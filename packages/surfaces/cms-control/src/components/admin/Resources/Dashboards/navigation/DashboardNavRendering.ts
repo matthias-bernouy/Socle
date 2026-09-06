@@ -76,3 +76,29 @@ function createItem(
 function clearGeneratedItems(menu: HTMLElement): void {
     menu.querySelectorAll("[data-generated]").forEach((element) => element.remove());
 }
+
+/** Reuses unchanged menu items so refreshes retain focus and sidebar scroll. */
+export function reconcileNavigation(menu: HTMLElement, next: HTMLElement): void {
+    const key = (item: HTMLElement) =>
+        `${item.dataset.source ?? ""}/${item.dataset.dashboard ?? ""}/${item.getAttribute("href") ?? ""}/${item.innerHTML}`;
+    const previous = new Map(
+        Array.from(menu.querySelectorAll<HTMLElement>("[data-generated]")).map((item) => [key(item), item]),
+    );
+    let anchor: Element | null =
+        Array.from(menu.children)
+            .filter((item) => !item.hasAttribute("data-generated"))
+            .at(-1) ?? null;
+    for (const item of Array.from(next.children) as HTMLElement[]) {
+        const id = key(item);
+        const retained = previous.get(id) ?? item;
+        previous.delete(id);
+        retained.toggleAttribute("active", item.hasAttribute("active"));
+        if (anchor?.nextElementSibling !== retained) {
+            menu.insertBefore(retained, anchor?.nextSibling ?? null);
+        }
+        anchor = retained;
+    }
+    for (const item of previous.values()) {
+        item.remove();
+    }
+}

@@ -1,14 +1,19 @@
 import { setText } from "../../shared";
 import { renderDetailActions } from "./actions";
-import { createFieldControl, fieldUsesInternalLabel } from "../controls";
+import { createFieldControl, fieldUsesInternalLabel, readFieldControlValue } from "../controls";
 import type { WDetailData, WDetailField, WDetailSection } from "../types";
 
 export class DetailView {
+    private readonly sections = new WeakMap<HTMLElement, WDetailSection[]>();
+    private actions: WDetailData["actions"] = [];
+
     constructor(private readonly root: ShadowRoot) {}
 
     render(value: WDetailData): void {
         setText(this.root, "[data-title]", value.title);
-        this.renderActions(value.actions);
+        if (!sameActions(this.actions, value.actions)) {
+            this.renderActions(value.actions);
+        }
         this.renderSections(this.query("[data-main]"), value.main);
         this.renderSections(this.query("[data-aside]"), value.aside, "compact");
     }
@@ -29,11 +34,38 @@ export class DetailView {
     }
 
     private renderActions(actions: WDetailData["actions"]): void {
+        this.actions = actions;
         this.query<HTMLElement>("[data-actions]").replaceChildren(...renderDetailActions(actions));
     }
 
     private renderSections(root: HTMLElement, sections: WDetailSection[], density?: string): void {
-        root.replaceChildren(...sections.map((section) => this.renderMainItem(section, density)));
+        const previous = this.sections.get(root) ?? [];
+        const existing = Array.from(root.children) as HTMLElement[];
+        const nodes = sections.map((section, index) => {
+            const old = previous[index];
+            const node = existing[index];
+            if (!old || !node || old.widgetSlot !== section.widgetSlot) {
+                return this.renderMainItem(section, density);
+            }
+            if (section.widgetSlot) {
+                return node;
+            }
+            node.setAttribute("heading", section.title);
+            node.setAttribute("description", section.description ?? "");
+            const fields = node.querySelector<HTMLElement>("[data-fields]")!;
+            const children = Array.from(fields.children) as HTMLElement[];
+            const next = section.fields.map((field) => {
+                const index = old.fields.findIndex((item) => item.id === field.id);
+                const existingField = children[index];
+                return existingField && unchangedField(existingField, old.fields[index]!, field)
+                    ? existingField
+                    : this.renderField(field);
+            });
+            reconcileChildren(fields, next);
+            return node;
+        });
+        reconcileChildren(root, nodes);
+        this.sections.set(root, sections);
         root.hidden = sections.length === 0;
     }
 
@@ -133,4 +165,23 @@ function sameFieldShape(current: WDetailField, next: WDetailField | undefined): 
         current.schemaStatus === next.schemaStatus &&
         JSON.stringify(current.schemaDefinitions) === JSON.stringify(next.schemaDefinitions)
     );
+}
+
+function unchangedField(node: HTMLElement, previous: WDetailField, next: WDetailField): boolean {
+    const control = node.querySelector<HTMLElement>("[data-field-control]");
+    const value = control ? readFieldControlValue(previous, control) : previous.value;
+    return JSON.stringify({ ...previous, value }) === JSON.stringify(next);
+}
+
+function reconcileChildren(root: HTMLElement, nodes: HTMLElement[]): void {
+    for (const child of Array.from(root.children)) {
+        if (!nodes.includes(child as HTMLElement)) {
+            child.remove();
+        }
+    }
+    nodes.forEach((node, index) => {
+        if (root.children[index] !== node) {
+            root.insertBefore(node, root.children[index] ?? null);
+        }
+    });
 }

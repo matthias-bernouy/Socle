@@ -20,17 +20,13 @@ describe("dashboard widget selection", () => {
 
         const wrapper = section.querySelector("[cms-source]")!;
         const table = section.querySelector("cms-dashboard-w-table")!;
-        const config = JSON.parse(table.getAttribute("data-config-json")!);
+        document.body.append(section);
+        expect(table.hasAttribute("data-config-json")).toBe(false);
 
         expect(section.getAttribute("slot")).toBe("main-extra");
         expect(wrapper.getAttribute("cms-source")).toBe(
             "/api/relations/page?relation=product-offers&fromId=product-1&limit=10&offset=0 as dashboardData",
         );
-        expect(config).toMatchObject({
-            widget: "w-table",
-            id: "offersRelation",
-            rowKey: "id",
-            columns: [{ id: "title", label: "Offer", path: "title", primary: true }],
-        });
+        expect(table.shadowRoot!.textContent).toContain("Offer");
     });
 });

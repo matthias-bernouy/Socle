@@ -1,13 +1,6 @@
 import type { IntegrationInstallationRow } from "../../Integrations/model";
 import { route } from "../api";
 
-export async function loadSourceInstallations(): Promise<IntegrationInstallationRow[]> {
-    const response = await fetch(route("/api/integrations/installations"));
-    if (!response.ok) {
-        throw new Error(`Unable to load source settings (HTTP ${response.status})`);
-    }
-    return response.json() as Promise<IntegrationInstallationRow[]>;
-}
 export function renderSourceManagement(
     menu: HTMLElement,
     source: string,

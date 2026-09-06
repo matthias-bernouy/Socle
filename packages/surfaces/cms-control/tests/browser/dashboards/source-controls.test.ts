@@ -18,11 +18,11 @@ test("Source dashboards fit narrow screens and the reused page picker keeps an o
                 await route.fulfill({
                     contentType: "text/html",
                     body: `<!doctype html><head><script src="/control.js"></script>
-                    <style>body { margin:16px; font:14px sans-serif; }</style></head><body>
+                    <style>body { margin:16px; font:14px sans-serif; }</style></head><body><cms-binding-core>
                     <cms-dashboards-admin id="dashboard" external></cms-dashboards-admin>
                     <div id="page-field" style="width:190px"><cms-editor-v2-page-link label="Published page"
                     published-only="true" allow-external="false" allow-media="false"></cms-editor-v2-page-link></div>
-                    </body>`,
+                    </cms-binding-core></body>`,
                 });
             } else if (url.pathname === "/api/page/links") {
                 expect(url.searchParams.get("visible")).toBe("published");

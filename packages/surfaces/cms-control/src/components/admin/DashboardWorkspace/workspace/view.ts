@@ -53,7 +53,7 @@ export function mountDashboardRuntime(
     path: string,
 ): void {
     const view = viewAtPath(dashboard.views, path);
-    const runtime = root.querySelector<DashboardViewController & HTMLElement>("[data-runtime]")!;
+    const runtime = root.host.querySelector<DashboardViewController & HTMLElement>("[data-runtime]")!;
     if (!view?.source) {
         runtime.hidden = true;
         return;

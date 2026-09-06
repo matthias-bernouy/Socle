@@ -17,6 +17,11 @@ Known HTTP clients are recognized from exact package imports: `axios`, `ky`,
 `ofetch`, `undici`, `node-fetch`, and `cross-fetch`. Findings require an actual
 request invocation. Imports, client construction through `create`/`extend`,
 and unrelated local objects named after a client do not create findings.
+Named `requestBindingData` imports from `@bernouy/components` (including aliases)
+are also reviewed: sharing binding transport does not make an imperative
+operation declarative or exempt it from review. Other component imports do not
+produce network findings.
+
 Dynamic property names, CommonJS/dynamic imports, arbitrary object aliases,
 global monkey-patching and injected transports are outside this detector.
 

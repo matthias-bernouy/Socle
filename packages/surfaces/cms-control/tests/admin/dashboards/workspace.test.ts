@@ -73,7 +73,7 @@ describe("dashboard workspace navigation", () => {
     test("uses the mounted View label and icon in the content header", () => {
         const root = runtimeRoot();
         let mountedMeta: Record<string, unknown> | undefined;
-        const runtime = root.querySelector<HTMLElement & { setExternalContext(groups: unknown[]): void }>(
+        const runtime = root.host.querySelector<HTMLElement & { setExternalContext(groups: unknown[]): void }>(
             "[data-runtime]",
         )!;
         runtime.setExternalContext = (groups) => {
@@ -147,7 +147,7 @@ function runtimeRoot(): ShadowRoot {
     const root = host.attachShadow({ mode: "open" });
     const runtime = document.createElement("div");
     runtime.dataset.runtime = "true";
-    root.append(runtime);
+    host.append(runtime);
     document.body.append(host);
     return root;
 }

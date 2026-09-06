@@ -1,4 +1,4 @@
-import { bindingOwnedBySubmitSource } from "./submitOwnership";
+import { bindingOwnedBySubmitSource, pathOwnedBySubmitSource } from "./submitOwnership";
 import type { CompilePlan, NodePath, SubmitSourceBoundary } from "../templatePlan";
 
 export function compileAttributes(
@@ -7,6 +7,15 @@ export function compileAttributes(
     plan: CompilePlan,
     boundary: SubmitSourceBoundary | null,
 ): void {
+    const value = element.getAttribute("cms-bind-value");
+    if (
+        value &&
+        element.localName.includes("-") &&
+        /^[\w$.-]+$/.test(value) &&
+        !pathOwnedBySubmitSource(value, boundary)
+    ) {
+        plan.values.push({ path, expression: value });
+    }
     for (const attribute of Array.from(element.attributes)) {
         if (attribute.value.includes("{{") && !bindingOwnedBySubmitSource(attribute.value, boundary)) {
             plan.attributes.push({ path, name: attribute.name, template: attribute.value });

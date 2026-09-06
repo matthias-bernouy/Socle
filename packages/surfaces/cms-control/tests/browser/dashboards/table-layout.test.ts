@@ -38,9 +38,9 @@ test("a wide dashboard table scrolls inside a narrow grid without overflowing th
                 body { margin:0; font:14px sans-serif; }
                 main { padding:16px; overflow:auto; }
                 .management { border:1px solid; padding:14px; }
-                </style></head><body><main id="admin-content"><section class="management">
+                </style></head><body><cms-binding-core><main id="admin-content"><section class="management">
                 <cms-dashboards-admin id="dashboard" external embedded></cms-dashboards-admin>
-                </section></main></body>`,
+                </section></main></cms-binding-core></body>`,
             });
         });
         for (const width of [390, 1440]) {

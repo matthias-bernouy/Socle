@@ -49,6 +49,31 @@ not to materialize independently editable Bloc copies.
 Use `cms-source-id` and `$sources.<id>.<state>` when one element must observe a
 specific source among several ancestors.
 
+## Typed custom-element inputs
+
+Use `cms-bind-value="catalogue.items"` when a custom element needs the resolved
+value itself. The element opts in by implementing `setBindingValue(value:
+unknown): void`. Objects, arrays, booleans, numbers, null and undefined retain
+their types; the engine does not serialize them into attributes. The expression
+is a scope path, not JavaScript, interpolation or an arbitrary property name.
+Native elements do not receive this binding.
+
+```html
+<example-chart cms-bind-value="catalogue.totals"></example-chart>
+```
+
+The receiver must cache values delivered before connection and render when
+connected. Repeated delivery of the identical value is skipped (`Object.is`);
+replace objects when publishing changes. A pending custom-element definition
+receives the latest value, and unmounting cancels queued delivery. Normal source,
+condition, repetition and form-result ownership still apply. This is a runtime
+component-authoring contract; the visual editor does not provide a new generic
+property-binding picker.
+
+Keep bound children in light DOM under the page core. A visual component may
+slot them into an encapsulated Shadow DOM shell; it must not create another
+core or inject document-level CSS to compensate for hidden bindings.
+
 ## Forms
 
 The form container is native HTML owned by the CMS editor. A collection may

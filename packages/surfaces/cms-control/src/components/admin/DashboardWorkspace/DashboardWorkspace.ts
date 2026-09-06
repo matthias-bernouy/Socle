@@ -4,6 +4,14 @@ import { DashboardWorkspaceController } from "./workspace/controller";
 export class CmsDashboardWorkspace extends DashboardWorkspaceController {
     override connectedCallback(): void {
         super.connectedCallback();
+        if (!this.querySelector("[data-runtime]")) {
+            const runtime = document.createElement("cms-dashboards-admin");
+            runtime.setAttribute("external", "");
+            runtime.setAttribute("slot", "runtime");
+            runtime.setAttribute("data-runtime", "");
+            runtime.hidden = true;
+            this.append(runtime);
+        }
         this.shadowRoot?.addEventListener("click", this.onClick);
         window.addEventListener(DASHBOARD_SELECTED_EVENT, this.onSelected as EventListener);
         window.addEventListener(DASHBOARD_VIEW_SELECTED_EVENT, this.onViewSelected as EventListener);

@@ -1,10 +1,13 @@
+import { retainWidgets } from "./reconcile";
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import type { DashboardRuntimeWidget, DetailSelection, RenderContext } from "../../domain";
 import "./../../widgets/w-section/WSection";
-import "./../../widgets/w-table/WTable";
+import { DashboardWTable } from "../../widgets/w-table/WTable";
 import { detailElement } from "./detail";
 import { navigationListElement, selectionVars } from "./navigation";
-import { appendSourceContent, jsonAttr, requiredSourceParams, sourceWrapper, tableRowsTemplate } from "./mountSource";
+import { requiredSourceParams, sourceWrapper, tableRowsTemplate } from "./mountSource";
+
+let tabsSequence = 0;
 
 export function mountDashboardWidgets(
     root: HTMLElement,
@@ -14,7 +17,12 @@ export function mountDashboardWidgets(
     tabState: Map<string, number>,
     detail: DetailSelection | null,
 ): void {
-    const core = document.createElement("cms-binding-core");
+    if (retainWidgets(root, widgets, context, detail)) {
+        return;
+    }
+    const core = document.createElement("p9r-stack");
+    core.setAttribute("gap", "md");
+    core.setAttribute("trim", "");
     core.className = "dashboard-widget-binding";
     core.replaceChildren(
         ...widgets.map((widget, index) => widgetElement(widget, context, `${key}.${index}`, tabState, detail)),
@@ -59,7 +67,9 @@ function sectionElement(
     if (widget.description) {
         element.setAttribute("description", widget.description);
     }
-    const stack = document.createElement("div");
+    const stack = document.createElement("p9r-stack");
+    stack.setAttribute("gap", "md");
+    stack.setAttribute("trim", "");
     stack.className = "widget-stack";
     stack.append(
         ...widget.children.map((child, index) => widgetElement(child, context, `${key}.${index}`, tabState, detail)),
@@ -75,32 +85,47 @@ function tabsElement(
     tabState: Map<string, number>,
     detail: DetailSelection | null,
 ): HTMLElement {
-    const panel = document.createElement("section");
-    panel.className = "tabs-panel";
-    const tabs = document.createElement("div");
-    tabs.className = "tabs";
-    tabs.setAttribute("role", "tablist");
-    const body = document.createElement("div");
-    body.className = "tab-body";
+    const panel = document.createElement("p9r-card");
+    const tabs = document.createElement("p9r-tabs");
+    tabs.setAttribute("wrap", "");
+    const prefix = `dashboard-tabs-${++tabsSequence}`;
     const activeIndex = Math.min(tabState.get(key) ?? 0, Math.max(widget.tabs.length - 1, 0));
-    const active = widget.tabs[activeIndex];
-    for (const [index, tab] of widget.tabs.entries()) {
-        const button = document.createElement("button");
-        button.className = `tab ${index === activeIndex ? "active" : ""}`.trim();
-        button.type = "button";
-        button.dataset.tabKey = key;
-        button.dataset.tabIndex = String(index);
-        button.textContent = tab.label;
-        tabs.append(button);
-    }
-    if (active) {
-        body.append(
-            ...active.children.map((child, index) =>
-                widgetElement(child, context, `${key}.${activeIndex}.${index}`, tabState, detail),
+    const populate = (index: number): void => {
+        const body = tabs.children[index];
+        const tab = widget.tabs[index];
+        if (!body || !tab || body.childElementCount) {
+            return;
+        }
+        const stack = document.createElement("p9r-stack");
+        stack.setAttribute("gap", "md");
+        stack.setAttribute("trim", "");
+        stack.append(
+            ...tab.children.map((child, childIndex) =>
+                widgetElement(child, context, `${key}.${index}.${childIndex}`, tabState, detail),
             ),
         );
+        body.append(stack);
+    };
+    for (const [index, tab] of widget.tabs.entries()) {
+        const body = document.createElement("p9r-tab-panel");
+        body.id = `${prefix}-${index}`;
+        body.setAttribute("label", tab.label);
+        tabs.append(body);
     }
-    panel.append(tabs, body);
+    tabs.setAttribute("active", `${prefix}-${activeIndex}`);
+    populate(activeIndex);
+    tabs.addEventListener("change", (event) => {
+        if (event.target !== tabs) {
+            return;
+        }
+        const id = (event as CustomEvent).detail.active;
+        const index = Array.from(tabs.children).findIndex((body) => body.id === id);
+        if (index >= 0) {
+            tabState.set(key, index);
+            populate(index);
+        }
+    });
+    panel.append(tabs);
     return panel;
 }
 
@@ -117,11 +142,11 @@ function tableElement(
         "dashboardData",
         requiredSourceParams(context, widget.source),
     );
-    const element = document.createElement("cms-dashboard-w-table");
-    element.setAttribute("data-config-json", jsonAttr(widget));
-    element.setAttribute("data-filters-json", jsonAttr(filters));
+    const element = new DashboardWTable();
+    element.dataset.widgetId = widget.id;
+    element.configure(widget, filters);
     element.setAttribute("data-selected", context.selectedRows.get(widget.selection?.opens ?? widget.id) ?? "");
-    element.append(tableRowsTemplate(widget));
-    appendSourceContent(wrapper, element);
-    return wrapper;
+    wrapper.append(tableRowsTemplate(widget));
+    element.append(wrapper);
+    return element;
 }

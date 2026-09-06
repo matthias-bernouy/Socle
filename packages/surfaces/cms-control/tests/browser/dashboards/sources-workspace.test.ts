@@ -17,12 +17,12 @@ test("Sources parser keeps catalogue exclusive and the add action above source n
                 await route.fulfill({
                     contentType: "text/html",
                     body: `<!doctype html>
-                    <head><script src="/control.js"></script></head><body>
+                    <head><script src="/control.js"></script></head><body><cms-binding-core>
                     <cms-dashboards-nav></cms-dashboards-nav>
                     <cms-resource-workspace>
                         <script>window.dashboardWasAbsent = !document.querySelector('cms-dashboards-admin');</script>
                         <cms-dashboards-admin external></cms-dashboards-admin>
-                    </cms-resource-workspace></body>`,
+                    </cms-resource-workspace></cms-binding-core></body>`,
                 });
             } else if (url.pathname === "/api/dashboards") {
                 await route.fulfill({

@@ -18,7 +18,7 @@ export class DetailFieldState {
 
     constructor(
         private readonly root: ShadowRoot,
-        private readonly dataset: DOMStringMap,
+        private readonly dataset: DetailBindingInput,
         private readonly readData: () => WDetailData,
     ) {}
 
@@ -144,7 +144,12 @@ function clearRequiredError(control: HTMLElement): void {
     control.removeAttribute("hint-level");
 }
 
-export function readDetailBinding(dataset: DOMStringMap): DetailBinding | null {
+export type DetailBindingInput = DOMStringMap | (() => DetailBinding | null);
+
+export function readDetailBinding(dataset: DetailBindingInput): DetailBinding | null {
+    if (typeof dataset === "function") {
+        return dataset();
+    }
     const widget = parseJson<DetailWidget>(dataset.configJson ?? "");
     const sourceJson = dataset.sourceJson ?? "";
     const sourceData = parseJson<unknown>(sourceJson);

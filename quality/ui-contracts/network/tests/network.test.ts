@@ -133,3 +133,11 @@ describe("browser network contracts", () => {
         expect(inspect("import type axios from 'axios'; axios('/items');")).toEqual([]);
     });
 });
+
+test("programmatic binding requests remain visible for declarative-UI review", () => {
+    const findings = inspect(
+        'import { requestBindingData as request, Button } from "@bernouy/components"; request("/data"); new Button();',
+    );
+    expect(findings).toHaveLength(1);
+    expect(findings[0]).toMatchObject({ rule: "ui.network.http", severity: "WARNING" });
+});

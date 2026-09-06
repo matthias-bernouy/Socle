@@ -1,8 +1,9 @@
 import type { DetailSelection, RenderContext, RuntimeDetailWidget } from "../../domain";
-import "../../widgets/w-detail/WDetail";
+import { DashboardWDetail } from "../../widgets/w-detail/WDetail";
+import "./input";
 import { detailReloadEvent } from "../reload";
 import { relationDetailSectionElement } from "./mountRelations";
-import { appendSourceContent, jsonAttr, requiredSourceParams, sourceWrapper } from "./mountSource";
+import { requiredSourceParams, sourceWrapper } from "./mountSource";
 import { navigationListElement } from "./navigation";
 
 export function detailElement(
@@ -13,13 +14,24 @@ export function detailElement(
     const rowKey = detail?.row ?? "";
     if (rowKey === "__new__") {
         const element = detailContent(widget, context, rowKey);
-        element.setAttribute("data-source-json", jsonAttr({}));
+        (element as DashboardWDetail).setBindingValue({});
         return element;
     }
     const directResource = matchingDetailResource(widget, context, rowKey);
     if (directResource) {
         return detailContent(widget, context, rowKey, directResource);
     }
+    const element = detailContent(widget, context, rowKey);
+    attachDetailSource(element, widget, context, rowKey);
+    return element;
+}
+
+export function attachDetailSource(
+    element: HTMLElement,
+    widget: RuntimeDetailWidget,
+    context: RenderContext,
+    rowKey: string,
+): void {
     const wrapper = sourceWrapper(
         context.dashboard.source,
         widget.source,
@@ -31,10 +43,18 @@ export function detailElement(
         "cms-reload-on",
         detailReloadEvent(context.dashboard.source, context.dashboard.id, widget.id, rowKey),
     );
-    const element = detailContent(widget, context, rowKey);
-    element.setAttribute("data-source-json", "{{ dashboardData | json }}");
-    appendSourceContent(wrapper, element);
-    return wrapper;
+    const input = document.createElement("cms-dashboard-input");
+    input.setAttribute("kind", "detail");
+    input.setAttribute("cms-bind-value", "dashboardData");
+    input.setAttribute("cms-condition", "$source.loaded || $source.empty");
+    input.hidden = true;
+    wrapper.setAttribute("slot", "source-status");
+    const status = document.createElement("cms-dashboard-input");
+    status.setAttribute("kind", "detail-status");
+    status.setAttribute("cms-bind-value", "$source");
+    status.hidden = true;
+    wrapper.append(status, input);
+    element.append(wrapper);
 }
 
 function detailContent(
@@ -43,7 +63,7 @@ function detailContent(
     rowKey: string,
     directResource: NonNullable<RenderContext["detailResource"]> | null = null,
 ): HTMLElement {
-    const element = document.createElement("cms-dashboard-w-detail");
+    const element = new DashboardWDetail();
     const config =
         directResource === null
             ? widget
@@ -51,9 +71,10 @@ function detailContent(
                   ...widget,
                   source: { ...widget.source, itemPath: undefined },
               };
-    element.setAttribute("data-config-json", jsonAttr(config));
+    element.dataset.widgetId = widget.id;
+    element.configure(config);
     if (directResource !== null) {
-        element.setAttribute("data-source-json", jsonAttr(directResource.resource));
+        element.setBindingValue(directResource.resource);
     }
     element.setAttribute("data-row-key", rowKey);
     element.setAttribute("data-source-id", context.dashboard.source);

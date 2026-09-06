@@ -9,6 +9,13 @@ import template from "./template.html" with { type: "text" };
 
 export class DashboardWNavigationList extends Component {
     private value: NavigationListWidget | null = null;
+    private readonly rowsObserver = new MutationObserver(() => this.syncItems());
+    configure(widget: NavigationListWidget): void {
+        this.value = widget;
+        if (this.isConnected) {
+            this.render();
+        }
+    }
     private dragging: DashboardWNavigationItem | null = null;
 
     constructor() {
@@ -26,6 +33,7 @@ export class DashboardWNavigationList extends Component {
     }
 
     override connectedCallback(): void {
+        this.rowsObserver.observe(this, { childList: true, subtree: true });
         this.shadowRoot!.querySelector<HTMLSlotElement>("slot")?.addEventListener("slotchange", this.onSlotChange);
         this.shadowRoot!.addEventListener("click", this.onActionClick);
         this.addEventListener("dragstart", this.onDragStart);
@@ -37,6 +45,7 @@ export class DashboardWNavigationList extends Component {
     }
 
     disconnectedCallback(): void {
+        this.rowsObserver.disconnect();
         this.shadowRoot?.querySelector<HTMLSlotElement>("slot")?.removeEventListener("slotchange", this.onSlotChange);
         this.shadowRoot?.removeEventListener("click", this.onActionClick);
         this.removeEventListener("dragstart", this.onDragStart);

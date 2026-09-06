@@ -40,7 +40,6 @@ describe("dashboard runtime source states", () => {
 
         expect(wrapper.querySelector("[data-editable-settings]")).toBeNull();
         expect(wrapper.textContent).toContain("Unable to load this data");
-        expect(wrapper.textContent).toContain("Nothing can be changed until the data is available.");
         expect(wrapper.textContent).toContain("HTTP 503");
         expect(wrapper.textContent).not.toContain("Save settings");
 
@@ -111,7 +110,7 @@ describe("dashboard runtime source states", () => {
             ],
             dashboards: [dashboard],
         };
-        const root = document.createElement("div");
+        const root = document.createElement("cms-binding-core");
         mountDashboardWidgets(
             root,
             [widget],
@@ -163,7 +162,7 @@ describe("dashboard runtime source states", () => {
             ],
             dashboards: [dashboard],
         };
-        const root = document.createElement("div");
+        const root = document.createElement("cms-binding-core");
         const detail = { collection: "albumDetail", row: "__new__" };
 
         mountDashboardWidgets(
@@ -178,7 +177,7 @@ describe("dashboard runtime source states", () => {
         await new Promise((resolve) => setTimeout(resolve, 20));
 
         expect(root.querySelector("[cms-source]")).toBeNull();
-        expect(root.querySelector("cms-dashboard-w-detail")?.getAttribute("data-source-json")).toBe("{}");
+        expect(root.querySelector("cms-dashboard-w-detail")?.hasAttribute("data-source-json")).toBe(false);
         expect(requests).toHaveLength(0);
     });
 
@@ -230,7 +229,7 @@ describe("dashboard runtime source states", () => {
             ],
             dashboards: [dashboard],
         };
-        const root = document.createElement("div");
+        const root = document.createElement("cms-binding-core");
 
         mountDashboardWidgets(
             root,
@@ -254,9 +253,7 @@ describe("dashboard runtime source states", () => {
             status: "published",
             limit: "100",
         });
-        expect(root.querySelector("cms-dashboard-w-table")?.getAttribute("data-filters-json")).toBe(
-            '{"q":"racket","status":"published"}',
-        );
+        expect(root.querySelector("cms-dashboard-w-table")?.hasAttribute("data-filters-json")).toBe(false);
     });
 
     test("loads selection-scoped evidence for the owning claim and not for an evidence detail", async () => {
@@ -268,7 +265,7 @@ describe("dashboard runtime source states", () => {
         const dashboard = claimEvidenceDashboard();
         const group = claimEvidenceSourceGroup(dashboard);
         const claim = { collection: "claimDetail", row: "claim-42" };
-        const root = document.createElement("div");
+        const root = document.createElement("cms-binding-core");
 
         mountDashboardWidgets(
             root,
@@ -291,7 +288,7 @@ describe("dashboard runtime source states", () => {
         root.remove();
         requests.length = 0;
         const evidence = { collection: "claimEvidenceDetail", row: "evidence-7" };
-        const evidenceRoot = document.createElement("div");
+        const evidenceRoot = document.createElement("cms-binding-core");
         mountDashboardWidgets(
             evidenceRoot,
             widgetsForSelection(dashboard, evidence),

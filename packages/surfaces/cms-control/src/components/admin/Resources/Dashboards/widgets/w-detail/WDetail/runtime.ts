@@ -1,7 +1,7 @@
 import { detailData } from "../../../runtime/mapping";
 import { DetailView } from "../runtime/detailView";
 import { DetailEvents } from "../runtime/events";
-import { DetailFieldState, type DetailWidget } from "../runtime/fieldState";
+import { DetailFieldState, type DetailWidget, type DetailBinding } from "../runtime/fieldState";
 import { DetailLookups } from "../runtime/lookups";
 import { DetailRequestCoordinator } from "../runtime/requests";
 import { DetailSchemasState } from "../runtime/schemas";
@@ -48,6 +48,7 @@ export class DetailSyncScheduler {
 }
 
 type DetailRuntimeCallbacks = {
+    readBinding(): DetailBinding | null;
     data(): WDetailData;
     isBound(): boolean;
     isConnected(): boolean;
@@ -61,17 +62,17 @@ export function createDetailRuntime(
     root: ShadowRoot,
     callbacks: DetailRuntimeCallbacks,
 ): DetailRuntime {
-    const fields = new DetailFieldState(root, host.dataset, callbacks.data);
+    const fields = new DetailFieldState(root, callbacks.readBinding, callbacks.data);
     const view = new DetailView(root);
     const requests = new DetailRequestCoordinator();
     let schemas: DetailSchemasState;
-    const lookups = new DetailLookups(host.dataset, fields, requests, {
+    const lookups = new DetailLookups(callbacks.readBinding, fields, requests, {
         setData: callbacks.setData,
         render: callbacks.render,
         isConnected: callbacks.isConnected,
         schemas: () => schemas.values,
     });
-    schemas = new DetailSchemasState(host.dataset, fields, requests, {
+    schemas = new DetailSchemasState(callbacks.readBinding, fields, requests, {
         setData: (value) => callbacks.setData(lookups.decorate(value)),
         render: callbacks.render,
         isConnected: callbacks.isConnected,

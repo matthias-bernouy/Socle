@@ -11,7 +11,7 @@ export function compileTemplatePlan(
     options: CompileOptions,
     createTemplate: TemplateFactory,
 ): CompilePlan {
-    const plan: CompilePlan = { text: [], attributes: [], conditions: [], repeats: [], rawHtml: [] };
+    const plan: CompilePlan = { values: [], text: [], attributes: [], conditions: [], repeats: [], rawHtml: [] };
     Array.from(fragment.childNodes).forEach((child, index) => {
         compileNode(
             child,

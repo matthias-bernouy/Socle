@@ -1,7 +1,10 @@
+import states from "cms-control/static/admin/_content/sources/_runtime/source-states.html" with { type: "text" };
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import type { RenderContext } from "../../domain";
-import { route } from "../../api";
+import { sourceUrl } from "../source";
 import { resolveParams, type RuntimeVars } from "../expressions";
+
+let sourceSequence = 0;
 
 type SourceRef = {
     sourceId?: string;
@@ -20,7 +23,8 @@ export function sourceWrapper(
     if (requiredParams.some((name) => params[name] === undefined)) {
         return pendingSourceWrapper();
     }
-    return urlSourceWrapper(sourceUrl(sourceId, ref, vars), alias);
+    const url = sourceUrl(sourceId, ref, vars);
+    return urlSourceWrapper(`${url.pathname}${url.search}`, alias);
 }
 
 export function requiredSourceParams(context: RenderContext, ref: SourceRef): string[] {
@@ -37,7 +41,10 @@ export function requiredSourceParams(context: RenderContext, ref: SourceRef): st
 export function urlSourceWrapper(url: string, alias: string): HTMLElement {
     const wrapper = document.createElement("div");
     wrapper.setAttribute("cms-source", `${url} as ${alias}`);
-    wrapper.append(sourceLoadingState(), sourceErrorState());
+    wrapper.setAttribute("cms-reload-on", `dashboard:retry:${++sourceSequence}`);
+    const template = document.createElement("template");
+    template.innerHTML = states as unknown as string;
+    wrapper.append(template.content.cloneNode(true));
     wrapper.addEventListener("click", retrySource);
     return wrapper;
 }
@@ -51,10 +58,6 @@ function pendingSourceWrapper(): HTMLElement {
 export function appendSourceContent(wrapper: HTMLElement, content: HTMLElement): void {
     content.setAttribute("cms-condition", "$source.loaded || $source.empty");
     wrapper.append(content);
-}
-
-export function jsonAttr(value: unknown): string {
-    return JSON.stringify(value);
 }
 
 export function tableRowsTemplate(widget: Extract<DashboardWidget, { widget: "w-table" }>): HTMLElement {
@@ -114,18 +117,6 @@ export function navigationItemsTemplate(
     return item;
 }
 
-function sourceUrl(sourceId: string, ref: SourceRef, vars: RuntimeVars): string {
-    const targetSourceId = ref.sourceId ?? sourceId;
-    const url = new URL(
-        route(`/.cms/sources/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`),
-        window.location.origin,
-    );
-    for (const [key, value] of Object.entries(resolveParams(ref.params, vars))) {
-        url.searchParams.set(key, value);
-    }
-    return `${url.pathname}${url.search}`;
-}
-
 function repeatPath(alias: string, path: string | undefined): string {
     return path ? `${alias}.${path}` : alias;
 }
@@ -134,42 +125,13 @@ function bindingPath(alias: string, path: string): string {
     return `{{ ${path === "." ? alias : `${alias}.${path}`} }}`;
 }
 
-function sourceLoadingState(): HTMLElement {
-    const state = document.createElement("div");
-    state.className = "dashboard-source-state dashboard-source-loading";
-    state.setAttribute("cms-condition", "$source.loading");
-    state.setAttribute("role", "status");
-    state.textContent = "Loading data…";
-    return state;
-}
-
-function sourceErrorState(): HTMLElement {
-    const state = document.createElement("div");
-    state.className = "dashboard-source-state dashboard-source-error";
-    state.setAttribute("cms-condition", "$source.error");
-    state.setAttribute("role", "alert");
-
-    const copy = document.createElement("div");
-    const title = document.createElement("strong");
-    title.textContent = "Unable to load this data";
-    const message = document.createElement("span");
-    message.textContent = "Nothing can be changed until the data is available.";
-    const detail = document.createElement("small");
-    detail.textContent = "{{ $source.message }}";
-    copy.append(title, message, detail);
-
-    const retry = document.createElement("button");
-    retry.type = "button";
-    retry.dataset.dashboardSourceRetry = "true";
-    retry.textContent = "Retry";
-    state.append(copy, retry);
-    return state;
-}
-
 function retrySource(event: Event): void {
     const target = event.target;
     if (!(target instanceof Element) || !target.closest("[data-dashboard-source-retry]")) {
         return;
     }
-    target.ownerDocument.dispatchEvent(new Event("cms-source:reload"));
+    const source = event.currentTarget as HTMLElement;
+    const name = source.getAttribute("cms-reload-on") || `dashboard:retry:${++sourceSequence}`;
+    source.setAttribute("cms-reload-on", name);
+    queueMicrotask(() => source.ownerDocument.dispatchEvent(new Event(name)));
 }

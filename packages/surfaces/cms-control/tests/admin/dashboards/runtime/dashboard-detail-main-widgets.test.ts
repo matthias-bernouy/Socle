@@ -28,8 +28,11 @@ describe("dashboard detail main widgets", () => {
         );
         const detailElement = root.querySelector<HTMLElement>("cms-dashboard-w-detail")!;
         const wrapper = detailElement.querySelector<HTMLElement>('[slot="main-widget-1"]')!;
-        const navigation = wrapper.querySelector("cms-dashboard-w-navigation-list");
-        const source = new URL(wrapper.getAttribute("cms-source")!.split(" as ")[0]!, window.location.origin);
+        const navigation = wrapper;
+        const source = new URL(
+            wrapper.querySelector("[cms-source]")!.getAttribute("cms-source")!.split(" as ")[0]!,
+            window.location.origin,
+        );
         document.body.append(root);
         const widgetSlot = detailElement.shadowRoot!.querySelector<HTMLSlotElement>('slot[name="main-widget-1"]');
         const mainChildren = Array.from(widgetSlot!.parentElement!.children).map((item) =>

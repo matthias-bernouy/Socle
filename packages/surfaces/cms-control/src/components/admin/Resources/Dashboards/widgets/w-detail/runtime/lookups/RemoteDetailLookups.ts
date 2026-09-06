@@ -9,7 +9,7 @@ import {
 } from "../../../../runtime/lookups";
 import type { RuntimeVars } from "../../../../runtime/expressions";
 import type { WDetailField } from "../../types";
-import { DetailFieldState, readDetailBinding } from "../fieldState";
+import { DetailFieldState, readDetailBinding, type DetailBindingInput } from "../fieldState";
 import { DetailRequestCoordinator, DetailRequestTargets } from "../requests";
 
 const PAGE_SIZE = 25;
@@ -31,7 +31,7 @@ export class RemoteDetailLookups {
     private readonly timers = new Map<string, ReturnType<typeof setTimeout>>();
 
     constructor(
-        private readonly dataset: DOMStringMap,
+        private readonly dataset: DetailBindingInput,
         private readonly fields: DetailFieldState,
         private readonly requests: DetailRequestCoordinator,
         private readonly targets: DetailRequestTargets,

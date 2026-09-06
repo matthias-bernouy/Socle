@@ -1,3 +1,4 @@
+import { requestBindingData, type BindingRequestResult } from "@bernouy/components";
 import type { DashboardDataRef, DashboardEndpointRef } from "@bernouy/cms-dashboards";
 import { route } from "../api";
 import { arrayAt, resolveBody, resolveParams, valueAt, type RuntimeVars } from "./expressions";
@@ -8,7 +9,7 @@ export async function fetchSourceJson(
     vars: RuntimeVars,
     options: { signal?: AbortSignal } = {},
 ): Promise<unknown> {
-    const response = await fetch(sourceUrl(sourceId, ref, vars), {
+    const response = await requestBindingData(sourceUrl(sourceId, ref, vars).href, {
         headers: { Accept: "application/json" },
         signal: options.signal,
     });
@@ -27,7 +28,15 @@ export async function sendSourceJson(
     method: string,
     vars: RuntimeVars,
 ): Promise<unknown> {
-    const response = await sendSourceResponse(sourceId, ref, method, vars, "application/json");
+    const body = resolveBody(ref.body, vars);
+    const response = await requestBindingData(sourceUrl(sourceId, ref, vars).href, {
+        method,
+        headers:
+            body === undefined
+                ? { Accept: "application/json" }
+                : { Accept: "application/json", "Content-Type": "application/json" },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    });
     return responseJson(response);
 }
 
@@ -38,7 +47,7 @@ export async function sendSourceForm(
     vars: RuntimeVars,
     body: FormData,
 ): Promise<unknown> {
-    const response = await fetch(sourceUrl(sourceId, ref, vars), {
+    const response = await requestBindingData(sourceUrl(sourceId, ref, vars).href, {
         method,
         headers: { Accept: "application/json" },
         body,
@@ -52,7 +61,7 @@ export async function sendSourceDownload(
     method: string,
     vars: RuntimeVars,
 ): Promise<{ blob: Blob; filename?: string }> {
-    const response = await sendSourceResponse(sourceId, ref, method, vars, "*/*");
+    const response = await sendDownloadResponse(sourceId, ref, method, vars, "*/*");
     if (!response.ok) {
         throw new Error((await response.text()) || `Source request failed (${response.status})`);
     }
@@ -63,7 +72,7 @@ export async function sendSourceDownload(
     };
 }
 
-async function sendSourceResponse(
+async function sendDownloadResponse(
     sourceId: string,
     ref: DashboardEndpointRef,
     method: string,
@@ -71,6 +80,7 @@ async function sendSourceResponse(
     accept: string,
 ): Promise<Response> {
     const body = resolveBody(ref.body, vars);
+    // Binary downloads need the response headers and Blob, which JSON binding does not expose.
     return fetch(sourceUrl(sourceId, ref, vars), {
         method,
         headers: body === undefined ? { Accept: accept } : { Accept: accept, "Content-Type": "application/json" },
@@ -78,7 +88,7 @@ async function sendSourceResponse(
     });
 }
 
-function sourceUrl(sourceId: string, ref: DashboardEndpointRef, vars: RuntimeVars): URL {
+export function sourceUrl(sourceId: string, ref: DashboardEndpointRef, vars: RuntimeVars): URL {
     const targetSourceId = ref.sourceId ?? sourceId;
     const dashboardId = document.documentElement.dataset.dashboardScope;
     const prefix = dashboardId ? `/.cms/dashboards/${encodeURIComponent(dashboardId)}/sources` : "/.cms/sources";
@@ -92,15 +102,14 @@ function sourceUrl(sourceId: string, ref: DashboardEndpointRef, vars: RuntimeVar
     return url;
 }
 
-async function responseJson(response: Response): Promise<unknown> {
+function responseJson(response: BindingRequestResult): unknown {
     if (!response.ok) {
-        throw new Error((await response.text()) || `Source request failed (${response.status})`);
+        if (response.statusText === "Aborted") {
+            throw new DOMException("Aborted", "AbortError");
+        }
+        throw new Error(response.message || `Source request failed (${response.status})`);
     }
-    const contentType = response.headers.get("content-type") ?? "";
-    if (!contentType.includes("json")) {
-        return response.text();
-    }
-    return response.json();
+    return response.body;
 }
 
 function filenameFromDisposition(value: string | null): string | undefined {

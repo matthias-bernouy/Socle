@@ -13,8 +13,15 @@ export async function submitForm(form: HTMLFormElement, options: SubmitFormOptio
         init.body = serialized.body;
     }
 
+    return { ...(await requestBindingData(serialized.url, init)), form };
+}
+
+export type BindingRequestResult = Omit<FormSubmitResult, "form">;
+
+/** Shared binding transport for schema-driven operations that cannot own a static form. */
+export async function requestBindingData(url: string, init: RequestInit = {}): Promise<BindingRequestResult> {
     try {
-        const response = await fetch(serialized.url, init);
+        const response = await fetch(url, init);
         const body = await readResponseBody(response);
         return {
             ok: response.ok,
@@ -22,11 +29,10 @@ export async function submitForm(form: HTMLFormElement, options: SubmitFormOptio
             statusText: response.statusText,
             body,
             message: response.ok ? "" : errorMessage(response, body),
-            form,
         };
     } catch (error) {
         if ((error as { name?: string } | null)?.name === "AbortError") {
-            return { ok: false, status: 0, statusText: "Aborted", body: null, message: "Aborted", form };
+            return { ok: false, status: 0, statusText: "Aborted", body: null, message: "Aborted" };
         }
         return {
             ok: false,
@@ -34,7 +40,6 @@ export async function submitForm(form: HTMLFormElement, options: SubmitFormOptio
             statusText: "Network Error",
             body: null,
             message: error instanceof Error ? error.message : String(error),
-            form,
         };
     }
 }

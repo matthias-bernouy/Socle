@@ -1,9 +1,5 @@
 <main class="content">
-    <cms-binding-core class="binding-source">
-        <span data-dashboard-list-source hidden>
-            <span data-dashboard-groups-json="{{ dashboards | json }}"></span>
-        </span>
-    </cms-binding-core>
+    <slot name="source-status"></slot>
 
     <section class="panel empty" data-empty>
         <strong>No dashboards</strong>
@@ -25,5 +21,5 @@
         <span data-detail-row></span>
     </section>
 
-    <div class="widgets" data-widgets hidden></div>
+    <div class="widgets" data-widget-panel hidden><slot name="widgets"></slot></div>
 </main>

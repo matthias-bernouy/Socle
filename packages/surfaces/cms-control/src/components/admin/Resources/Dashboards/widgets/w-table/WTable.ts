@@ -10,6 +10,29 @@ import template from "./template.html" with { type: "text" };
 export class DashboardWTable extends Component {
     private value: WTableData = { title: "", actions: [], columns: [], filters: [], filterValues: {}, rows: [] };
     private selectedRow = "";
+    private configuration?: TableWidget;
+    private filterValues?: Record<string, string>;
+    updateFilters(filters: Record<string, string>): void {
+        if (JSON.stringify(this.filterValues) === JSON.stringify(filters)) {
+            return;
+        }
+        this.filterValues = filters;
+        this.value.filterValues = filters;
+        for (const control of Array.from(
+            this.shadowRoot!.querySelectorAll<HTMLInputElement | HTMLSelectElement>("[data-filter-id]"),
+        )) {
+            control.value = filters[control.dataset.filterId ?? ""] ?? "";
+        }
+    }
+    private readonly rowsObserver = new MutationObserver(() => this.syncRows());
+    configure(widget: TableWidget, filters: Record<string, string> = {}): void {
+        this.configuration = widget;
+        this.filterValues = filters;
+        this.syncConfig();
+        if (this.isConnected) {
+            this.render();
+        }
+    }
 
     constructor() {
         super({ css: css as unknown as string, template: template as unknown as string });
@@ -41,6 +64,7 @@ export class DashboardWTable extends Component {
     }
 
     override connectedCallback(): void {
+        this.rowsObserver.observe(this, { childList: true, subtree: true });
         this.shadowRoot!.querySelector<HTMLSlotElement>("slot")?.addEventListener("slotchange", this.onSlotChange);
         this.shadowRoot!.querySelector("[data-select-all]")?.addEventListener("change", this.onSelectAll);
         this.shadowRoot!.querySelector("[data-actions]")?.addEventListener("click", this.onActionClick);
@@ -51,6 +75,7 @@ export class DashboardWTable extends Component {
     }
 
     disconnectedCallback(): void {
+        this.rowsObserver.disconnect();
         this.shadowRoot?.querySelector<HTMLSlotElement>("slot")?.removeEventListener("slotchange", this.onSlotChange);
         this.shadowRoot?.querySelector("[data-select-all]")?.removeEventListener("change", this.onSelectAll);
         this.shadowRoot?.querySelector("[data-actions]")?.removeEventListener("click", this.onActionClick);
@@ -122,7 +147,7 @@ export class DashboardWTable extends Component {
 
     private syncConfig(): void {
         this.selectedRow = this.dataset.selected ?? "";
-        const widget = parseJson<TableWidget>(this.dataset.configJson ?? "");
+        const widget = this.configuration ?? parseJson<TableWidget>(this.dataset.configJson ?? "");
         if (!widget || widget.widget !== "w-table") {
             return;
         }
@@ -149,7 +174,7 @@ export class DashboardWTable extends Component {
                 ...(filter.placeholder ? { placeholder: filter.placeholder } : {}),
                 ...(filter.options ? { options: filter.options } : {}),
             })),
-            filterValues: parseFilterValues(this.dataset.filtersJson ?? ""),
+            filterValues: this.filterValues ?? parseFilterValues(this.dataset.filtersJson ?? ""),
             rows: [],
         };
     }
@@ -193,7 +218,7 @@ export class DashboardWTable extends Component {
         event.preventDefault();
         const filters = filterFormValues(event.currentTarget as HTMLFormElement);
         emitWidgetEvent(this, WIDGET_FILTER_CHANGE_EVENT, {
-            widget: parseJson<TableWidget>(this.dataset.configJson ?? "")?.id ?? "",
+            widget: (this.configuration ?? parseJson<TableWidget>(this.dataset.configJson ?? ""))?.id ?? "",
             filters,
         });
     };
@@ -206,7 +231,7 @@ export class DashboardWTable extends Component {
             }
         }
         emitWidgetEvent(this, WIDGET_FILTER_CHANGE_EVENT, {
-            widget: parseJson<TableWidget>(this.dataset.configJson ?? "")?.id ?? "",
+            widget: (this.configuration ?? parseJson<TableWidget>(this.dataset.configJson ?? ""))?.id ?? "",
             filters: {},
         });
     };

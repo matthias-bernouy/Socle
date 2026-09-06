@@ -20,7 +20,7 @@ export function renderDashboardShell(
     query(root, "[data-source-empty]").hidden = !group || Boolean(dashboard);
     query(root, "[data-dashboard-head]").hidden = !dashboard;
     query(root, "[data-detail-toolbar]").hidden = true;
-    query(root, "[data-widgets]").hidden = !dashboard;
+    query(root, "[data-widget-panel]").hidden = !dashboard;
     if (!group || !dashboard) {
         return;
     }
@@ -46,12 +46,12 @@ export function renderExampleShell(root: ShadowRoot, selectedRow: string | null)
     query(root, "[data-source-empty]").hidden = true;
     query(root, "[data-detail-toolbar]").hidden = true;
     query(root, "[data-dashboard-head]").hidden = false;
-    query(root, "[data-widgets]").hidden = false;
+    query(root, "[data-widget-panel]").hidden = false;
     query(root, "[data-dashboard-name]").textContent = "Dashboard widgets example";
     renderIcon(query(root, "[data-dashboard-icon]"), undefined, "layout", "layout");
     mountDashboardWidgetExample(query(root, "[data-widgets]"), selectedRow);
 }
 
 function query<T extends HTMLElement>(root: ShadowRoot, selector: string): T {
-    return root.querySelector(selector) as T;
+    return (selector === "[data-widgets]" ? root.host.querySelector(selector) : root.querySelector(selector)) as T;
 }

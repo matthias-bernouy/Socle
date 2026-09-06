@@ -1,0 +1,4 @@
+<div data-dashboard-list-source slot="source-status" cms-source="/api/dashboards as dashboards" cms-reload-on="dashboard:definitions-changed">
+    <cms-dashboard-input hidden kind="groups" cms-bind-value="dashboards"></cms-dashboard-input>
+    <p9r-alert type="error" cms-condition="$source.error">Unable to load dashboards. {{ $source.message }}</p9r-alert>
+</div>

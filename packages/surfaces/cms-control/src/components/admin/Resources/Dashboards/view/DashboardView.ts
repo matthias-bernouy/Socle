@@ -1,7 +1,6 @@
 import { showToast } from "@bernouy/components";
 import { currentSelection, DASHBOARD_SELECTION_EVENT, pushSelectionUrl, type DashboardSelection } from "../api";
 import { detailKey } from "../domain";
-import { configureDashboardBindingFilters } from "../runtime/mounting/bindingFilters";
 import { updateDashboardWidgetExampleField } from "../widgets/example";
 import {
     WIDGET_ACTION_EVENT,
@@ -28,7 +27,6 @@ const styles = [baseCss, panelsCss].join("\n") as unknown as string;
 export class DashboardView extends DashboardViewController {
     constructor() {
         super(styles, template as unknown as string);
-        configureDashboardBindingFilters();
     }
 
     override connectedCallback(): void {
@@ -36,26 +34,26 @@ export class DashboardView extends DashboardViewController {
         if (!this.hasAttribute("embedded")) {
             this.syncFromSelection(currentSelection());
         }
-        this.shadowRoot!.addEventListener("click", this.onClick);
-        this.shadowRoot!.addEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect as EventListener);
-        this.shadowRoot!.addEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
-        this.shadowRoot!.addEventListener(WIDGET_ACTION_EVENT, this.onWidgetAction as EventListener);
-        this.shadowRoot!.addEventListener(WIDGET_FILTER_CHANGE_EVENT, this.onWidgetFilterChange as EventListener);
-        this.shadowRoot!.addEventListener(WIDGET_FIELD_CHANGE_EVENT, this.onWidgetFieldChange as EventListener);
-        this.shadowRoot!.addEventListener(WIDGET_MEDIA_ACTION_EVENT, this.onWidgetMediaAction as EventListener);
+        this.addEventListener("click", this.onClick);
+        this.addEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect as EventListener);
+        this.addEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
+        this.addEventListener(WIDGET_ACTION_EVENT, this.onWidgetAction as EventListener);
+        this.addEventListener(WIDGET_FILTER_CHANGE_EVENT, this.onWidgetFilterChange as EventListener);
+        this.addEventListener(WIDGET_FIELD_CHANGE_EVENT, this.onWidgetFieldChange as EventListener);
+        this.addEventListener(WIDGET_MEDIA_ACTION_EVENT, this.onWidgetMediaAction as EventListener);
         window.addEventListener("popstate", this.onPopState);
         window.addEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection as EventListener);
         this.startBoundSource();
     }
 
     disconnectedCallback(): void {
-        this.shadowRoot?.removeEventListener("click", this.onClick);
-        this.shadowRoot?.removeEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect as EventListener);
-        this.shadowRoot?.removeEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
-        this.shadowRoot?.removeEventListener(WIDGET_ACTION_EVENT, this.onWidgetAction as EventListener);
-        this.shadowRoot?.removeEventListener(WIDGET_FILTER_CHANGE_EVENT, this.onWidgetFilterChange as EventListener);
-        this.shadowRoot?.removeEventListener(WIDGET_FIELD_CHANGE_EVENT, this.onWidgetFieldChange as EventListener);
-        this.shadowRoot?.removeEventListener(WIDGET_MEDIA_ACTION_EVENT, this.onWidgetMediaAction as EventListener);
+        this.removeEventListener("click", this.onClick);
+        this.removeEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect as EventListener);
+        this.removeEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
+        this.removeEventListener(WIDGET_ACTION_EVENT, this.onWidgetAction as EventListener);
+        this.removeEventListener(WIDGET_FILTER_CHANGE_EVENT, this.onWidgetFilterChange as EventListener);
+        this.removeEventListener(WIDGET_FIELD_CHANGE_EVENT, this.onWidgetFieldChange as EventListener);
+        this.removeEventListener(WIDGET_MEDIA_ACTION_EVENT, this.onWidgetMediaAction as EventListener);
         window.removeEventListener("popstate", this.onPopState);
         window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onSelection as EventListener);
         this.disconnectBoundSource();

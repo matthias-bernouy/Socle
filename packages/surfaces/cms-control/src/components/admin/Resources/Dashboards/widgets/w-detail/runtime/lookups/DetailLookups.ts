@@ -10,7 +10,7 @@ import {
 import { dashboardUserOptions, fetchDashboardUsers } from "../../../../api";
 import { matchesDashboardVisibility } from "../../../../runtime/expressions";
 import type { WDetailData, WDetailField } from "../../types";
-import { DetailFieldState, readDetailBinding, type DetailWidget } from "../fieldState";
+import { DetailFieldState, readDetailBinding, type DetailBindingInput, type DetailWidget } from "../fieldState";
 import { DetailRequestCoordinator, DetailRequestTargets } from "../requests";
 import { RemoteDetailLookups, type RemoteLookupMode } from "./RemoteDetailLookups";
 
@@ -44,7 +44,7 @@ export class DetailLookups {
     private readonly remote: RemoteDetailLookups;
 
     constructor(
-        private readonly dataset: DOMStringMap,
+        private readonly dataset: DetailBindingInput,
         private readonly fields: DetailFieldState,
         private readonly requests: DetailRequestCoordinator,
         private readonly callbacks: LookupCallbacks,

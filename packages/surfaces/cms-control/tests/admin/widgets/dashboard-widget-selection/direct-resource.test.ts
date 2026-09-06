@@ -42,7 +42,7 @@ describe("dashboard widget selection", () => {
         const dashboard = productDashboard();
         const widget = productDetailWidget();
         const selection = { collection: "productDetail", row: "product-1" };
-        const root = document.createElement("div");
+        const root = document.createElement("cms-binding-core");
         mountDashboardWidgets(
             root,
             [widget] as never[],
@@ -61,17 +61,48 @@ describe("dashboard widget selection", () => {
         );
 
         const detail = root.querySelector<HTMLElement>("cms-dashboard-w-detail")!;
-        const config = JSON.parse(detail.dataset.configJson!);
+        expect(detail.hasAttribute("data-config-json")).toBe(false);
         expect(root.querySelector("[cms-source*='/getProduct']")).toBeNull();
-        expect(JSON.parse(detail.dataset.sourceJson!)).toEqual(resource);
-        expect(config.source).toEqual({
-            endpoint: "getProduct",
-            params: { id: "$selection.id" },
-        });
+        expect(detail.hasAttribute("data-source-json")).toBe(false);
+        expect(detail.shadowRoot!.querySelector('[data-field-control="title"]')).not.toBeNull();
         expect(requests.some((url) => url.includes("/getProduct"))).toBeFalse();
         expect(requests.filter((url) => url.includes("/brands"))).toHaveLength(1);
         expect(requests.filter((url) => url.includes("/categorySchema"))).toHaveLength(1);
         expect(requests.filter((url) => url.startsWith("/api/relations/page"))).toHaveLength(1);
+    });
+
+    test("restores the bound source on the same detail host after clearing an action resource", async () => {
+        let requests = 0;
+        globalThis.fetch = (async () => {
+            requests += 1;
+            return Response.json({ item: { id: "product-1", title: "Reloaded" } });
+        }) as unknown as typeof fetch;
+        const dashboard = productDashboard();
+        const widget = simpleDetailWidget();
+        const selection = { collection: "productDetail", row: "product-1" };
+        const root = document.createElement("cms-binding-core");
+        const tabs = new Map<string, number>();
+        mountDashboardWidgets(
+            root,
+            [widget] as never[],
+            renderContext(dashboard, detailResource(dashboard, selection, { id: "product-1", title: "Saved" })),
+            "root",
+            tabs,
+            selection,
+        );
+        document.body.append(root);
+        const detail = root.querySelector("cms-dashboard-w-detail");
+        mountDashboardWidgets(
+            root,
+            [widget] as never[],
+            renderContext(dashboard, detailResource(dashboard, selection, null)),
+            "root",
+            tabs,
+            selection,
+        );
+        await waitFor(() => requests === 1);
+        expect(root.querySelector("cms-dashboard-w-detail")).toBe(detail);
+        expect(root.querySelector("[cms-source*='/getProduct']")).not.toBeNull();
     });
 
     test("keeps the source request when an action resource is null", async () => {
@@ -83,7 +114,7 @@ describe("dashboard widget selection", () => {
         const dashboard = productDashboard();
         const widget = simpleDetailWidget();
         const selection = { collection: "productDetail", row: "product-1" };
-        const root = document.createElement("div");
+        const root = document.createElement("cms-binding-core");
         mountDashboardWidgets(
             root,
             [widget] as never[],
@@ -109,7 +140,7 @@ describe("dashboard widget selection", () => {
             sourceId: "another-source",
             row: "product-2",
         };
-        const root = document.createElement("div");
+        const root = document.createElement("cms-binding-core");
         mountDashboardWidgets(
             root,
             [widget] as never[],
@@ -120,10 +151,11 @@ describe("dashboard widget selection", () => {
         );
 
         const wrapper = root.querySelector<HTMLElement>("[cms-source*='/getProduct']")!;
-        const detail = wrapper.querySelector<HTMLElement>("cms-dashboard-w-detail")!;
+        const detail = wrapper.closest<HTMLElement>("cms-dashboard-w-detail")!;
         expect(wrapper.getAttribute("cms-source")).toBe(
             "/.cms/sources/products/getProduct?id=product-1 as dashboardData",
         );
-        expect(detail.dataset.sourceJson).toBe("{{ dashboardData | json }}");
+        expect(detail.hasAttribute("data-source-json")).toBe(false);
+        expect(wrapper.querySelector("[cms-bind-value=dashboardData]")).not.toBeNull();
     });
 });

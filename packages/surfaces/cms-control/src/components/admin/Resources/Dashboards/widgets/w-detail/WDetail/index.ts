@@ -1,9 +1,10 @@
+import { valueAt } from "../../../runtime/expressions";
 import { Component } from "@bernouy/components/base";
 import { fieldValues } from "../../../runtime/mapping";
 import "../../w-section/WSection";
 import "cms-control/components/admin/Layout/ShellDetail/ShellDetail";
 import { applyLookupOption } from "../runtime/detailView";
-import { readDetailBinding } from "../runtime/fieldState";
+import { readDetailBinding, type DetailWidget, type DetailBinding } from "../runtime/fieldState";
 import schemaCss from "../runtime/schemas/style.css" with { type: "text" };
 import type { WDetailData, WDetailField, WDetailSection } from "../types";
 import baseCss from "./base.css" with { type: "text" };
@@ -14,6 +15,48 @@ import template from "./template.html" with { type: "text" };
 const styles = [baseCss, controlsCss, schemaCss].join("\n") as unknown as string;
 
 export class DashboardWDetail extends Component {
+    private configuration?: DetailWidget;
+    private sourceUnavailable = false;
+    private resource: unknown;
+    configure(widget: DetailWidget): void {
+        this.configuration = widget;
+    }
+    setBindingValue(value: unknown): void {
+        if (value === undefined || Object.is(value, this.resource)) {
+            return;
+        }
+        this.resource = value;
+        this.bindingRevision += 1;
+        this.scheduleBoundDataSync();
+    }
+    private readBinding(): DetailBinding | null {
+        if (!this.configuration) {
+            return readDetailBinding(this.dataset);
+        }
+        const resource = this.configuration.source.itemPath
+            ? valueAt(this.resource, this.configuration.source.itemPath)
+            : this.resource;
+        return resource === undefined || resource === null
+            ? null
+            : {
+                  widget: this.configuration,
+                  resource,
+                  rowKey: this.dataset.rowKey ?? "",
+                  sourceId: this.dataset.sourceId ?? "",
+              };
+    }
+    private readonly boundValue = (event: Event): void => {
+        const { kind, value } = (event as CustomEvent).detail;
+        if (kind === "detail-status" && (event.target as Element).closest("cms-dashboard-w-detail") === this) {
+            event.stopPropagation();
+            this.sourceUnavailable = Boolean(value.loading || value.error);
+            this.syncSourceAvailability();
+        }
+        if (kind === "detail" && (event.target as Element).closest("cms-dashboard-w-detail") === this) {
+            event.stopPropagation();
+            this.setBindingValue(value);
+        }
+    };
     private value: WDetailData = emptyDetailData();
     private readonly runtime: DetailRuntime;
     private readonly syncScheduler = new DetailSyncScheduler();
@@ -23,6 +66,7 @@ export class DashboardWDetail extends Component {
     constructor() {
         super({ css: styles, template: template as unknown as string });
         this.runtime = createDetailRuntime(this, this.shadowRoot!, {
+            readBinding: () => this.readBinding(),
             data: () => this.value,
             setData: (value) => {
                 this.value = value;
@@ -65,6 +109,7 @@ export class DashboardWDetail extends Component {
     override connectedCallback(): void {
         this.syncScheduler.advanceLifecycle();
         this.runtime.events.bind();
+        this.addEventListener("dashboard:bound-value", this.boundValue);
         if (this.mode === "manual") {
             this.render();
         } else {
@@ -75,18 +120,28 @@ export class DashboardWDetail extends Component {
     disconnectedCallback(): void {
         this.syncScheduler.advanceLifecycle();
         this.runtime.events.unbind();
+        this.removeEventListener("dashboard:bound-value", this.boundValue);
         this.resetState(true);
     }
 
     private render(): void {
         this.runtime.view.render(this.value);
+        this.syncSourceAvailability();
+    }
+
+    private syncSourceAvailability(): void {
+        for (const target of Array.from(
+            this.shadowRoot!.querySelectorAll("[data-actions], [data-main], [data-aside]"),
+        )) {
+            target.toggleAttribute("inert", this.sourceUnavailable);
+        }
     }
 
     private refreshConditionalFields(): void {
         if (this.mode !== "bound") {
             return;
         }
-        const binding = readDetailBinding(this.dataset);
+        const binding = this.readBinding();
         if (!binding) {
             return;
         }
@@ -104,7 +159,7 @@ export class DashboardWDetail extends Component {
     }
 
     private syncBoundData(): void {
-        const binding = readDetailBinding(this.dataset);
+        const binding = this.readBinding();
         if (!binding) {
             this.resetState();
             return;

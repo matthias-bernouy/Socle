@@ -1,13 +1,7 @@
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import type { DetailSelection, RenderContext } from "../../domain";
-import "../../widgets/w-navigation-list/WNavigationList";
-import {
-    appendSourceContent,
-    jsonAttr,
-    navigationItemsTemplate,
-    requiredSourceParams,
-    sourceWrapper,
-} from "./mountSource";
+import { DashboardWNavigationList } from "../../widgets/w-navigation-list/WNavigationList";
+import { navigationItemsTemplate, requiredSourceParams, sourceWrapper } from "./mountSource";
 
 export function navigationListElement(
     widget: Extract<DashboardWidget, { widget: "w-navigation-list" }>,
@@ -22,14 +16,14 @@ export function navigationListElement(
         "dashboardData",
         requiredSourceParams(context, widget.source),
     );
+    const element = new DashboardWNavigationList();
     if (slot) {
-        wrapper.setAttribute("slot", slot);
+        element.setAttribute("slot", slot);
     }
-    const element = document.createElement("cms-dashboard-w-navigation-list");
-    element.setAttribute("data-config-json", jsonAttr(widget));
-    element.append(navigationItemsTemplate(widget));
-    appendSourceContent(wrapper, element);
-    return wrapper;
+    element.configure(widget);
+    wrapper.append(navigationItemsTemplate(widget));
+    element.append(wrapper);
+    return element;
 }
 
 export function selectionVars(detail: DetailSelection | null): { selection?: Record<string, unknown> } {

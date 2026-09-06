@@ -1,3 +1,5 @@
+import definitions from "cms-control/static/admin/_content/sources/_runtime/definitions.html" with { type: "text" };
+import "../../runtime/mounting/input";
 import { defaultDashboardSource, route, type DashboardSelection } from "../../api";
 import { detailReloadEvent } from "../../runtime/reload";
 import type { DashboardSourceGroup } from "../../types";
@@ -6,9 +8,19 @@ import { renderDashboardShell, renderExampleShell } from "../rendering";
 import { DashboardStateController } from "./DashboardStateController";
 
 export class DashboardViewController extends DashboardStateController {
-    private observer: MutationObserver | null = null;
+    private readonly boundValue = (event: Event): void => {
+        const { kind, value } = (event as CustomEvent).detail;
+        if (kind !== "groups" || !Array.isArray(value)) {
+            return;
+        }
+        this.groups = value;
+        this.selectedSource ||= defaultDashboardSource(this.groups);
+        this.ensureDashboardSelection();
+        this.renderDashboard();
+    };
 
     protected startBoundSource(): void {
+        this.addEventListener("dashboard:bound-value", this.boundValue);
         if (this.isExampleMode()) {
             this.renderDashboard();
             return;
@@ -17,22 +29,31 @@ export class DashboardViewController extends DashboardStateController {
             this.renderDashboard();
             return;
         }
-        const source = this.shadowRoot!.querySelector<HTMLElement>("[data-dashboard-list-source]");
-        source?.setAttribute("cms-source", `${route("/api/dashboards")} as dashboards`);
-        this.observer = new MutationObserver(() => this.readBoundGroups());
-        if (source) {
-            this.observer.observe(source, { attributes: true, childList: true, subtree: true });
+        if (!this.querySelector("[data-dashboard-list-source]")) {
+            const template = document.createElement("template");
+            template.innerHTML = definitions as unknown as string;
+            template.content
+                .querySelector("[cms-source]")!
+                .setAttribute("cms-source", `${route("/api/dashboards")} as dashboards`);
+            this.append(template.content.cloneNode(true));
         }
-        this.readBoundGroups();
     }
 
     protected disconnectBoundSource(): void {
-        this.observer?.disconnect();
-        this.observer = null;
+        this.removeEventListener("dashboard:bound-value", this.boundValue);
         this.disconnectState();
     }
 
     protected renderDashboard(): void {
+        if (!this.querySelector("[data-widgets]")) {
+            const widgets = document.createElement("p9r-stack");
+            widgets.setAttribute("slot", "widgets");
+            widgets.setAttribute("gap", "md");
+            widgets.setAttribute("trim", "");
+            widgets.setAttribute("data-widgets", "");
+            this.append(widgets);
+        }
+
         if (this.isExampleMode()) {
             renderExampleShell(this.shadowRoot!, this.detailSelection?.row ?? null);
             return;
@@ -83,18 +104,6 @@ export class DashboardViewController extends DashboardStateController {
         };
     }
 
-    private readBoundGroups(): void {
-        const target = this.shadowRoot!.querySelector<HTMLElement>("[data-dashboard-groups-json]");
-        const next = parseGroups(target?.dataset.dashboardGroupsJson ?? "");
-        if (!next) {
-            return;
-        }
-        this.groups = next;
-        this.selectedSource ||= defaultDashboardSource(this.groups);
-        this.ensureDashboardSelection();
-        this.renderDashboard();
-    }
-
     private reloadDetail(collection: string, row: string): void {
         const dashboard = this.activeDashboard();
         if (!dashboard) {
@@ -105,17 +114,5 @@ export class DashboardViewController extends DashboardStateController {
             return;
         }
         document.dispatchEvent(new CustomEvent(detailReloadEvent(dashboard.source, dashboard.id, collection, row)));
-    }
-}
-
-function parseGroups(value: string): DashboardSourceGroup[] | null {
-    if (!value) {
-        return null;
-    }
-    try {
-        const parsed = JSON.parse(value);
-        return Array.isArray(parsed) ? (parsed as DashboardSourceGroup[]) : null;
-    } catch {
-        return null;
     }
 }

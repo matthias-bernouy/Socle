@@ -16,13 +16,10 @@ describe("dashboard deep links", () => {
             document.body.append(component);
             expect(selectionOf(component)).toBe(selectedDashboard);
 
-            const target = component.shadowRoot!.querySelector<HTMLElement>(
-                "[data-nav-groups-json], [data-dashboard-groups-json]",
+            const target = component.querySelector<HTMLElement & { setBindingValue(value: unknown): void }>(
+                "cms-dashboard-input[kind=groups]",
             )!;
-            const attribute = target.hasAttribute("data-nav-groups-json")
-                ? "data-nav-groups-json"
-                : "data-dashboard-groups-json";
-            target.setAttribute(attribute, JSON.stringify(groups));
+            target.setBindingValue(groups);
             await new Promise((resolve) => setTimeout(resolve, 0));
 
             expect(selectionOf(component)).toBe(selectedDashboard);

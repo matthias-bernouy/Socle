@@ -46,9 +46,9 @@ cancellation and submissions support multipart forms and nested field paths.
 
 The ownership rule is a **CMS application policy**, not a restriction of the
 foundation engine. The engine supports isolated nested cores; that capability and
-its tests remain valid. Current Dashboard component cores are reported because
-they are component scopes inside an existing document. Dynamic widget mounting
-is also a refactoring target; it does not justify a private core.
+its tests remain valid. Dashboard navigation and widget sources now remain in
+light DOM under the document core. Dynamic widget mounting does not justify a
+private core. See the [Dashboard follow-up](./ui-contracts-dashboards.md).
 
 ## Component composition and styles
 

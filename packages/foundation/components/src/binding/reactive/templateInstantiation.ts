@@ -1,11 +1,12 @@
 import type { FilterMap } from "../core/interpolate";
 import type { LiveBindingSite } from "./MountedRegion";
-import { AttributeSite, ConditionSite, RawHtmlSite, RepeatSite, TextSite } from "./templateSites";
+import { ValueSite, AttributeSite, ConditionSite, RawHtmlSite, RepeatSite, TextSite } from "./templateSites";
 import type { CompilePlan, NodePath } from "./templatePlan";
 
 export function instantiateSites(root: Node, plan: CompilePlan, filters: FilterMap): LiveBindingSite[] {
     const sites: LiveBindingSite[] = [];
     // Resolve every path before structural sites replace nodes with anchors.
+    const valueTargets = plan.values.map((item) => ({ item, node: nodeAtPath(root, item.path) }));
     const textTargets = plan.text.map((item) => ({ item, node: nodeAtPath(root, item.path) }));
     const attributeTargets = plan.attributes.map((item) => ({ item, node: nodeAtPath(root, item.path) }));
     const conditionTargets = plan.conditions.map((item) => ({ item, node: nodeAtPath(root, item.path) }));
@@ -35,6 +36,9 @@ export function instantiateSites(root: Node, plan: CompilePlan, filters: FilterM
     for (const { item: rawHtml, node } of rawHtmlTargets) {
         const range = replaceWithAnchors(node, `cms-html ${rawHtml.expression}`);
         sites.push(new RawHtmlSite(range.start, range.end, rawHtml.expression));
+    }
+    for (const { item, node } of valueTargets) {
+        sites.push(new ValueSite(node as HTMLElement, item.expression));
     }
     return sites;
 }

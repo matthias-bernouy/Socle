@@ -1,3 +1,4 @@
+import { requestBindingData } from "@bernouy/components";
 import type { DashboardOption } from "@bernouy/cms-dashboards";
 import type { DashboardListResponse } from "./types";
 
@@ -116,11 +117,11 @@ export function dashboardUserOptions(users: DashboardUserOption[]): DashboardOpt
 }
 
 async function getJson<T>(url: string): Promise<T> {
-    const response = await fetch(url, { headers: { Accept: "application/json" } });
+    const response = await requestBindingData(url, { headers: { Accept: "application/json" } });
     if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
     }
-    return response.json() as Promise<T>;
+    return response.body as T;
 }
 
 function cleanText(value: unknown): string {

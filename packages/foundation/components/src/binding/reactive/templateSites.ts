@@ -134,3 +134,38 @@ export class RawHtmlSite implements LiveBindingSite {
         clearBetween(this.start, this.end);
     }
 }
+
+/** Typed opt-in input for custom elements; never assigns arbitrary DOM properties. */
+export class ValueSite implements LiveBindingSite {
+    private revision = 0;
+    private previous: unknown = Symbol("unbound");
+    constructor(
+        private readonly element: HTMLElement,
+        private readonly expression: string,
+    ) {}
+    update(scope: Scope): void {
+        const value = lookup(scope, this.expression).value;
+        if (Object.is(value, this.previous)) {
+            return;
+        }
+        this.previous = value;
+        const revision = ++this.revision;
+        const apply = () => {
+            if (revision !== this.revision) {
+                return;
+            }
+            const target = this.element as HTMLElement & { setBindingValue?: (value: unknown) => void };
+            target.setBindingValue?.(value);
+        };
+        const registry = this.element.ownerDocument.defaultView?.customElements;
+        if (registry && !registry.get(this.element.localName)) {
+            void registry.whenDefined(this.element.localName).then(apply);
+        } else {
+            registry?.upgrade(this.element);
+            apply();
+        }
+    }
+    unmount(): void {
+        this.revision += 1;
+    }
+}

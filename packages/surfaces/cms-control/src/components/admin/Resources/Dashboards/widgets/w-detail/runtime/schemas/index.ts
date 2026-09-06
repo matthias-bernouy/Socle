@@ -1,7 +1,7 @@
 import type { DashboardField } from "@bernouy/cms-dashboards";
 import { detailData, type DetailOptions, type DetailSchemas } from "../../../../runtime/mapping";
 import type { WDetailData, WDetailSchemaDefinition } from "../../types";
-import { DetailFieldState, readDetailBinding, type DetailWidget } from "../fieldState";
+import { DetailFieldState, readDetailBinding, type DetailBindingInput, type DetailWidget } from "../fieldState";
 import { DetailRequestCoordinator, DetailRequestTargets } from "../requests";
 import { definitionsAt } from "./definitions";
 import { schemaDependenciesResolved, schemaFields, schemaKeysDependingOn } from "./dependencies";
@@ -28,7 +28,7 @@ export class DetailSchemasState {
     private readonly targets: DetailRequestTargets;
 
     constructor(
-        private readonly dataset: DOMStringMap,
+        private readonly dataset: DetailBindingInput,
         private readonly fields: DetailFieldState,
         private readonly requests: DetailRequestCoordinator,
         private readonly callbacks: SchemaCallbacks,

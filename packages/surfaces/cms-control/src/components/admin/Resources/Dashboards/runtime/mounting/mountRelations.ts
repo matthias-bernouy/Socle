@@ -1,7 +1,8 @@
+import { DashboardWTable } from "../../widgets/w-table/WTable";
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import type { RelationTableWidget } from "../../domain";
 import { route } from "../../api";
-import { appendSourceContent, jsonAttr, tableRowsTemplate, urlSourceWrapper } from "./mountSource";
+import { tableRowsTemplate, urlSourceWrapper } from "./mountSource";
 
 export function relationDetailSectionElement(widget: RelationTableWidget): HTMLElement {
     const section = document.createElement("cms-detail-section");
@@ -28,12 +29,12 @@ function relationTableElement(widget: RelationTableWidget): HTMLElement {
         ...(widget.actions?.length ? { actions: widget.actions.map(tableAction) } : {}),
     };
     const wrapper = urlSourceWrapper(relationPageUrl(widget), "dashboardData");
-    const element = document.createElement("cms-dashboard-w-table");
-    element.setAttribute("data-config-json", jsonAttr(tableWidget));
+    const element = new DashboardWTable();
+    element.configure(tableWidget);
     element.toggleAttribute("embedded", true);
-    element.append(tableRowsTemplate(tableWidget));
-    appendSourceContent(wrapper, element);
-    return wrapper;
+    wrapper.append(tableRowsTemplate(tableWidget));
+    element.append(wrapper);
+    return element;
 }
 
 function tableAction(action: NonNullable<RelationTableWidget["actions"]>[number]) {
