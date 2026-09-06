@@ -24,7 +24,7 @@
 .navigation-list-header h3 { margin: 0; font-size: 14px; }
 
 .navigation-list-actions { display: flex; gap: 8px; }
-.navigation-list-actions p9r-button {
+::slotted(p9r-button[slot="actions"]) {
     --_btn-padding-y: .42rem;
     --_btn-padding-x: .72rem;
     --_btn-font-size: 12px;

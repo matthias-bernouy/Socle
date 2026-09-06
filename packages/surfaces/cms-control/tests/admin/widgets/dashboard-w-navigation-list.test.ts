@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { Button } from "@bernouy/components";
-import "../../../src/components/admin/Resources/Dashboards/widgets/w-navigation-list/WNavigationList";
+import { navigationListShell } from "../../../src/components/admin/Resources/Dashboards/runtime/mounting/navigation";
 import {
     WIDGET_ACTION_EVENT,
     WIDGET_ROW_SELECT_EVENT,
@@ -72,7 +72,10 @@ describe("dashboard navigation list widget", () => {
         const list = navigationList();
         const agency = navigationItem("agency", "Agency", "agency", "string");
         const club = navigationItem("club", "Club", "club", "string");
-        list.append(agency, club);
+        const source = document.createElement("div");
+        source.setAttribute("cms-source", "/fields as dashboardData");
+        source.append(agency, club);
+        list.append(source);
         const actions: WidgetActionDetail[] = [];
         list.addEventListener(WIDGET_ACTION_EVENT, (event) =>
             actions.push((event as CustomEvent<WidgetActionDetail>).detail),
@@ -80,7 +83,7 @@ describe("dashboard navigation list widget", () => {
         document.body.append(list);
         await Promise.resolve();
 
-        const action = list.shadowRoot!.querySelector("p9r-button") as HTMLElement;
+        const action = list.querySelector("p9r-button") as HTMLElement;
         expect(action.getAttribute("color")).toBe("primary");
         expect(action.hasAttribute("tone")).toBeFalse();
 
@@ -99,25 +102,20 @@ describe("dashboard navigation list widget", () => {
 });
 
 function navigationList(): HTMLElement {
-    const list = document.createElement("cms-dashboard-w-navigation-list");
-    list.setAttribute(
-        "data-config-json",
-        JSON.stringify({
-            widget: "w-navigation-list",
-            id: "extraFields",
-            title: "Personal information fields",
-            source: { endpoint: "listExtraFields", itemsPath: "fields" },
-            rowKey: "id",
-            item: { icon: "tag", title: { path: "label" }, subtitle: { path: "id" }, badge: { path: "type" } },
-            selection: { opens: "extraFieldDetail" },
-            reorderable: { action: "reorderExtraFields" },
-            actions: [
-                { id: "newExtraField", label: "Add field", selection: { opens: "extraFieldDetail" } },
-                { id: "reorderExtraFields", label: "Reorder fields", endpoint: { endpoint: "reorderExtraFields" } },
-            ],
-        }),
-    );
-    return list;
+    return navigationListShell({
+        widget: "w-navigation-list",
+        id: "extraFields",
+        title: "Personal information fields",
+        source: { endpoint: "listExtraFields", itemsPath: "fields" },
+        rowKey: "id",
+        item: { icon: "tag", title: { path: "label" }, subtitle: { path: "id" }, badge: { path: "type" } },
+        selection: { opens: "extraFieldDetail" },
+        reorderable: { action: "reorderExtraFields" },
+        actions: [
+            { id: "newExtraField", label: "Add field", selection: { opens: "extraFieldDetail" } },
+            { id: "reorderExtraFields", label: "Reorder fields", endpoint: { endpoint: "reorderExtraFields" } },
+        ],
+    });
 }
 
 function navigationItem(id: string, label: string, subtitle: string, badge: string, withIcon = true): HTMLElement {

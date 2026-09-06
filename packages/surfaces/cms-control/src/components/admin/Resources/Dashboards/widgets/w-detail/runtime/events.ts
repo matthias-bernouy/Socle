@@ -58,7 +58,7 @@ export class DetailEvents {
     private onClick = (event: Event): void => {
         const target = event.target as Element | null;
         this.retryCmsUser(target);
-        if (target?.closest("[data-back]")) {
+        if (findEventTarget(event, "[data-back]")) {
             emitWidgetEvent(this.host, WIDGET_BACK_EVENT, {});
         }
         const action = findEventTarget(event, "[data-action]");

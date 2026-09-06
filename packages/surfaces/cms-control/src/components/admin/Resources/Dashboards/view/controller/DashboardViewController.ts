@@ -1,7 +1,7 @@
 import definitions from "cms-control/static/admin/_content/sources/_runtime/definitions.html" with { type: "text" };
 import "../../runtime/mounting/input";
 import { defaultDashboardSource, route, type DashboardSelection } from "../../api";
-import { detailReloadEvent } from "../../runtime/reload";
+import { detailReloadEvent, reloadCollection } from "../../runtime/reload";
 import type { DashboardSourceGroup } from "../../types";
 import type { DashboardViewActionContext } from "../actions";
 import { renderDashboardShell, renderExampleShell } from "../rendering";
@@ -97,6 +97,7 @@ export class DashboardViewController extends DashboardStateController {
             render: () => this.renderDashboard(),
             reloadDefinitions: () => this.reloadDefinitions(),
             reload: (collection, row) => this.reloadDetail(collection, row),
+            reloadCollection: (widgetId) => reloadCollection(this, widgetId),
             clearDetail: () => this.clearDetail(),
             openDetail: (collection, row) => this.openDetail(collection, row),
             setDetailResource: (collection, row, resource) => this.setDetailResource(collection, row, resource),

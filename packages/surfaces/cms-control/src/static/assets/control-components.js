@@ -32083,7 +32083,7 @@ p9r-token-input {
     onClick = (event) => {
       const target2 = event.target;
       this.retryCmsUser(target2);
-      if (target2?.closest("[data-back]")) {
+      if (findEventTarget(event, "[data-back]")) {
         emitWidgetEvent(this.host, WIDGET_BACK_EVENT, {});
       }
       const action = findEventTarget(event, "[data-action]");
@@ -34802,6 +34802,10 @@ slot {
         }
         return;
       }
+      if (!actionDetail && !after && action.widget && context.reloadCollection) {
+        context.reloadCollection(action.widget);
+        return;
+      }
       runPostActionFallback(context, after, detail, action.action, result.value, resource);
     } catch (error) {
       finishAction();
@@ -34838,6 +34842,13 @@ slot {
   }
   function encodePart(value2) {
     return encodeURIComponent(value2);
+  }
+  function reloadCollection(root, widgetId) {
+    const widget = Array.from(root.querySelectorAll("[data-widget-id]")).find((element) => element.dataset.widgetId === widgetId);
+    const event = widget?.querySelector("[cms-source][cms-reload-on]")?.getAttribute("cms-reload-on");
+    if (event) {
+      root.ownerDocument.dispatchEvent(new Event(event));
+    }
   }
 
   // src/static/admin/_content/sources/_runtime/source-states.html
@@ -35121,16 +35132,6 @@ slot {
     return target2 instanceof Element ? target2.closest("cms-dashboard-w-navigation-item") : null;
   }
 
-  // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/config.ts
-  function parseNavigationListWidget(value2) {
-    try {
-      const widget = value2 ? JSON.parse(value2) : null;
-      return widget?.widget === "w-navigation-list" ? widget : null;
-    } catch {
-      return null;
-    }
-  }
-
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/style.css
   var style_default11 = `:host {
     display: block;
@@ -35158,7 +35159,7 @@ slot {
 .navigation-list-header h3 { margin: 0; font-size: 14px; }
 
 .navigation-list-actions { display: flex; gap: 8px; }
-.navigation-list-actions p9r-button {
+::slotted(p9r-button[slot="actions"]) {
     --_btn-padding-y: .42rem;
     --_btn-padding-x: .72rem;
     --_btn-font-size: 12px;
@@ -35179,7 +35180,7 @@ slot { display: contents; }
   var template_default15 = `<section class="navigation-list-shell">
     <header class="navigation-list-header" data-header>
         <h3 data-title></h3>
-        <div class="navigation-list-actions" data-actions></div>
+        <div class="navigation-list-actions" data-actions><slot name="actions"></slot></div>
     </header>
     <div class="navigation-list-items" data-items>
         <slot></slot>
@@ -35190,85 +35191,47 @@ slot { display: contents; }
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/WNavigationList.ts
   class DashboardWNavigationList extends l2 {
-    value = null;
     rowsObserver = new MutationObserver(() => this.syncItems());
-    configure(widget) {
-      this.value = widget;
-      if (this.isConnected) {
-        this.render();
-      }
-    }
     dragging = null;
     constructor() {
       super({ css: style_default11, template: template_default15 });
     }
-    static get observedAttributes() {
-      return ["data-config-json"];
-    }
+    static observedAttributes = ["heading"];
     attributeChangedCallback() {
-      this.syncConfig();
-      if (this.isConnected) {
-        this.render();
-      }
+      this.syncHeader();
     }
     connectedCallback() {
       this.rowsObserver.observe(this, { childList: true, subtree: true });
       this.shadowRoot.querySelector("slot")?.addEventListener("slotchange", this.onSlotChange);
-      this.shadowRoot.addEventListener("click", this.onActionClick);
+      this.addEventListener("click", this.onActionClick);
       this.addEventListener("dragstart", this.onDragStart);
       this.addEventListener("dragover", this.onDragOver);
       this.addEventListener("drop", this.onDrop);
       this.addEventListener("dragend", this.onDragEnd);
-      this.syncConfig();
-      this.render();
+      this.syncHeader();
+      this.syncItems();
     }
     disconnectedCallback() {
       this.rowsObserver.disconnect();
       this.shadowRoot?.querySelector("slot")?.removeEventListener("slotchange", this.onSlotChange);
-      this.shadowRoot?.removeEventListener("click", this.onActionClick);
+      this.removeEventListener("click", this.onActionClick);
       this.removeEventListener("dragstart", this.onDragStart);
       this.removeEventListener("dragover", this.onDragOver);
       this.removeEventListener("drop", this.onDrop);
       this.removeEventListener("dragend", this.onDragEnd);
     }
-    syncConfig() {
-      const widget = parseNavigationListWidget(this.dataset.configJson ?? "");
-      if (widget) {
-        this.value = widget;
-      }
-    }
-    render() {
-      const widget = this.value;
-      if (!widget) {
-        return;
-      }
-      setText(this.shadowRoot, "[data-title]", widget.title ?? "");
-      this.query("[data-header]").hidden = !widget.title && !this.visibleActions().length;
-      this.query("[data-actions]").replaceChildren(...this.visibleActions().map((action) => {
-        const button = document.createElement("p9r-button");
-        button.dataset.action = action.id;
-        button.dataset.widget = widget.id;
-        if (action.selection?.opens) {
-          button.dataset.target = action.selection.opens;
-        }
-        if (action.confirm) {
-          button.dataset.confirm = action.confirm;
-        }
-        setP9rButtonTone(button, action.tone ?? "primary");
-        setP9rButtonLabel(button, action.label);
-        return button;
-      }));
-      this.syncItems();
-    }
-    visibleActions() {
-      return (this.value?.actions ?? []).filter((action) => action.id !== this.value?.reorderable?.action);
+    syncHeader() {
+      const heading = this.getAttribute("heading") ?? "";
+      setText(this.shadowRoot, "[data-title]", heading);
+      this.query("[data-header]").hidden = !heading && !this.querySelector('[slot="actions"]');
     }
     syncItems() {
+      this.syncHeader();
       this.query("[data-empty]").hidden = this.items().length > 0;
     }
     onSlotChange = () => this.syncItems();
     onActionClick = (event) => {
-      const target2 = event.target?.closest("[data-action]");
+      const target2 = event.composedPath().find((node) => node instanceof HTMLElement && node.hasAttribute("data-action"));
       if (!target2?.dataset.action) {
         return;
       }
@@ -35283,7 +35246,7 @@ slot { display: contents; }
     };
     onDragStart = (event) => {
       const item = navigationDragItem(event);
-      if (!item || !this.value?.reorderable) {
+      if (!item || !this.getAttribute("reorder-action")) {
         return;
       }
       this.dragging = item;
@@ -35307,20 +35270,20 @@ slot { display: contents; }
     onDrop = (event) => {
       const target2 = navigationDragItem(event);
       const dragging = this.dragging;
-      if (!target2 || !dragging || target2 === dragging || !this.value?.reorderable) {
+      if (!target2 || !dragging || target2 === dragging || !this.getAttribute("reorder-action")) {
         return;
       }
       event.preventDefault();
       const movesDown = Boolean(dragging.compareDocumentPosition(target2) & Node.DOCUMENT_POSITION_FOLLOWING);
       if (movesDown) {
-        this.insertBefore(dragging, target2.nextSibling);
+        target2.parentNode.insertBefore(dragging, target2.nextSibling);
       } else {
-        this.insertBefore(dragging, target2);
+        target2.parentNode.insertBefore(dragging, target2);
       }
       const value2 = this.items().map((item) => item.rowKey).filter(Boolean);
       emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
-        action: this.value.reorderable.action,
-        widget: this.value.id,
+        action: this.getAttribute("reorder-action"),
+        widget: this.getAttribute("widget-id") ?? "",
         value: value2
       });
       this.clearDragState();
@@ -35344,14 +35307,49 @@ slot { display: contents; }
     customElements.define("cms-dashboard-w-navigation-list", DashboardWNavigationList);
   }
 
+  // src/static/admin/_content/sources/_runtime/navigation-list.html
+  var navigation_list_default = `<template data-navigation-action>
+    <p9r-button type="button" slot="actions"></p9r-button>
+</template>
+`;
+
   // src/components/admin/Resources/Dashboards/runtime/mounting/navigation.ts
+  function navigationListShell(widget) {
+    const element = new DashboardWNavigationList;
+    element.setAttribute("heading", widget.title ?? "");
+    element.setAttribute("widget-id", widget.id);
+    element.dataset.widgetId = widget.id;
+    if (widget.reorderable) {
+      element.setAttribute("reorder-action", widget.reorderable.action);
+    }
+    const template6 = document.createElement("template");
+    template6.innerHTML = navigation_list_default;
+    const actionTemplate = template6.content.querySelector("[data-navigation-action]");
+    for (const action of widget.actions ?? []) {
+      if (action.id === widget.reorderable?.action) {
+        continue;
+      }
+      const button = actionTemplate.content.firstElementChild.cloneNode(true);
+      button.dataset.action = action.id;
+      button.dataset.widget = widget.id;
+      if (action.selection?.opens) {
+        button.dataset.target = action.selection.opens;
+      }
+      if (action.confirm) {
+        button.dataset.confirm = action.confirm;
+      }
+      setP9rButtonTone(button, action.tone ?? "primary");
+      setP9rButtonLabel(button, action.label);
+      element.append(button);
+    }
+    return element;
+  }
   function navigationListElement(widget, context, detail, slot) {
     const wrapper = sourceWrapper(context.dashboard.source, widget.source, selectionVars(detail), "dashboardData", requiredSourceParams(context, widget.source));
-    const element = new DashboardWNavigationList;
+    const element = navigationListShell(widget);
     if (slot) {
       element.setAttribute("slot", slot);
     }
-    element.configure(widget);
     wrapper.append(navigationItemsTemplate(widget));
     element.append(wrapper);
     return element;
@@ -35879,6 +35877,7 @@ slot { display: contents; }
         render: () => this.renderDashboard(),
         reloadDefinitions: () => this.reloadDefinitions(),
         reload: (collection, row) => this.reloadDetail(collection, row),
+        reloadCollection: (widgetId) => reloadCollection(this, widgetId),
         clearDetail: () => this.clearDetail(),
         openDetail: (collection, row) => this.openDetail(collection, row),
         setDetailResource: (collection, row, resource) => this.setDetailResource(collection, row, resource),

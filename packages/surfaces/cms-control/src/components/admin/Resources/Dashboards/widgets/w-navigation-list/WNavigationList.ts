@@ -1,104 +1,63 @@
 import { Component } from "@bernouy/components/base";
-import { emitWidgetEvent, setP9rButtonLabel, setP9rButtonTone, setText, WIDGET_ACTION_EVENT } from "../shared";
+import { emitWidgetEvent, setText, WIDGET_ACTION_EVENT } from "../shared";
 import "./WNavigationItem";
 import type { DashboardWNavigationItem } from "./WNavigationItem";
 import { navigationDragItem } from "./drag";
-import { parseNavigationListWidget, type NavigationListWidget } from "./config";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
 
 export class DashboardWNavigationList extends Component {
-    private value: NavigationListWidget | null = null;
     private readonly rowsObserver = new MutationObserver(() => this.syncItems());
-    configure(widget: NavigationListWidget): void {
-        this.value = widget;
-        if (this.isConnected) {
-            this.render();
-        }
-    }
     private dragging: DashboardWNavigationItem | null = null;
 
     constructor() {
         super({ css: css as unknown as string, template: template as unknown as string });
     }
 
-    static get observedAttributes(): string[] {
-        return ["data-config-json"];
-    }
+    static observedAttributes = ["heading"];
     attributeChangedCallback(): void {
-        this.syncConfig();
-        if (this.isConnected) {
-            this.render();
-        }
+        this.syncHeader();
     }
 
     override connectedCallback(): void {
         this.rowsObserver.observe(this, { childList: true, subtree: true });
         this.shadowRoot!.querySelector<HTMLSlotElement>("slot")?.addEventListener("slotchange", this.onSlotChange);
-        this.shadowRoot!.addEventListener("click", this.onActionClick);
+        this.addEventListener("click", this.onActionClick);
         this.addEventListener("dragstart", this.onDragStart);
         this.addEventListener("dragover", this.onDragOver);
         this.addEventListener("drop", this.onDrop);
         this.addEventListener("dragend", this.onDragEnd);
-        this.syncConfig();
-        this.render();
+        this.syncHeader();
+        this.syncItems();
     }
 
     disconnectedCallback(): void {
         this.rowsObserver.disconnect();
         this.shadowRoot?.querySelector<HTMLSlotElement>("slot")?.removeEventListener("slotchange", this.onSlotChange);
-        this.shadowRoot?.removeEventListener("click", this.onActionClick);
+        this.removeEventListener("click", this.onActionClick);
         this.removeEventListener("dragstart", this.onDragStart);
         this.removeEventListener("dragover", this.onDragOver);
         this.removeEventListener("drop", this.onDrop);
         this.removeEventListener("dragend", this.onDragEnd);
     }
 
-    private syncConfig(): void {
-        const widget = parseNavigationListWidget(this.dataset.configJson ?? "");
-        if (widget) {
-            this.value = widget;
-        }
-    }
-
-    private render(): void {
-        const widget = this.value;
-        if (!widget) {
-            return;
-        }
-        setText(this.shadowRoot!, "[data-title]", widget.title ?? "");
-        this.query<HTMLElement>("[data-header]").hidden = !widget.title && !this.visibleActions().length;
-        this.query<HTMLElement>("[data-actions]").replaceChildren(
-            ...this.visibleActions().map((action) => {
-                const button = document.createElement("p9r-button");
-                button.dataset.action = action.id;
-                button.dataset.widget = widget.id;
-                if (action.selection?.opens) {
-                    button.dataset.target = action.selection.opens;
-                }
-                if (action.confirm) {
-                    button.dataset.confirm = action.confirm;
-                }
-                setP9rButtonTone(button, action.tone ?? "primary");
-                setP9rButtonLabel(button, action.label);
-                return button;
-            }),
-        );
-        this.syncItems();
-    }
-
-    private visibleActions() {
-        return (this.value?.actions ?? []).filter((action) => action.id !== this.value?.reorderable?.action);
+    private syncHeader(): void {
+        const heading = this.getAttribute("heading") ?? "";
+        setText(this.shadowRoot!, "[data-title]", heading);
+        this.query<HTMLElement>("[data-header]").hidden = !heading && !this.querySelector('[slot="actions"]');
     }
 
     private syncItems(): void {
+        this.syncHeader();
         this.query<HTMLElement>("[data-empty]").hidden = this.items().length > 0;
     }
 
     private onSlotChange = (): void => this.syncItems();
 
     private onActionClick = (event: Event): void => {
-        const target = (event.target as Element | null)?.closest<HTMLElement>("[data-action]");
+        const target = event
+            .composedPath()
+            .find((node): node is HTMLElement => node instanceof HTMLElement && node.hasAttribute("data-action"));
         if (!target?.dataset.action) {
             return;
         }
@@ -114,7 +73,7 @@ export class DashboardWNavigationList extends Component {
 
     private onDragStart = (event: DragEvent): void => {
         const item = navigationDragItem(event);
-        if (!item || !this.value?.reorderable) {
+        if (!item || !this.getAttribute("reorder-action")) {
             return;
         }
         this.dragging = item;
@@ -140,22 +99,22 @@ export class DashboardWNavigationList extends Component {
     private onDrop = (event: DragEvent): void => {
         const target = navigationDragItem(event);
         const dragging = this.dragging;
-        if (!target || !dragging || target === dragging || !this.value?.reorderable) {
+        if (!target || !dragging || target === dragging || !this.getAttribute("reorder-action")) {
             return;
         }
         event.preventDefault();
         const movesDown = Boolean(dragging.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING);
         if (movesDown) {
-            this.insertBefore(dragging, target.nextSibling);
+            target.parentNode!.insertBefore(dragging, target.nextSibling);
         } else {
-            this.insertBefore(dragging, target);
+            target.parentNode!.insertBefore(dragging, target);
         }
         const value = this.items()
             .map((item) => item.rowKey)
             .filter(Boolean);
         emitWidgetEvent(this, WIDGET_ACTION_EVENT, {
-            action: this.value.reorderable.action,
-            widget: this.value.id,
+            action: this.getAttribute("reorder-action")!,
+            widget: this.getAttribute("widget-id") ?? "",
             value,
         });
         this.clearDragState();

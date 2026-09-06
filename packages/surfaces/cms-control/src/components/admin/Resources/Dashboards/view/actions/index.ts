@@ -120,6 +120,10 @@ export async function runDashboardWidgetAction(
             }
             return;
         }
+        if (!actionDetail && !after && action.widget && context.reloadCollection) {
+            context.reloadCollection(action.widget);
+            return;
+        }
         runPostActionFallback(context, after, detail, action.action, result.value, resource);
     } catch (error) {
         finishAction();

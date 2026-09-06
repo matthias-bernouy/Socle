@@ -158,3 +158,42 @@ bundle and original test timeouts. Evidence: `table-layout-baseline-original.log
 `browser-suite-repeat.log` and `isolated-*.log`. Diagnostic instrumentation was
 removed. No timeout was increased. This pre-existing grouped-run failure is
 reported separately from the successful isolated browser checks.
+
+## Navigation-list checkpoint
+
+Navigation lists no longer accept a JSON configuration attribute or an object
+configuration method. Their actions are declared in light DOM from the dashboard
+definition, before source activation, using the static navigation-list fragment.
+Rows continue to use the document source and repeat. The visual component keeps
+its encapsulated appearance, empty-state detection and drag interactions.
+
+The new Chromium flow exposed and fixed two functional problems: dragging tried
+to move a source-owned row into the wrong parent, and a successful collection
+mutation retained stale rows without refreshing their source. Successful
+collection mutations now trigger only that widget's binding reload event. A
+separate regression test checks that navigating away during a mutation does not
+refresh the newly selected screen. The detail back button also needed composed
+path matching after its listener moved to the light-DOM host.
+
+The controlled browser flow covers an intentionally delayed reorder, its exact
+request payload, one subsequent collection read, stable list geometry during
+and after the request, saved order after a full reload, detail opening/back,
+confirmation cancellation, confirmed clearing and opening an empty creation
+form. It checks document ownership of the action controls and JavaScript errors.
+This fixture persists data in its route handler, not in the real local database;
+creation/save, failed reordering and overlapping reorder operations still need
+additional coverage before the full matrix is complete.
+
+Inspected desktop/mobile before-and-after screenshots are pixel-identical at
+1440×1000 and 390×844. The baseline is the preceding implementation checkpoint;
+its navigation rendering was unchanged from the goal's starting revision.
+Evidence: `navigation-captures/`, `navigation-comparison.log`,
+`navigation-unit.log` and `navigation-scoped.log` in the evidence directory.
+
+Validation: build passed, 132 dashboard/widget tests passed, all eight dashboard
+browser files passed individually, and all eight check:all gates passed. UI
+contract counts remain 0 errors, 77 warnings and 11 informational findings.
+The browser dashboard directory now has eight entries, an informational fanout
+finding; its two fixture directories group their respective browser scenarios.
+There are no new blocking findings. The full scope remains in progress and the
+local runtime still needs final bundle activation and verification.
