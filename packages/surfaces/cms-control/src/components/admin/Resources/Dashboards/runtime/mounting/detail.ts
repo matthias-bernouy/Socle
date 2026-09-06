@@ -1,3 +1,6 @@
+import { setSourceData } from "@bernouy/components";
+import { setValueAt } from "../expressions";
+import { supportsBoundDetail } from "../../widgets/w-detail/binding/composition";
 import type { DetailSelection, RenderContext, RuntimeDetailWidget } from "../../domain";
 import { DashboardWDetail } from "../../widgets/w-detail/WDetail";
 import "./input";
@@ -14,12 +17,19 @@ export function detailElement(
     const rowKey = detail?.row ?? "";
     if (rowKey === "__new__") {
         const element = detailContent(widget, context, rowKey);
-        (element as DashboardWDetail).setBindingValue({});
+        publishDetailResource(element as DashboardWDetail, widget, {});
+        if (element.hasAttribute("data-declarative")) {
+            attachDetailSource(element, widget, context, rowKey);
+        }
         return element;
     }
     const directResource = matchingDetailResource(widget, context, rowKey);
     if (directResource) {
-        return detailContent(widget, context, rowKey, directResource);
+        const element = detailContent(widget, context, rowKey, directResource);
+        if (element.hasAttribute("data-declarative")) {
+            attachDetailSource(element, widget, context, rowKey);
+        }
+        return element;
     }
     const element = detailContent(widget, context, rowKey);
     attachDetailSource(element, widget, context, rowKey);
@@ -43,6 +53,20 @@ export function attachDetailSource(
         "cms-reload-on",
         detailReloadEvent(context.dashboard.source, context.dashboard.id, widget.id, rowKey),
     );
+    if (element.hasAttribute("data-declarative")) {
+        for (const child of Array.from(wrapper.children)) {
+            child.setAttribute("slot", "source-status");
+        }
+        element.append(...Array.from(wrapper.childNodes));
+        element.setAttribute("cms-source", wrapper.getAttribute("cms-source") ?? "");
+        element.setAttribute("cms-reload-on", wrapper.getAttribute("cms-reload-on")!);
+        element.addEventListener("click", (event) => {
+            if ((event.target as Element).closest("[data-dashboard-source-retry]")) {
+                element.ownerDocument.dispatchEvent(new Event(element.getAttribute("cms-reload-on")!));
+            }
+        });
+        return;
+    }
     const input = document.createElement("cms-dashboard-input");
     input.setAttribute("kind", "detail");
     input.setAttribute("cms-bind-value", "dashboardData");
@@ -65,7 +89,7 @@ function detailContent(
 ): HTMLElement {
     const element = new DashboardWDetail();
     const config =
-        directResource === null
+        directResource === null || supportsBoundDetail(widget)
             ? widget
             : {
                   ...widget,
@@ -74,7 +98,7 @@ function detailContent(
     element.dataset.widgetId = widget.id;
     element.configure(config);
     if (directResource !== null) {
-        element.setBindingValue(directResource.resource);
+        publishDetailResource(element, widget, directResource.resource);
     }
     element.setAttribute("data-row-key", rowKey);
     element.setAttribute("data-source-id", context.dashboard.source);
@@ -101,4 +125,18 @@ function matchingDetailResource(widget: RuntimeDetailWidget, context: RenderCont
         resource.row === row
         ? resource
         : null;
+}
+
+export function publishDetailResource(element: DashboardWDetail, widget: RuntimeDetailWidget, resource: unknown): void {
+    if (!element.hasAttribute("data-declarative")) {
+        element.setBindingValue(resource);
+        return;
+    }
+    if (widget.source.itemPath) {
+        const data: Record<string, unknown> = {};
+        setValueAt(data, widget.source.itemPath, resource);
+        setSourceData(element, data);
+    } else {
+        setSourceData(element, resource);
+    }
 }

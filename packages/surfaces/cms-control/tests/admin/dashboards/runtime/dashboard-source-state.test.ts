@@ -176,7 +176,7 @@ describe("dashboard runtime source states", () => {
         document.body.append(root);
         await new Promise((resolve) => setTimeout(resolve, 20));
 
-        expect(root.querySelector("[cms-source]")).toBeNull();
+        expect(root.querySelector("cms-dashboard-w-detail[cms-source]") !== null).toBe(true);
         expect(root.querySelector("cms-dashboard-w-detail")?.hasAttribute("data-source-json")).toBe(false);
         expect(requests).toHaveLength(0);
     });

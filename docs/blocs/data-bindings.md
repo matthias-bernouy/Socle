@@ -49,6 +49,19 @@ not to materialize independently editable Bloc copies.
 Use `cms-source-id` and `$sources.<id>.<state>` when one element must observe a
 specific source among several ancestors.
 
+Conditions can use the same registered value filters as interpolation:
+`cms-condition="items | kind == 'list'"` or
+`cms-condition="items | includes(selection.id)"`. The host supplies pure `kind`
+and `includes` filters in these examples. A filter takes one resolved input and
+optionally one argument path. It runs before comparisons and boolean operators;
+`!items | includes(selection.id)` negates the filtered result. Filters are not
+arbitrary JavaScript calls, and an unknown filter makes the condition invalid.
+A missing scope root does not invoke the filter. A present root with a missing
+property supplies `undefined`, matching interpolation's scope ownership rules.
+This allows declared scalar/list branches without a component constructing DOM
+from response data. It does not add general parentheses, filter chains or a
+template-reference mechanism.
+
 ## Typed custom-element inputs
 
 Use `cms-bind-value="catalogue.items"` when a custom element needs the resolved
@@ -73,6 +86,27 @@ property-binding picker.
 Keep bound children in light DOM under the page core. A visual component may
 slot them into an encapsulated Shadow DOM shell; it must not create another
 core or inject document-level CSS to compensate for hidden bindings.
+
+## Applying an action result to a source
+
+Control may already have the complete resource returned by a successful action.
+`setSourceData(sourceElement, value)` from `@bernouy/components` (also exported
+by `@bernouy/components/binding`) supplies that value to the existing source
+renderer. It cancels an older pending read and applies normal interpolation,
+conditions and repetition to the source's authored template. It does not call a
+widget renderer or serialize the value into an attribute.
+
+A value supplied before source activation seeds the initial render without an
+HTTP request, including an explicit null/empty value for a creation form.
+Explicit reloads still fetch the configured URL. The source retains its alias,
+status lifecycle and ownership under the document core. `readSourceData(element)`
+reads the last supplied/fetched value for action-expression evaluation; disposing
+the source clears it. Consumers must retain their operation-generation checks
+so an obsolete action cannot target a newly selected resource.
+
+This interface is intended for automatic read sources. Native form submissions
+continue to use their existing result and success-event contract. It is not an
+alternative HTML renderer or a reason to add hidden object-relay elements.
 
 ## Forms
 

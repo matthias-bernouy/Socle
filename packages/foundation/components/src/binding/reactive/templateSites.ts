@@ -25,7 +25,10 @@ export class AttributeSite implements LiveBindingSite {
         private readonly filters: FilterMap,
     ) {}
     update(scope: Scope): void {
-        this.element.setAttribute(this.name, interpolateString(this.template, scope, this.filters));
+        const value = interpolateString(this.template, scope, this.filters);
+        if (this.element.getAttribute(this.name) !== value) {
+            this.element.setAttribute(this.name, value);
+        }
     }
 }
 

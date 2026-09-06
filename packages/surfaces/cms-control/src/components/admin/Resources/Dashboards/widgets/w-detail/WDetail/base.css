@@ -15,7 +15,9 @@ cms-shell-detail {
     min-width: 0;
 }
 
-.w-detail-main > slot {
+.w-detail-main > slot,
+.w-detail-aside > slot,
+.w-detail-actions > slot {
     display: contents;
 }
 
@@ -26,7 +28,8 @@ cms-shell-detail {
     width: 100%;
 }
 
-.w-detail-actions p9r-button {
+.w-detail-actions p9r-button,
+.w-detail-actions ::slotted(p9r-button) {
     --_btn-padding-y: 0.48rem;
     --_btn-padding-x: 0.82rem;
     --_btn-font-size: 12px;

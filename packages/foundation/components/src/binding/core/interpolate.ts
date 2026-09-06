@@ -29,6 +29,14 @@ export type FilterMap = Record<string, Filter>;
 
 const BUILTIN_FILTERS = createBuiltinFilters();
 
+export function bindingFilter(name: string, filters: FilterMap): Filter | undefined {
+    return Object.hasOwn(filters, name)
+        ? filters[name]
+        : Object.hasOwn(BUILTIN_FILTERS, name)
+          ? BUILTIN_FILTERS[name]
+          : undefined;
+}
+
 export function createBuiltinFilters(locale?: string): FilterMap {
     const normalizedLocale = locale?.trim() || undefined;
     return {
@@ -50,7 +58,7 @@ export function interpolateString(str: string, scope: Scope, filters: FilterMap 
             if (!res.found) {
                 return ""; // absent in the whole scope chain → blank
             }
-            const fn = filter ? (filters[filter] ?? BUILTIN_FILTERS[filter]) : undefined;
+            const fn = filter ? bindingFilter(filter, filters) : undefined;
             const argument = argPath ? lookup(scope, argPath) : null;
             const value = fn ? fn(res.value, argument?.found ? argument.value : undefined) : res.value;
             return value == null ? "" : String(value);

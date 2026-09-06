@@ -11,6 +11,7 @@ import { SourceRenderer } from "./presentation/sourceRenderer";
 import { SourcePresenter } from "./presentation/sourcePresenter";
 import { type SourceStatusOptions } from "./presentation/sourceStatus";
 import { ownerForm, SourceSubmission } from "./submission";
+import { connectSourceData, disconnectSourceData, rememberSourceData } from "./values";
 
 export { clearRuntimeStamps } from "./runtime/runtimeStamps";
 export { RELOAD_ATTR, RELOAD_EVENT } from "./sourceEvents";
@@ -73,13 +74,19 @@ export class Source {
     }
 
     start(): void {
+        const supplied =
+            sourceTrigger(this.el) === "auto"
+                ? connectSourceData(this.el, (value) => this.acceptData(value))
+                : undefined;
         this.stopListeners = listenSourceEvents(this.el, {
             onReload: this.onReload,
             onReactiveUrlChange: this.onReactiveUrlChange,
             onSubmit: this.onSubmit,
             onChange: this.onChange,
         });
-        if (sourceTrigger(this.el) === "auto" || this.options.sourceStateForce) {
+        if (supplied && !this.options.sourceStateForce) {
+            this.acceptData(supplied.value);
+        } else if (sourceTrigger(this.el) === "auto" || this.options.sourceStateForce) {
             void this.run();
         } else {
             const spec = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "");
@@ -92,6 +99,7 @@ export class Source {
     }
 
     dispose(): void {
+        disconnectSourceData(this.el);
         this.abort?.abort();
         this.abort = null;
         this.stopListeners?.();
@@ -141,6 +149,7 @@ export class Source {
             if (ac.signal.aborted) {
                 return;
             }
+            this.abort = null;
             this.presenter.result(spec.alias, result);
             this.afterRender();
             this.submission!.complete(result, spec.alias);
@@ -151,13 +160,23 @@ export class Source {
         if (ac.signal.aborted || outcome.kind === "aborted") {
             return;
         }
+        this.abort = null;
         if (outcome.kind === "error") {
             this.presenter.error(spec.alias, url, outcome.status, outcome.message);
             this.afterRender();
             return;
         }
 
-        this.presenter.data(spec.alias, outcome.data);
+        this.acceptData(outcome.data);
+    }
+
+    private acceptData(value: unknown): void {
+        this.abort?.abort();
+        this.abort = null;
+        rememberSourceData(this.el, value);
+        const spec = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "");
+        this.lastUrl = resolveReactiveUrl(spec.url, this.el.ownerDocument);
+        this.presenter.data(spec.alias, value);
         this.afterRender();
     }
 

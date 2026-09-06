@@ -1,24 +1,38 @@
 import { lookup, type Scope } from "../../core/scope";
+import { bindingFilter, type FilterMap } from "../../core/interpolate";
 import type { CompareOperator, ConditionNode } from "./types";
 
-export function evaluateNode(node: ConditionNode, scope: Scope): unknown {
+export function evaluateNode(node: ConditionNode, scope: Scope, filters: FilterMap): unknown {
     if (node.kind === "literal") {
         return node.value;
     }
     if (node.kind === "path") {
         return lookupValue(node.path, scope);
     }
+    if (node.kind === "filter") {
+        const result = lookup(scope, node.path);
+        return result.found
+            ? bindingFilter(node.name, filters)!(
+                  result.value,
+                  node.argument ? lookupValue(node.argument, scope) : undefined,
+              )
+            : undefined;
+    }
     if (node.kind === "not") {
-        return !truthy(evaluateNode(node.node, scope));
+        return !truthy(evaluateNode(node.node, scope, filters));
     }
     if (node.kind === "and") {
-        return truthy(evaluateNode(node.left, scope)) && truthy(evaluateNode(node.right, scope));
+        return truthy(evaluateNode(node.left, scope, filters)) && truthy(evaluateNode(node.right, scope, filters));
     }
     if (node.kind === "or") {
-        return truthy(evaluateNode(node.left, scope)) || truthy(evaluateNode(node.right, scope));
+        return truthy(evaluateNode(node.left, scope, filters)) || truthy(evaluateNode(node.right, scope, filters));
     }
     if (node.kind === "compare") {
-        return compare(evaluateNode(node.left, scope), evaluateNode(node.right, scope), node.operator);
+        return compare(
+            evaluateNode(node.left, scope, filters),
+            evaluateNode(node.right, scope, filters),
+            node.operator,
+        );
     }
     return false;
 }

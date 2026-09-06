@@ -2,7 +2,7 @@ import type { DashboardRuntimeWidget, DetailSelection, RenderContext } from "../
 import type { DashboardWTable } from "../../widgets/w-table/WTable";
 import type { DashboardWDetail } from "../../widgets/w-detail/WDetail";
 import { requiredSourceParams, sourceWrapper } from "./mountSource";
-import { attachDetailSource } from "./detail";
+import { attachDetailSource, publishDetailResource } from "./detail";
 import { selectionVars } from "./navigation";
 
 const contexts = new WeakMap<HTMLElement, RenderContext>();
@@ -20,6 +20,7 @@ export function retainWidgets(
         contexts.set(root, context);
         return false;
     }
+    const previousResource = contexts.get(root)?.detailResource;
     Object.assign(contexts.get(root)!, context);
     const visit = (items: DashboardRuntimeWidget[]): void => {
         for (const widget of items) {
@@ -61,10 +62,26 @@ export function retainWidgets(
                     resource.dashboardId !== context.dashboard.id ||
                     resource.resource == null
                 ) {
-                    if (target && detail?.row !== "__new__" && !target.querySelector('[slot="source-status"]')) {
+                    if (
+                        target?.hasAttribute("data-declarative") &&
+                        previousResource?.collection === widget.id &&
+                        previousResource.resource != null
+                    ) {
+                        target.ownerDocument.dispatchEvent(new Event(target.getAttribute("cms-reload-on")!));
+                    }
+                    if (
+                        target &&
+                        !target.hasAttribute("data-declarative") &&
+                        detail?.row !== "__new__" &&
+                        !target.querySelector('[slot="source-status"]')
+                    ) {
                         target.configure(widget);
                         attachDetailSource(target, widget, context, detail?.row ?? "");
                     }
+                    continue;
+                }
+                if (target?.hasAttribute("data-declarative")) {
+                    publishDetailResource(target, widget, resource.resource);
                     continue;
                 }
                 if (target) {

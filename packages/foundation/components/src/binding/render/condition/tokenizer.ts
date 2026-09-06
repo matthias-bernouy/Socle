@@ -24,8 +24,10 @@ export function tokenize(expression: string): Token[] {
             continue;
         }
 
-        if (char === "(" || char === ")") {
-            throw new Error("parentheses are not supported yet");
+        if (char === "|" || char === "(" || char === ")") {
+            tokens.push({ kind: "punctuation", value: char });
+            index += 1;
+            continue;
         }
 
         if (char === "'" || char === '"') {

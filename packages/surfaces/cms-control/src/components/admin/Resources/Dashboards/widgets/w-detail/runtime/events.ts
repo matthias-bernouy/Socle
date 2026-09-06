@@ -8,7 +8,7 @@ import {
 import { W_MEDIA_FIELD_ACTION_EVENT, type DashboardMediaActionDetail } from "../../w-media-field/types";
 import { readFieldControlValue } from "../controls";
 import type { WDetailData } from "../types";
-import { DetailFieldState, parseJson, type DetailWidget } from "./fieldState";
+import { DetailFieldState } from "./fieldState";
 import { DetailLookups } from "./lookups";
 import { DetailSchemasState } from "./schemas";
 import { addTableRow, removeTableRow, toggleChip, updateDerivedTables } from "./tableValues";
@@ -18,7 +18,7 @@ export class DetailEvents {
 
     constructor(
         private readonly host: HTMLElement,
-        private readonly root: ShadowRoot,
+        private root: ShadowRoot | HTMLElement,
         private readonly fields: DetailFieldState,
         private readonly lookups: DetailLookups,
         private readonly schemas: DetailSchemasState,
@@ -30,6 +30,9 @@ export class DetailEvents {
     bind(): void {
         if (this.bound) {
             return;
+        }
+        if (this.host.hasAttribute("data-declarative")) {
+            this.root = this.host;
         }
         this.root.addEventListener("click", this.onClick);
         this.root.addEventListener("focusin", this.onFocusIn);
@@ -59,7 +62,6 @@ export class DetailEvents {
             emitWidgetEvent(this.host, WIDGET_BACK_EVENT, {});
         }
         const action = findEventTarget(event, "[data-action]");
-        const widget = this.isBound() ? parseJson<DetailWidget>(this.host.dataset.configJson ?? "") : null;
         const data = this.readData();
         if (action?.dataset.action && !this.fields.validate()) {
             return;
@@ -71,7 +73,7 @@ export class DetailEvents {
             emitWidgetEvent(this.host, WIDGET_ACTION_EVENT, {
                 action: action.dataset.action,
                 detail: true,
-                widget: widget?.id,
+                widget: action.dataset.widget ?? this.host.dataset.widgetId,
                 row: data.rowKey,
                 resource: this.isBound() ? this.fields.currentResource() : undefined,
                 fields: this.fields.currentFields(),

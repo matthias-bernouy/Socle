@@ -55,5 +55,32 @@ describe("cms-condition evaluator", () => {
             "email.enabled",
         ]);
         expect(collectConditionReferences("(result.ok)")).toEqual(["result.ok"]);
+        expect(collectConditionReferences("result.items | contains(selection.id) && result.ready")).toEqual([
+            "result.items",
+            "selection.id",
+            "result.ready",
+        ]);
+    });
+
+    test("filter operands use registered functions, explicit argument paths and normal operator precedence", () => {
+        const filters = {
+            count: (value: unknown) => (Array.isArray(value) ? value.length : 0),
+            includes: (value: unknown, item: unknown) => Array.isArray(value) && value.includes(item),
+        };
+        expect(evaluateCondition("items | count >= 2 && !plan.archived", scope, filters)).toBe(true);
+        expect(evaluateCondition("!items | includes(plan.status)", scope, filters)).toBe(true);
+        expect(evaluateCondition("items | includes(items.0)", scope, filters)).toBe(true);
+        expect(evaluateCondition("missing | count == 0", scope, filters)).toBe(false);
+        expect(evaluateCondition('plan.status | urlencode == "active"', scope)).toBe(true);
+        for (const expression of [
+            "items | unknown",
+            "items | constructor",
+            "items.map()",
+            "items | includes()",
+            "items | includes('a')",
+            "items | count | count",
+        ]) {
+            expect(compileCondition(expression, filters).valid).toBe(false);
+        }
     });
 });

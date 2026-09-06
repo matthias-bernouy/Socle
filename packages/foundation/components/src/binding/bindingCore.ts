@@ -52,6 +52,7 @@ export {
     type CmsSourceResultEventMap,
 } from "./source/submissionEvents";
 export type { FormSubmitResult } from "./submit/formSubmit";
+export { readSourceData, setSourceData } from "./source/values";
 
 /** Filter set passed to every source's interpolation. Empty until a host wires
  *  one in via `setBindingFilters` (the concrete filters are a later step). */

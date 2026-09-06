@@ -31,7 +31,7 @@ export function compileRepeat(
             removeCondition: !!options.submitBoundary && !!condition && !conditionOwned,
             submitBoundary: options.submitBoundary,
         }),
-        rootCondition: conditionOwned || !condition ? null : compileCondition(condition),
+        rootCondition: conditionOwned || !condition ? null : compileCondition(condition, filters),
     });
     return true;
 }
@@ -54,7 +54,7 @@ export function compileConditional(
     }
     plan.conditions.push({
         path,
-        condition: compileCondition(value),
+        condition: compileCondition(value, filters),
         template: compileElementTemplate(element, filters, createTemplate, {
             removeCondition: !!options.submitBoundary,
             submitBoundary: options.submitBoundary,

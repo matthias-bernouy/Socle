@@ -17,10 +17,14 @@ export class DetailFieldState {
     private values: Record<string, unknown> = {};
 
     constructor(
-        private readonly root: ShadowRoot,
+        private readonly container: ShadowRoot,
         private readonly dataset: DetailBindingInput,
         private readonly readData: () => WDetailData,
     ) {}
+
+    private get root(): ShadowRoot | Element {
+        return this.container.host.hasAttribute("data-declarative") ? this.container.host : this.container;
+    }
 
     get draft(): Record<string, unknown> {
         return this.values;

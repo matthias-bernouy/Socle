@@ -1,3 +1,5 @@
+import { readSourceData, setSourceData } from "@bernouy/components";
+import { composeDetail, supportsBoundDetail } from "../binding/composition";
 import { valueAt } from "../../../runtime/expressions";
 import { Component } from "@bernouy/components/base";
 import { fieldValues } from "../../../runtime/mapping";
@@ -20,8 +22,16 @@ export class DashboardWDetail extends Component {
     private resource: unknown;
     configure(widget: DetailWidget): void {
         this.configuration = widget;
+        if (!this.hasAttribute("data-declarative") && supportsBoundDetail(widget)) {
+            this.setAttribute("data-declarative", "");
+            this.append(composeDetail(widget));
+        }
     }
     setBindingValue(value: unknown): void {
+        if (this.hasAttribute("data-declarative")) {
+            setSourceData(this, value);
+            return;
+        }
         if (value === undefined || Object.is(value, this.resource)) {
             return;
         }
@@ -33,9 +43,8 @@ export class DashboardWDetail extends Component {
         if (!this.configuration) {
             return readDetailBinding(this.dataset);
         }
-        const resource = this.configuration.source.itemPath
-            ? valueAt(this.resource, this.configuration.source.itemPath)
-            : this.resource;
+        const data = this.hasAttribute("data-declarative") ? readSourceData(this) : this.resource;
+        const resource = this.configuration.source.itemPath ? valueAt(data, this.configuration.source.itemPath) : data;
         return resource === undefined || resource === null
             ? null
             : {
@@ -67,7 +76,19 @@ export class DashboardWDetail extends Component {
         super({ css: styles, template: template as unknown as string });
         this.runtime = createDetailRuntime(this, this.shadowRoot!, {
             readBinding: () => this.readBinding(),
-            data: () => this.value,
+            data: () => {
+                const binding = this.hasAttribute("data-declarative") ? this.readBinding() : null;
+                return binding
+                    ? mapDetailData(
+                          this.runtime,
+                          binding.widget,
+                          binding.resource,
+                          binding.rowKey,
+                          this.runtime.fields.draft,
+                          binding.sourceId,
+                      )
+                    : this.value;
+            },
             setData: (value) => {
                 this.value = value;
             },
@@ -125,6 +146,9 @@ export class DashboardWDetail extends Component {
     }
 
     private render(): void {
+        if (this.hasAttribute("data-declarative")) {
+            return;
+        }
         this.runtime.view.render(this.value);
         this.syncSourceAvailability();
     }
@@ -138,7 +162,7 @@ export class DashboardWDetail extends Component {
     }
 
     private refreshConditionalFields(): void {
-        if (this.mode !== "bound") {
+        if (this.mode !== "bound" || this.hasAttribute("data-declarative")) {
             return;
         }
         const binding = this.readBinding();

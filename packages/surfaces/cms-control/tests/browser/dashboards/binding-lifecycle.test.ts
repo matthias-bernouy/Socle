@@ -133,6 +133,13 @@ test("page-owned bindings preserve navigation, filtered tables and detail hosts 
         await input.fill("Updated item");
         const originalInput = await input.elementHandle();
         const detail = await page.locator("cms-dashboard-w-detail").elementHandle();
+        expect(await page.locator("cms-dashboard-w-detail[cms-source]").count()).toBe(1);
+        expect(await page.locator('cms-dashboard-w-detail cms-dashboard-input[kind="detail"]').count()).toBe(0);
+        expect(
+            await page
+                .locator("cms-dashboard-w-detail [data-field-control]")
+                .evaluateAll((nodes) => nodes.every((node) => node.getRootNode() === document)),
+        ).toBe(true);
         const saved = page.waitForResponse((response) => response.url().endsWith("/save"));
         await page.getByRole("button", { name: "Save item", exact: true }).click();
         expect((await saved).status()).toBe(200);

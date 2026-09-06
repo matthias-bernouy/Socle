@@ -2,22 +2,30 @@ import { evaluateNode } from "./condition/evaluate";
 import { parseConditionExpression } from "./condition/parser";
 import type { CompiledCondition, ConditionNode } from "./condition/types";
 import type { Scope } from "../core/scope";
+import { bindingFilter, type FilterMap } from "../core/interpolate";
+import { conditionOperands } from "./condition/references";
 
 export type { CompiledCondition } from "./condition/types";
 export { collectConditionReferences } from "./condition/references";
 
-export function evaluateCondition(expression: string, scope: Scope): boolean {
-    return compileCondition(expression).evaluate(scope);
+export function evaluateCondition(expression: string, scope: Scope, filters: FilterMap = {}): boolean {
+    return compileCondition(expression, filters).evaluate(scope);
 }
 
-export function compileCondition(expression: string): CompiledCondition {
+export function compileCondition(expression: string, filters: FilterMap = {}): CompiledCondition {
     const trimmed = expression.trim();
     if (!trimmed) {
-        return validCondition(expression, { kind: "literal", value: true });
+        return validCondition(expression, { kind: "literal", value: true }, filters);
     }
 
     try {
-        return validCondition(expression, parseConditionExpression(trimmed));
+        const root = parseConditionExpression(trimmed);
+        for (const operand of conditionOperands(root)) {
+            if (operand.kind === "filter" && typeof bindingFilter(operand.name, filters) !== "function") {
+                throw new Error(`unknown filter "${operand.name}"`);
+            }
+        }
+        return validCondition(expression, root, filters);
     } catch (error) {
         let warned = false;
         return {
@@ -34,11 +42,11 @@ export function compileCondition(expression: string): CompiledCondition {
     }
 }
 
-function validCondition(expression: string, root: ConditionNode): CompiledCondition {
+function validCondition(expression: string, root: ConditionNode, filters: FilterMap): CompiledCondition {
     return {
         expression,
         valid: true,
-        evaluate: (scope) => Boolean(evaluateNode(root, scope)),
+        evaluate: (scope) => Boolean(evaluateNode(root, scope, filters)),
     };
 }
 

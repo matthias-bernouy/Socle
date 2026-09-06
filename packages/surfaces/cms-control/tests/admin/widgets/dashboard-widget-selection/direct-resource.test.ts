@@ -156,6 +156,7 @@ describe("dashboard widget selection", () => {
             "/.cms/sources/products/getProduct?id=product-1 as dashboardData",
         );
         expect(detail.hasAttribute("data-source-json")).toBe(false);
-        expect(wrapper.querySelector("[cms-bind-value=dashboardData]")).not.toBeNull();
+        expect(wrapper.querySelector("[cms-bind-value=dashboardData]")).toBeNull();
+        expect(wrapper.querySelector("[data-field-control]")).not.toBeNull();
     });
 });

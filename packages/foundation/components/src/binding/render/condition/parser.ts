@@ -57,12 +57,39 @@ class Parser {
             return { kind: "literal", value: token.value };
         }
         if (token.kind === "path") {
-            return { kind: "path", path: token.value };
+            return this.parsePath(token.value);
         }
         if (token.kind === "end") {
             throw new Error("unexpected end of expression");
         }
         throw new Error(`unexpected operator "${token.value}"`);
+    }
+
+    private parsePath(path: string): ConditionNode {
+        if (!this.punctuation("|")) {
+            return { kind: "path", path };
+        }
+        const filter = this.next();
+        if (filter.kind !== "path" || !/^\w+$/.test(filter.value)) {
+            throw new Error("expected a registered filter name");
+        }
+        if (!this.punctuation("(")) {
+            return { kind: "filter", path, name: filter.value };
+        }
+        const argument = this.next();
+        if (argument.kind !== "path" || !this.punctuation(")")) {
+            throw new Error("expected one filter argument path");
+        }
+        return { kind: "filter", path, name: filter.value, argument: argument.value };
+    }
+
+    private punctuation(value: "|" | "(" | ")"): boolean {
+        const token = this.peek();
+        if (token.kind !== "punctuation" || token.value !== value) {
+            return false;
+        }
+        this.index += 1;
+        return true;
     }
 
     private match(operator: Operator): boolean {

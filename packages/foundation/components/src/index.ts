@@ -136,3 +136,4 @@ export { setParam, PARAMS_CHANGE_EVENT } from "./binding/params";
 export type { FilterMap, Filter } from "./binding/core/interpolate";
 
 export { requestBindingData, type BindingRequestResult } from "./binding/submit/submitRequest";
+export { readSourceData, setSourceData } from "./binding/source/values";
