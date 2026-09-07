@@ -1,3 +1,4 @@
+import type { DashboardLookup } from "../lookups/Lookup";
 import { readSourceData, setSourceData, refreshSourceContext } from "@bernouy/components";
 import { bindDetailContext } from "../binding/context";
 import { supportsBoundDetail } from "../binding/composition";
@@ -119,6 +120,13 @@ export class DashboardWDetail extends Component {
         const control = this.runtime.fields.control(fieldId);
         const field = control ? this.runtime.fields.find(fieldId) : undefined;
         if (control && field) {
+            const lookup = control.closest<DashboardLookup>("cms-dashboard-lookup");
+            if (lookup) {
+                this.runtime.fields.record(fieldId, value);
+                lookup.acceptCreatedOption(option);
+                refreshSourceContext(this);
+                return;
+            }
             applyLookupOption(control, value, option);
         }
     }
@@ -219,7 +227,7 @@ export class DashboardWDetail extends Component {
         if (this.isConnected) {
             this.render();
         }
-        if (!sourceId) {
+        if (!sourceId || this.hasAttribute("data-declarative")) {
             return;
         }
         const fields = fieldValues(widget, resource);

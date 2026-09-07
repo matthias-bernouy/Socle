@@ -305,4 +305,22 @@ describe("Combobox", () => {
         );
         expect(loads).toBe(1);
     });
+    test("interpolated false loading and pagination flags preserve the open search input", () => {
+        const control = mountCombobox({ remoteSearch: true });
+        const input = shadowElement<HTMLInputElement>(control, "input");
+        input.focus();
+        write(input, "Draft query");
+        input.setSelectionRange(1, 4);
+        control.setAttribute("loading", "true");
+        expect(shadowElement<HTMLElement>(control, ".loading").textContent).toBe("Loading…");
+        control.setAttribute("loading", "false");
+        control.setAttribute("has-more", "true");
+        expect(control.shadowRoot!.querySelector(".loading")).toBeNull();
+        expect(control.shadowRoot!.querySelector(".load-more")).not.toBeNull();
+        control.setAttribute("has-more", "false");
+        expect(control.shadowRoot!.querySelector(".load-more")).toBeNull();
+        expect(input.value).toBe("Draft query");
+        expect([input.selectionStart, input.selectionEnd]).toEqual([1, 4]);
+        expect(control.shadowRoot!.activeElement).toBe(input);
+    });
 });

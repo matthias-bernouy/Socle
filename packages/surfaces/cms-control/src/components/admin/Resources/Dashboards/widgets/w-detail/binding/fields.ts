@@ -1,3 +1,4 @@
+import { composeLookup } from "../lookups/composition";
 import type { DashboardField } from "@bernouy/cms-dashboards";
 import controls from "cms-control/static/admin/_content/sources/_runtime/detail/controls.html" with { type: "text" };
 import { route } from "../../../api";
@@ -83,7 +84,11 @@ export function fieldElement(field: DashboardField, root: string): HTMLElement {
             control.setAttribute("allow-media", String(field.allowMedia === true));
             control.setAttribute("published-only", String(field.publishedOnly === true));
         }
-        wrapper.append(control);
+        wrapper.append(
+            (field.type === "combobox" || field.type === "tokens") && field.lookup
+                ? composeLookup(control, field)
+                : control,
+        );
     }
     return wrapper;
 }

@@ -1,3 +1,4 @@
+import { detailLookupUrls } from "../lookups/urls";
 import { readSourceData, setSourceContext } from "@bernouy/components";
 import { fieldValues } from "../../../runtime/mapping";
 import { matchesDashboardVisibility, setValueAt, valueAt } from "../../../runtime/expressions";
@@ -60,6 +61,8 @@ export function bindDetailContext(
                 }),
         );
         return {
+            detailResourcePath: widget.source.itemPath ?? "",
+            detailLookupUrls: detailLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
             detailReady: resource !== null && resource !== undefined,
             detailValues: effective,
             detailActions: actions(values, resource),

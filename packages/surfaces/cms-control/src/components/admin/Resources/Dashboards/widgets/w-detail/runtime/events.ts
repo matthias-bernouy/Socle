@@ -124,6 +124,10 @@ export class DetailEvents {
                 this.displayValue(field.input, control),
             );
         }
+        if (field && this.host.hasAttribute("data-declarative")) {
+            this.refreshConditionalFields();
+            return;
+        }
         if (field && this.isBound()) {
             this.lookups.schedule(field.id);
             this.schemas.schedule(field.id);
@@ -186,7 +190,7 @@ export class DetailEvents {
     };
 
     private afterFieldChange(fieldId: string): void {
-        if (this.isBound()) {
+        if (this.isBound() && !this.host.hasAttribute("data-declarative")) {
             this.lookups.schedule(fieldId);
             this.schemas.schedule(fieldId);
         }

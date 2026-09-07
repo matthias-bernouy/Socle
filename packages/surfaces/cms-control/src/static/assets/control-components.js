@@ -5585,8 +5585,11 @@ input:disabled {
     attributeChangedCallback(t, e, i) {
       if (t === "value")
         this.value = i ?? "";
-      else if (this.syncAttributes(), (t === "loading" || t === "has-more") && !this.view.listHidden)
-        this.renderList(this.keyboard.query);
+      else if (t === "loading" || t === "has-more") {
+        if (!this.view.listHidden)
+          this.renderList(this.keyboard.query);
+      } else
+        this.syncAttributes();
     }
     get value() {
       return this.selectedValue;
@@ -5641,7 +5644,7 @@ input:disabled {
     }
     renderList(t) {
       this.items = this.hasAttribute("remote-search") ? ro(this.options, t, this.hasAttribute("creatable")) : St(this.options, t, this.hasAttribute("creatable"));
-      let e = this.hasAttribute("remote-search") || this.hasAttribute("has-more") ? { loading: this.hasAttribute("loading"), hasMore: this.hasAttribute("has-more"), loadMore: () => this.dispatchEvent(new CustomEvent("combobox-load-more", { bubbles: true, composed: true })) } : null;
+      let e = this.hasAttribute("remote-search") || this.hasAttribute("has-more") && this.getAttribute("has-more") !== "false" ? { loading: this.hasAttribute("loading") && this.getAttribute("loading") !== "false", hasMore: this.hasAttribute("has-more") && this.getAttribute("has-more") !== "false", loadMore: () => this.dispatchEvent(new CustomEvent("combobox-load-more", { bubbles: true, composed: true })) } : null;
       this.view.renderList(this.items, this.keyboard.activeIndex, this.selectedValue, this.selectItem, e);
     }
     selectItem = (t) => {
@@ -26608,6 +26611,261 @@ w13c-lateral-menu-item {
   function isDetailWidget(widget) {
     return widget.widget === "w-detail";
   }
+  // src/components/admin/Resources/Dashboards/runtime/source.ts
+  async function fetchSourceJson(sourceId, ref, vars, options = {}) {
+    const response = await Cd(sourceUrl(sourceId, ref, vars).href, {
+      headers: { Accept: "application/json" },
+      signal: options.signal
+    });
+    return responseJson(response);
+  }
+  function sourceRequestKey(sourceId, ref, vars) {
+    const url = sourceUrl(sourceId, ref, vars);
+    url.searchParams.sort();
+    return url.href;
+  }
+  async function sendSourceJson(sourceId, ref, method, vars) {
+    const body = resolveBody(ref.body, vars);
+    const response = await Cd(sourceUrl(sourceId, ref, vars).href, {
+      method,
+      headers: body === undefined ? { Accept: "application/json" } : { Accept: "application/json", "Content-Type": "application/json" },
+      ...body === undefined ? {} : { body: JSON.stringify(body) }
+    });
+    return responseJson(response);
+  }
+  async function sendSourceForm(sourceId, ref, method, vars, body) {
+    const response = await Cd(sourceUrl(sourceId, ref, vars).href, {
+      method,
+      headers: { Accept: "application/json" },
+      body
+    });
+    return responseJson(response);
+  }
+  async function sendSourceDownload(sourceId, ref, method, vars) {
+    const response = await sendDownloadResponse(sourceId, ref, method, vars, "*/*");
+    if (!response.ok) {
+      throw new Error(await response.text() || `Source request failed (${response.status})`);
+    }
+    const filename = filenameFromDisposition(response.headers.get("content-disposition"));
+    return {
+      blob: await response.blob(),
+      ...filename ? { filename } : {}
+    };
+  }
+  async function sendDownloadResponse(sourceId, ref, method, vars, accept) {
+    const body = resolveBody(ref.body, vars);
+    return fetch(sourceUrl(sourceId, ref, vars), {
+      method,
+      headers: body === undefined ? { Accept: accept } : { Accept: accept, "Content-Type": "application/json" },
+      ...body === undefined ? {} : { body: JSON.stringify(body) }
+    });
+  }
+  function sourceUrl(sourceId, ref, vars) {
+    const targetSourceId = ref.sourceId ?? sourceId;
+    const dashboardId = document.documentElement.dataset.dashboardScope;
+    const prefix = dashboardId ? `/.cms/dashboards/${encodeURIComponent(dashboardId)}/sources` : "/.cms/sources";
+    const url = new URL(route2(`${prefix}/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
+    for (const [key, value2] of Object.entries(resolveParams(ref.params, vars))) {
+      url.searchParams.set(key, value2);
+    }
+    return url;
+  }
+  function responseJson(response) {
+    if (!response.ok) {
+      if (response.statusText === "Aborted") {
+        throw new DOMException("Aborted", "AbortError");
+      }
+      throw new Error(response.message || `Source request failed (${response.status})`);
+    }
+    return response.body;
+  }
+  function filenameFromDisposition(value2) {
+    const match = value2?.match(/filename="?([^";]+)"?/i);
+    return match?.[1]?.trim() || undefined;
+  }
+  function itemsFrom(data, ref) {
+    if (!ref.itemsPath) {
+      return Array.isArray(data) ? data : [];
+    }
+    return arrayAt(data, ref.itemsPath);
+  }
+  function itemFrom(data, ref) {
+    return ref.itemPath ? valueAt(data, ref.itemPath) : data;
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/lookups/targets.ts
+  function nestedLookupKey(fieldId, nestedId) {
+    return `${fieldId}::${nestedId}`;
+  }
+  function detailLookupTargets(widget) {
+    return detailFields(widget).flatMap((field2) => {
+      if (isLookupField(field2)) {
+        return [{ key: field2.id, lookup: field2.lookup, selectedField: field2 }];
+      }
+      if (field2.type === "table") {
+        return field2.columns.flatMap((column) => column.editable === true && column.type === "combobox" && column.lookup ? [{ key: nestedLookupKey(field2.id, column.id), lookup: column.lookup }] : []);
+      }
+      if (field2.type === "reorderable-list") {
+        return field2.fields.flatMap((item) => item.type === "combobox" && item.lookup ? [{ key: nestedLookupKey(field2.id, item.id), lookup: item.lookup }] : []);
+      }
+      return [];
+    });
+  }
+  function allLookupTargetKeys(widget) {
+    return new Set([
+      ...detailLookupTargets(widget).map((target2) => target2.key),
+      ...detailFields(widget).filter((field2) => field2.type === "cms-user").map((field2) => field2.id)
+    ]);
+  }
+  function cmsUserTarget(widget, key) {
+    return detailFields(widget).find((field2) => field2.id === key && field2.type === "cms-user");
+  }
+  function lookupTargetKeysDependingOn(widget, changedFieldId) {
+    if (!changedFieldId) {
+      return new Set;
+    }
+    return new Set(detailLookupTargets(widget).filter((target2) => Object.values(target2.lookup.params ?? {}).some((expression) => expression === `$field.${changedFieldId}` || expression.startsWith(`$field.${changedFieldId}.`))).map((target2) => target2.key));
+  }
+  function isLookupField(field2) {
+    return (field2.type === "combobox" || field2.type === "tokens") && Boolean(field2.lookup);
+  }
+  function lookupUsesRemoteSearch(lookup) {
+    return Object.values(lookup.params ?? {}).includes("$search");
+  }
+  function lookupUsesOffsetPagination(lookup) {
+    const expressions = Object.values(lookup.params ?? {});
+    return expressions.includes("$limit") && expressions.includes("$offset");
+  }
+  function detailFields(widget) {
+    return [...widget.main.filter(isDetailSection), ...widget.aside ?? []].flatMap((section) => section.fields);
+  }
+  function isDetailSection(item) {
+    return !("widget" in item);
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/lookups/options.ts
+  async function loadDetailLookupOptions(sourceId, widget, resource, fields, requestOptions = {}) {
+    const loadData = requestOptions.loadData ?? fetchSourceJson;
+    const entries = await Promise.all(detailLookupTargets(widget).filter((target2) => !requestOptions.targetKeys || requestOptions.targetKeys.has(target2.key)).map((target2) => lookupEntry(sourceId, target2, resource, fields, loadData, requestOptions.vars)));
+    return {
+      failedTargetKeys: new Set(entries.filter((entry) => entry.failed).map((entry) => entry.key)),
+      options: Object.fromEntries(entries.map((entry) => [entry.key, entry.options])),
+      pages: Object.fromEntries(entries.map((entry) => [entry.key, entry.page]))
+    };
+  }
+  async function lookupEntry(sourceId, target2, resource, fields, loadData, requestVars) {
+    const selected2 = selectedOptions(target2, resource, fields);
+    try {
+      const { items, total } = await lookupItems(sourceId, target2.lookup, resource, fields, loadData, requestVars);
+      return {
+        failed: false,
+        key: target2.key,
+        options: dedupeOptions([...optionsFromItems(items, target2.lookup), ...selected2]),
+        page: { received: items.length, ...total !== undefined ? { total } : {} }
+      };
+    } catch {
+      return { failed: true, key: target2.key, options: selected2, page: { received: 0 } };
+    }
+  }
+  async function lookupItems(sourceId, lookup, resource, fields, loadData, requestVars) {
+    const vars = { resource, fields, ...requestVars };
+    if (!lookupDependenciesResolved(lookup, vars)) {
+      return { items: [] };
+    }
+    const payload = await loadData(sourceId, lookup, vars);
+    const total = numericTotal(payload, lookup.totalPath);
+    return { items: itemsFrom(payload, lookup), ...total !== undefined ? { total } : {} };
+  }
+  function optionsFromItems(items, lookup) {
+    return items.flatMap((item) => {
+      const option2 = optionFromItem(item, lookup, true);
+      return option2 ? [option2] : [];
+    });
+  }
+  function selectedOptions(target2, resource, fields) {
+    const field2 = target2.selectedField;
+    const expression = target2.lookup.selected;
+    if (!field2 || typeof expression !== "string" || !isSafeDashboardExpression(expression, ["resource"], true)) {
+      return [];
+    }
+    const current = Object.hasOwn(fields, field2.id) ? fields[field2.id] : valueAt(resource, field2.path);
+    const selected2 = new Set(selectedValues(current));
+    if (!selected2.size) {
+      return [];
+    }
+    const resolved = resolveExpression(expression, { resource, fields });
+    const items = Array.isArray(resolved) ? resolved : [resolved];
+    return dedupeOptions(items.flatMap((item) => {
+      const option2 = optionFromItem(item, target2.lookup, false);
+      return option2 && selected2.has(option2.value) ? [option2] : [];
+    }));
+  }
+  function optionFromItem(item, lookup, fallbackToValue) {
+    const value2 = textAt(item, lookup.valuePath);
+    const label2 = textAt(item, lookup.labelPath, fallbackToValue ? value2 : "");
+    if (!value2 || !label2) {
+      return null;
+    }
+    return {
+      value: value2,
+      label: label2,
+      subtitle: lookup.subtitlePath ? textAt(item, lookup.subtitlePath) : undefined,
+      media: lookup.mediaPath ? textAt(item, lookup.mediaPath) : undefined
+    };
+  }
+  function selectedValues(value2) {
+    if (Array.isArray(value2)) {
+      return value2.map(String).filter(Boolean);
+    }
+    return value2 === null || value2 === undefined || value2 === "" ? [] : [String(value2)];
+  }
+  function lookupDependenciesResolved(lookup, vars) {
+    return Object.values(lookup.params ?? {}).every((expression) => {
+      if (["$search", "$limit", "$offset"].includes(expression) || !expression.startsWith("$")) {
+        return true;
+      }
+      const value2 = resolveExpression(expression, vars);
+      return value2 !== undefined && value2 !== null && value2 !== "";
+    });
+  }
+  function numericTotal(payload, path) {
+    const value2 = path ? valueAt(payload, path) : undefined;
+    const total = typeof value2 === "number" ? value2 : Number(value2);
+    return Number.isFinite(total) && total >= 0 ? total : undefined;
+  }
+  function dedupeOptions(options) {
+    const seen = new Set;
+    return options.filter((option2) => {
+      if (seen.has(option2.value)) {
+        return false;
+      }
+      seen.add(option2.value);
+      return true;
+    });
+  }
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/urls.ts
+  function detailLookupUrls(fields, sourceId, values, resource) {
+    return Object.fromEntries(fields.flatMap((field2) => {
+      if (field2.type !== "combobox" && field2.type !== "tokens" || !field2.lookup) {
+        return [];
+      }
+      const vars = {
+        fields: values,
+        resource,
+        ...lookupUsesRemoteSearch(field2.lookup) ? { search: "" } : {},
+        ...lookupUsesOffsetPagination(field2.lookup) ? { limit: 25, offset: 0 } : {}
+      };
+      const ready = Object.values(field2.lookup.params ?? {}).every((expression) => {
+        if (!expression.startsWith("$") || ["$search", "$limit", "$offset"].includes(expression)) {
+          return true;
+        }
+        const value2 = resolveExpression(expression, vars);
+        return value2 !== undefined && value2 !== null && value2 !== "";
+      });
+      return [[field2.id, ready ? sourceUrl(sourceId, field2.lookup, vars).href : ""]];
+    }));
+  }
+
   // src/components/admin/Resources/Dashboards/runtime/media.ts
   function mediaValue(value2, field2, sourceId) {
     const values = Array.isArray(value2) ? value2 : value2 !== null && typeof value2 === "object" ? [value2] : arrayAt({ value: value2 }, "value");
@@ -26740,56 +26998,6 @@ w13c-lateral-menu-item {
   }
   function decimalSeparator(locale) {
     return new Intl.NumberFormat(locale).formatToParts(1.1).find((part) => part.type === "decimal")?.value ?? ".";
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/lookups/targets.ts
-  function nestedLookupKey(fieldId, nestedId) {
-    return `${fieldId}::${nestedId}`;
-  }
-  function detailLookupTargets(widget) {
-    return detailFields(widget).flatMap((field2) => {
-      if (isLookupField(field2)) {
-        return [{ key: field2.id, lookup: field2.lookup, selectedField: field2 }];
-      }
-      if (field2.type === "table") {
-        return field2.columns.flatMap((column) => column.editable === true && column.type === "combobox" && column.lookup ? [{ key: nestedLookupKey(field2.id, column.id), lookup: column.lookup }] : []);
-      }
-      if (field2.type === "reorderable-list") {
-        return field2.fields.flatMap((item) => item.type === "combobox" && item.lookup ? [{ key: nestedLookupKey(field2.id, item.id), lookup: item.lookup }] : []);
-      }
-      return [];
-    });
-  }
-  function allLookupTargetKeys(widget) {
-    return new Set([
-      ...detailLookupTargets(widget).map((target2) => target2.key),
-      ...detailFields(widget).filter((field2) => field2.type === "cms-user").map((field2) => field2.id)
-    ]);
-  }
-  function cmsUserTarget(widget, key) {
-    return detailFields(widget).find((field2) => field2.id === key && field2.type === "cms-user");
-  }
-  function lookupTargetKeysDependingOn(widget, changedFieldId) {
-    if (!changedFieldId) {
-      return new Set;
-    }
-    return new Set(detailLookupTargets(widget).filter((target2) => Object.values(target2.lookup.params ?? {}).some((expression) => expression === `$field.${changedFieldId}` || expression.startsWith(`$field.${changedFieldId}.`))).map((target2) => target2.key));
-  }
-  function isLookupField(field2) {
-    return (field2.type === "combobox" || field2.type === "tokens") && Boolean(field2.lookup);
-  }
-  function lookupUsesRemoteSearch(lookup) {
-    return Object.values(lookup.params ?? {}).includes("$search");
-  }
-  function lookupUsesOffsetPagination(lookup) {
-    const expressions = Object.values(lookup.params ?? {});
-    return expressions.includes("$limit") && expressions.includes("$offset");
-  }
-  function detailFields(widget) {
-    return [...widget.main.filter(isDetailSection), ...widget.aside ?? []].flatMap((section) => section.fields);
-  }
-  function isDetailSection(item) {
-    return !("widget" in item);
   }
 
   // src/components/admin/Resources/Dashboards/runtime/mapping/nestedFields.ts
@@ -27180,6 +27388,8 @@ w13c-lateral-menu-item {
         ];
       }));
       return {
+        detailResourcePath: widget.source.itemPath ?? "",
+        detailLookupUrls: detailLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
         detailReady: resource !== null && resource !== undefined,
         detailValues: effective,
         detailActions: actions(values, resource),
@@ -27188,6 +27398,238 @@ w13c-lateral-menu-item {
         detailRules: rules
       };
     });
+  }
+
+  // src/static/admin/_content/sources/_runtime/detail/lookup.html
+  var lookup_default = `<template data-lookup="states">
+    <span hidden cms-condition="$source.loading"></span>
+    <span hidden cms-condition="$source.error"></span>
+</template>
+<template data-lookup="options">
+    <option cms-repeat="lookupOptions as lookupOption" value="{{ lookupOption.value }}">{{ lookupOption.label }}</option>
+</template>
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/options.ts
+  function lookupPage(host, payload) {
+    const lookup = {
+      endpoint: "",
+      valuePath: host.getAttribute("value-path") ?? "id",
+      labelPath: host.getAttribute("label-path") ?? "name",
+      itemsPath: host.getAttribute("items-path") || undefined
+    };
+    const items = itemsFrom(payload, lookup);
+    const options = items.flatMap((item) => option2(item, lookup));
+    const totalPath = host.getAttribute("total-path");
+    const totalValue = totalPath ? valueAt(payload, totalPath) : undefined;
+    const parsedTotal = Number(totalValue);
+    const total = Number.isFinite(parsedTotal) && parsedTotal >= 0 ? parsedTotal : undefined;
+    return { options, received: items.length, total };
+  }
+  function selectedLookupOptions(host) {
+    const parent = host.closest("cms-dashboard-w-detail");
+    const data = parent ? Td(parent) : undefined;
+    const resourcePath = host.getAttribute("resource-path");
+    const resource = resourcePath ? valueAt(data, resourcePath) : data;
+    const expression = host.getAttribute("selected-expression");
+    if (!expression || !isSafeDashboardExpression(expression, ["resource"], true)) {
+      return [];
+    }
+    const items = resolveExpression(expression, { resource });
+    const selected2 = new Set((host.getAttribute("selected-value") ?? "").split(","));
+    const lookup = {
+      valuePath: host.getAttribute("value-path") ?? "id",
+      labelPath: host.getAttribute("label-path") ?? "name"
+    };
+    return (Array.isArray(items) ? items : [items]).flatMap((item) => option2(item, lookup, false).filter((entry) => selected2.has(entry.value)));
+  }
+  function distinctOptions(options) {
+    const seen = new Set;
+    return options.filter((option2) => {
+      if (seen.has(option2.value)) {
+        return false;
+      }
+      seen.add(option2.value);
+      return true;
+    });
+  }
+  function option2(item, lookup, fallback = true) {
+    const value2 = textAt(item, lookup.valuePath);
+    const label2 = textAt(item, lookup.labelPath, fallback ? value2 : "");
+    return value2 && label2 ? [{ value: value2, label: label2 }] : [];
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/Lookup.ts
+  var sequence = 0;
+
+  class DashboardLookup extends HTMLElement {
+    static observedAttributes = ["request-base", "selected-value"];
+    timer;
+    query = "";
+    offset = 0;
+    received = 0;
+    acceptedOffset = 0;
+    pending = false;
+    hasMore = false;
+    previous;
+    options = [];
+    created = [];
+    declared = [];
+    connectedCallback() {
+      this.declared = Array.from(this.querySelectorAll("[data-static-options] option")).map((option3) => ({ value: option3.value, label: option3.textContent ?? option3.value }));
+      this.setAttribute("cms-reload-on", `dashboard:lookup:${++sequence}`);
+      fd(this, (value2) => this.context(value2));
+      this.addEventListener("combobox-search", this.onSearch);
+      this.addEventListener("combobox-load-more", this.onMore);
+      this.updateUrl();
+      if (!this.getAttribute("cms-source")) {
+        Md(this, {});
+      }
+    }
+    disconnectedCallback() {
+      clearTimeout(this.timer);
+      this.removeEventListener("combobox-search", this.onSearch);
+      this.removeEventListener("combobox-load-more", this.onMore);
+    }
+    attributeChangedCallback(name, before, after) {
+      if (before === after || !this.isConnected) {
+        return;
+      }
+      if (name === "request-base") {
+        clearTimeout(this.timer);
+        this.query = "";
+        this.offset = 0;
+        this.updateUrl();
+      } else {
+        bi(this);
+      }
+    }
+    acceptCreatedOption(option3) {
+      this.created = distinctOptions([...this.created, option3]);
+      bi(this);
+    }
+    context(rendered) {
+      if (rendered !== undefined) {
+        this.pending = false;
+      }
+      const payload = Td(this);
+      if (payload !== undefined && !Object.is(payload, this.previous)) {
+        this.previous = payload;
+        this.acceptedOffset = this.offset;
+        const page = lookupPage(this, payload);
+        this.options = distinctOptions(this.offset ? [...this.options, ...page.options] : page.options);
+        this.received = page.received;
+        this.hasMore = Boolean(this.getAttribute("offset-params")) && (page.total === undefined ? page.received >= 25 : this.offset + page.received < page.total);
+      }
+      return {
+        lookupValue: this.getAttribute("selected-value") ?? "",
+        lookupOptions: distinctOptions([
+          ...this.declared,
+          ...this.options,
+          ...this.created,
+          ...selectedLookupOptions(this)
+        ]),
+        lookupHasMore: this.hasMore
+      };
+    }
+    updateUrl(retry = false) {
+      const base = this.getAttribute("request-base");
+      if (!base || base.includes("{{")) {
+        this.offset = 0;
+        this.setAttribute("cms-source", "");
+        Md(this, {});
+        return;
+      }
+      const url = new URL(base, this.ownerDocument.location.href);
+      for (const [attribute, value2] of [
+        ["search-params", this.query],
+        ["offset-params", String(this.offset)]
+      ]) {
+        for (const key of (this.getAttribute(attribute) ?? "").split(" ").filter(Boolean)) {
+          if (attribute === "search-params" && value2 === "") {
+            url.searchParams.delete(key);
+          } else {
+            url.searchParams.set(key, value2);
+          }
+        }
+      }
+      const source2 = `${url.pathname}${url.search} as lookupData`;
+      if (this.getAttribute("cms-source") !== source2) {
+        this.pending = true;
+        this.setAttribute("cms-source", source2);
+      } else if (retry) {
+        this.pending = true;
+        this.ownerDocument.dispatchEvent(new Event(this.getAttribute("cms-reload-on")));
+      }
+    }
+    onSearch = (event) => {
+      if (!this.getAttribute("search-params")) {
+        return;
+      }
+      event.stopPropagation();
+      const query4 = event.detail?.query;
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => {
+        this.query = typeof query4 === "string" ? query4.slice(0, 200) : "";
+        this.offset = 0;
+        this.updateUrl(true);
+      }, 250);
+    };
+    onMore = (event) => {
+      event.stopPropagation();
+      if (this.hasMore && !this.pending) {
+        this.offset = this.acceptedOffset + this.received;
+        this.updateUrl(true);
+      }
+    };
+  }
+  customElements.define("cms-dashboard-lookup", DashboardLookup);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/composition.ts
+  function composeLookup(control, field2) {
+    const lookup = field2.lookup;
+    const host = document.createElement("cms-dashboard-lookup");
+    host.setAttribute("cms-source", "");
+    host.setAttribute("request-base", `{{ detailLookupUrls.${field2.id} }}`);
+    host.setAttribute("selected-value", control.getAttribute("value") ?? "");
+    host.setAttribute("resource-path", "{{ detailResourcePath }}");
+    for (const [attribute, value2] of Object.entries({
+      "items-path": lookup.itemsPath,
+      "value-path": lookup.valuePath,
+      "label-path": lookup.labelPath,
+      "total-path": lookup.totalPath,
+      "selected-expression": lookup.selected
+    })) {
+      if (typeof value2 === "string") {
+        host.setAttribute(attribute, value2);
+      }
+    }
+    for (const [attribute, expression] of [
+      ["search-params", "$search"],
+      ["offset-params", "$offset"]
+    ]) {
+      host.setAttribute(attribute, Object.entries(lookup.params ?? {}).filter(([, value2]) => value2 === expression).map(([key]) => key).join(" "));
+    }
+    if (!lookupUsesOffsetPagination(lookup)) {
+      host.removeAttribute("offset-params");
+    }
+    const declared = document.createElement("span");
+    declared.hidden = true;
+    declared.setAttribute("data-static-options", "");
+    declared.append(...Array.from(control.children));
+    host.append(declared);
+    control.setAttribute("value", "{{ lookupValue }}");
+    if (field2.type === "combobox") {
+      control.toggleAttribute("remote-search", Boolean(host.getAttribute("search-params")));
+      control.setAttribute("loading", "{{ $source.loading }}");
+      control.setAttribute("has-more", "{{ lookupHasMore }}");
+    }
+    control.toggleAttribute("creatable", Boolean(field2.allowCustom || lookup.create?.mode === "inline"));
+    const template = document.createElement("template");
+    template.innerHTML = lookup_default;
+    control.append(template.content.querySelector('[data-lookup="options"]').content.cloneNode(true));
+    host.append(control, template.content.querySelector('[data-lookup="states"]').content.cloneNode(true));
+    return host;
   }
 
   // src/static/admin/_content/sources/_runtime/detail/controls.html
@@ -27295,7 +27737,7 @@ w13c-lateral-menu-item {
       }
       if (field2.type === "select" || field2.type === "combobox" || field2.type === "tokens") {
         const options = field2.type === "select" ? field2.options : optionList(field2.options, []);
-        if (field2.type === "select" && !options.some((option2) => option2.value === "")) {
+        if (field2.type === "select" && !options.some((option3) => option3.value === "")) {
           const placeholder = document.createElement("option");
           placeholder.value = "";
           placeholder.disabled = true;
@@ -27304,10 +27746,10 @@ w13c-lateral-menu-item {
           control.append(placeholder);
         }
         for (const item of options) {
-          const option2 = document.createElement("option");
-          option2.value = item.value;
-          option2.textContent = item.label;
-          control.append(option2);
+          const option3 = document.createElement("option");
+          option3.value = item.value;
+          option3.textContent = item.label;
+          control.append(option3);
         }
         if (field2.type !== "select") {
           control.toggleAttribute("creatable", field2.allowCustom === true);
@@ -27322,7 +27764,7 @@ w13c-lateral-menu-item {
         control.setAttribute("allow-media", String(field2.allowMedia === true));
         control.setAttribute("published-only", String(field2.publishedOnly === true));
       }
-      wrapper.append(control);
+      wrapper.append((field2.type === "combobox" || field2.type === "tokens") && field2.lookup ? composeLookup(control, field2) : control);
     }
     return wrapper;
   }
@@ -27373,7 +27815,7 @@ dd { margin: 0; min-width: 0; }
     "money"
   ]);
   function supportsBoundDetail(widget) {
-    return [...widget.main, ...widget.aside ?? []].every((section2) => ("widget" in section2) || section2.fields.every((field2) => supported.has(field2.type) && !(("lookup" in field2) && field2.lookup)));
+    return [...widget.main, ...widget.aside ?? []].every((section2) => ("widget" in section2) || section2.fields.every((field2) => supported.has(field2.type)));
   }
   function composeDetail(widget, navigation) {
     const fragment = document.createDocumentFragment();
@@ -30131,16 +30573,16 @@ input {
     control.toggleAttribute("loading", field2.lookupLoading === true);
     control.toggleAttribute("has-more", field2.lookupHasMore === true);
   }
-  function optionElement(option2, value2) {
+  function optionElement(option3, value2) {
     const element = document.createElement("option");
-    element.value = option2.value;
-    element.textContent = option2.label;
-    element.selected = option2.value === value2;
+    element.value = option3.value;
+    element.textContent = option3.label;
+    element.selected = option3.value === value2;
     return element;
   }
   function selectOptionElements(options, value2) {
-    const elements = options.map((option2) => optionElement(option2, value2));
-    if (value2 !== "" || options.some((option2) => option2.value === "")) {
+    const elements = options.map((option3) => optionElement(option3, value2));
+    if (value2 !== "" || options.some((option3) => option3.value === "")) {
       return elements;
     }
     const placeholder = optionElement({ label: "Select an option", value: "" }, value2);
@@ -30184,14 +30626,14 @@ input {
     const input = document.createElement("p9r-select");
     const text4 = textValue2(value2);
     input.setAttribute("value", text4);
-    input.replaceChildren(...column.options.map((option2) => optionElement(option2, text4)));
+    input.replaceChildren(...column.options.map((option3) => optionElement(option3, text4)));
     return input;
   }
   function comboboxEditor(column, value2) {
     const input = document.createElement("p9r-combobox");
     const text4 = textValue2(value2);
     input.setAttribute("value", text4);
-    input.replaceChildren(...column.options.map((option2) => optionElement(option2, text4)));
+    input.replaceChildren(...column.options.map((option3) => optionElement(option3, text4)));
     applyRemoteLookupMetadata(input, column);
     input.value = text4;
     return input;
@@ -30344,7 +30786,7 @@ input {
     }
     applyFeedbackMetadata(input, field2);
     applyRemoteLookupMetadata(input, field2);
-    input.replaceChildren(...(field2.options ?? []).map((option2) => optionElement(option2, String(field2.value))));
+    input.replaceChildren(...(field2.options ?? []).map((option3) => optionElement(option3, String(field2.value))));
     input.value = String(field2.value);
     bindFieldControl(input, field2);
     return input;
@@ -30360,7 +30802,7 @@ input {
     if (field2.creatable) {
       input.setAttribute("creatable", "");
     }
-    input.replaceChildren(...(field2.options ?? []).map((option2) => optionElement(option2, "")));
+    input.replaceChildren(...(field2.options ?? []).map((option3) => optionElement(option3, "")));
     bindFieldControl(input, field2);
     return input;
   }
@@ -30507,13 +30949,13 @@ input {
     const group = document.createElement("div");
     group.className = "chip-group";
     bindFieldControl(group, field2);
-    for (const option2 of field2.options ?? []) {
+    for (const option3 of field2.options ?? []) {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "chip";
-      button.dataset.value = option2.value;
-      button.setAttribute("aria-pressed", String(selected2.has(option2.value)));
-      button.textContent = option2.label;
+      button.dataset.value = option3.value;
+      button.setAttribute("aria-pressed", String(selected2.has(option3.value)));
+      button.textContent = option3.label;
       group.append(button);
     }
     return group;
@@ -30748,11 +31190,11 @@ input {
       control2.setAttribute("aria-label", field2.label);
       const text5 = value2 === null || value2 === undefined ? "" : String(value2);
       control2.setAttribute("value", text5);
-      control2.replaceChildren(...(field2.options ?? []).map((option2) => {
+      control2.replaceChildren(...(field2.options ?? []).map((option3) => {
         const element = document.createElement("option");
-        element.value = option2.value;
-        element.textContent = option2.label;
-        element.selected = option2.value === text5;
+        element.value = option3.value;
+        element.textContent = option3.label;
+        element.selected = option3.value === text5;
         return element;
       }));
       if (field2.type === "combobox") {
@@ -31561,14 +32003,14 @@ input {
       return this.root.querySelector(selector);
     }
   }
-  function applyLookupOption(control, value2, option2) {
-    const existing = Array.from(control.querySelectorAll("option")).find((item) => item.value === option2.value);
+  function applyLookupOption(control, value2, option3) {
+    const existing = Array.from(control.querySelectorAll("option")).find((item) => item.value === option3.value);
     if (existing) {
-      existing.textContent = option2.label;
+      existing.textContent = option3.label;
     } else {
       const element = document.createElement("option");
-      element.value = option2.value;
-      element.textContent = option2.label;
+      element.value = option3.value;
+      element.textContent = option3.label;
       control.append(element);
     }
     const nextValue = Array.isArray(value2) ? value2.map(String).join(",") : String(value2 ?? "");
@@ -32366,6 +32808,10 @@ p9r-token-input {
       if (control && field2 && this.host.hasAttribute("data-declarative")) {
         this.fields.record(field2.id, readFieldControlValue(field2, control), this.displayValue(field2.input, control));
       }
+      if (field2 && this.host.hasAttribute("data-declarative")) {
+        this.refreshConditionalFields();
+        return;
+      }
       if (field2 && this.isBound()) {
         this.lookups.schedule(field2.id);
         this.schemas.schedule(field2.id);
@@ -32422,7 +32868,7 @@ p9r-token-input {
       });
     };
     afterFieldChange(fieldId) {
-      if (this.isBound()) {
+      if (this.isBound() && !this.host.hasAttribute("data-declarative")) {
         this.lookups.schedule(fieldId);
         this.schemas.schedule(fieldId);
       }
@@ -32443,188 +32889,6 @@ p9r-token-input {
     return event.composedPath().find((target2) => target2 instanceof HTMLElement && target2.matches(selector));
   }
 
-  // src/components/admin/Resources/Dashboards/runtime/source.ts
-  async function fetchSourceJson(sourceId, ref, vars, options = {}) {
-    const response = await Cd(sourceUrl(sourceId, ref, vars).href, {
-      headers: { Accept: "application/json" },
-      signal: options.signal
-    });
-    return responseJson(response);
-  }
-  function sourceRequestKey(sourceId, ref, vars) {
-    const url = sourceUrl(sourceId, ref, vars);
-    url.searchParams.sort();
-    return url.href;
-  }
-  async function sendSourceJson(sourceId, ref, method, vars) {
-    const body = resolveBody(ref.body, vars);
-    const response = await Cd(sourceUrl(sourceId, ref, vars).href, {
-      method,
-      headers: body === undefined ? { Accept: "application/json" } : { Accept: "application/json", "Content-Type": "application/json" },
-      ...body === undefined ? {} : { body: JSON.stringify(body) }
-    });
-    return responseJson(response);
-  }
-  async function sendSourceForm(sourceId, ref, method, vars, body) {
-    const response = await Cd(sourceUrl(sourceId, ref, vars).href, {
-      method,
-      headers: { Accept: "application/json" },
-      body
-    });
-    return responseJson(response);
-  }
-  async function sendSourceDownload(sourceId, ref, method, vars) {
-    const response = await sendDownloadResponse(sourceId, ref, method, vars, "*/*");
-    if (!response.ok) {
-      throw new Error(await response.text() || `Source request failed (${response.status})`);
-    }
-    const filename = filenameFromDisposition(response.headers.get("content-disposition"));
-    return {
-      blob: await response.blob(),
-      ...filename ? { filename } : {}
-    };
-  }
-  async function sendDownloadResponse(sourceId, ref, method, vars, accept) {
-    const body = resolveBody(ref.body, vars);
-    return fetch(sourceUrl(sourceId, ref, vars), {
-      method,
-      headers: body === undefined ? { Accept: accept } : { Accept: accept, "Content-Type": "application/json" },
-      ...body === undefined ? {} : { body: JSON.stringify(body) }
-    });
-  }
-  function sourceUrl(sourceId, ref, vars) {
-    const targetSourceId = ref.sourceId ?? sourceId;
-    const dashboardId = document.documentElement.dataset.dashboardScope;
-    const prefix = dashboardId ? `/.cms/dashboards/${encodeURIComponent(dashboardId)}/sources` : "/.cms/sources";
-    const url = new URL(route2(`${prefix}/${encodeURIComponent(targetSourceId)}/${encodeURIComponent(ref.endpoint)}`), window.location.origin);
-    for (const [key, value2] of Object.entries(resolveParams(ref.params, vars))) {
-      url.searchParams.set(key, value2);
-    }
-    return url;
-  }
-  function responseJson(response) {
-    if (!response.ok) {
-      if (response.statusText === "Aborted") {
-        throw new DOMException("Aborted", "AbortError");
-      }
-      throw new Error(response.message || `Source request failed (${response.status})`);
-    }
-    return response.body;
-  }
-  function filenameFromDisposition(value2) {
-    const match = value2?.match(/filename="?([^";]+)"?/i);
-    return match?.[1]?.trim() || undefined;
-  }
-  function itemsFrom(data, ref) {
-    if (!ref.itemsPath) {
-      return Array.isArray(data) ? data : [];
-    }
-    return arrayAt(data, ref.itemsPath);
-  }
-  function itemFrom(data, ref) {
-    return ref.itemPath ? valueAt(data, ref.itemPath) : data;
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/lookups/options.ts
-  async function loadDetailLookupOptions(sourceId, widget, resource, fields, requestOptions = {}) {
-    const loadData = requestOptions.loadData ?? fetchSourceJson;
-    const entries = await Promise.all(detailLookupTargets(widget).filter((target2) => !requestOptions.targetKeys || requestOptions.targetKeys.has(target2.key)).map((target2) => lookupEntry(sourceId, target2, resource, fields, loadData, requestOptions.vars)));
-    return {
-      failedTargetKeys: new Set(entries.filter((entry) => entry.failed).map((entry) => entry.key)),
-      options: Object.fromEntries(entries.map((entry) => [entry.key, entry.options])),
-      pages: Object.fromEntries(entries.map((entry) => [entry.key, entry.page]))
-    };
-  }
-  async function lookupEntry(sourceId, target2, resource, fields, loadData, requestVars) {
-    const selected2 = selectedOptions(target2, resource, fields);
-    try {
-      const { items, total } = await lookupItems(sourceId, target2.lookup, resource, fields, loadData, requestVars);
-      return {
-        failed: false,
-        key: target2.key,
-        options: dedupeOptions([...optionsFromItems(items, target2.lookup), ...selected2]),
-        page: { received: items.length, ...total !== undefined ? { total } : {} }
-      };
-    } catch {
-      return { failed: true, key: target2.key, options: selected2, page: { received: 0 } };
-    }
-  }
-  async function lookupItems(sourceId, lookup, resource, fields, loadData, requestVars) {
-    const vars = { resource, fields, ...requestVars };
-    if (!lookupDependenciesResolved(lookup, vars)) {
-      return { items: [] };
-    }
-    const payload = await loadData(sourceId, lookup, vars);
-    const total = numericTotal(payload, lookup.totalPath);
-    return { items: itemsFrom(payload, lookup), ...total !== undefined ? { total } : {} };
-  }
-  function optionsFromItems(items, lookup) {
-    return items.flatMap((item) => {
-      const option2 = optionFromItem(item, lookup, true);
-      return option2 ? [option2] : [];
-    });
-  }
-  function selectedOptions(target2, resource, fields) {
-    const field2 = target2.selectedField;
-    const expression = target2.lookup.selected;
-    if (!field2 || typeof expression !== "string" || !isSafeDashboardExpression(expression, ["resource"], true)) {
-      return [];
-    }
-    const current = Object.hasOwn(fields, field2.id) ? fields[field2.id] : valueAt(resource, field2.path);
-    const selected2 = new Set(selectedValues(current));
-    if (!selected2.size) {
-      return [];
-    }
-    const resolved = resolveExpression(expression, { resource, fields });
-    const items = Array.isArray(resolved) ? resolved : [resolved];
-    return dedupeOptions(items.flatMap((item) => {
-      const option2 = optionFromItem(item, target2.lookup, false);
-      return option2 && selected2.has(option2.value) ? [option2] : [];
-    }));
-  }
-  function optionFromItem(item, lookup, fallbackToValue) {
-    const value2 = textAt(item, lookup.valuePath);
-    const label2 = textAt(item, lookup.labelPath, fallbackToValue ? value2 : "");
-    if (!value2 || !label2) {
-      return null;
-    }
-    return {
-      value: value2,
-      label: label2,
-      subtitle: lookup.subtitlePath ? textAt(item, lookup.subtitlePath) : undefined,
-      media: lookup.mediaPath ? textAt(item, lookup.mediaPath) : undefined
-    };
-  }
-  function selectedValues(value2) {
-    if (Array.isArray(value2)) {
-      return value2.map(String).filter(Boolean);
-    }
-    return value2 === null || value2 === undefined || value2 === "" ? [] : [String(value2)];
-  }
-  function lookupDependenciesResolved(lookup, vars) {
-    return Object.values(lookup.params ?? {}).every((expression) => {
-      if (["$search", "$limit", "$offset"].includes(expression) || !expression.startsWith("$")) {
-        return true;
-      }
-      const value2 = resolveExpression(expression, vars);
-      return value2 !== undefined && value2 !== null && value2 !== "";
-    });
-  }
-  function numericTotal(payload, path) {
-    const value2 = path ? valueAt(payload, path) : undefined;
-    const total = typeof value2 === "number" ? value2 : Number(value2);
-    return Number.isFinite(total) && total >= 0 ? total : undefined;
-  }
-  function dedupeOptions(options) {
-    const seen = new Set;
-    return options.filter((option2) => {
-      if (seen.has(option2.value)) {
-        return false;
-      }
-      seen.add(option2.value);
-      return true;
-    });
-  }
   // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/requests.ts
   var MAX_IN_FLIGHT_REQUESTS = 64;
 
@@ -32874,11 +33138,11 @@ p9r-token-input {
         return;
       }
       const selected2 = "value" in control ? String(control.value ?? "") : "";
-      control.replaceChildren(...options.map((option2) => {
+      control.replaceChildren(...options.map((option3) => {
         const element = document.createElement("option");
-        element.value = option2.value;
-        element.textContent = option2.label;
-        element.selected = option2.value === selected2;
+        element.value = option3.value;
+        element.textContent = option3.label;
+        element.selected = option3.value === selected2;
         return element;
       }));
     }
@@ -32898,11 +33162,11 @@ p9r-token-input {
   }
   function dedupeOptions2(options) {
     const seen = new Set;
-    return options.filter((option2) => {
-      if (seen.has(option2.value)) {
+    return options.filter((option3) => {
+      if (seen.has(option3.value)) {
         return false;
       }
-      seen.add(option2.value);
+      seen.add(option3.value);
       return true;
     });
   }
@@ -33133,7 +33397,7 @@ p9r-token-input {
   }
   function preserveCmsUserSelection(options, selected2) {
     const value2 = typeof selected2 === "string" ? selected2 : "";
-    if (!value2 || options.some((option2) => option2.value === value2)) {
+    if (!value2 || options.some((option3) => option3.value === value2)) {
       return options;
     }
     return [...options, { value: value2, label: `Unknown CMS user · ${value2}` }];
@@ -33178,15 +33442,15 @@ p9r-token-input {
       return [];
     }
     const seen = new Set;
-    return value2.slice(0, DASHBOARD_MAX_OPTIONS).flatMap((option2) => {
+    return value2.slice(0, DASHBOARD_MAX_OPTIONS).flatMap((option3) => {
       let result;
-      if (typeof option2 === "string" || typeof option2 === "number") {
-        const value3 = text4(option2, LABEL_MAX_LENGTH);
+      if (typeof option3 === "string" || typeof option3 === "number") {
+        const value3 = text4(option3, LABEL_MAX_LENGTH);
         if (value3) {
           result = { value: value3, label: value3 };
         }
       } else {
-        const entry = record2(option2);
+        const entry = record2(option3);
         const optionValue = text4(entry?.value, LABEL_MAX_LENGTH);
         const optionLabel = text4(entry?.label, LABEL_MAX_LENGTH) ?? optionValue;
         if (optionValue && optionLabel) {
@@ -33532,11 +33796,18 @@ p9r-token-input {
         this.render();
       }
     }
-    applyLookupCreate(fieldId, value2, option2) {
+    applyLookupCreate(fieldId, value2, option3) {
       const control = this.runtime.fields.control(fieldId);
       const field2 = control ? this.runtime.fields.find(fieldId) : undefined;
       if (control && field2) {
-        applyLookupOption(control, value2, option2);
+        const lookup = control.closest("cms-dashboard-lookup");
+        if (lookup) {
+          this.runtime.fields.record(fieldId, value2);
+          lookup.acceptCreatedOption(option3);
+          bi(this);
+          return;
+        }
+        applyLookupOption(control, value2, option3);
       }
     }
     acknowledgeSavedFields(fields) {
@@ -33611,7 +33882,7 @@ p9r-token-input {
       if (this.isConnected) {
         this.render();
       }
-      if (!sourceId) {
+      if (!sourceId || this.hasAttribute("data-declarative")) {
         return;
       }
       const fields = fieldValues(widget, resource);
@@ -34271,10 +34542,10 @@ slot { display: contents; }
           control.setAttribute("placeholder", filter.placeholder);
         }
         if (filter.type === "select") {
-          for (const option2 of filter.options ?? []) {
+          for (const option3 of filter.options ?? []) {
             const element = document.createElement("option");
-            element.value = option2.value;
-            element.textContent = option2.label;
+            element.value = option3.value;
+            element.textContent = option3.label;
             control.append(element);
           }
         }
@@ -36157,9 +36428,9 @@ slot { display: contents; }
       ah(error instanceof Error ? error.message : "Lookup creation failed", { type: "error" });
     }
   }
-  function applyLookupCreate(target2, field2, value2, option2) {
+  function applyLookupCreate(target2, field2, value2, option3) {
     const detail = target2;
-    detail?.applyLookupCreate?.(field2, value2, option2);
+    detail?.applyLookupCreate?.(field2, value2, option3);
   }
 
   // src/components/admin/Resources/Dashboards/view/styles/base.css
@@ -36524,10 +36795,10 @@ p {
     select2.dataset.dashboardSwitcher = "true";
     select2.setAttribute("aria-label", "Select dashboard");
     for (const dashboard of dashboards) {
-      const option2 = document.createElement("option");
-      option2.value = dashboard.id;
-      option2.textContent = dashboard.meta.name;
-      select2.append(option2);
+      const option3 = document.createElement("option");
+      option3.value = dashboard.id;
+      option3.textContent = dashboard.meta.name;
+      select2.append(option3);
     }
     select2.setAttribute("value", current?.id ?? "");
     select2.value = current?.id ?? "";
@@ -39869,11 +40140,11 @@ cms-dashboard-icon svg {
     placeholder.disabled = true;
     placeholder.selected = !selected2;
     select2.replaceChildren(placeholder, ...Object.keys(DASHBOARD_ICONS).map((icon) => {
-      const option2 = document.createElement("option");
-      option2.value = icon;
-      option2.textContent = icon.replaceAll("-", " ");
-      option2.selected = icon === selected2;
-      return option2;
+      const option3 = document.createElement("option");
+      option3.value = icon;
+      option3.textContent = icon.replaceAll("-", " ");
+      option3.selected = icon === selected2;
+      return option3;
     }));
     select2.setAttribute("value", selected2);
     select2.value = selected2;
@@ -40081,11 +40352,11 @@ cms-dashboard-icon svg {
     placeholder.disabled = true;
     placeholder.selected = !value2;
     select2.replaceChildren(placeholder, ...views.map((view) => {
-      const option2 = document.createElement("option");
-      option2.value = view.id;
-      option2.textContent = `${view.meta.name} · ${view.source}`;
-      option2.selected = view.id === value2;
-      return option2;
+      const option3 = document.createElement("option");
+      option3.value = view.id;
+      option3.textContent = `${view.meta.name} · ${view.source}`;
+      option3.selected = view.id === value2;
+      return option3;
     }));
     setValue3(select2, value2);
   }
@@ -40856,7 +41127,7 @@ p9r-modal {
     el2.textContent = text5;
     return el2;
   }
-  function option2(value2, text5) {
+  function option3(value2, text5) {
     const el2 = document.createElement("option");
     el2.value = value2;
     el2.textContent = text5;
@@ -40920,7 +41191,7 @@ p9r-modal {
   function sourceSelectField(field2, draft, onChange) {
     const select2 = document.createElement("select");
     select2.dataset.path = field2.path;
-    select2.append(option2("", "Loading..."));
+    select2.append(option3("", "Loading..."));
     select2.value = String(valueAtDraft(draft, field2.path) ?? "");
     select2.addEventListener("change", () => {
       setDraftValue(draft, field2.path, select2.value);
@@ -40954,18 +41225,18 @@ p9r-modal {
     try {
       const response = await fetchSourceEndpoint(field2.source, field2.endpoint, resolvedParams(field2.params, draft));
       const items = arrayAt2(response, field2.itemsPath ?? "items");
-      select2.replaceChildren(option2("", "Select..."));
+      select2.replaceChildren(option3("", "Select..."));
       for (const item of items) {
         const value2 = stringValue2(valueAt2(item, field2.valuePath ?? "id"));
         if (!value2) {
           continue;
         }
         const label3 = stringValue2(valueAt2(item, field2.labelPath ?? field2.valuePath ?? "id")) || value2;
-        select2.append(option2(value2, label3));
+        select2.append(option3(value2, label3));
       }
       select2.value = String(valueAtDraft(draft, field2.path) ?? "");
     } catch (error) {
-      select2.replaceChildren(option2("", error instanceof Error ? error.message : "Failed to load options"));
+      select2.replaceChildren(option3("", error instanceof Error ? error.message : "Failed to load options"));
     }
   }
   async function seedObject(seed, draft) {
@@ -41434,11 +41705,11 @@ pre {
     wrap.className = "value-picker";
     const select2 = document.createElement("select");
     select2.setAttribute("aria-label", label3);
-    select2.append(option3("", label3));
+    select2.append(option4("", label3));
     for (const reference of references) {
-      select2.append(option3(reference.value, reference.label));
+      select2.append(option4(reference.value, reference.label));
     }
-    select2.append(option3("__literal__", "Fixed value…"));
+    select2.append(option4("__literal__", "Fixed value…"));
     select2.value = draft.mode === "literal" ? "__literal__" : draft.value;
     const literal = document.createElement("input");
     literal.type = "text";
@@ -41490,7 +41761,7 @@ pre {
       return reference.shape.type === shape.type && reference.shape.semantic?.kind !== "user-id";
     });
   }
-  function option3(value2, label3) {
+  function option4(value2, label3) {
     const el2 = document.createElement("option");
     el2.value = value2;
     el2.textContent = label3;
@@ -41545,10 +41816,10 @@ pre {
     name.addEventListener("change", onChange);
     const type = document.createElement("select");
     for (const value2 of ["string", "number", "boolean", "object", "array"]) {
-      const option4 = document.createElement("option");
-      option4.value = value2;
-      option4.textContent = value2;
-      type.append(option4);
+      const option5 = document.createElement("option");
+      option5.value = value2;
+      option5.textContent = value2;
+      type.append(option5);
     }
     type.value = field2.type;
     type.setAttribute("aria-label", "Field type");
@@ -41617,10 +41888,10 @@ pre {
   function select2(options2, current, onChange) {
     const element = document.createElement("select");
     for (const [optionValue, label3] of options2) {
-      const option4 = document.createElement("option");
-      option4.value = optionValue;
-      option4.textContent = label3;
-      element.append(option4);
+      const option5 = document.createElement("option");
+      option5.value = optionValue;
+      option5.textContent = label3;
+      element.append(option5);
     }
     element.value = current;
     element.addEventListener("change", () => onChange(element.value));
@@ -43480,16 +43751,16 @@ details[open] > summary > .chevron {
     return error.message;
   }
   function versionOption(version, choices) {
-    const option4 = document.createElement("option");
-    option4.value = version;
+    const option5 = document.createElement("option");
+    option5.value = version;
     const channels = [choices.stable === version ? "stable" : "", choices.latest === version ? "latest" : ""].filter(Boolean);
     const target2 = choices.targets?.find((candidate) => candidate.version === version);
     const labels = [
       ...channels,
       ...target2?.migrations.map((migration) => `${migration.connectorKey} from ${migration.supportedSourceRange}; rollback ${migration.rollback}`) ?? []
     ];
-    option4.textContent = labels.length ? `${version} (${labels.join(", ")})` : version;
-    return option4;
+    option5.textContent = labels.length ? `${version} (${labels.join(", ")})` : version;
+    return option5;
   }
   function upgradeSummary(choices) {
     const unavailable = choices.targets?.filter((target2) => !target2.eligible) ?? [];
@@ -45272,7 +45543,7 @@ button.run:disabled {
   function checkbox2(root, name) {
     return input2(root, name);
   }
-  function option4(value3, label4) {
+  function option5(value3, label4) {
     const element = document.createElement("option");
     element.value = value3;
     element.textContent = label4;
@@ -46013,18 +46284,18 @@ details[open] > summary > .chevron {
   function populateSources(host, sources) {
     const sourceSelect = select3(host, "source");
     for (const source2 of sources) {
-      sourceSelect.append(option4(source2.id, source2.label));
+      sourceSelect.append(option5(source2.id, source2.label));
     }
   }
   function syncEndpointOptions(host, sources) {
     const endpointSelect = select3(host, "endpoint");
     const source2 = sources.find((item) => item.id === select3(host, "source").value);
-    endpointSelect.replaceChildren(...(source2?.endpoints ?? []).map((endpoint) => option4(endpoint.endpointId, `${endpoint.method} ${endpoint.meta?.name ?? endpoint.endpointId}`)));
+    endpointSelect.replaceChildren(...(source2?.endpoints ?? []).map((endpoint) => option5(endpoint.endpointId, `${endpoint.method} ${endpoint.meta?.name ?? endpoint.endpointId}`)));
   }
   function populateFunctions(host, functions) {
     const functionSelect = select3(host, "function");
     for (const fn2 of functions) {
-      functionSelect.append(option4(fn2.id, `${fn2.label} (${fn2.method})`));
+      functionSelect.append(option5(fn2.id, `${fn2.label} (${fn2.method})`));
     }
   }
   function syncFunctionContract(host, functions) {
@@ -47101,7 +47372,7 @@ button:hover {
     controls.className = "param-controls";
     const mode = document.createElement("select");
     mode.className = "param-mode";
-    mode.append(option5("queryParam", "Query param"), option5("raw", "Raw value"), option5("state", "Page state"));
+    mode.append(option6("queryParam", "Query param"), option6("raw", "Raw value"), option6("state", "Page state"));
     const value3 = document.createElement("input");
     value3.className = "param-value";
     value3.placeholder = name;
@@ -47112,7 +47383,7 @@ button:hover {
     controls.append(mode, value3);
     return controls;
   }
-  function option5(value3, label4) {
+  function option6(value3, label4) {
     const element = document.createElement("option");
     element.value = value3;
     element.textContent = label4;
@@ -47124,7 +47395,7 @@ button:hover {
     return element;
   }
   function selectOption(select4, value3) {
-    const index = Array.from(select4.options).findIndex((option6) => option6.value === value3);
+    const index = Array.from(select4.options).findIndex((option7) => option7.value === value3);
     if (index >= 0) {
       select4.selectedIndex = index;
     }
@@ -47202,7 +47473,7 @@ button:hover {
     label4.textContent = "Trigger";
     const trigger = document.createElement("select");
     trigger.className = "source-trigger";
-    trigger.append(option6("auto", "Auto"), option6("submit", "Submit"), option6("change", "Change"));
+    trigger.append(option7("auto", "Auto"), option7("submit", "Submit"), option7("change", "Change"));
     selectOption2(trigger, value3);
     label4.append(trigger);
     return label4;
@@ -47244,14 +47515,14 @@ button:hover {
       }, initialBinding?.body?.[field3.name]));
     }
   }
-  function option6(value3, label4) {
+  function option7(value3, label4) {
     const element = document.createElement("option");
     element.value = value3;
     element.textContent = label4;
     return element;
   }
   function selectOption2(select4, value3) {
-    const index = Array.from(select4.options).findIndex((option7) => option7.value === value3);
+    const index = Array.from(select4.options).findIndex((option8) => option8.value === value3);
     if (index >= 0) {
       select4.selectedIndex = index;
     }
@@ -47403,17 +47674,17 @@ button:hover {
   }
   function selectMethodFilter(filter, value3) {
     const options2 = Array.from(filter.options);
-    const index = options2.findIndex((option7) => option7.value === value3);
+    const index = options2.findIndex((option8) => option8.value === value3);
     filter.selectedIndex = index >= 0 ? index : 0;
-    options2.forEach((option7, optionIndex) => {
-      option7.selected = optionIndex === filter.selectedIndex;
-      option7.toggleAttribute("selected", option7.selected);
+    options2.forEach((option8, optionIndex) => {
+      option8.selected = optionIndex === filter.selectedIndex;
+      option8.toggleAttribute("selected", option8.selected);
     });
     filter.setAttribute("value", options2[filter.selectedIndex]?.value ?? "GET");
   }
   function selectedMethodFilter(filter) {
     const options2 = Array.from(filter.options);
-    const selected2 = options2.find((option7) => option7.selected);
+    const selected2 = options2.find((option8) => option8.selected);
     if (selected2?.value) {
       return selected2.value;
     }
@@ -47421,7 +47692,7 @@ button:hover {
     if (selectedIndexValue) {
       return selectedIndexValue;
     }
-    const selectedAttribute = options2.find((option7) => option7.hasAttribute("selected"));
+    const selectedAttribute = options2.find((option8) => option8.hasAttribute("selected"));
     return selectedAttribute?.value ?? filter.getAttribute("value") ?? "GET";
   }
 
@@ -48339,10 +48610,10 @@ textarea { min-height: 92px; resize: vertical; }
     const select4 = document.createElement("select");
     select4.className = "field-path";
     for (const field3 of fields) {
-      const option7 = document.createElement("option");
-      option7.value = field3.path;
-      option7.textContent = `${field3.scopeLabel}: ${field3.path}`;
-      select4.append(option7);
+      const option8 = document.createElement("option");
+      option8.value = field3.path;
+      option8.textContent = `${field3.scopeLabel}: ${field3.path}`;
+      select4.append(option8);
     }
     select4.selectedIndex = Math.max(0, fields.findIndex((field3) => field3.path === draft.path));
     select4.addEventListener("change", () => {
@@ -48355,10 +48626,10 @@ textarea { min-height: 92px; resize: vertical; }
     const select4 = document.createElement("select");
     select4.className = "field-operator";
     for (const operator of OPERATORS) {
-      const option7 = document.createElement("option");
-      option7.value = operator.value;
-      option7.textContent = operator.label;
-      select4.append(option7);
+      const option8 = document.createElement("option");
+      option8.value = operator.value;
+      option8.textContent = operator.label;
+      select4.append(option8);
     }
     select4.selectedIndex = Math.max(0, OPERATORS.findIndex((operator) => operator.value === draft.operator));
     select4.addEventListener("change", () => {
@@ -49157,33 +49428,33 @@ dd {
 `);
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerItems.ts
-  function normalizeBlockPickerOption(option7) {
-    if (option7.item) {
+  function normalizeBlockPickerOption(option8) {
+    if (option8.item) {
       return {
-        ...option7,
-        kind: option7.item.kind
+        ...option8,
+        kind: option8.item.kind
       };
     }
-    if (!option7.entry) {
+    if (!option8.entry) {
       throw new Error("Block picker option requires either item or entry.");
     }
     return {
-      ...option7,
+      ...option8,
       kind: "block",
       item: {
         kind: "block",
-        entry: option7.entry
+        entry: option8.entry
       }
     };
   }
-  function blockPickerOptionItem(option7) {
-    if (option7.item) {
-      return option7.item;
+  function blockPickerOptionItem(option8) {
+    if (option8.item) {
+      return option8.item;
     }
-    if (option7.entry) {
+    if (option8.entry) {
       return {
         kind: "block",
-        entry: option7.entry
+        entry: option8.entry
       };
     }
     throw new Error("Block picker option requires either item or entry.");
@@ -49221,54 +49492,54 @@ dd {
   function blockPickerIconText(item) {
     return (blockPickerItemIcon(item) ?? blockPickerItemLabel(item)).slice(0, 1).toUpperCase();
   }
-  function blockPickerCategoryLabel(option7) {
-    const item = blockPickerOptionItem(option7);
+  function blockPickerCategoryLabel(option8) {
+    const item = blockPickerOptionItem(option8);
     const category = blockPickerItemCategory(item) ?? blockPickerSourceLabel(item.kind);
     const subCategory = blockPickerItemSubCategory(item);
     return subCategory ? `${category} / ${subCategory}` : category;
   }
-  function blockPickerOptionMatches(option7, query7) {
+  function blockPickerOptionMatches(option8, query7) {
     if (!query7) {
       return true;
     }
-    const item = blockPickerOptionItem(option7);
+    const item = blockPickerOptionItem(option8);
     return [
       blockPickerItemLabel(item),
       blockPickerItemDescription(item),
       blockPickerItemCategory(item),
       blockPickerItemSubCategory(item),
       blockPickerItemHandle(item),
-      option7.slotLabel
+      option8.slotLabel
     ].some((value3) => value3?.toLowerCase().includes(query7));
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerState.ts
   function blockPickerVisibleOptions(group, source2, category, query7) {
-    return group?.options.filter((option7) => {
-      const item = blockPickerOptionItem(option7);
+    return group?.options.filter((option8) => {
+      const item = blockPickerOptionItem(option8);
       if (item.kind !== source2) {
         return false;
       }
-      if (category && blockPickerCategoryLabel(option7) !== category) {
+      if (category && blockPickerCategoryLabel(option8) !== category) {
         return false;
       }
-      return blockPickerOptionMatches(option7, query7);
+      return blockPickerOptionMatches(option8, query7);
     }) ?? [];
   }
   function blockPickerOptionsForSource(group, source2) {
-    return group?.options.filter((option7) => blockPickerOptionItem(option7).kind === source2) ?? [];
+    return group?.options.filter((option8) => blockPickerOptionItem(option8).kind === source2) ?? [];
   }
   function blockPickerSourceCount(group, source2) {
     return blockPickerOptionsForSource(group, source2).length;
   }
   function blockPickerCategoryCount(group, source2, category) {
-    return group?.options.filter((option7) => blockPickerOptionItem(option7).kind === source2 && blockPickerCategoryLabel(option7) === category).length ?? 0;
+    return group?.options.filter((option8) => blockPickerOptionItem(option8).kind === source2 && blockPickerCategoryLabel(option8) === category).length ?? 0;
   }
   function blockPickerCategories(group, source2) {
     const categories = new Set;
-    for (const option7 of group?.options ?? []) {
-      if (blockPickerOptionItem(option7).kind === source2) {
-        categories.add(blockPickerCategoryLabel(option7));
+    for (const option8 of group?.options ?? []) {
+      if (blockPickerOptionItem(option8).kind === source2) {
+        categories.add(blockPickerCategoryLabel(option8));
       }
     }
     return [...categories].sort((left, right) => left.localeCompare(right));
@@ -49284,16 +49555,16 @@ dd {
   var BLOCK_PICKER_SELECT_EVENT = "editor-v2:block-picker-select";
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerView.ts
-  function renderBlockPickerDetails(container, option7, onSelect) {
+  function renderBlockPickerDetails(container, option8, onSelect) {
     container.replaceChildren();
-    if (!option7) {
+    if (!option8) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select content to see details.";
       container.append(empty4);
       return;
     }
-    const item = blockPickerOptionItem(option7);
+    const item = blockPickerOptionItem(option8);
     const eyebrow = document.createElement("div");
     eyebrow.className = "details-eyebrow";
     eyebrow.textContent = blockPickerSourceLabel(item.kind);
@@ -49308,22 +49579,22 @@ dd {
     previewIcon.textContent = blockPickerIconText(item);
     preview.append(previewIcon);
     const meta = document.createElement("dl");
-    meta.append(metaRow("Source", blockPickerSourceLabel(item.kind)), metaRow("Handle", blockPickerItemHandle(item)), metaRow("Slot", option7.slotLabel), metaRow("Category", blockPickerCategoryLabel(option7)));
+    meta.append(metaRow("Source", blockPickerSourceLabel(item.kind)), metaRow("Handle", blockPickerItemHandle(item)), metaRow("Slot", option8.slotLabel), metaRow("Category", blockPickerCategoryLabel(option8)));
     const insert = document.createElement("button");
     insert.className = "insert";
     insert.type = "button";
     insert.textContent = "Insert";
-    insert.addEventListener("click", () => onSelect(option7));
+    insert.addEventListener("click", () => onSelect(option8));
     container.append(preview, eyebrow, title2, description, meta, insert);
   }
-  function renderBlockPickerOption(option7, activeOption, onActivate, onSelect) {
+  function renderBlockPickerOption(option8, activeOption, onActivate, onSelect) {
     const button2 = document.createElement("button");
     button2.className = "block";
     button2.type = "button";
-    button2.ariaSelected = String(option7 === activeOption);
-    button2.addEventListener("click", () => onActivate(option7));
-    button2.addEventListener("dblclick", () => onSelect(option7));
-    const item = blockPickerOptionItem(option7);
+    button2.ariaSelected = String(option8 === activeOption);
+    button2.addEventListener("click", () => onActivate(option8));
+    button2.addEventListener("dblclick", () => onSelect(option8));
+    const item = blockPickerOptionItem(option8);
     const icon = document.createElement("span");
     icon.className = "icon";
     icon.textContent = blockPickerIconText(item);
@@ -49336,7 +49607,7 @@ dd {
     description.textContent = blockPickerItemDescription(item);
     const category = document.createElement("span");
     category.className = "category";
-    category.textContent = blockPickerCategoryLabel(option7);
+    category.textContent = blockPickerCategoryLabel(option8);
     body.append(name, description, category);
     button2.append(icon, body);
     return button2;
@@ -49386,8 +49657,8 @@ dd {
       return null;
     }
     const activeOption = input3.activeOption && options2.includes(input3.activeOption) ? input3.activeOption : options2[0];
-    for (const option7 of options2) {
-      input3.results.append(renderBlockPickerOption(option7, activeOption, input3.onActivate, input3.onSelect));
+    for (const option8 of options2) {
+      input3.results.append(renderBlockPickerOption(option8, activeOption, input3.onActivate, input3.onSelect));
     }
     renderBlockPickerDetails(input3.details, activeOption, input3.onSelect);
     return activeOption;
@@ -49480,7 +49751,7 @@ dd {
     open(groups, contextLabel) {
       this._groups = groups.map((group) => ({
         ...group,
-        options: group.options.map((option7) => normalizeBlockPickerOption(option7))
+        options: group.options.map((option8) => normalizeBlockPickerOption(option8))
       }));
       this._activeSlotKey = firstEnabledBlockPickerGroup(this._groups)?.slot ?? "";
       this._activeSource = "block";
@@ -49516,11 +49787,11 @@ dd {
         activeSource: this._activeSource,
         details: this.elements.details,
         group: this._activeGroup(),
-        onActivate: (option7) => {
-          this._activeOption = option7;
+        onActivate: (option8) => {
+          this._activeOption = option8;
           this._renderEntries();
         },
-        onSelect: (option7) => this._selectOption(option7),
+        onSelect: (option8) => this._selectOption(option8),
         query: this.elements.search.value.trim().toLowerCase(),
         results: this.elements.results
       });
@@ -49549,11 +49820,11 @@ dd {
         sources: this.elements.sources
       });
     }
-    _selectOption(option7) {
+    _selectOption(option8) {
       this.dispatchEvent(new CustomEvent(BLOCK_PICKER_SELECT_EVENT, {
         bubbles: true,
         composed: true,
-        detail: { option: option7 }
+        detail: { option: option8 }
       }));
       this.close();
     }
@@ -50240,9 +50511,9 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Actions/structureBlockPicker.ts
   function openPickerOrEmitSingleMedia(action, groups, contextLabel, context) {
-    const option7 = singleEnabledOption(groups);
-    if (option7?.item?.kind === "media") {
-      context.emitAction(action.action, option7.item, option7.slot);
+    const option8 = singleEnabledOption(groups);
+    if (option8?.item?.kind === "media") {
+      context.emitAction(action.action, option8.item, option8.slot);
       return;
     }
     context.setPendingPickerAction(action);
@@ -50474,8 +50745,8 @@ dd {
       }
     ] : [];
     return [
-      ...blockOptions.filter((option7) => canFitItem(context, parent, slot, option7.item, replaced)),
-      ...mediaOptions.filter((option7) => option7.item && canFitItem(context, parent, slot, option7.item, replaced))
+      ...blockOptions.filter((option8) => canFitItem(context, parent, slot, option8.item, replaced)),
+      ...mediaOptions.filter((option8) => option8.item && canFitItem(context, parent, slot, option8.item, replaced))
     ];
   }
   function canFitItem(context, parent, slot, item, replaced) {
@@ -50582,9 +50853,9 @@ dd {
   function conditionFieldOptions(scopes) {
     const byPath = new Map;
     for (const scope of scopes) {
-      for (const option7 of fieldOptions(scope.fields, scope.name, scope.label ?? scope.name)) {
-        if (!byPath.has(option7.path)) {
-          byPath.set(option7.path, option7);
+      for (const option8 of fieldOptions(scope.fields, scope.name, scope.label ?? scope.name)) {
+        if (!byPath.has(option8.path)) {
+          byPath.set(option8.path, option8);
         }
       }
     }
@@ -52138,7 +52409,7 @@ input:disabled {
   // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataPicker.ts
   function matchingDynamicDataOptions(options2, query7) {
     const normalized = query7.trim().toLowerCase();
-    return normalized ? options2.filter((option7) => `${option7.label} ${option7.path}`.toLowerCase().includes(normalized)) : options2;
+    return normalized ? options2.filter((option8) => `${option8.label} ${option8.path}`.toLowerCase().includes(normalized)) : options2;
   }
   function renderDynamicDataOptions(list, options2, totalOptions, onSelect) {
     list.replaceChildren();
@@ -52149,18 +52420,18 @@ input:disabled {
       list.append(empty4);
       return;
     }
-    for (const option7 of options2) {
+    for (const option8 of options2) {
       const button2 = document.createElement("button");
       button2.className = "data-option";
       button2.type = "button";
-      button2.dataset.path = option7.path;
+      button2.dataset.path = option8.path;
       const label4 = document.createElement("span");
       label4.className = "data-label";
-      label4.textContent = option7.label;
+      label4.textContent = option8.label;
       const path = document.createElement("code");
-      path.textContent = option7.path;
+      path.textContent = option8.path;
       button2.append(label4, path);
-      button2.addEventListener("click", () => onSelect(option7.path));
+      button2.addEventListener("click", () => onSelect(option8.path));
       list.append(button2);
     }
   }
@@ -52170,9 +52441,9 @@ input:disabled {
     const byPath = new Map;
     for (const scope of scopes) {
       const options2 = fieldOptions2(scope.fields, scope.name, scope.label ?? scope.name);
-      for (const option7 of options2) {
-        if (!byPath.has(option7.path)) {
-          byPath.set(option7.path, option7);
+      for (const option8 of options2) {
+        if (!byPath.has(option8.path)) {
+          byPath.set(option8.path, option8);
         }
       }
     }
@@ -53440,11 +53711,11 @@ select:disabled {
       syncFieldCopy(this);
       const current = this.getAttribute("value");
       const options2 = this._parseOptions();
-      this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option7) => {
+      this.shadowRoot.querySelector("select").replaceChildren(...options2.map((option8) => {
         const element = document.createElement("option");
-        element.textContent = option7.label;
-        element.value = option7.value;
-        element.selected = option7.value === current;
+        element.textContent = option8.label;
+        element.value = option8.value;
+        element.selected = option8.value === current;
         return element;
       }));
     }
@@ -53878,12 +54149,12 @@ select:disabled {
     select4.append(custom);
     const groups = new Map;
     for (const token of tokens) {
-      const option7 = document.createElement("option");
-      option7.value = `var(--${token.variable})`;
-      option7.textContent = token.label;
+      const option8 = document.createElement("option");
+      option8.value = `var(--${token.variable})`;
+      option8.textContent = token.label;
       const category = token.category?.trim();
       if (!category) {
-        select4.append(option7);
+        select4.append(option8);
         continue;
       }
       let group = groups.get(category);
@@ -53893,9 +54164,9 @@ select:disabled {
         groups.set(category, group);
         select4.append(group);
       }
-      group.append(option7);
+      group.append(option8);
     }
-    const selected2 = Array.from(select4.querySelectorAll("option")).find((option7) => option7.value === (setting.defaultValue ?? ""));
+    const selected2 = Array.from(select4.querySelectorAll("option")).find((option8) => option8.value === (setting.defaultValue ?? ""));
     if (selected2) {
       selected2.selected = true;
     }
@@ -54166,15 +54437,15 @@ select:disabled {
       const label4 = renderFieldLabel(setting.label, setting.labelDisplay);
       const control2 = document.createElement("cms-editor-v2-segmented-control");
       control2.setAttribute("aria-label", setting.ariaLabel ?? setting.label);
-      for (const option7 of setting.options) {
+      for (const option8 of setting.options) {
         const button2 = document.createElement("button");
         button2.type = "button";
-        button2.value = option7.value;
+        button2.value = option8.value;
         button2.disabled = setting.disabled === true;
-        button2.title = option7.ariaLabel ?? option7.label;
-        button2.ariaLabel = option7.ariaLabel ?? option7.label;
-        button2.ariaPressed = String(option7.value === setting.defaultValue);
-        button2.append(...renderOptionContent(setting.display, option7.display, option7.icon ?? setting.icon, option7.label));
+        button2.title = option8.ariaLabel ?? option8.label;
+        button2.ariaLabel = option8.ariaLabel ?? option8.label;
+        button2.ariaPressed = String(option8.value === setting.defaultValue);
+        button2.append(...renderOptionContent(setting.display, option8.display, option8.icon ?? setting.icon, option8.label));
         button2.addEventListener("click", () => {
           if (setting.disabled) {
             return;
@@ -54182,7 +54453,7 @@ select:disabled {
           for (const item of Array.from(control2.querySelectorAll("button"))) {
             item.ariaPressed = String(item === button2);
           }
-          this.emitSettingChange(setting, option7.value);
+          this.emitSettingChange(setting, option8.value);
         });
         control2.append(button2);
       }
@@ -54363,7 +54634,7 @@ select:disabled {
       capability.link ? "link" : null,
       capability.code ? "code" : null,
       capability.dynamic ? "dynamic" : null
-    ].filter((option7) => Boolean(option7));
+    ].filter((option8) => Boolean(option8));
     return options2.length > 0 ? options2.join(", ") : "Plain text";
   }
 
@@ -55121,9 +55392,9 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/repeatOptions.ts
   function repeatArrayOptions(scopes) {
     const byPath = new Map;
-    for (const option7 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
-      if (!byPath.has(option7.path)) {
-        byPath.set(option7.path, option7);
+    for (const option8 of scopes.flatMap((scope) => repeatArrayFields(scope.fields, scope.name, scope.label ?? scope.name))) {
+      if (!byPath.has(option8.path)) {
+        byPath.set(option8.path, option8);
       }
     }
     return [...byPath.values()];
@@ -55150,7 +55421,7 @@ label {
     if (!normalizedQuery) {
       return options2;
     }
-    return options2.filter((option7) => [option7.path, option7.label, option7.scopeLabel].some((value3) => value3.toLowerCase().includes(normalizedQuery)));
+    return options2.filter((option8) => [option8.path, option8.label, option8.scopeLabel].some((value3) => value3.toLowerCase().includes(normalizedQuery)));
   }
   function defaultRepeatAlias(path) {
     const segment = path.split(".").filter(Boolean).at(-1) ?? "item";
@@ -55168,26 +55439,26 @@ label {
       container.append(empty4);
       return;
     }
-    for (const option7 of options2) {
+    for (const option8 of options2) {
       const button2 = document.createElement("button");
       button2.className = "array";
       button2.type = "button";
-      button2.ariaSelected = String(option7 === activeOption);
+      button2.ariaSelected = String(option8 === activeOption);
       const name = document.createElement("span");
       name.className = "name";
-      name.textContent = option7.path;
+      name.textContent = option8.path;
       const scope = document.createElement("span");
       scope.className = "scope";
-      scope.textContent = option7.scopeLabel;
+      scope.textContent = option8.scopeLabel;
       button2.append(name, scope);
-      button2.addEventListener("click", () => onActivate(option7));
-      button2.addEventListener("dblclick", () => onSelect(option7));
+      button2.addEventListener("click", () => onActivate(option8));
+      button2.addEventListener("dblclick", () => onSelect(option8));
       container.append(button2);
     }
   }
-  function renderRepeatDetails(container, option7) {
+  function renderRepeatDetails(container, option8) {
     container.replaceChildren();
-    if (!option7) {
+    if (!option8) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select an array field to inspect item fields.";
@@ -55197,11 +55468,11 @@ label {
     const heading = document.createElement("div");
     heading.className = "details-eyebrow";
     heading.textContent = "Response fields";
-    container.append(heading, renderFields(option7.fields));
+    container.append(heading, renderFields(option8.fields));
   }
-  function renderRepeatBinding(container, option7, onSelect) {
+  function renderRepeatBinding(container, option8, onSelect) {
     container.replaceChildren();
-    if (!option7) {
+    if (!option8) {
       const empty4 = document.createElement("div");
       empty4.className = "details-empty";
       empty4.textContent = "Select an array field to configure repeat.";
@@ -55216,7 +55487,7 @@ label {
     const pathLabel = document.createElement("span");
     pathLabel.textContent = "Array";
     const pathValue = document.createElement("strong");
-    pathValue.textContent = option7.path;
+    pathValue.textContent = option8.path;
     path.append(pathLabel, pathValue);
     const config = document.createElement("section");
     config.className = "binding-config";
@@ -55224,14 +55495,14 @@ label {
     label4.textContent = "Alias";
     const alias = document.createElement("input");
     alias.className = "alias";
-    alias.value = defaultRepeatAlias(option7.path);
+    alias.value = defaultRepeatAlias(option8.path);
     label4.append(alias);
     config.append(label4);
     const insert = document.createElement("button");
     insert.className = "insert";
     insert.type = "button";
     insert.textContent = "Use repeat";
-    insert.addEventListener("click", () => onSelect(option7, alias.value));
+    insert.addEventListener("click", () => onSelect(option8, alias.value));
     const scroll = document.createElement("div");
     scroll.className = "binding-scroll";
     scroll.append(heading, path, config);
@@ -55405,17 +55676,17 @@ label {
       }
       this._renderOptions();
       renderRepeatDetails(this.details, this._activeOption);
-      renderRepeatBinding(this.binding, this._activeOption, (option7, alias) => this._selectPath(option7.path, alias));
+      renderRepeatBinding(this.binding, this._activeOption, (option8, alias) => this._selectPath(option8.path, alias));
     }
     _renderOptions() {
       const options2 = visibleRepeatOptions(this._options, this.search.value);
       if (!this._activeOption || !options2.includes(this._activeOption)) {
         this._activeOption = options2[0] ?? null;
       }
-      renderRepeatOptions(this.arrays, options2, this._activeOption, (option7) => {
-        this._activeOption = option7;
+      renderRepeatOptions(this.arrays, options2, this._activeOption, (option8) => {
+        this._activeOption = option8;
         this._render();
-      }, (option7) => this._selectPath(option7.path, defaultRepeatAlias(option7.path)));
+      }, (option8) => this._selectPath(option8.path, defaultRepeatAlias(option8.path)));
     }
     _selectPath(path, alias) {
       const cleanAlias = alias.trim();
@@ -58140,7 +58411,7 @@ label {
     }
     const controlled = CONTROLLED_VALUES[tag]?.[attribute];
     if (controlled && (setting.type === "select" || setting.type === "segmented")) {
-      return setting.options.length > 0 && setting.options.every((option7) => controlled.has(option7.value));
+      return setting.options.length > 0 && setting.options.every((option8) => controlled.has(option8.value));
     }
     if (setting.type === "page-link") {
       return pageLinkSettingIsControlled(tag, attribute, setting);

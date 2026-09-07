@@ -68,11 +68,12 @@ export class Combobox extends Component {
     attributeChangedCallback(name: string, _oldValue: string | null, value: string | null): void {
         if (name === "value") {
             this.value = value ?? "";
-        } else {
-            this.syncAttributes();
-            if ((name === "loading" || name === "has-more") && !this.view.listHidden) {
+        } else if (name === "loading" || name === "has-more") {
+            if (!this.view.listHidden) {
                 this.renderList(this.keyboard.query);
             }
+        } else {
+            this.syncAttributes();
         }
     }
 
@@ -171,10 +172,11 @@ export class Combobox extends Component {
             ? remoteComboItemsFor(this.options, query, this.hasAttribute("creatable"))
             : comboItemsFor(this.options, query, this.hasAttribute("creatable"));
         const remote =
-            this.hasAttribute("remote-search") || this.hasAttribute("has-more")
+            this.hasAttribute("remote-search") ||
+            (this.hasAttribute("has-more") && this.getAttribute("has-more") !== "false")
                 ? {
-                      loading: this.hasAttribute("loading"),
-                      hasMore: this.hasAttribute("has-more"),
+                      loading: this.hasAttribute("loading") && this.getAttribute("loading") !== "false",
+                      hasMore: this.hasAttribute("has-more") && this.getAttribute("has-more") !== "false",
                       loadMore: () =>
                           this.dispatchEvent(new CustomEvent("combobox-load-more", { bubbles: true, composed: true })),
                   }

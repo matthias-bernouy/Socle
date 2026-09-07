@@ -458,3 +458,69 @@ The binding site file remains cohesive at 201 lines; mounting now has eight
 entries, an informational directory finding. Complex detail controls,
 definition/navigation relays, the example detail, real local writes and final
 runtime activation remain incomplete. The overall matrix remains pending.
+
+## Remote field lookups checkpoint
+
+Top-level combobox and token lookup fields now compose a light-DOM source with
+ordinary option repeats. They no longer require the detail's old lookup loader
+or response-to-DOM option reconstruction. The detail projects dependency URLs;
+`cms-dashboard-lookup` keeps only query, offset and accumulated option data. It
+changes its source URL for interactions and projects successful source data into
+binding context. It does not fetch, inject CSS, accept a JSON configuration or
+construct rendered options after a response. The option and source-state
+markup is in `sources/_runtime/detail/lookup.html`.
+
+Definitions declare mapping paths and query parameter names as scalar
+attributes. Declared static options, selected resource labels and newly created
+options join fetched pages in a data-only projection, with the original value
+precedence. Unresolved dependencies use a locally seeded empty source; changing
+the dependency activates its network URL without rebuilding the control.
+Cross-source URLs retain the operator route prefix. Empty literal parameters
+do not block readiness, and search/offset parameters preserve the existing
+request contract. Page accumulation and query debouncing remain necessary local
+interaction state; the binding source owns reads, cancellation and rendering.
+
+The official combobox accepts explicit `loading="false"` and `has-more="false"`
+values for binding interpolation, while retaining the existing presence form.
+Changing those status flags updates the option list without reapplying the
+selected value. A focused component test checks an open query, caret and focus
+through the loading/pagination transitions. No new binding directive or private
+binding core was introduced.
+
+Browser coverage includes selected labels outside the fetched page, remote
+search, next-page accumulation, typed token arrays, missing dependencies,
+dependency clearing, normalized inline creation and saving returned identifiers.
+Save payloads and values after full reloads are checked against route-fixture
+persistence. Slow responses preserve field/navigation geometry over five
+frames, input focus, selection and an unrelated draft. Out-of-order replies
+cannot replace the latest search; a failed search retries the same query.
+An additional failing test exposed a next-page retry bug in the new controller:
+its retry now reissues the same offset, and two immediate pagination clicks
+produce one request. These tests do not establish real local database writes.
+
+Four desktop/mobile closed/open captures were inspected and their field
+geometry matches the original goal bundle. The latest desktop images match
+pixel-for-pixel; mobile differences are 25 pixels closed and 3 pixels open,
+confined to control corners. Five sequential controlled runs measured desktop
+median readiness of 182.3ms before and 194.7ms after (ranges 169.2–200.8ms and
+182.7–203.3ms); mobile medians were 182.9ms and 193.5ms (ranges 168.3–185.9ms and
+189.3–207.7ms). This sample is modestly slower and is not evidence of a speedup.
+Each run performs one lookup read. These are fixture/bundle measurements, not
+provider or local-service latency. Evidence: `lookup-captures/`,
+`lookup-timings.json`, `lookup-visual-*.log`, `lookup-browser/` and the dedicated
+`lookup-pagination*.log` files in the evidence directory.
+
+Validation: 265 binding/combobox tests and 180 dashboard/widget/detail tests
+pass. All 23 previously present dashboard browser files passed individually;
+the added pagination file also passes, bringing the inventory to 24. Build and
+initial/final check:all pass all eight gates, with UI contracts unchanged at
+0 errors, 77 warnings and 11 informational findings. The detail widget and
+browser detail-binding directories now have eight entries (informational).
+Existing cohesive combobox, detail event and detail host files remain above the
+size-review threshold; no new handwritten file exceeds it.
+
+The old lookup code is still needed by unmigrated complex details, including
+CMS-user controls and lookups nested in editable collections. It must be removed
+as those controls migrate. Schemas, media, collection controls, metadata relays,
+real local persistence and final runtime activation remain outstanding. This
+checkpoint does not complete the goal or the full verification matrix.

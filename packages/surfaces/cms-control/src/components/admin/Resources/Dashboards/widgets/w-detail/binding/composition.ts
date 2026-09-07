@@ -21,9 +21,7 @@ const supported = new Set([
 /** Temporary migration boundary; extend it as the remaining control families migrate. */
 export function supportsBoundDetail(widget: DetailWidget): boolean {
     return [...widget.main, ...(widget.aside ?? [])].every(
-        (section) =>
-            "widget" in section ||
-            section.fields.every((field) => supported.has(field.type) && !("lookup" in field && field.lookup)),
+        (section) => "widget" in section || section.fields.every((field) => supported.has(field.type)),
     );
 }
 

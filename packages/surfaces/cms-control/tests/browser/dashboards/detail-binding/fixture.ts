@@ -48,6 +48,7 @@ export async function installReadonlyRoutes(
     styles: string,
     choices?: {
         fields: DashboardField[];
+        extraEndpoints?: Array<{ endpointId: string; method: string; params: never[] }>;
         actions?: DashboardAction[];
         resource: Record<string, unknown>;
         normalize?: (resource: Record<string, unknown>) => Record<string, unknown>;
@@ -59,7 +60,11 @@ export async function installReadonlyRoutes(
     const definition = choices
         ? {
               ...group,
-              endpoints: [...group.endpoints, { endpointId: "save", method: "PUT", params: [] }],
+              endpoints: [
+                  ...group.endpoints,
+                  { endpointId: "save", method: "PUT", params: [] },
+                  ...(choices.extraEndpoints ?? []),
+              ],
               dashboards: group.dashboards.map((dashboard) => ({
                   ...dashboard,
                   views: dashboard.views.map((view) => ({
