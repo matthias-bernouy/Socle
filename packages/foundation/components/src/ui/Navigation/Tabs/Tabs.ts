@@ -13,7 +13,7 @@ export class Tabs extends Component {
     private _slot: HTMLSlotElement | null;
 
     static get observedAttributes() {
-        return ["active"];
+        return ["active", "expanded"];
     }
 
     constructor() {
@@ -38,6 +38,8 @@ export class Tabs extends Component {
     attributeChangedCallback(name: string, _oldVal: string | null, newVal: string | null) {
         if (name === "active" && newVal !== null) {
             activateTab(this, this._tablist, this._slot, newVal);
+        } else if (name === "expanded") {
+            rebuildTabs(this, this._tablist, this._slot);
         }
     }
 

@@ -8,7 +8,13 @@
     gap: 6px;
 }
 
+.label-row { display: flex; align-items: center; gap: 8px; }
+.label-row[hidden] { display: none; }
+slot[name="label-actions"] { display: contents; }
+::slotted([slot="label-actions"]) { display: inline-flex; flex-shrink: 0; --text-main: var(--text-muted); }
+
 .label {
+    flex: 1;
     color: var(--text-muted, #94a3b8);
     font-size: 10px;
     font-weight: 700;

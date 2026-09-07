@@ -82,3 +82,29 @@
     transform: translateY(0) scale(0.98);
   }
 }
+
+:host([variant="link"]) {
+  --_btn-bg: transparent;
+  --_btn-border: transparent;
+  --_btn-text: var(--_accent-base);
+  --_btn-hover-bg: transparent;
+  --_btn-font-size: 12px;
+  --_btn-line-height: 1.5;
+  --_btn-padding-x: 0;
+  --_btn-padding-y: 0;
+}
+
+:host([variant="link"]) .button {
+  border: 0;
+  border-radius: 2px;
+  font-weight: 500;
+  text-underline-offset: 3px;
+}
+
+:host([variant="link"]) .button:hover {
+  box-shadow: none;
+  transform: none;
+  text-decoration: underline;
+}
+
+:host([variant="link"]) .button:active { transform: none; }

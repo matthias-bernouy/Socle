@@ -31,7 +31,7 @@ export class Modal extends Component {
         this._footerSlot?.addEventListener("slotchange", this._syncFooter);
         this._titleSlot?.addEventListener("slotchange", this._syncTitle);
         this._syncTitle();
-        this.addEventListener("form:success", this.hide);
+        this.addEventListener("form:success", this._onSuccess);
         this._syncLabel();
         this._syncFooter();
         this._syncOpen();
@@ -43,7 +43,7 @@ export class Modal extends Component {
         this._dialog?.removeEventListener("close", this._onClose);
         this._footerSlot?.removeEventListener("slotchange", this._syncFooter);
         this._titleSlot?.removeEventListener("slotchange", this._syncTitle);
-        this.removeEventListener("form:success", this.hide);
+        this.removeEventListener("form:success", this._onSuccess);
     }
 
     attributeChangedCallback(name: string, _old: string | null, _new: string | null) {
@@ -110,8 +110,20 @@ export class Modal extends Component {
     showModal() {
         this.show();
     }
+    private _onSuccess = (event: Event): void => {
+        if (
+            this.getAttribute("close-on-success") !== "false" &&
+            (event.target as Element).closest("p9r-modal") === this
+        ) {
+            this.hide();
+        }
+    };
+
     hide() {
-        if (this.hasAttribute("open")) {
+        if (
+            this.hasAttribute("open") &&
+            this.dispatchEvent(new CustomEvent("beforeclose", { bubbles: true, composed: true, cancelable: true }))
+        ) {
             this.removeAttribute("open");
         }
     }

@@ -37,6 +37,16 @@ runtime uses a `cms-` activation tag.
 
 ## Forms
 
+`p9r-modal[placement="end"]` presents a full-height side panel on desktop and a
+full-screen panel on mobile, using the same native dialog lifecycle as a centered
+modal. `content-layout="contained"` lets
+slotted content own its scrolling and chrome; use `no-close` only when that
+content supplies an accessible close action through `hide()`/`beforeclose`.
+
+`p9r-tabs[expanded]` shows all panels as labelled regions and hides its tab bar,
+without moving or recreating panel content. Removing `expanded` restores the
+selected tab. Consumers can use this mode for responsive columns.
+
 Form-associated visual components use `static formAssociated = true` and
 `ElementInternals`. Update values with `setFormValue()` and validity with
 `setCustomValidity()`; do not forward form values through ad-hoc shadow DOM

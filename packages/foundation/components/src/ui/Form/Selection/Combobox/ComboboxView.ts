@@ -33,7 +33,7 @@ export class ComboboxView {
         this.hint = root?.querySelector(".hint") ?? null;
         this.clearButton = root?.querySelector("[data-clear]") ?? null;
         this.chevron = root?.querySelector(".chevron") ?? null;
-        this.optionSlot = root?.querySelector("slot") ?? null;
+        this.optionSlot = root?.querySelector("slot:not([name])") ?? null;
         this.listPopover = this.control && this.listbox ? new ComboListPopover(this.control, this.listbox) : null;
     }
 
@@ -61,6 +61,7 @@ export class ComboboxView {
             const label = host.getAttribute("label") ?? "";
             this.label.textContent = label;
             this.label.hidden = label === "";
+            this.label.parentElement!.hidden = label === "" && !host.querySelector('[slot="label-actions"]');
         }
         if (this.input) {
             this.input.placeholder = host.getAttribute("placeholder") ?? "";

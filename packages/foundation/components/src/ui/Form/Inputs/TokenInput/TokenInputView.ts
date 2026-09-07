@@ -32,7 +32,7 @@ export class TokenInputView {
         this.tokens = root?.querySelector("[data-tokens]") ?? null;
         this.listbox = root?.querySelector("[role='listbox']") ?? null;
         this.createButton = root?.querySelector("[data-create]") ?? null;
-        this.optionSlot = root?.querySelector("slot") ?? null;
+        this.optionSlot = root?.querySelector("slot:not([name])") ?? null;
     }
 
     connect(handlers: TokenInputHandlers): void {
@@ -78,7 +78,7 @@ export class TokenInputView {
             this.createButton.hidden = !showCreateAction;
         }
         if (this.labelRow) {
-            this.labelRow.hidden = label === "" && !showCreateAction;
+            this.labelRow.hidden = label === "" && !showCreateAction && !host.querySelector('[slot="label-actions"]');
         }
     }
 

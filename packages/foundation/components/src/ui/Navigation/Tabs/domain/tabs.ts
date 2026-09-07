@@ -33,8 +33,14 @@ export const rebuildTabs = (host: HTMLElement, tablist: HTMLElement | null, slot
         }
         tablist.appendChild(btn);
 
-        panel.setAttribute("role", "tabpanel");
-        panel.setAttribute("aria-labelledby", `tab-${id}`);
+        panel.setAttribute("role", host.hasAttribute("expanded") ? "region" : "tabpanel");
+        if (host.hasAttribute("expanded")) {
+            panel.removeAttribute("aria-labelledby");
+            panel.setAttribute("aria-label", labelAttr);
+        } else {
+            panel.removeAttribute("aria-label");
+            panel.setAttribute("aria-labelledby", `tab-${id}`);
+        }
     });
 
     if (activeId) {
@@ -57,7 +63,7 @@ export const activateTab = (
         if (isMatch) {
             matched = true;
         }
-        p.toggleAttribute("hidden", !isMatch);
+        p.toggleAttribute("hidden", !host.hasAttribute("expanded") && !isMatch);
     });
 
     tabs.forEach((t) => {

@@ -29,7 +29,7 @@ export const handleKeydown = (
     if (tabs.length === 0) {
         return;
     }
-    const current = tabs.findIndex((t) => t === document.activeElement);
+    const current = tabs.findIndex((t) => t === e.target);
     const fallback = current === -1 ? 0 : current;
     let next = fallback;
     if (e.key === "ArrowLeft") {

@@ -71,6 +71,9 @@
   flex: 1;
 }
 
+:host([expanded]) .tablist { display: none; }
+:host([expanded]) .panels { padding-top: 0; }
+
 @media (prefers-reduced-motion: no-preference) {
   .tab { transition: color 0.15s; }
 }
