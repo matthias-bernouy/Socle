@@ -60,8 +60,20 @@ export class SelectPopover {
             return;
         }
         const rect = this.view.trigger.getBoundingClientRect();
-        this.view.panel.style.top = `${rect.bottom + 4}px`;
-        this.view.panel.style.left = `${rect.left}px`;
-        this.view.panel.style.width = `${rect.width}px`;
+        const gap = 4;
+        const height = document.documentElement.clientHeight || window.innerHeight;
+        const width = document.documentElement.clientWidth || window.innerWidth;
+        const below = height - rect.bottom - gap;
+        const above = rect.top - gap;
+        const opensUp = below < 120 && above > below;
+        const panelWidth = Math.min(rect.width, Math.max(0, width - gap * 2 - 2));
+        this.view.panel.style.top = opensUp ? "auto" : `${rect.bottom + gap}px`;
+        this.view.panel.style.bottom = opensUp ? `${height - rect.top + gap}px` : "auto";
+        this.view.panel.style.left = `${Math.max(gap, Math.min(rect.left, width - panelWidth - gap - 2))}px`;
+        this.view.panel.style.width = `${panelWidth}px`;
+        if (this.view.list) {
+            // Leave room for the list padding and the panel border.
+            this.view.list.style.maxHeight = `${Math.max(0, Math.min(200, (opensUp ? above : below) - 10))}px`;
+        }
     };
 }

@@ -4442,9 +4442,9 @@ dialog[open]::backdrop { opacity: 1; }
         this.show();
     }
   }
-  var Or = `<slot></slot>
+  var Vr = `<slot></slot>
 `;
-  var Vr = `:host {
+  var Or = `:host {
     display: contents;
     cursor: pointer;
 }
@@ -4452,7 +4452,7 @@ dialog[open]::backdrop { opacity: 1; }
 
   class Dr extends l {
     constructor() {
-      super({ css: Vr, template: Or });
+      super({ css: Or, template: Vr });
     }
     connectedCallback() {
       if (!this.hasAttribute("role"))
@@ -6422,7 +6422,7 @@ input:disabled {
   }
   var iu = So + Co + To + Mo;
 
-  class Oo extends ne {
+  class Vo extends ne {
     static observedAttributes = Fo;
     input;
     label;
@@ -6999,8 +6999,9 @@ input:disabled {
     reposition = () => {
       if (!this.view.trigger || !this.view.panel)
         return;
-      let t = this.view.trigger.getBoundingClientRect();
-      this.view.panel.style.top = `${t.bottom + 4}px`, this.view.panel.style.left = `${t.left}px`, this.view.panel.style.width = `${t.width}px`;
+      let t = this.view.trigger.getBoundingClientRect(), e = 4, i = document.documentElement.clientHeight || window.innerHeight, r = document.documentElement.clientWidth || window.innerWidth, o = i - t.bottom - e, n = t.top - e, a = o < 120 && n > o, s = Math.min(t.width, Math.max(0, r - e * 2 - 2));
+      if (this.view.panel.style.top = a ? "auto" : `${t.bottom + e}px`, this.view.panel.style.bottom = a ? `${i - t.top + e}px` : "auto", this.view.panel.style.left = `${Math.max(e, Math.min(t.left, r - s - e - 2))}px`, this.view.panel.style.width = `${s}px`, this.view.list)
+        this.view.list.style.maxHeight = `${Math.max(0, Math.min(200, (a ? n : o) - 10))}px`;
     };
   }
 
@@ -7942,10 +7943,10 @@ p9r-tag:hover {
       return;
     Ae(t, e.value.trim().toLowerCase());
   };
-  var On = (t) => {
+  var Vn = (t) => {
     setTimeout(() => Bt(t), 150);
   };
-  var Vn = (t, e) => {
+  var On = (t, e) => {
     if (!e)
       return;
     if (Ae(t, e.value.trim().toLowerCase()), (t.getAttribute("mode") || "multiple") === "single")
@@ -8050,8 +8051,8 @@ p9r-tag:hover {
         this.value = i ?? "";
     }
     _onFocus = () => Bn(this, this._input);
-    _onBlur = () => On(this);
-    _onInput = () => Vn(this, this._input);
+    _onBlur = () => Vn(this);
+    _onInput = () => On(this, this._input);
     _onKeyDown = (t) => Dn(this, this._input, t);
     get value() {
       return zn(this.getAttribute("mode") || "multiple", this._tags);
@@ -8658,7 +8659,7 @@ input:hover:not(:disabled) {
     }
     reload() {
       let t = ++this.load;
-      this.options = [], this.onChange(), Ou(this.host).then((e) => {
+      this.options = [], this.onChange(), Vu(this.host).then((e) => {
         if (t !== this.load || !this.host.isConnected)
           return;
         this.options = e, this.onChange();
@@ -8669,7 +8670,7 @@ input:hover:not(:disabled) {
       return [...t, ...this.options.filter((i) => !e.has(i.value))];
     }
   }
-  async function Ou(t) {
+  async function Vu(t) {
     let e = t.getAttribute("api");
     if (!e)
       return [];
@@ -8681,12 +8682,12 @@ input:hover:not(:disabled) {
       if (!o.ok)
         return [];
       let n = await o.json();
-      return Vu(n);
+      return Ou(n);
     } catch {
       return [];
     }
   }
-  function Vu(t) {
+  function Ou(t) {
     if (!Array.isArray(t))
       return [];
     let e = new Map;
@@ -10639,7 +10640,7 @@ p {
       return [];
     return t.assignedElements({ flatten: true }).filter((e) => e instanceof HTMLElement && e.tagName.toLowerCase() === "w13c-lateral-menu-item" && !e.hasAttribute("disabled"));
   };
-  var Oa = (t, e) => {
+  var Va = (t, e) => {
     let i = t.shadowRoot?.querySelector("slot:not([name])"), r = Ba(i);
     if (r.length === 0)
       return;
@@ -10666,7 +10667,7 @@ p {
       s.focus();
   };
 
-  class Va extends l {
+  class Oa extends l {
     _sidebar;
     constructor() {
       super({ css: Fa, template: Ra });
@@ -10701,7 +10702,7 @@ p {
       else
         this.removeAttribute("collapsed");
     }
-    _onKey = (t) => Oa(this, t);
+    _onKey = (t) => Va(this, t);
   }
   var Da = `<div class="menu-item" part="item">
     <a class="menu-item-link" part="link" tabindex="-1">
@@ -10910,7 +10911,7 @@ p {
     box-shadow: 0 2px 4px color-mix(in oklab, var(--item-color-active), transparent 80%);
 }
 `;
-  var Oe = (t, e) => {
+  var Ve = (t, e) => {
     if (!t)
       return;
     if (e)
@@ -10918,7 +10919,7 @@ p {
     else
       t.removeAttribute("href");
   };
-  var Ve = (t, e) => {
+  var Oe = (t, e) => {
     if (!t)
       return;
     if (e)
@@ -10988,7 +10989,7 @@ p {
         this.setAttribute("role", "listitem");
       if (!this.hasAttribute("tabindex"))
         this.setAttribute("tabindex", "0");
-      Oe(this._anchor, this.getAttribute("href")), Ve(this._badgeEl, this.getAttribute("badge")), X(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey), this.addEventListener("click", this._onActionClick);
+      Ve(this._anchor, this.getAttribute("href")), Oe(this._badgeEl, this.getAttribute("badge")), X(this, this._anchor), window.addEventListener("popstate", this._onPopstate), this.addEventListener("keydown", this._onKey), this.addEventListener("click", this._onActionClick);
       for (let t of this.actionSlots())
         t.addEventListener("slotchange", this._syncActionSlots);
       this._syncActionSlots();
@@ -11002,11 +11003,11 @@ p {
       if (!this._anchor)
         return;
       if (t === "href") {
-        if (Oe(this._anchor, i), this.isConnected)
+        if (Ve(this._anchor, i), this.isConnected)
           X(this, this._anchor);
       }
       if (t === "badge")
-        Ve(this._badgeEl, i);
+        Oe(this._badgeEl, i);
       if (t === "active")
         if (i !== null)
           ut(this, this._anchor, true);
@@ -11447,7 +11448,7 @@ p {
   background: var(--bg-base, #eee);
 }
 `;
-  var Op = (t) => {
+  var Vp = (t) => {
     let e = t.getAttribute("filter-name");
     if (!e)
       return "";
@@ -11462,7 +11463,7 @@ p {
       return;
     }
     e.removeAttribute("hidden");
-    let o = Op(t);
+    let o = Vp(t);
     if (i)
       i.value = o;
     if (o)
@@ -11509,7 +11510,7 @@ p {
   var Ts = (t, e) => {
     e?.setAttribute("hidden", ""), t?.setAttribute("aria-expanded", "false");
   };
-  var Vp = ws + ks;
+  var Op = ws + ks;
 
   class Ms extends l {
     _sortTrigger;
@@ -11520,7 +11521,7 @@ p {
       return ["sort", "filter-name"];
     }
     constructor() {
-      super({ css: Vp, template: _s });
+      super({ css: Op, template: _s });
       this._sortTrigger = this.shadowRoot?.querySelector("#sort-trigger") ?? null, this._filterBtn = this.shadowRoot?.querySelector("#filter-btn") ?? null, this._filterPopover = this.shadowRoot?.querySelector("#filter-popover") ?? null, this._filterInput = this.shadowRoot?.querySelector("#filter-input") ?? null;
     }
     connectedCallback() {
@@ -11726,7 +11727,7 @@ p {
   flex-wrap: wrap;
 }
 `;
-  var Os = `:host([variant="pills"]) .tablist {
+  var Vs = `:host([variant="pills"]) .tablist {
   border-bottom: 0;
   gap: 0.4rem;
   padding: 0.25rem;
@@ -11771,7 +11772,7 @@ p {
     return t.assignedElements({ flatten: true }).filter((e) => e.tagName === "P9R-TAB-PANEL");
   };
   var Kp = 0;
-  var Vs = () => `tabpanel-${Kp++}`;
+  var Os = () => `tabpanel-${Kp++}`;
   var Ds = (t, e) => {
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, detail: { active: e } }));
   };
@@ -11783,7 +11784,7 @@ p {
     if (!o && r.length > 0)
       o = r[0]?.getAttribute("id") ?? null;
     if (r.forEach((n, a) => {
-      let s = n.getAttribute("id") ?? Vs();
+      let s = n.getAttribute("id") ?? Os();
       if (!n.id)
         n.id = s;
       let d = n.getAttribute("label") ?? `Tab ${a + 1}`, u = document.createElement("button");
@@ -11838,7 +11839,7 @@ p {
       Z(t, e, i, u);
     d.focus();
   };
-  var Up = Bs + Os;
+  var Up = Bs + Vs;
 
   class $s extends l {
     _tablist;
@@ -12434,14 +12435,14 @@ p {
     let e = new Date(t);
     return Number.isNaN(e.getTime()) ? t : ph.format(e);
   };
-  function Vt(t, e) {
+  function Ot(t, e) {
     return `<div class="empty"><svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><p class="empty-title">${L(t)}</p>${e ? `<p class="empty-hint">${L(e)}</p>` : ""}</div>`;
   }
   function cl(t) {
     if (t.length === 0)
       return "";
-    let e = 320, i = 140, r = 32, o = 8, n = 10, a = 22, s = e - r - o, d = i - n - a, u = n + d, p = Math.max(...t.map((B) => B.value), 1), b = t.length, m = t.map((B, rt) => [r + (b === 1 ? s / 2 : rt / (b - 1) * s), n + (1 - B.value / p) * d]), z = m.map(([B, rt]) => `${B.toFixed(1)},${rt.toFixed(1)}`).join(" "), Vd = `${m[0][0].toFixed(1)},${u} ${z} ${m[b - 1][0].toFixed(1)},${u}`, Dd = m.map(([B, rt]) => `<circle class="dot" cx="${B.toFixed(1)}" cy="${rt.toFixed(1)}" r="2.5"/>`).join("");
-    return `<svg class="line" viewBox="0 0 ${e} ${i}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${r}" y1="${n}" x2="${r}" y2="${u}"/><line class="axis" x1="${r}" y1="${u}" x2="${e - o}" y2="${u}"/><text class="tick" x="${r - 4}" y="${n + 3}" text-anchor="end">${hh(p)}</text><text class="tick" x="${r - 4}" y="${u}" text-anchor="end">0</text><polygon class="area" points="${Vd}" fill="url(#lc-grad)"/><polyline class="stroke" points="${z}"/>${Dd}<text class="tick" x="${r}" y="${i - 6}">${L(t[0].label)}</text><text class="tick" x="${e - o}" y="${i - 6}" text-anchor="end">${L(t[b - 1].label)}</text></svg>`;
+    let e = 320, i = 140, r = 32, o = 8, n = 10, a = 22, s = e - r - o, d = i - n - a, u = n + d, p = Math.max(...t.map((B) => B.value), 1), b = t.length, m = t.map((B, rt) => [r + (b === 1 ? s / 2 : rt / (b - 1) * s), n + (1 - B.value / p) * d]), z = m.map(([B, rt]) => `${B.toFixed(1)},${rt.toFixed(1)}`).join(" "), Od = `${m[0][0].toFixed(1)},${u} ${z} ${m[b - 1][0].toFixed(1)},${u}`, Dd = m.map(([B, rt]) => `<circle class="dot" cx="${B.toFixed(1)}" cy="${rt.toFixed(1)}" r="2.5"/>`).join("");
+    return `<svg class="line" viewBox="0 0 ${e} ${i}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${r}" y1="${n}" x2="${r}" y2="${u}"/><line class="axis" x1="${r}" y1="${u}" x2="${e - o}" y2="${u}"/><text class="tick" x="${r - 4}" y="${n + 3}" text-anchor="end">${hh(p)}</text><text class="tick" x="${r - 4}" y="${u}" text-anchor="end">0</text><polygon class="area" points="${Od}" fill="url(#lc-grad)"/><polyline class="stroke" points="${z}"/>${Dd}<text class="tick" x="${r}" y="${i - 6}">${L(t[0].label)}</text><text class="tick" x="${e - o}" y="${i - 6}" text-anchor="end">${L(t[b - 1].label)}</text></svg>`;
   }
   function ul(t, e) {
     if (t.length === 0)
@@ -12609,7 +12610,7 @@ p {
     async _load() {
       let t = this.shadowRoot.querySelector(".chart"), e = this.getAttribute("url"), i = e ? await Y(e) : null, r = Array.isArray(i) ? i : [];
       if (r.length === 0) {
-        t.innerHTML = Vt(this.getAttribute("empty-title") ?? "Aucune donnée à afficher", this.getAttribute("empty-hint") ?? undefined);
+        t.innerHTML = Ot(this.getAttribute("empty-title") ?? "Aucune donnée à afficher", this.getAttribute("empty-hint") ?? undefined);
         return;
       }
       let o = this.getAttribute("value") ?? "value", n = this.getAttribute("x") ?? "", a = r.map((s) => ({ label: n ? dl(String(s[n] ?? "")) : "", value: Number(s[o] ?? 0) }));
@@ -12701,7 +12702,7 @@ p {
     async _load() {
       let t = this.shadowRoot.querySelector(".list"), e = this.getAttribute("url"), i = e ? await Y(e) : null, r = Array.isArray(i) ? i : [];
       if (r.length === 0) {
-        t.innerHTML = Vt(this.getAttribute("empty") ?? "Aucune donnée");
+        t.innerHTML = Ot(this.getAttribute("empty") ?? "Aucune donnée");
         return;
       }
       let o = this.getAttribute("label-field") ?? "key", n = this.getAttribute("value-field") ?? "value", a = r.map((s) => ({ label: String(s[o] ?? ""), value: Number(s[n] ?? 0) }));
@@ -12788,7 +12789,7 @@ p {
   function Ml(t) {
     return kh.includes(t ?? "");
   }
-  var O = "cms-params:change";
+  var V = "cms-params:change";
   var R = "cms-state:change";
   var Eh = new RegExp("#\\{\\s*([A-Za-z0-9_][A-Za-z0-9_.:-]*)\\s*\\}", "g");
   var Ah = new RegExp("#\\{\\s*[A-Za-z0-9_][A-Za-z0-9_.:-]*\\s*\\}");
@@ -12952,10 +12953,10 @@ p {
         console.warn(`${_}: no key — set ${_}="<param>" or a name attribute`, this.el);
         return;
       }
-      this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), document.addEventListener(O, this.onParams), window.addEventListener("popstate", this.onParams), this.childObserver = new MutationObserver(this.onChildren), this.childObserver.observe(this.el, { childList: true });
+      this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), document.addEventListener(V, this.onParams), window.addEventListener("popstate", this.onParams), this.childObserver = new MutationObserver(this.onChildren), this.childObserver.observe(this.el, { childList: true });
     }
     dispose() {
-      if (this.el.removeEventListener("input", this.onInput), this.el.removeEventListener("change", this.onChange), document.removeEventListener(O, this.onParams), window.removeEventListener("popstate", this.onParams), this.childObserver?.disconnect(), this.childObserver = null, this.timer)
+      if (this.el.removeEventListener("input", this.onInput), this.el.removeEventListener("change", this.onChange), document.removeEventListener(V, this.onParams), window.removeEventListener("popstate", this.onParams), this.childObserver?.disconnect(), this.childObserver = null, this.timer)
         clearTimeout(this.timer);
       if (this.reflectTimer)
         clearTimeout(this.reflectTimer);
@@ -13032,7 +13033,7 @@ p {
   function Bl(t, e, i) {
     C(t, h, e, (r) => i.unregisterSource(r)), C(t, _, e, (r) => i.unregisterParamSync(r)), C(t, f, e, (r) => i.unregisterPageStateSync(r));
   }
-  function Ol(t, e, i) {
+  function Vl(t, e, i) {
     if (t.nodeType !== Node.ELEMENT_NODE || !e)
       return;
     let r = t;
@@ -13059,7 +13060,7 @@ p {
         n.set("Accept", "application/json");
       r = await fetch(t, { ...i, headers: n, signal: e });
     } catch (n) {
-      return Vl(n) ? { kind: "aborted" } : { kind: "error", status: null, message: Dl(n) };
+      return Ol(n) ? { kind: "aborted" } : { kind: "error", status: null, message: Dl(n) };
     }
     if (!r.ok)
       return { kind: "error", status: r.status, message: `HTTP ${r.status}` };
@@ -13067,7 +13068,7 @@ p {
     try {
       o = await r.text();
     } catch (n) {
-      return Vl(n) ? { kind: "aborted" } : { kind: "error", status: r.status, message: Dl(n) };
+      return Ol(n) ? { kind: "aborted" } : { kind: "error", status: r.status, message: Dl(n) };
     }
     if (o.trim() === "")
       return { kind: "success", data: null };
@@ -13077,7 +13078,7 @@ p {
       return { kind: "error", status: r.status, message: "Invalid JSON response" };
     }
   }
-  function Vl(t) {
+  function Ol(t) {
     return t?.name === "AbortError";
   }
   function Dl(t) {
@@ -13116,18 +13117,18 @@ p {
   function Kl(t, e, i) {
     let r = zl(t), o = Il(t);
     if (r)
-      e.addEventListener(O, i), e.defaultView?.addEventListener?.("popstate", i);
+      e.addEventListener(V, i), e.defaultView?.addEventListener?.("popstate", i);
     if (o)
       e.addEventListener(R, i);
     return () => {
       if (r)
-        e.removeEventListener(O, i), e.defaultView?.removeEventListener?.("popstate", i);
+        e.removeEventListener(V, i), e.defaultView?.removeEventListener?.("popstate", i);
       if (o)
         e.removeEventListener(R, i);
     };
   }
   var Th = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
-  function V(t) {
+  function O(t) {
     return T(t).url;
   }
   function T(t) {
@@ -13154,7 +13155,7 @@ p {
         a?.removeEventListener(s, d);
       };
     }
-    let n = Kl(V(t.getAttribute(h) ?? ""), i, e.onReactiveUrlChange);
+    let n = Kl(O(t.getAttribute(h) ?? ""), i, e.onReactiveUrlChange);
     return () => {
       for (let a of o)
         i.removeEventListener(a, e.onReload);
@@ -13278,12 +13279,12 @@ p {
       i.removeChild(r), r = o;
     }
   }
-  var Oh = { found: false, value: undefined };
+  var Vh = { found: false, value: undefined };
   function y(t, e) {
     if (e === ".")
       return { found: true, value: t.value };
     if (e === "value")
-      return { found: true, value: Vh(t) };
+      return { found: true, value: Oh(t) };
     let i = e.indexOf("."), r = i === -1 ? e : e.slice(0, i), o = i === -1 ? "" : e.slice(i + 1);
     for (let n = t;n; n = n.parent) {
       if (n.vars && r in n.vars)
@@ -13292,9 +13293,9 @@ p {
       if (ed(a) && r in a)
         return { found: true, value: td(a[r], o) };
     }
-    return Oh;
+    return Vh;
   }
-  function Vh(t) {
+  function Oh(t) {
     let e = t.value;
     if (ed(e) && "value" in e)
       return e.value;
@@ -14516,10 +14517,10 @@ p {
   function Md(t, e) {
     if (w(t) !== "auto")
       throw Error("setSourceData requires an automatic read source; form sources own their submission results.");
-    it.set(t, { value: e, local: V(t.getAttribute("cms-source") ?? "") === "" }), Si.get(t)?.(e);
+    it.set(t, { value: e, local: O(t.getAttribute("cms-source") ?? "") === "" }), Si.get(t)?.(e);
   }
   function Hd(t, e) {
-    it.set(t, { value: e, local: Ci(t) && V(t.getAttribute("cms-source") ?? "") === "" });
+    it.set(t, { value: e, local: Ci(t) && O(t.getAttribute("cms-source") ?? "") === "" });
   }
   function zd(t, e) {
     return Si.set(t, e), it.get(t);
@@ -14755,7 +14756,7 @@ p {
       return true;
     }
     hasSourceInput(t) {
-      return V(t.getAttribute(h) ?? "").trim() !== "" || w(t) === "auto" && Ci(t);
+      return O(t.getAttribute(h) ?? "").trim() !== "" || w(t) === "auto" && Ci(t);
     }
   }
 
@@ -14852,7 +14853,7 @@ p {
       this.observer = new t((e) => {
         for (let i of e) {
           if (i.type === "attributes") {
-            Ol(i.target, i.attributeName, this.registry);
+            Vl(i.target, i.attributeName, this.registry);
             continue;
           }
           i.removedNodes.forEach((r) => Bl(r, this.root, this.registry)), i.addedNodes.forEach((r) => {
@@ -14886,7 +14887,7 @@ p {
     Bd = t;
   }
 
-  class Od extends HTMLElement {
+  class Vd extends HTMLElement {
     _runtime = null;
     static get observedAttributes() {
       return [pt, Dt];
@@ -26631,6 +26632,99 @@ w13c-lateral-menu-item {
   function isDetailWidget(widget) {
     return widget.widget === "w-detail";
   }
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/schemas/definitions.ts
+  var KEY_MAX_LENGTH = 128;
+  var LABEL_MAX_LENGTH = 256;
+  var UNIT_MAX_LENGTH = 32;
+  function definitionsAt(data, path) {
+    const definitions = new Map;
+    for (const value2 of arrayAt(data, path).slice(0, DASHBOARD_MAX_NESTED_FIELDS)) {
+      const definition = schemaDefinition(value2);
+      if (definition && !definitions.has(definition.id)) {
+        definitions.set(definition.id, definition);
+      }
+    }
+    return [...definitions.values()];
+  }
+  function schemaDefinition(value2) {
+    const row = record(value2);
+    const nested = record(row?.definition);
+    const id2 = text4(row?.id, KEY_MAX_LENGTH) ?? text4(row?.fieldKey, KEY_MAX_LENGTH) ?? text4(row?.key, KEY_MAX_LENGTH);
+    const label2 = text4(row?.label, LABEL_MAX_LENGTH) ?? text4(nested?.label, LABEL_MAX_LENGTH) ?? id2;
+    const rawType = text4(row?.type, 16) ?? text4(row?.fieldType, 16) ?? text4(nested?.fieldType, 16);
+    const type = rawType === "enum" ? "string" : rawType;
+    if (!id2 || !label2 || !safeKey(id2) || type !== "string" && type !== "number" && type !== "boolean") {
+      return null;
+    }
+    const options = schemaOptions(row?.options ?? nested?.options);
+    const unit = text4(row?.unit, UNIT_MAX_LENGTH) ?? text4(nested?.unit, UNIT_MAX_LENGTH);
+    return {
+      id: id2,
+      label: label2,
+      type,
+      ...row?.required === true ? { required: true } : {},
+      ...unit ? { unit } : {},
+      ...options.length ? { options } : {}
+    };
+  }
+  function schemaOptions(value2) {
+    if (!Array.isArray(value2)) {
+      return [];
+    }
+    const seen = new Set;
+    return value2.slice(0, DASHBOARD_MAX_OPTIONS).flatMap((option2) => {
+      let result;
+      if (typeof option2 === "string" || typeof option2 === "number") {
+        const value3 = text4(option2, LABEL_MAX_LENGTH);
+        if (value3) {
+          result = { value: value3, label: value3 };
+        }
+      } else {
+        const entry = record(option2);
+        const optionValue = text4(entry?.value, LABEL_MAX_LENGTH);
+        const optionLabel = text4(entry?.label, LABEL_MAX_LENGTH) ?? optionValue;
+        if (optionValue && optionLabel) {
+          result = { value: optionValue, label: optionLabel };
+        }
+      }
+      if (!result || seen.has(result.value)) {
+        return [];
+      }
+      seen.add(result.value);
+      return [result];
+    });
+  }
+  function safeKey(value2) {
+    return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value2) && !["__proto__", "prototype", "constructor"].includes(value2);
+  }
+  function text4(value2, maxLength) {
+    if (typeof value2 !== "string" && typeof value2 !== "number") {
+      return;
+    }
+    const result = String(value2).trim();
+    return result && result.length <= maxLength ? result : undefined;
+  }
+  function record(value2) {
+    return value2 !== null && typeof value2 === "object" && !Array.isArray(value2) ? value2 : undefined;
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/data.ts
+  var cache = new WeakMap;
+  function boundSchemas(host) {
+    return Object.fromEntries(Array.from(host.querySelectorAll("cms-dashboard-schema-source")).map((source2) => {
+      const payload = Td(source2);
+      let entry = cache.get(source2);
+      if (!entry || !Object.is(entry.payload, payload)) {
+        entry = {
+          payload,
+          definitions: definitionsAt(payload, source2.getAttribute("items-path") ?? undefined)
+        };
+        cache.set(source2, entry);
+      }
+      return [source2.getAttribute("field-id"), { definitions: entry.definitions, status: source2.status }];
+    }));
+  }
+
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/types.ts
   var W_MEDIA_FIELD_ACTION_EVENT = "cms-dashboard-w-media-field:action";
 
@@ -26724,112 +26818,6 @@ w13c-lateral-menu-item {
     };
   }
 
-  // src/components/admin/Resources/Dashboards/runtime/media.ts
-  function mediaValue(value2, field2, sourceId) {
-    const values = Array.isArray(value2) ? value2 : value2 !== null && typeof value2 === "object" ? [value2] : arrayAt({ value: value2 }, "value");
-    return values.map((item) => {
-      const source2 = sourceMediaItem(item, field2, sourceId);
-      return source2.id && source2.url ? source2 : normalizedMediaItem(item) ?? source2;
-    }).filter((item) => item.id && item.url);
-  }
-  function normalizedMediaItem(item) {
-    if (!item || typeof item !== "object" || Array.isArray(item)) {
-      return null;
-    }
-    const record = item;
-    const id2 = textAt(record, "id");
-    const url = textAt(record, "url");
-    if (!id2 || !url) {
-      return null;
-    }
-    return {
-      id: id2,
-      url,
-      ...typeof record.thumbnailUrl === "string" && record.thumbnailUrl ? { thumbnailUrl: record.thumbnailUrl } : {},
-      ...typeof record.alt === "string" ? { alt: record.alt } : {},
-      ...typeof record.name === "string" ? { name: record.name } : {},
-      ...record.pending === true ? { pending: true } : {}
-    };
-  }
-  function sourceMediaItem(item, field2, sourceId) {
-    return {
-      id: textAt(item, field2.item.idPath, textAt(item, field2.item.urlPath)),
-      url: mediaUrl(item, field2, sourceId),
-      alt: field2.item.altPath ? textAt(item, field2.item.altPath) : undefined
-    };
-  }
-  function mediaUrl(item, field2, sourceId) {
-    const raw = textAt(item, field2.item.urlPath);
-    if (isRenderableUrl(raw)) {
-      return raw;
-    }
-    const id2 = textAt(item, field2.item.idPath);
-    const endpoint = mediaFileEndpoint(field2);
-    if (!sourceId || !endpoint || !id2) {
-      return raw;
-    }
-    return route2(`/.cms/sources/${encodeURIComponent(sourceId)}/${encodeURIComponent(endpoint)}?id=${encodeURIComponent(id2)}`);
-  }
-  function mediaFileEndpoint(field2) {
-    const upload = field2.actions?.upload?.endpoint ?? "";
-    if (!upload.startsWith("upload") || upload.length <= "upload".length) {
-      return "";
-    }
-    const rest = upload.slice("upload".length);
-    return `${rest.charAt(0).toLowerCase()}${rest.slice(1)}`;
-  }
-  function isRenderableUrl(value2) {
-    return /^(https?:|blob:|data:|\/)/.test(value2);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/context.ts
-  function mediaContext(owner, fields) {
-    const definitions = fields.filter((field2) => field2.type === "media");
-    const cache = new Map;
-    return (values, edits) => {
-      const urls = new Set;
-      const result = Object.fromEntries(definitions.map((field2) => {
-        const raw = values[field2.id];
-        const draft = Object.hasOwn(edits, field2.id);
-        let entry = cache.get(field2.id);
-        if (!entry || entry.raw !== raw || entry.draft !== draft) {
-          const items = draft && Array.isArray(raw) ? raw : mediaValue(raw, field2, owner.dataset.sourceId ?? "");
-          entry = {
-            raw,
-            draft,
-            items: items.map((item, index2) => ({
-              ...item,
-              index: index2,
-              thumbnail: item.thumbnailUrl || item.url,
-              title: item.name?.trim() || item.alt?.trim() || `Image ${index2 + 1}`,
-              previewAlt: item.alt?.trim() || item.name?.trim() || `Image ${index2 + 1}`
-            }))
-          };
-          cache.set(field2.id, entry);
-        }
-        for (const item of entry.items) {
-          urls.add(item.url);
-        }
-        const control = Array.from(owner.querySelectorAll("cms-dashboard-media-field")).find((node) => node.dataset.fieldControl === field2.id);
-        const index = Math.min(control?.preview.index ?? 0, Math.max(0, entry.items.length - 1));
-        const open = (control?.preview.opened ?? false) && entry.items.length > 0;
-        return [
-          field2.id,
-          {
-            items: entry.items,
-            showAdd: field2.multiple || entry.items.length === 0,
-            index,
-            open,
-            preview: entry.items[index],
-            counter: `${index + 1} / ${entry.items.length}`
-          }
-        ];
-      }));
-      mediaFiles(owner).retain(urls);
-      return result;
-    };
-  }
-
   // src/components/admin/Resources/Dashboards/runtime/source.ts
   async function fetchSourceJson(sourceId, ref, vars, options = {}) {
     const response = await Cd(sourceUrl(sourceId, ref, vars).href, {
@@ -26912,6 +26900,178 @@ w13c-lateral-menu-item {
     return ref.itemPath ? valueAt(data, ref.itemPath) : data;
   }
 
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/schemas/dependencies.ts
+  function schemaFields(widget) {
+    return [...widget.main.filter(isDetailSection), ...widget.aside ?? []].flatMap((section) => section.fields).filter((field2) => field2.type === "schema");
+  }
+  function isDetailSection(item) {
+    return !("widget" in item);
+  }
+  function schemaKeysDependingOn(widget, fieldId) {
+    return new Set(schemaFields(widget).filter((field2) => Object.values(field2.schema.params ?? {}).some((expression) => expression === `$field.${fieldId}` || expression.startsWith(`$field.${fieldId}.`))).map((field2) => field2.id));
+  }
+  function schemaDependenciesResolved(field2, resource, fields) {
+    return Object.values(field2.schema.params ?? {}).every((expression) => {
+      if (!expression.startsWith("$")) {
+        return true;
+      }
+      const value2 = resolveExpression(expression, { resource, fields });
+      return value2 !== undefined && value2 !== null && value2 !== "";
+    });
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/context.ts
+  function schemaContext(host, fields) {
+    const schemas = fields.filter((field2) => field2.type === "schema");
+    const rows = new WeakMap;
+    return (values, resource) => {
+      const data = boundSchemas(host);
+      return {
+        detailSchemaUrls: Object.fromEntries(schemas.map((field2) => [
+          field2.id,
+          resource != null && schemaDependenciesResolved(field2, resource, values) ? sourceUrl(host.dataset.sourceId ?? "", field2.schema, { fields: values, resource }).href : ""
+        ])),
+        detailSchemas: Object.fromEntries(schemas.map((field2) => {
+          const schema = data[field2.id];
+          const definitions = schemaDefinitions(field2, values, schema?.definitions ?? []);
+          const current = recordValue(values[field2.id]);
+          const projected = definitions.map((definition) => {
+            let row = rows.get(definition);
+            if (!row) {
+              row = {
+                ...definition,
+                required: definition.required === true,
+                checkbox: definition.type === "boolean",
+                select: definition.type !== "boolean" && Boolean(definition.options?.length),
+                text: definition.type !== "boolean" && !definition.options?.length,
+                inputType: definition.type === "number" ? "number" : "text",
+                value: "",
+                checked: false,
+                placeholder: false
+              };
+              rows.set(definition, row);
+            }
+            const value2 = current[definition.id];
+            row.value = value2 == null ? "" : String(value2);
+            row.checked = value2 === true;
+            row.placeholder = row.value === "" && !definition.options?.some((option2) => option2.value === "");
+            return row;
+          });
+          return [
+            field2.id,
+            { status: schema?.status ?? "loading", rows: projected, empty: definitions.length === 0 }
+          ];
+        }))
+      };
+    };
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/media.ts
+  function mediaValue(value2, field2, sourceId) {
+    const values = Array.isArray(value2) ? value2 : value2 !== null && typeof value2 === "object" ? [value2] : arrayAt({ value: value2 }, "value");
+    return values.map((item) => {
+      const source2 = sourceMediaItem(item, field2, sourceId);
+      return source2.id && source2.url ? source2 : normalizedMediaItem(item) ?? source2;
+    }).filter((item) => item.id && item.url);
+  }
+  function normalizedMediaItem(item) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      return null;
+    }
+    const record2 = item;
+    const id2 = textAt(record2, "id");
+    const url = textAt(record2, "url");
+    if (!id2 || !url) {
+      return null;
+    }
+    return {
+      id: id2,
+      url,
+      ...typeof record2.thumbnailUrl === "string" && record2.thumbnailUrl ? { thumbnailUrl: record2.thumbnailUrl } : {},
+      ...typeof record2.alt === "string" ? { alt: record2.alt } : {},
+      ...typeof record2.name === "string" ? { name: record2.name } : {},
+      ...record2.pending === true ? { pending: true } : {}
+    };
+  }
+  function sourceMediaItem(item, field2, sourceId) {
+    return {
+      id: textAt(item, field2.item.idPath, textAt(item, field2.item.urlPath)),
+      url: mediaUrl(item, field2, sourceId),
+      alt: field2.item.altPath ? textAt(item, field2.item.altPath) : undefined
+    };
+  }
+  function mediaUrl(item, field2, sourceId) {
+    const raw = textAt(item, field2.item.urlPath);
+    if (isRenderableUrl(raw)) {
+      return raw;
+    }
+    const id2 = textAt(item, field2.item.idPath);
+    const endpoint = mediaFileEndpoint(field2);
+    if (!sourceId || !endpoint || !id2) {
+      return raw;
+    }
+    return route2(`/.cms/sources/${encodeURIComponent(sourceId)}/${encodeURIComponent(endpoint)}?id=${encodeURIComponent(id2)}`);
+  }
+  function mediaFileEndpoint(field2) {
+    const upload = field2.actions?.upload?.endpoint ?? "";
+    if (!upload.startsWith("upload") || upload.length <= "upload".length) {
+      return "";
+    }
+    const rest = upload.slice("upload".length);
+    return `${rest.charAt(0).toLowerCase()}${rest.slice(1)}`;
+  }
+  function isRenderableUrl(value2) {
+    return /^(https?:|blob:|data:|\/)/.test(value2);
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/context.ts
+  function mediaContext(owner, fields) {
+    const definitions = fields.filter((field2) => field2.type === "media");
+    const cache2 = new Map;
+    return (values, edits) => {
+      const urls = new Set;
+      const result = Object.fromEntries(definitions.map((field2) => {
+        const raw = values[field2.id];
+        const draft = Object.hasOwn(edits, field2.id);
+        let entry = cache2.get(field2.id);
+        if (!entry || entry.raw !== raw || entry.draft !== draft) {
+          const items = draft && Array.isArray(raw) ? raw : mediaValue(raw, field2, owner.dataset.sourceId ?? "");
+          entry = {
+            raw,
+            draft,
+            items: items.map((item, index2) => ({
+              ...item,
+              index: index2,
+              thumbnail: item.thumbnailUrl || item.url,
+              title: item.name?.trim() || item.alt?.trim() || `Image ${index2 + 1}`,
+              previewAlt: item.alt?.trim() || item.name?.trim() || `Image ${index2 + 1}`
+            }))
+          };
+          cache2.set(field2.id, entry);
+        }
+        for (const item of entry.items) {
+          urls.add(item.url);
+        }
+        const control = Array.from(owner.querySelectorAll("cms-dashboard-media-field")).find((node) => node.dataset.fieldControl === field2.id);
+        const index = Math.min(control?.preview.index ?? 0, Math.max(0, entry.items.length - 1));
+        const open = (control?.preview.opened ?? false) && entry.items.length > 0;
+        return [
+          field2.id,
+          {
+            items: entry.items,
+            showAdd: field2.multiple || entry.items.length === 0,
+            index,
+            open,
+            preview: entry.items[index],
+            counter: `${index + 1} / ${entry.items.length}`
+          }
+        ];
+      }));
+      mediaFiles(owner).retain(urls);
+      return result;
+    };
+  }
+
   // src/components/admin/Resources/Dashboards/runtime/lookups/targets.ts
   function nestedLookupKey(fieldId, nestedId) {
     return `${fieldId}::${nestedId}`;
@@ -26956,9 +27116,9 @@ w13c-lateral-menu-item {
     return expressions.includes("$limit") && expressions.includes("$offset");
   }
   function detailFields(widget) {
-    return [...widget.main.filter(isDetailSection), ...widget.aside ?? []].flatMap((section) => section.fields);
+    return [...widget.main.filter(isDetailSection2), ...widget.aside ?? []].flatMap((section) => section.fields);
   }
-  function isDetailSection(item) {
+  function isDetailSection2(item) {
     return !("widget" in item);
   }
 
@@ -27418,7 +27578,7 @@ w13c-lateral-menu-item {
   // src/components/admin/Resources/Dashboards/runtime/mapping/detail.ts
   function detailData(widget, resource, rowKey, draft = {}, options = {}, sourceId = "", schemas = {}) {
     const fields = { ...fieldValues(widget, resource), ...draft };
-    const scope = { ...record(resource), ...fields };
+    const scope = { ...record2(resource), ...fields };
     return {
       rowKey,
       eyebrow: widget.id,
@@ -27430,7 +27590,7 @@ w13c-lateral-menu-item {
     };
   }
   function fieldValues(widget, resource) {
-    const all = [...widget.main.filter(isDetailSection2), ...widget.aside ?? []].flatMap((section) => section.fields);
+    const all = [...widget.main.filter(isDetailSection3), ...widget.aside ?? []].flatMap((section) => section.fields);
     return Object.fromEntries(all.map((field2) => [field2.id, valueAt(resource, field2.path)]));
   }
   function sections(sections2, resource, fields, options, sourceId, schemas) {
@@ -27443,7 +27603,7 @@ w13c-lateral-menu-item {
       fields: section2.fields.filter((field2) => matchesDashboardVisibility(field2.visibleWhen, { fields, resource })).map((field2) => detailField(field2, resource, fields, options, sourceId, schemas))
     };
   }
-  function isDetailSection2(item) {
+  function isDetailSection3(item) {
     return !("widget" in item);
   }
   function actionData(action) {
@@ -27460,7 +27620,7 @@ w13c-lateral-menu-item {
   function isActionIcon(value2) {
     return value2 === "archive" || value2 === "download" || value2 === "link" || value2 === "trash";
   }
-  function record(value2) {
+  function record2(value2) {
     return value2 && typeof value2 === "object" && !Array.isArray(value2) ? value2 : {};
   }
   // src/static/admin/_content/sources/_runtime/detail/actions.html
@@ -27521,6 +27681,7 @@ w13c-lateral-menu-item {
     const fields = [...widget.main, ...widget.aside ?? []].flatMap((section2) => ("widget" in section2) ? [] : section2.fields);
     const users = directoryContext(host, fields);
     const media = mediaContext(host, fields);
+    const schemas = schemaContext(host, fields);
     const actions = actionLayout(widget.actions ?? []);
     const rules = Object.fromEntries(fields.map((field2) => [field2.id, field2.visibleWhen]));
     fd(host, () => {
@@ -27551,6 +27712,7 @@ w13c-lateral-menu-item {
         ];
       }));
       return {
+        ...schemas(values, resource),
         detailMedia: media(values, edits),
         ...users(values, resource),
         detailResourcePath: widget.source.itemPath ?? "",
@@ -27633,6 +27795,155 @@ w13c-lateral-menu-item {
     return host.content.querySelector(`[data-users="${kind}"]`).content.firstElementChild.cloneNode(true);
   }
 
+  // src/static/admin/_content/sources/_runtime/detail/schema.html
+  var schema_default = `<span data-schema-state="loading">Loading dynamic fields…</span>
+<span data-schema-state="error">Dynamic fields are temporarily unavailable. Existing values are preserved.</span>
+<span data-schema-state="empty">No dynamic fields are configured.</span>
+<div data-schema-state="ready">
+    <cms-dashboard-schema-row data-schema-row>
+        <p9r-input cms-condition="schemaRow.text" type="{{ schemaRow.inputType }}"
+            data-schema-key="{{ schemaRow.id }}" label="{{ schemaRow.label }}" value="{{ schemaRow.value }}"
+            cms-bind-boolean-required="schemaRow.required"></p9r-input>
+        <p9r-select cms-condition="schemaRow.select" data-schema-key="{{ schemaRow.id }}"
+            label="{{ schemaRow.label }}" value="{{ schemaRow.value }}" cms-bind-boolean-required="schemaRow.required">
+            <option cms-condition="schemaRow.placeholder" value="" disabled>Select an option</option>
+            <option cms-repeat="schemaRow.options as schemaOption" value="{{ schemaOption.value }}">{{ schemaOption.label }}</option>
+        </p9r-select>
+        <label cms-condition="schemaRow.checkbox" cms-bind-boolean-data-required="schemaRow.required">
+            <input type="checkbox" data-schema-key="{{ schemaRow.id }}" cms-bind-value="schemaRow.checked"
+                aria-label="{{ schemaRow.label }}" aria-required="{{ schemaRow.required }}">
+            <span>{{ schemaRow.label }}</span>
+        </label>
+        <span cms-condition="schemaRow.unit" data-schema-unit>{{ schemaRow.unit }}</span>
+    </cms-dashboard-schema-row>
+</div>
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/Source.ts
+  class DashboardSchemaSource extends HTMLElement {
+    static observedAttributes = ["request-base"];
+    status = "loading";
+    timer;
+    queued = false;
+    connectedCallback() {
+      fd(this, (value2) => {
+        this.status = value2 === undefined ? "loading" : Object.is(value2, Td(this)) ? "ready" : "error";
+        this.refreshOwner();
+        return {};
+      });
+      this.updateUrl(false);
+    }
+    disconnectedCallback() {
+      clearTimeout(this.timer);
+    }
+    attributeChangedCallback(_name, before, after) {
+      if (before !== after && this.isConnected) {
+        this.updateUrl(Boolean(before && !before.includes("{{")));
+      }
+    }
+    updateUrl(debounce) {
+      clearTimeout(this.timer);
+      const url = this.getAttribute("request-base");
+      this.setAttribute("cms-source", "");
+      if (!url || url.includes("{{")) {
+        this.status = "ready";
+        Md(this, []);
+        this.refreshOwner();
+        return;
+      }
+      this.status = "loading";
+      this.refreshOwner();
+      const activate = () => {
+        this.setAttribute("cms-source", `${url} as schemaPayload`);
+      };
+      if (debounce) {
+        this.timer = setTimeout(activate, 250);
+      } else {
+        activate();
+      }
+    }
+    refreshOwner() {
+      if (this.queued) {
+        return;
+      }
+      this.queued = true;
+      queueMicrotask(() => {
+        this.queued = false;
+        const owner = this.closest("cms-dashboard-w-detail");
+        if (this.isConnected && owner) {
+          bi(owner);
+        }
+      });
+    }
+  }
+  customElements.define("cms-dashboard-schema-source", DashboardSchemaSource);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/field.css
+  var field_default = `:host { display: block; min-width: 0; }
+:host(cms-dashboard-schema-row) { display: grid; }
+slot { display: contents; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.grid ::slotted([data-schema-state="ready"]) { display: contents; }
+.grid ::slotted([data-schema-state]) { color: #66736f; font-size: 12px; }
+.grid ::slotted([data-schema-state="error"]) { color: #8a1f12; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+.row ::slotted(p9r-input), .row ::slotted(p9r-select) { width: 100%; }
+.row ::slotted([data-schema-unit]) {
+    align-items: center; background: #f3f7f5; border: 1px solid #cfd8d4;
+    border-radius: 7px; color: #66736f; display: inline-flex; font-size: 12px;
+    font-weight: 750; justify-content: center; min-height: 36px; min-width: 44px; padding: 0 10px 9px;
+}
+.row ::slotted(label) {
+    align-items: center; color: #16231f; display: flex; font-size: 13px;
+    font-weight: 650; gap: 8px; min-height: 36px;
+}
+.row ::slotted(label[data-required])::after {
+    color: var(--text-muted, #94a3b8); content: "* Required";
+    flex-shrink: 0; font-size: 10px; font-weight: 650; letter-spacing: 0; margin-inline-start: auto;
+}
+.row ::slotted(label[data-required]:has([invalid]))::after { color: var(--danger-base, #dc2626); }
+@media (max-width: 720px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/Field.ts
+  class SchemaField extends l2 {
+    constructor() {
+      super({ css: field_default, template: '<div class="grid"><slot></slot></div>' });
+    }
+  }
+
+  class SchemaRow extends l2 {
+    constructor() {
+      super({ css: field_default, template: '<div class="row"><slot></slot></div>' });
+    }
+  }
+  customElements.define("cms-dashboard-schema-field", SchemaField);
+  customElements.define("cms-dashboard-schema-row", SchemaRow);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/composition.ts
+  function schemaSource(field2) {
+    const source2 = document.createElement("cms-dashboard-schema-source");
+    source2.hidden = true;
+    source2.setAttribute("cms-source", "");
+    source2.setAttribute("field-id", field2.id);
+    source2.setAttribute("request-base", `{{ detailSchemaUrls.${field2.id} }}`);
+    if (field2.schema.itemsPath) {
+      source2.setAttribute("items-path", field2.schema.itemsPath);
+    }
+    return source2;
+  }
+  function composeSchema(control, field2) {
+    const template = document.createElement("template");
+    template.innerHTML = schema_default;
+    const root = `detailSchemas.${field2.id}`;
+    for (const state of ["loading", "error", "empty", "ready"]) {
+      const element = template.content.querySelector(`[data-schema-state="${state}"]`);
+      element.setAttribute("cms-condition", state === "empty" ? `${root}.status == 'ready' && ${root}.empty` : `${root}.status == '${state}'`);
+    }
+    template.content.querySelector("[data-schema-row]").setAttribute("cms-repeat", `${root}.rows as schemaRow`);
+    control.append(template.content);
+  }
+
   // src/static/admin/_content/sources/_runtime/detail/media.html
   var media_default = `<template data-media="tile">
     <cms-dashboard-media-tile slot="tile" data-media-tile draggable="true" tabindex="0" aria-label="Replace media"
@@ -27654,7 +27965,7 @@ w13c-lateral-menu-item {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/field.css
-  var field_default = `:host {
+  var field_default2 = `:host {
     --media-grid-item-max: 120px;
     --media-grid-item-max-mobile: 112px;
     --media-grid-featured-item-max: calc((var(--media-grid-item-max) * 2) + 8px);
@@ -28093,11 +28404,11 @@ button {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/index.ts
-  var styles_default3 = [field_default, preview_layout_default, preview_media_default].join(`
+  var styles_default3 = [field_default2, preview_layout_default, preview_media_default].join(`
 `);
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/field.css
-  var field_default2 = `slot { display: contents; }
+  var field_default3 = `slot { display: contents; }
 .media-grid ::slotted(*) { max-width: var(--media-grid-item-max); width: 100%; }
 .media-grid ::slotted(cms-dashboard-media-tile:first-child) {
     grid-column: span 2;
@@ -28126,7 +28437,7 @@ button {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/field.html
-  var field_default3 = `<section class="media-field">
+  var field_default4 = `<section class="media-field">
     <div class="label-row">
         <span data-label></span>
         <button class="preview-trigger" data-preview-open type="button" hidden>
@@ -28438,7 +28749,7 @@ button {
       this.suppressClick = value2;
     });
     constructor() {
-      super({ css: styles_default3 + field_default2, template: field_default3 });
+      super({ css: styles_default3 + field_default3, template: field_default4 });
       this.preview = new MediaPreview(this);
     }
     connectedCallback() {
@@ -28973,6 +29284,7 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 <template data-control="badge"><div><span class="badge"></span></div></template>
 <template data-control="image"><div><span>No image</span><img class="detail-image" loading="lazy" /></div></template>
 <template data-control="media"><cms-dashboard-media-field></cms-dashboard-media-field></template>
+<template data-control="schema"><cms-dashboard-schema-field></cms-dashboard-schema-field></template>
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/readonly.ts
@@ -29031,7 +29343,7 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
       if (field2.type === "checkbox") {
         control.setAttribute("cms-bind-value", field2.path === "." ? root : `${root}.${field2.path}`);
         control.setAttribute("aria-label", field2.label);
-      } else if (field2.type !== "media") {
+      } else if (field2.type !== "media" && field2.type !== "schema") {
         control.setAttribute("value", fieldBinding(root, field2.path, field2.type === "tokens" ? "dashboardTokens" : undefined));
       }
       control.toggleAttribute("required", field2.required === true);
@@ -29079,6 +29391,9 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
       if (field2.type === "media") {
         composeMedia(control, field2);
       }
+      if (field2.type === "schema") {
+        composeSchema(control, field2);
+      }
       if (field2.type === "secret-ref") {
         control.setAttribute("api", route2("/api/secrets"));
       }
@@ -29093,7 +29408,7 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/field.css
-  var field_default4 = `:host { display: block; min-width: 0; }
+  var field_default5 = `:host { display: block; min-width: 0; }
 dl { display: grid; gap: 7px; margin: 0; min-width: 0; }
 dt { color: #66736f; font-size: 11px; font-weight: 750; letter-spacing: 0; text-transform: uppercase; }
 dd { margin: 0; min-width: 0; }
@@ -29114,7 +29429,7 @@ dd { margin: 0; min-width: 0; }
   // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/Field.ts
   class DashboardDetailField extends l2 {
     constructor() {
-      super({ css: field_default4, template: "<dl><dt></dt><dd><slot></slot></dd></dl>" });
+      super({ css: field_default5, template: "<dl><dt></dt><dd><slot></slot></dd></dl>" });
     }
     static observedAttributes = ["label", "required", "internal-label"];
     attributeChangedCallback() {
@@ -29125,6 +29440,7 @@ dd { margin: 0; min-width: 0; }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/composition.ts
   var supported = new Set([
+    "schema",
     "media",
     "cms-user",
     "text",
@@ -29163,6 +29479,11 @@ dd { margin: 0; min-width: 0; }
     }
     fragment.append(title);
     fragment.append(composeActions());
+    for (const section2 of [...widget.main, ...widget.aside ?? []]) {
+      if (!("widget" in section2)) {
+        fragment.append(...section2.fields.filter((field2) => field2.type === "schema").map(schemaSource));
+      }
+    }
     if ([...widget.main, ...widget.aside ?? []].some((section2) => !("widget" in section2) && section2.fields.some((field2) => field2.type === "cms-user"))) {
       fragment.append(directoryElement());
     }
@@ -31394,25 +31715,25 @@ input {
   }
   function textEditor(value2) {
     const input = document.createElement("p9r-input");
-    const text4 = textValue2(value2);
-    input.setAttribute("value", text4);
-    input.value = text4;
+    const text5 = textValue2(value2);
+    input.setAttribute("value", text5);
+    input.value = text5;
     return input;
   }
   function selectEditor(column, value2) {
     const input = document.createElement("p9r-select");
-    const text4 = textValue2(value2);
-    input.setAttribute("value", text4);
-    input.replaceChildren(...column.options.map((option3) => optionElement(option3, text4)));
+    const text5 = textValue2(value2);
+    input.setAttribute("value", text5);
+    input.replaceChildren(...column.options.map((option3) => optionElement(option3, text5)));
     return input;
   }
   function comboboxEditor(column, value2) {
     const input = document.createElement("p9r-combobox");
-    const text4 = textValue2(value2);
-    input.setAttribute("value", text4);
-    input.replaceChildren(...column.options.map((option3) => optionElement(option3, text4)));
+    const text5 = textValue2(value2);
+    input.setAttribute("value", text5);
+    input.replaceChildren(...column.options.map((option3) => optionElement(option3, text5)));
     applyRemoteLookupMetadata(input, column);
-    input.value = text4;
+    input.value = text5;
     return input;
   }
   function tokensEditor(value2) {
@@ -31479,12 +31800,12 @@ input {
     const list = document.createElement("ul");
     list.className = "readonly readonly-list";
     for (const item of value2) {
-      const text4 = typeof item === "string" ? item : String(item.id ?? "");
-      if (!text4) {
+      const text5 = typeof item === "string" ? item : String(item.id ?? "");
+      if (!text5) {
         continue;
       }
       const entry = document.createElement("li");
-      entry.textContent = text4;
+      entry.textContent = text5;
       list.append(entry);
     }
     return list;
@@ -31910,9 +32231,9 @@ input {
     const label2 = document.createElement("label");
     label2.className = "detail-schema-checkbox";
     label2.toggleAttribute("data-required", definition.required);
-    const text4 = document.createElement("span");
-    text4.textContent = definition.label;
-    label2.append(control, text4);
+    const text5 = document.createElement("span");
+    text5.textContent = definition.label;
+    label2.append(control, text5);
     return label2;
   }
   function statusMessage(status) {
@@ -31965,13 +32286,13 @@ input {
     if (field2.type === "select" || field2.type === "combobox") {
       const control2 = document.createElement(field2.type === "select" ? "p9r-select" : "p9r-combobox");
       control2.setAttribute("aria-label", field2.label);
-      const text5 = value2 === null || value2 === undefined ? "" : String(value2);
-      control2.setAttribute("value", text5);
+      const text6 = value2 === null || value2 === undefined ? "" : String(value2);
+      control2.setAttribute("value", text6);
       control2.replaceChildren(...(field2.options ?? []).map((option3) => {
         const element = document.createElement("option");
         element.value = option3.value;
         element.textContent = option3.label;
-        element.selected = option3.value === text5;
+        element.selected = option3.value === text6;
         return element;
       }));
       if (field2.type === "combobox") {
@@ -31983,7 +32304,7 @@ input {
         control2.toggleAttribute("loading", field2.lookupLoading === true);
         control2.toggleAttribute("has-more", field2.lookupHasMore === true);
       }
-      control2.value = text5;
+      control2.value = text6;
       return control2;
     }
     if (field2.type === "checkbox") {
@@ -31992,10 +32313,10 @@ input {
       return input;
     }
     const control = document.createElement("p9r-input");
-    const text4 = value2 === null || value2 === undefined ? "" : String(value2);
+    const text5 = value2 === null || value2 === undefined ? "" : String(value2);
     control.setAttribute("type", "text");
-    control.setAttribute("value", text4);
-    control.value = text4;
+    control.setAttribute("value", text5);
+    control.value = text5;
     return control;
   }
   function valueAtValue(value2) {
@@ -33579,6 +33900,9 @@ p9r-token-input {
     onInput = (event) => {
       const control = findEventTarget(event, "[data-field-control]");
       const field2 = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
+      if (field2?.input === "schema" && this.host.hasAttribute("data-declarative")) {
+        updateSchemaControl(field2, event);
+      }
       if (control && field2?.input === "table") {
         updateDerivedTables(field2.id, this.fields);
       }
@@ -33604,6 +33928,10 @@ p9r-token-input {
       const control = findEventTarget(event, "[data-field-control]");
       if (!control) {
         return;
+      }
+      const field2 = this.fields.find(control.dataset.fieldControl ?? "");
+      if (field2?.input === "schema" && this.host.hasAttribute("data-declarative")) {
+        updateSchemaControl(field2, event);
       }
       this.fields.refreshRequiredValidity(control);
       this.emitFieldChange(control, Boolean(event.detail?.created));
@@ -34192,102 +34520,6 @@ p9r-token-input {
     }
     return [...options, { value: value2, label: `Unknown CMS user · ${value2}` }];
   }
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/schemas/definitions.ts
-  var KEY_MAX_LENGTH = 128;
-  var LABEL_MAX_LENGTH = 256;
-  var UNIT_MAX_LENGTH = 32;
-  function definitionsAt(data, path) {
-    const definitions = new Map;
-    for (const value2 of arrayAt(data, path).slice(0, DASHBOARD_MAX_NESTED_FIELDS)) {
-      const definition = schemaDefinition(value2);
-      if (definition && !definitions.has(definition.id)) {
-        definitions.set(definition.id, definition);
-      }
-    }
-    return [...definitions.values()];
-  }
-  function schemaDefinition(value2) {
-    const row = record2(value2);
-    const nested = record2(row?.definition);
-    const id2 = text4(row?.id, KEY_MAX_LENGTH) ?? text4(row?.fieldKey, KEY_MAX_LENGTH) ?? text4(row?.key, KEY_MAX_LENGTH);
-    const label2 = text4(row?.label, LABEL_MAX_LENGTH) ?? text4(nested?.label, LABEL_MAX_LENGTH) ?? id2;
-    const rawType = text4(row?.type, 16) ?? text4(row?.fieldType, 16) ?? text4(nested?.fieldType, 16);
-    const type = rawType === "enum" ? "string" : rawType;
-    if (!id2 || !label2 || !safeKey(id2) || type !== "string" && type !== "number" && type !== "boolean") {
-      return null;
-    }
-    const options = schemaOptions(row?.options ?? nested?.options);
-    const unit = text4(row?.unit, UNIT_MAX_LENGTH) ?? text4(nested?.unit, UNIT_MAX_LENGTH);
-    return {
-      id: id2,
-      label: label2,
-      type,
-      ...row?.required === true ? { required: true } : {},
-      ...unit ? { unit } : {},
-      ...options.length ? { options } : {}
-    };
-  }
-  function schemaOptions(value2) {
-    if (!Array.isArray(value2)) {
-      return [];
-    }
-    const seen = new Set;
-    return value2.slice(0, DASHBOARD_MAX_OPTIONS).flatMap((option3) => {
-      let result;
-      if (typeof option3 === "string" || typeof option3 === "number") {
-        const value3 = text4(option3, LABEL_MAX_LENGTH);
-        if (value3) {
-          result = { value: value3, label: value3 };
-        }
-      } else {
-        const entry = record2(option3);
-        const optionValue = text4(entry?.value, LABEL_MAX_LENGTH);
-        const optionLabel = text4(entry?.label, LABEL_MAX_LENGTH) ?? optionValue;
-        if (optionValue && optionLabel) {
-          result = { value: optionValue, label: optionLabel };
-        }
-      }
-      if (!result || seen.has(result.value)) {
-        return [];
-      }
-      seen.add(result.value);
-      return [result];
-    });
-  }
-  function safeKey(value2) {
-    return /^[A-Za-z_][A-Za-z0-9_-]*$/.test(value2) && !["__proto__", "prototype", "constructor"].includes(value2);
-  }
-  function text4(value2, maxLength) {
-    if (typeof value2 !== "string" && typeof value2 !== "number") {
-      return;
-    }
-    const result = String(value2).trim();
-    return result && result.length <= maxLength ? result : undefined;
-  }
-  function record2(value2) {
-    return value2 !== null && typeof value2 === "object" && !Array.isArray(value2) ? value2 : undefined;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/schemas/dependencies.ts
-  function schemaFields(widget) {
-    return [...widget.main.filter(isDetailSection3), ...widget.aside ?? []].flatMap((section2) => section2.fields).filter((field2) => field2.type === "schema");
-  }
-  function isDetailSection3(item) {
-    return !("widget" in item);
-  }
-  function schemaKeysDependingOn(widget, fieldId) {
-    return new Set(schemaFields(widget).filter((field2) => Object.values(field2.schema.params ?? {}).some((expression) => expression === `$field.${fieldId}` || expression.startsWith(`$field.${fieldId}.`))).map((field2) => field2.id));
-  }
-  function schemaDependenciesResolved(field2, resource, fields) {
-    return Object.values(field2.schema.params ?? {}).every((expression) => {
-      if (!expression.startsWith("$")) {
-        return true;
-      }
-      const value2 = resolveExpression(expression, { resource, fields });
-      return value2 !== undefined && value2 !== null && value2 !== "";
-    });
-  }
-
   // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/schemas/index.ts
   class DetailSchemasState {
     dataset;
@@ -34467,8 +34699,8 @@ p9r-token-input {
     const events = new DetailEvents(host, root, fields, lookups, schemas, callbacks.isBound, callbacks.data, callbacks.refreshConditionalFields);
     return { events, fields, lookups, requests, schemas, view };
   }
-  function mapDetailData(runtime2, widget, resource, rowKey, fields, sourceId) {
-    return runtime2.lookups.decorate(detailData(widget, resource, rowKey, fields, runtime2.lookups.options, sourceId, runtime2.schemas.values));
+  function mapDetailData(runtime2, widget, resource, rowKey, fields, sourceId, schemas = runtime2.schemas.values) {
+    return runtime2.lookups.decorate(detailData(widget, resource, rowKey, fields, runtime2.lookups.options, sourceId, schemas));
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/template.html
@@ -34566,7 +34798,7 @@ p9r-token-input {
         readBinding: () => this.readBinding(),
         data: () => {
           const binding2 = this.hasAttribute("data-declarative") ? this.readBinding() : null;
-          return binding2 ? mapDetailData(this.runtime, binding2.widget, binding2.resource, binding2.rowKey, this.runtime.fields.draft, binding2.sourceId) : this.value;
+          return binding2 ? mapDetailData(this.runtime, binding2.widget, binding2.resource, binding2.rowKey, this.runtime.fields.draft, binding2.sourceId, boundSchemas(this)) : this.value;
         },
         setData: (value2) => {
           this.value = value2;
@@ -40115,7 +40347,7 @@ cms-dashboard-icon svg {
     };
   }
 
-  class Ot {
+  class Ot2 {
     el;
     captured;
     filters;
@@ -40193,7 +40425,7 @@ cms-dashboard-icon svg {
     return i ? { [i]: r } : {};
   }
 
-  class Vt2 {
+  class Vt {
     el;
     renderer;
     options;
@@ -40621,7 +40853,7 @@ cms-dashboard-icon svg {
       this.options = i;
       this.formOwned = U3(t, t.ownerDocument) !== null && b(t) !== "auto", this.submission = this.formOwned ? new jt2(t, r) : null;
       let e = this.formOwned ? pr2(t) : lr(t);
-      this.renderer = new Ot(t, e, this.filters, { inPlace: this.formOwned }), this.presenter = new Vt2(t, e, this.renderer, this.options);
+      this.renderer = new Ot2(t, e, this.filters, { inPlace: this.formOwned }), this.presenter = new Vt(t, e, this.renderer, this.options);
     }
     start() {
       this.stopContext = Xr2(this.el, () => {
@@ -62251,7 +62483,7 @@ label {
         description: "Provides global data scopes to editable content.",
         icon: "database",
         category: "Runtime",
-        bloc: Od,
+        bloc: Vd,
         editor: BindingCoreEditor
       },
       ...createNativeEditorCatalog()
@@ -66073,7 +66305,7 @@ dialog::backdrop {
       customElements.define(tag, constructor);
     }
   }
-  define(CMS_BINDING_CORE_TAG, Od);
+  define(CMS_BINDING_CORE_TAG, Vd);
   define("cms-page-form-controller", PageFormController);
   define("cms-page-copy-source", PageCopySource);
   gb({
@@ -66099,12 +66331,12 @@ dialog::backdrop {
   define("p9r-grid", pa);
   define("p9r-icon-button", go);
   define("w13c-lateral-dialog", Hr);
-  define("w13c-lateral-menu", Va);
+  define("w13c-lateral-menu", Oa);
   define("w13c-lateral-menu-item", ja);
   define("w13c-left-menu-layout", ma);
   define("p9r-modal", Br);
   define("p9r-open-modal", Dr);
-  define("p9r-input", Oo);
+  define("p9r-input", Vo);
   define("p9r-select", nn);
   define("p9r-photo-album", Aa);
   define("p9r-segmented-switch", yn);

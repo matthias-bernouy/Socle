@@ -1,4 +1,5 @@
 import { directoryElement } from "../lookups/users";
+import { schemaSource } from "../controls/schema/binding/composition";
 import type { DashboardNavigationListWidget, DashboardSection } from "@bernouy/cms-dashboards";
 import type { DetailWidget } from "../runtime/fieldState";
 import { composeActions } from "./actions";
@@ -6,6 +7,7 @@ import { fieldElement } from "./fields";
 import "./Field";
 
 const supported = new Set([
+    "schema",
     "media",
     "cms-user",
     "text",
@@ -53,6 +55,11 @@ export function composeDetail(
     }
     fragment.append(title);
     fragment.append(composeActions());
+    for (const section of [...widget.main, ...(widget.aside ?? [])]) {
+        if (!("widget" in section)) {
+            fragment.append(...section.fields.filter((field) => field.type === "schema").map(schemaSource));
+        }
+    }
     if (
         [...widget.main, ...(widget.aside ?? [])].some(
             (section) => !("widget" in section) && section.fields.some((field) => field.type === "cms-user"),

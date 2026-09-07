@@ -24,6 +24,14 @@ test("dynamic schema validates typed fields, preserves opaque metadata and persi
         const condition = schema.locator('[data-schema-key="condition"]');
         const save = page.getByRole("button", { name: "Save choices", exact: true });
         await weight.waitFor();
+        expect(await schema.evaluate((node) => node.getRootNode() === document)).toBe(true);
+        expect(
+            await schema
+                .locator("[data-schema-key]")
+                .evaluateAll((nodes) => nodes.every((node) => node.getRootNode() === document)),
+        ).toBe(true);
+        const optional = schema.getByRole("checkbox", { name: "Optional flag", exact: true });
+        expect(await optional.locator("..").getAttribute("data-required")).toBeNull();
         expect(await weight.inputValue()).toBe("300");
         expect(await schema.locator('[data-schema-key="grip"]').count()).toBe(0);
         expect(await schema.locator('[data-schema-key="constructor"]').count()).toBe(0);

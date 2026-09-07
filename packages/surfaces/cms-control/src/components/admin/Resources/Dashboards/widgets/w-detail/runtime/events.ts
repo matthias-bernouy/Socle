@@ -1,4 +1,5 @@
 import type { DashboardDirectory } from "../lookups/Directory";
+import { updateSchemaControl } from "../controls/schema/runtime";
 import {
     emitWidgetEvent,
     WIDGET_ACTION_EVENT,
@@ -109,6 +110,9 @@ export class DetailEvents {
     private onInput = (event: Event): void => {
         const control = findEventTarget(event, "[data-field-control]");
         const field = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
+        if (field?.input === "schema" && this.host.hasAttribute("data-declarative")) {
+            updateSchemaControl(field, event);
+        }
         if (control && field?.input === "table") {
             updateDerivedTables(field.id, this.fields);
         }
@@ -139,6 +143,10 @@ export class DetailEvents {
         const control = findEventTarget(event, "[data-field-control]");
         if (!control) {
             return;
+        }
+        const field = this.fields.find(control.dataset.fieldControl ?? "");
+        if (field?.input === "schema" && this.host.hasAttribute("data-declarative")) {
+            updateSchemaControl(field, event);
         }
         this.fields.refreshRequiredValidity(control);
         this.emitFieldChange(control, Boolean((event as CustomEvent<{ created?: boolean }>).detail?.created));

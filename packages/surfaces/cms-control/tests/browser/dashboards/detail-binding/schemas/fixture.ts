@@ -14,10 +14,11 @@ export const definitions = [
     { fieldKey: "constructor", label: "Unsafe", fieldType: "string" },
 ];
 
-export async function installSchemaRoutes(page: Page, bundle: string, styles: string) {
+export async function installSchemaRoutes(page: Page, bundle: string, styles: string, conditional = false) {
     const resource = {
         title: "Category metadata",
         category: "tennis",
+        showSchema: true,
         metadata: {
             excluded: "grip",
             weight: 300,
@@ -32,6 +33,9 @@ export async function installSchemaRoutes(page: Page, bundle: string, styles: st
         resource,
         normalize: (value) => Object.assign(resource, value),
         fields: [
+            ...(conditional
+                ? [{ id: "showSchema", path: "showSchema", label: "Show schema", type: "checkbox" as const }]
+                : []),
             { id: "title", path: "title", label: "Title", type: "text" },
             {
                 id: "category",
@@ -45,6 +49,7 @@ export async function installSchemaRoutes(page: Page, bundle: string, styles: st
                 path: "metadata",
                 label: "Metadata",
                 type: "schema",
+                ...(conditional ? { visibleWhen: { value: "$field.showSchema" as const, equals: true } } : {}),
                 schema: { endpoint: "categoryFields", params: { category: "$field.category" }, itemsPath: "fields" },
                 exclude: { from: "$field.metadata", valuePath: "excluded" },
             },
@@ -68,6 +73,7 @@ export async function installSchemaRoutes(page: Page, bundle: string, styles: st
                 status === 503
                     ? { error: "Schema unavailable" }
                     : {
+                          status: "available",
                           fields:
                               category === "empty"
                                   ? []

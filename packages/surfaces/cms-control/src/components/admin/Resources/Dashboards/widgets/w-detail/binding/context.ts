@@ -1,4 +1,5 @@
 import { directoryContext } from "../lookups/directoryContext";
+import { schemaContext } from "../controls/schema/binding/context";
 import { mediaContext } from "../../w-media-field/binding/context";
 import { detailLookupUrls } from "../lookups/urls";
 import { readSourceData, setSourceContext } from "@bernouy/components";
@@ -20,6 +21,7 @@ export function bindDetailContext(
     );
     const users = directoryContext(host, fields);
     const media = mediaContext(host, fields);
+    const schemas = schemaContext(host, fields);
     const actions = actionLayout(widget.actions ?? []);
     const rules = Object.fromEntries(fields.map((field) => [field.id, field.visibleWhen]));
     setSourceContext(host, () => {
@@ -65,6 +67,7 @@ export function bindDetailContext(
                 }),
         );
         return {
+            ...schemas(values, resource),
             detailMedia: media(values, edits),
             ...users(values, resource),
             detailResourcePath: widget.source.itemPath ?? "",

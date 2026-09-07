@@ -1,4 +1,5 @@
 import { composeUserOptions } from "../lookups/users";
+import { composeSchema } from "../controls/schema/binding/composition";
 import { composeMedia } from "../../w-media-field/binding/composition";
 import { composeLookup } from "../lookups/composition";
 import type { DashboardField } from "@bernouy/cms-dashboards";
@@ -33,7 +34,7 @@ export function fieldElement(field: DashboardField, root: string): HTMLElement {
         if (field.type === "checkbox") {
             control.setAttribute("cms-bind-value", field.path === "." ? root : `${root}.${field.path}`);
             control.setAttribute("aria-label", field.label);
-        } else if (field.type !== "media") {
+        } else if (field.type !== "media" && field.type !== "schema") {
             control.setAttribute(
                 "value",
                 fieldBinding(root, field.path, field.type === "tokens" ? "dashboardTokens" : undefined),
@@ -83,6 +84,9 @@ export function fieldElement(field: DashboardField, root: string): HTMLElement {
         }
         if (field.type === "media") {
             composeMedia(control, field);
+        }
+        if (field.type === "schema") {
+            composeSchema(control, field);
         }
         if (field.type === "secret-ref") {
             control.setAttribute("api", route("/api/secrets"));

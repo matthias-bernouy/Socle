@@ -61,10 +61,12 @@ describe("dashboard widget selection", () => {
         );
 
         const detail = root.querySelector<HTMLElement>("cms-dashboard-w-detail")!;
+        await waitFor(() => Boolean(detail.querySelector('[data-schema-key="material"]')));
         expect(detail.hasAttribute("data-config-json")).toBe(false);
-        expect(root.querySelector("[cms-source*='/getProduct']")).toBeNull();
+        expect(root.querySelector("[cms-source*='/getProduct']")).toBe(detail);
         expect(detail.hasAttribute("data-source-json")).toBe(false);
-        expect(detail.shadowRoot!.querySelector('[data-field-control="title"]')).not.toBeNull();
+        expect(detail.querySelector('[data-field-control="title"]')).not.toBeNull();
+        expect(detail.querySelector('[data-schema-key="material"]')).not.toBeNull();
         expect(requests.some((url) => url.includes("/getProduct"))).toBeFalse();
         expect(requests.filter((url) => url.includes("/brands"))).toHaveLength(1);
         expect(requests.filter((url) => url.includes("/categorySchema"))).toHaveLength(1);

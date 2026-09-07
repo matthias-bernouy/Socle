@@ -6,6 +6,7 @@ import { DetailLookups } from "../runtime/lookups";
 import { DetailRequestCoordinator } from "../runtime/requests";
 import { DetailSchemasState } from "../runtime/schemas";
 import type { WDetailData } from "../types";
+import type { DetailSchemas } from "../../../runtime/mapping/types";
 
 export type DetailRuntime = {
     events: DetailEvents;
@@ -98,8 +99,9 @@ export function mapDetailData(
     rowKey: string,
     fields: Record<string, unknown>,
     sourceId: string,
+    schemas: DetailSchemas = runtime.schemas.values,
 ): WDetailData {
     return runtime.lookups.decorate(
-        detailData(widget, resource, rowKey, fields, runtime.lookups.options, sourceId, runtime.schemas.values),
+        detailData(widget, resource, rowKey, fields, runtime.lookups.options, sourceId, schemas),
     );
 }

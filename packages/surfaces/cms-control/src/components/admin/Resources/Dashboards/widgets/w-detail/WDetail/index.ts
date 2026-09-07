@@ -1,4 +1,5 @@
 import type { DashboardLookup } from "../lookups/Lookup";
+import { boundSchemas } from "../controls/schema/binding/data";
 import { releaseMediaFiles } from "../../w-media-field/binding/files";
 import { readSourceData, setSourceData, refreshSourceContext } from "@bernouy/components";
 import { bindDetailContext } from "../binding/context";
@@ -94,6 +95,7 @@ export class DashboardWDetail extends Component {
                           binding.rowKey,
                           this.runtime.fields.draft,
                           binding.sourceId,
+                          boundSchemas(this),
                       )
                     : this.value;
             },

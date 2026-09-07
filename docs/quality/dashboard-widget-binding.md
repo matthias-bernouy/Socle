@@ -809,3 +809,88 @@ Preserve schema exclusion and validation contracts. Remove the corresponding
 manual response renderer as consumers migrate. Delayed current responses,
 drafts/focus during schema refresh, provider/operator endpoints and real local
 persistence still require their full migration validation.
+
+## Bound dynamic schemas checkpoint
+
+Details whose controls are supported by the binding path now include schema
+fields. The composition declares one hidden binding source per schema and the
+static `sources/_runtime/detail/schema.html` template. The page core owns schema
+requests, row repetitions, nested option repetitions, conditions and value
+updates. `cms-dashboard-schema-source` only coordinates dependency debounce and
+source lifecycle; it does not fetch or render definitions. Schema form reading
+and validation consume the same source cache as the document projection.
+
+Validated definitions retain the existing key/type/size limits. Pure row
+projections keep their identity while ordinary values change, so the existing
+repeat fast path updates active controls. There is no key directive or second
+DOM renderer. Visual field/row shells encapsulate the grid, units and checkbox
+styles; labels, inputs, selects, options and bindings remain in document light
+DOM. Native light-DOM checkbox labels still toggle their inputs. Optional
+checkboxes no longer incorrectly display Required; their validation and absent
+value semantics are unchanged.
+
+The seven schema browser cases now cover the reference save/error/dependency
+flows plus source arrival during typing, detail refreshes, edits during a held
+save, and conditional hiding/showing before and after source completion. They
+assert draft values, focus/caret/selection, nonzero mobile scroll, field/nav
+geometry and exact persisted fixture values after full reloads. Source arrival
+preserves an existing note's focus and selection; inserting new schema rows can
+naturally move that note, so that case does not claim unchanged field geometry.
+Refresh/save cases assert it across multiple frames. Schema payloads containing
+a normal `status` property remain valid data, not network-error markers.
+
+A matching post-action resource exposed an initialization bug in the first
+implementation: seeding undefined before activating the schema source caused
+binding to treat it as supplied data and skip its GET. Only unresolved sources
+are now seeded with an empty array. The existing direct-resource test now
+asserts schema controls in light DOM, one schema/lookup/relation request and no
+main-detail refetch. Its dormant main source remains attached for future
+refreshes, consistent with other bound details.
+
+The mobile save test also exposed the existing `p9r-select` popup positioning
+bug: it always opened below a trigger near the viewport bottom, leaving Used
+unclickable. The generic select now opens upward when needed, limits the list
+height to available space and clamps horizontal positioning. The browser test
+selects the previously unreachable option, checks panel bounds, resizes while
+open and finishes the save. Before/after captures are `schema-select-before.png`
+and `schema-select-after.png`; both were inspected. The field UI is unchanged.
+
+All nine schema capture states retain reference geometry and mobile scroll.
+Five final image pairs are pixel identical; three ready/bottom pairs differ
+only in the removed optional Required marker (318 pixels each), and mobile
+empty has 11 differing input-border pixels. Desktop/mobile ready, loading,
+empty and error images were inspected. Five sequential runs are recorded in
+`schema-migration-visual-{0..4}.log` and `schema-migration-timings.json`:
+
+| State | Desktop before / after (ms) | Mobile before / after (ms) |
+|---|---:|---:|
+| Ready | 204.2 / 196.6 | 183.6 / 193.5 |
+| Loading | 162.2 / 178.5 | 155.0 / 176.5 |
+| Empty | 176.0 / 201.5 | 180.4 / 197.5 |
+| Error | 179.0 / 204.8 | 167.2 / 204.7 |
+
+Each initial state makes one detail read and one schema request. Several states
+are slower; overall performance improvement is not established and remains a
+final-review item. A separate five-run selected-detail save probe verifies both
+rendered and fixture-persisted values. Click-to-save-response medians are
+53.4ms before and 54.3ms after. The legacy path adds one schema GET per save;
+the bound path retains the unchanged schema and adds none. Neither adds a main
+detail GET. Raw data is in `schema-save-timings.json`. The original baseline
+standalone probe emitted no save request, so that failed observation was kept
+in `schema-save-unselected-before.log`; it is not included in comparable timing
+results. Current standalone saves are covered by the passing browser flows.
+
+All 46 dashboard browser tests in 40 independently executed files pass, as do
+181 Control tests and three foundation select tests. Build and initial/final
+check:all pass all eight gates. UI contracts remain 0 errors, 77 warnings and
+11 information; no fanout error was introduced. Existing WDetail (284 lines)
+and event-controller (233 lines) size warnings remain: the small schema wiring
+belongs with their current responsibilities, and removing their legacy paths
+is still outstanding. New schema modules remain below the size target.
+
+The old schema control and loader remain for details containing unmigrated
+editable tables/reorderable lists and for manual examples. They must disappear
+with those consumers; this is not a permanent compatibility path. These tests
+use route-fixture persistence. Complex/nested widgets, concurrent media writes,
+operator/provider coverage, real local storage, metadata relays, the complete
+E2E matrix and final runtime activation still prevent goal completion.
