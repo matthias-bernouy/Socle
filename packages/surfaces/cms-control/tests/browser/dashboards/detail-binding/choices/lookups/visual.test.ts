@@ -4,10 +4,10 @@ import { resolve } from "node:path";
 import { mkdir } from "node:fs/promises";
 import { installLookupRoutes } from "./fixture";
 const bundle = await Bun.file(
-    resolve(import.meta.dir, "../../../../../src/static/assets/control-components.js"),
+    resolve(import.meta.dir, "../../../../../../src/static/assets/control-components.js"),
 ).text();
 const styles = await Bun.file(
-    resolve(import.meta.dir, "../../../../../../../foundation/components/dist/style.css"),
+    resolve(import.meta.dir, "../../../../../../../../foundation/components/dist/style.css"),
 ).text();
 
 test("remote lookup fields preserve their desktop/mobile presentation", async () => {

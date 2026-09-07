@@ -894,3 +894,63 @@ with those consumers; this is not a permanent compatibility path. These tests
 use route-fixture persistence. Complex/nested widgets, concurrent media writes,
 operator/provider coverage, real local storage, metadata relays, the complete
 E2E matrix and final runtime activation still prevent goal completion.
+
+
+### Embedded table reference checkpoint
+
+The next unmigrated family is the table field inside a detail, distinct from
+the already bound top-level table widget. `detail-binding/tables/` now has a
+route fixture, a complete sequential save flow and desktop/mobile references.
+Lookup tests moved under `detail-binding/choices/lookups/` to keep the directory
+within its fanout limit; their behavior is unchanged.
+
+The sequential browser flow exercises text, select, remote combobox and token
+cells, removes the first row, edits the remaining nested values, adds a blank
+row, saves and reloads, then adds another axis and saves/reloads its Cartesian
+matrix. Assertions preserve hidden row metadata, readonly price/date source
+values and row ordering. Blank rows are excluded from submission when all
+editor values are empty. A select with a nonempty default makes a newly added
+row nonempty; the fixture therefore explicitly provides a None option. These
+saves use route-fixture persistence, not a local database.
+
+Six screenshot pairs compare the original goal bundle with the current bundle
+at this checkpoint: desktop 1440 and mobile 390, each ready, empty and waiting
+for lookup options. All six pairs are pixel identical, with identical measured
+field/row/navigation geometry. Images were inspected. The table field is still
+on its old renderer in both bundles; this establishes a reference and does not
+claim migration. Evidence is under `/tmp/cmscore-widget-binding-20260907/`:
+`table-reference-captures/`, `table-reference-visual-{0..4}.log` and
+`table-reference-timings.json`. Five-run initial-display medians are:
+
+| State | Desktop original / current (ms) | Mobile original / current (ms) |
+|---|---:|---:|
+| Ready | 213.0 / 209.7 | 195.7 / 193.5 |
+| Empty | 177.6 / 175.5 | 185.7 / 174.9 |
+| Pending lookup | 176.3 / 188.9 | 185.8 / 186.1 |
+
+Every observation makes one detail GET and one shared lookup GET, including
+an empty table. These are reference measurements, not a performance gain.
+
+A separate adversarial browser probe deliberately fails the required newer-
+draft assertion: `table-concurrency-regression.test.ts` and its matching log
+in the evidence directory. Resolving pending lookup options retains the edited
+text but loses focus and changes selection from 2–7 to the end. Saving, then
+editing a cell while the response is held, replaces the newer text with the
+submitted text on response. All five sampled frames show the old value and
+lost focus. This probe is not counted among passing tests and must become a
+passing regression test during the binding migration.
+
+Mobile images also expose pre-existing clipped columns: the editable table has
+552px of content inside a 324px container. The matrix and readonly table exceed
+their containers too. The migration must provide access to every column while
+preserving desktop presentation; equal reference screenshots alone do not
+satisfy the overflow requirement.
+
+The eight browser files affected by this checkpoint pass independently.
+Initial and final `check:all` pass all eight gates; UI contracts remain at
+0 errors, 77 warnings and 11 information, with no new fanout error. The first
+final check caught a test-only geometry-map typing error; it was fixed before
+the passing rerun. Logs are `embedded-table-start.log`,
+`table-reference-final.log` and `table-reference-browser/`.
+No runtime implementation changed. The full migration, concurrency correction,
+mobile overflow correction and remaining goal scope are still outstanding.

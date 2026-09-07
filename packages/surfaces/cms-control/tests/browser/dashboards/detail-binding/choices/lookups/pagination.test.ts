@@ -3,10 +3,10 @@ import { chromium } from "playwright";
 import { resolve } from "node:path";
 import { installLookupRoutes } from "./fixture";
 const bundle = await Bun.file(
-    resolve(import.meta.dir, "../../../../../src/static/assets/control-components.js"),
+    resolve(import.meta.dir, "../../../../../../src/static/assets/control-components.js"),
 ).text();
 const styles = await Bun.file(
-    resolve(import.meta.dir, "../../../../../../../foundation/components/dist/style.css"),
+    resolve(import.meta.dir, "../../../../../../../../foundation/components/dist/style.css"),
 ).text();
 
 test("a failed next lookup page retries the same offset and repeated clicks issue one request", async () => {
