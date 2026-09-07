@@ -9,16 +9,18 @@
             </p9r-button>
         </div>
 
-        <cms-detail-section slot="main" heading="Installing integration" description="This can take a moment when connector deployment is required.">
-            <div class="installing-state">
-                <span class="spinner"></span>
-                <strong>Installation in progress</strong>
-                <small>The installed detail opens automatically when the import completes.</small>
-            </div>
-        </cms-detail-section>
+        <cms-shell-detail-body slot="body">
+            <cms-detail-section slot="main" heading="Installing integration" description="This can take a moment when connector deployment is required.">
+                <div class="installing-state">
+                    <span class="spinner"></span>
+                    <strong>Installation in progress</strong>
+                    <small>The installed detail opens automatically when the import completes.</small>
+                </div>
+            </cms-detail-section>
 
-        <cms-detail-section slot="aside" heading="Import summary" description="The server is creating these resources now.">
-            <div data-summary></div>
-        </cms-detail-section>
+            <cms-detail-section slot="aside" heading="Import summary" description="The server is creating these resources now.">
+                <div data-summary></div>
+            </cms-detail-section>
+        </cms-shell-detail-body>
     </cms-shell-detail>
 </template>

@@ -32,11 +32,13 @@
     </span>
     <span slot="title" data-source-title>Theme</span>
 
-    <p class="theme-message" slot="main" data-message aria-live="polite"></p>
+    <cms-shell-detail-body slot="body">
+        <p class="theme-message" slot="main" data-message aria-live="polite"></p>
 
-    <cms-detail-section slot="main" density="compact" data-category-section>
-        <div class="groups" data-groups></div>
-    </cms-detail-section>
+        <cms-detail-section slot="main" density="compact" data-category-section>
+            <div class="groups" data-groups></div>
+        </cms-detail-section>
+    </cms-shell-detail-body>
 </cms-shell-detail>
 
 <p9r-modal data-context-modal aria-label="Edit theme">

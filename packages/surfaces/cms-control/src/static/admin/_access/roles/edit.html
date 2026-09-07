@@ -17,18 +17,20 @@
                         <p9r-button color="danger" variant="ghost">Delete role</p9r-button>
                     </cms-confirm-form>
 
-                    <cms-detail-section slot="main" heading="Permissions">
-                        <cms-role-editor api="{{BASE_PATH}}/api/roles" back="{{BASE_PATH}}/admin/roles"></cms-role-editor>
-                    </cms-detail-section>
+                    <cms-shell-detail-body slot="body">
+                        <cms-detail-section slot="main" heading="Permissions">
+                            <cms-role-editor api="{{BASE_PATH}}/api/roles" back="{{BASE_PATH}}/admin/roles"></cms-role-editor>
+                        </cms-detail-section>
 
-                    <cms-detail-section slot="aside" heading="Role">
-                        <p9r-stack gap="sm">
-                            <strong>{{ label }}</strong>
-                            <code>{{ id }}</code>
-                            <span>{{ kind }}</span>
-                            <span>{{ permissionsLabel }}</span>
-                        </p9r-stack>
-                    </cms-detail-section>
+                        <cms-detail-section slot="aside" heading="Role">
+                            <p9r-stack gap="sm">
+                                <strong>{{ label }}</strong>
+                                <code>{{ id }}</code>
+                                <span>{{ kind }}</span>
+                                <span>{{ permissionsLabel }}</span>
+                            </p9r-stack>
+                        </cms-detail-section>
+                    </cms-shell-detail-body>
                 </cms-shell-detail>
             </template>
         </div>

@@ -19,23 +19,25 @@
             </a>
             <span slot="title">Settings</span>
 
-            <cms-detail-section slot="main" heading="Configuration areas">
-                <p9r-stack gap="md">
-                    <a href="{{BASE_PATH}}/admin/settings/general">General</a>
-                    <a href="{{BASE_PATH}}/admin/settings/organization">Organization</a>
-                    <a href="{{BASE_PATH}}/admin/settings/email">Email</a>
-                    <a href="{{BASE_PATH}}/admin/settings/privacy-analytics">Privacy &amp; analytics</a>
-                    <a href="{{BASE_PATH}}/admin/settings/secrets">Secrets</a>
-                    <a href="{{BASE_PATH}}/admin/settings/authentication/methods">Authentication</a>
-                    <a href="{{BASE_PATH}}/admin/settings/connectors">Connector providers</a>
-                </p9r-stack>
-            </cms-detail-section>
+            <cms-shell-detail-body slot="body">
+                <cms-detail-section slot="main" heading="Configuration areas">
+                    <p9r-stack gap="md">
+                        <a href="{{BASE_PATH}}/admin/settings/general">General</a>
+                        <a href="{{BASE_PATH}}/admin/settings/organization">Organization</a>
+                        <a href="{{BASE_PATH}}/admin/settings/email">Email</a>
+                        <a href="{{BASE_PATH}}/admin/settings/privacy-analytics">Privacy &amp; analytics</a>
+                        <a href="{{BASE_PATH}}/admin/settings/secrets">Secrets</a>
+                        <a href="{{BASE_PATH}}/admin/settings/authentication/methods">Authentication</a>
+                        <a href="{{BASE_PATH}}/admin/settings/connectors">Connector providers</a>
+                    </p9r-stack>
+                </cms-detail-section>
 
-            <cms-detail-section slot="aside" heading="Settings navigation">
-                <p9r-stack gap="sm">
-                    <span>Use the secondary navigation to open each settings page.</span>
-                </p9r-stack>
-            </cms-detail-section>
+                <cms-detail-section slot="aside" heading="Settings navigation">
+                    <p9r-stack gap="sm">
+                        <span>Use the secondary navigation to open each settings page.</span>
+                    </p9r-stack>
+                </cms-detail-section>
+            </cms-shell-detail-body>
         </cms-shell-detail>
     </p9r-container>
 </w13c-fixed-admin-layout>

@@ -56,15 +56,15 @@ export class CmsFunctionDetail extends HTMLElement {
         }
         const shell = document.createElement("cms-shell-detail");
         shell.className = "functions-shell";
-        shell.append(
-            backLink(),
-            title(this.detail),
-            headerActions(),
+        const body = document.createElement("cms-shell-detail-body");
+        body.slot = "body";
+        body.append(
             inputsSection(this.detail, this.draft, (path) => void this.onInputChange(path)),
             resultSection(),
             functionSummarySection(this.detail),
             contractSection(this.detail),
         );
+        shell.append(backLink(), title(this.detail), headerActions(), body);
         this.replaceChildren(styleNode(css as unknown as string), shell);
         this.bindRefs();
         void hydrateExecuteFields(this, this.detail, this.draft);

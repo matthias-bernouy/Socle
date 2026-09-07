@@ -21800,40 +21800,14 @@ slot[name="actions"]::slotted(p9r-action-menu) {
     --action-menu-panel-min-width: 220px;
 }
 
-.shell-detail-layout {
-    display: grid;
-    grid-template-columns: minmax(0, var(--shell-detail-main-width)) minmax(0, var(--shell-detail-aside-width));
-    gap: var(--shell-detail-gap);
-    align-items: start;
-    min-width: 0;
-}
-
-.shell-detail-main,
-.shell-detail-aside {
-    display: grid;
-    gap: 16px;
-    min-width: 0;
-}
-
-.shell-detail-main {
-    width: 100%;
-}
-
-.shell-detail-aside {
-    width: 100%;
-}
-
-.shell-detail-main > slot,
-.shell-detail-aside > slot {
-    display: grid;
-    gap: 16px;
-    min-width: 0;
-}
-
-slot[name="main"]::slotted(*),
-slot[name="aside"]::slotted(*) {
+slot[name="body"],
+slot[name="body"]::slotted(*) {
     min-width: 0;
     max-width: 100%;
+}
+
+slot[name="body"]::slotted(form) {
+    margin: 0;
 }
 
 @media (max-width: 880px) {
@@ -21848,14 +21822,6 @@ slot[name="aside"]::slotted(*) {
         flex-direction: column;
     }
 
-    .shell-detail-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .shell-detail-main,
-    .shell-detail-aside {
-        width: auto;
-    }
 }
 `;
 
@@ -21873,14 +21839,7 @@ slot[name="aside"]::slotted(*) {
         </div>
     </header>
 
-    <div class="shell-detail-layout">
-        <main class="shell-detail-main">
-            <slot name="main"></slot>
-        </main>
-        <aside class="shell-detail-aside">
-            <slot name="aside"></slot>
-        </aside>
-    </div>
+    <slot name="body"></slot>
 </article>
 `;
 
@@ -22018,6 +21977,85 @@ p {
       }
       return node.textContent?.trim() !== "";
     }));
+  }
+
+  // src/components/admin/Layout/ShellDetail/body/style.css
+  var style_default8 = `:host {
+    display: block;
+    min-width: 0;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.shell-detail-layout {
+    display: grid;
+    grid-template-columns: minmax(0, var(--shell-detail-main-width, var(--w-detail-main-width, 600px))) minmax(0, var(--shell-detail-aside-width, var(--w-detail-aside-width, 285px)));
+    gap: var(--shell-detail-gap, var(--w-detail-gap, 16px));
+    align-items: start;
+    min-width: 0;
+}
+
+.shell-detail-main,
+.shell-detail-aside {
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+}
+
+.shell-detail-main {
+    width: 100%;
+}
+
+.shell-detail-aside {
+    width: 100%;
+}
+
+.shell-detail-main > slot,
+.shell-detail-aside > slot {
+    display: grid;
+    gap: 16px;
+    min-width: 0;
+}
+
+slot[name="main"]::slotted(*),
+slot[name="aside"]::slotted(*) {
+    min-width: 0;
+    max-width: 100%;
+}
+
+@media (max-width: 880px) {
+    .shell-detail-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .shell-detail-main,
+    .shell-detail-aside {
+        width: auto;
+    }
+}
+`;
+
+  // src/components/admin/Layout/ShellDetail/body/template.html
+  var template_default10 = `<div class="shell-detail-layout">
+    <main class="shell-detail-main">
+        <slot name="main"></slot>
+    </main>
+    <aside class="shell-detail-aside">
+        <slot name="aside"></slot>
+    </aside>
+</div>
+`;
+
+  // src/components/admin/Layout/ShellDetail/body/ShellDetailBody.ts
+  class CmsShellDetailBody extends l2 {
+    constructor() {
+      super({ css: style_default8, template: template_default10 });
+    }
+  }
+  if (!customElements.get("cms-shell-detail-body")) {
+    customElements.define("cms-shell-detail-body", CmsShellDetailBody);
   }
 
   // src/components/admin/Layout/ShellDetail/ShellDetail.ts
@@ -24198,7 +24236,7 @@ circle.endpoint-timeline__errors {
 `;
 
   // src/components/admin/Layout/EndpointPerformance/template.html
-  var template_default10 = `<section class="analytics-surface endpoint-performance">
+  var template_default11 = `<section class="analytics-surface endpoint-performance">
     <div class="analytics-loading" data-view-state="loading" aria-label="Loading endpoint performance">
         <div class="skeleton skeleton--heading"></div>
         <div class="endpoint-skeleton-grid">
@@ -24384,7 +24422,7 @@ circle.endpoint-timeline__errors {
       const template3 = document.createElement("template");
       style.textContent = [dashboard_default, data_default, states_default, layout_default, table_default, chart_default2].join(`
 `);
-      template3.innerHTML = template_default10;
+      template3.innerHTML = template_default11;
       this.replaceChildren(style, template3.content.cloneNode(true));
       this.query("[data-filters]").addEventListener("submit", this.applyFilters);
       this.query("[data-reset]").addEventListener("click", this.resetFilters);
@@ -25985,11 +26023,13 @@ p9r-modal[data-variable-edit-modal]::part(footer) {
     </span>
     <span slot="title" data-source-title>Theme</span>
 
-    <p class="theme-message" slot="main" data-message aria-live="polite"></p>
+    <cms-shell-detail-body slot="body">
+        <p class="theme-message" slot="main" data-message aria-live="polite"></p>
 
-    <cms-detail-section slot="main" density="compact" data-category-section>
-        <div class="groups" data-groups></div>
-    </cms-detail-section>
+        <cms-detail-section slot="main" density="compact" data-category-section>
+            <div class="groups" data-groups></div>
+        </cms-detail-section>
+    </cms-shell-detail-body>
 </cms-shell-detail>
 
 <p9r-modal data-context-modal aria-label="Edit theme">
@@ -26691,68 +26731,70 @@ ${ThemeNavActions_default}`;
                     <span class="action-status" role="status" aria-live="polite" data-action-status></span>
                 </div>
 
-                <cms-integration-management slot="main" data-management></cms-integration-management>
+                <cms-shell-detail-body slot="body">
+                    <cms-integration-management slot="main" data-management></cms-integration-management>
 
-                <cms-detail-section slot="main" heading="Created resources">
-                    <div class="resource-list">
-                        <article class="resource-row" cms-repeat="integration.artifacts as artifact">
-                            <span class="resource-icon" data-grid-icon aria-hidden="true"></span>
-                            <span>
-                                <strong>{{ artifact.id }}</strong>
-                                <small>{{ artifact.typeLabel }} - {{ artifact.actionLabel }}</small>
-                            </span>
-                            <span class="resource-state">{{ artifact.existsLabel }}</span>
-                        </article>
-                    </div>
-                </cms-detail-section>
-
-                <cms-detail-section slot="main" heading="Recent activity">
-                    <div class="activity-list">
-                        <article class="activity-row" cms-repeat="integration.runs as run">
-                            <span class="activity-dot"></span>
-                            <span>
-                                <strong>Run #{{ run.runNumber }} - {{ run.statusLabel }}</strong>
-                                <small>{{ run.startedAtLabel }}</small>
-                            </span>
-                        </article>
-                    </div>
-                </cms-detail-section>
-
-                <cms-detail-section slot="aside" heading="Installation">
-                    <dl class="summary-grid">
-                        <div><dt>Description</dt><dd data-description></dd></div>
-                        <div><dt>Identifier</dt><dd>{{ integration.id }}</dd></div>
-                        <div><dt>Status</dt><dd>{{ integration.statusLabel }}</dd></div>
-                        <div><dt>Version</dt><dd>{{ integration.definitionVersion }}</dd></div>
-                        <div><dt>Last sync</dt><dd>{{ integration.updatedAtLabel }}</dd></div>
-                    </dl>
-                </cms-detail-section>
-
-                <cms-detail-section slot="aside" heading="Version upgrade">
-                    <div class="upgrade-panel" data-upgrade-panel>
-                        <p>Upgrades are explicit. Syncing never changes the installed version.</p>
-                        <p9r-button type="button" data-upgrade-open>Check for upgrades</p9r-button>
-                        <div class="upgrade-form" data-upgrade-form hidden>
-                            <label>
-                                Target version
-                                <select data-upgrade-target aria-label="Target integration version"></select>
-                            </label>
-                            <label>
-                                Type the exact target version to confirm
-                                <input data-upgrade-confirmation type="text" autocomplete="off" spellcheck="false" />
-                            </label>
-                            <div class="upgrade-actions">
-                                <p9r-button type="button" color="primary" data-upgrade-confirm>Upgrade</p9r-button>
-                                <button type="button" class="secondary-action" data-upgrade-cancel>Cancel</button>
-                            </div>
+                    <cms-detail-section slot="main" heading="Created resources">
+                        <div class="resource-list">
+                            <article class="resource-row" cms-repeat="integration.artifacts as artifact">
+                                <span class="resource-icon" data-grid-icon aria-hidden="true"></span>
+                                <span>
+                                    <strong>{{ artifact.id }}</strong>
+                                    <small>{{ artifact.typeLabel }} - {{ artifact.actionLabel }}</small>
+                                </span>
+                                <span class="resource-state">{{ artifact.existsLabel }}</span>
+                            </article>
                         </div>
-                        <p class="upgrade-status" data-upgrade-status role="status" aria-live="polite"></p>
-                    </div>
-                </cms-detail-section>
+                    </cms-detail-section>
 
-                <cms-detail-section slot="aside" heading="Linked integrations">
-                    <div data-linked></div>
-                </cms-detail-section>
+                    <cms-detail-section slot="main" heading="Recent activity">
+                        <div class="activity-list">
+                            <article class="activity-row" cms-repeat="integration.runs as run">
+                                <span class="activity-dot"></span>
+                                <span>
+                                    <strong>Run #{{ run.runNumber }} - {{ run.statusLabel }}</strong>
+                                    <small>{{ run.startedAtLabel }}</small>
+                                </span>
+                            </article>
+                        </div>
+                    </cms-detail-section>
+
+                    <cms-detail-section slot="aside" heading="Installation">
+                        <dl class="summary-grid">
+                            <div><dt>Description</dt><dd data-description></dd></div>
+                            <div><dt>Identifier</dt><dd>{{ integration.id }}</dd></div>
+                            <div><dt>Status</dt><dd>{{ integration.statusLabel }}</dd></div>
+                            <div><dt>Version</dt><dd>{{ integration.definitionVersion }}</dd></div>
+                            <div><dt>Last sync</dt><dd>{{ integration.updatedAtLabel }}</dd></div>
+                        </dl>
+                    </cms-detail-section>
+
+                    <cms-detail-section slot="aside" heading="Version upgrade">
+                        <div class="upgrade-panel" data-upgrade-panel>
+                            <p>Upgrades are explicit. Syncing never changes the installed version.</p>
+                            <p9r-button type="button" data-upgrade-open>Check for upgrades</p9r-button>
+                            <div class="upgrade-form" data-upgrade-form hidden>
+                                <label>
+                                    Target version
+                                    <select data-upgrade-target aria-label="Target integration version"></select>
+                                </label>
+                                <label>
+                                    Type the exact target version to confirm
+                                    <input data-upgrade-confirmation type="text" autocomplete="off" spellcheck="false" />
+                                </label>
+                                <div class="upgrade-actions">
+                                    <p9r-button type="button" color="primary" data-upgrade-confirm>Upgrade</p9r-button>
+                                    <button type="button" class="secondary-action" data-upgrade-cancel>Cancel</button>
+                                </div>
+                            </div>
+                            <p class="upgrade-status" data-upgrade-status role="status" aria-live="polite"></p>
+                        </div>
+                    </cms-detail-section>
+
+                    <cms-detail-section slot="aside" heading="Linked integrations">
+                        <div data-linked></div>
+                    </cms-detail-section>
+                </cms-shell-detail-body>
             </cms-shell-detail>
         </template>
     </div>
@@ -26787,17 +26829,19 @@ ${ThemeNavActions_default}`;
             </p9r-button>
         </div>
 
-        <cms-detail-section slot="main" heading="Installing integration" description="This can take a moment when connector deployment is required.">
-            <div class="installing-state">
-                <span class="spinner"></span>
-                <strong>Installation in progress</strong>
-                <small>The installed detail opens automatically when the import completes.</small>
-            </div>
-        </cms-detail-section>
+        <cms-shell-detail-body slot="body">
+            <cms-detail-section slot="main" heading="Installing integration" description="This can take a moment when connector deployment is required.">
+                <div class="installing-state">
+                    <span class="spinner"></span>
+                    <strong>Installation in progress</strong>
+                    <small>The installed detail opens automatically when the import completes.</small>
+                </div>
+            </cms-detail-section>
 
-        <cms-detail-section slot="aside" heading="Import summary" description="The server is creating these resources now.">
-            <div data-summary></div>
-        </cms-detail-section>
+            <cms-detail-section slot="aside" heading="Import summary" description="The server is creating these resources now.">
+                <div data-summary></div>
+            </cms-detail-section>
+        </cms-shell-detail-body>
     </cms-shell-detail>
 </template>
 `;
@@ -26845,22 +26889,24 @@ ${ThemeNavActions_default}`;
             <span class="action-status" data-setup-status></span>
         </div>
 
-        <p slot="main">Install first, then configure the connection from its settings.</p>
+        <cms-shell-detail-body slot="body">
+            <p slot="main">Install first, then configure the connection from its settings.</p>
 
-        <cms-detail-section slot="main" heading="Resources to create" description="The import will create or update these integration resources.">
-            <div class="collection-selection" data-collection-selection hidden>
-                <p class="collection-source-plan" data-collection-source-plan></p>
-            </div>
-            <div class="resource-list" data-resources></div>
-        </cms-detail-section>
+            <cms-detail-section slot="main" heading="Resources to create" description="The import will create or update these integration resources.">
+                <div class="collection-selection" data-collection-selection hidden>
+                    <p class="collection-source-plan" data-collection-source-plan></p>
+                </div>
+                <div class="resource-list" data-resources></div>
+            </cms-detail-section>
 
-        <cms-detail-section slot="aside" heading="Related resources" description="Related integrations stay available from this setup flow.">
-            <div data-linked></div>
-        </cms-detail-section>
+            <cms-detail-section slot="aside" heading="Related resources" description="Related integrations stay available from this setup flow.">
+                <div data-linked></div>
+            </cms-detail-section>
 
-        <cms-detail-section slot="aside" heading="Import summary" description="The server creates the resources and deploys connectors when needed.">
-            <div data-summary></div>
-        </cms-detail-section>
+            <cms-detail-section slot="aside" heading="Import summary" description="The server creates the resources and deploys connectors when needed.">
+                <div data-summary></div>
+            </cms-detail-section>
+        </cms-shell-detail-body>
     </cms-shell-detail>
 </template>
 `;
@@ -27708,7 +27754,7 @@ ${ThemeNavActions_default}`;
   }
 
   // src/components/admin/Resources/Dashboards/navigation/icons/style.css
-  var style_default8 = `:host { display: inline-flex; width: var(--icon-size, 16px); height: var(--icon-size, 16px); }
+  var style_default9 = `:host { display: inline-flex; width: var(--icon-size, 16px); height: var(--icon-size, 16px); }
 span { display: contents; }
 svg { width: 100%; height: 100%; stroke: currentColor; fill: none; }
 `;
@@ -27716,7 +27762,7 @@ svg { width: 100%; height: 100%; stroke: currentColor; fill: none; }
   // src/components/admin/Resources/Dashboards/navigation/icons/Icon.ts
   class DashboardIcon extends l2 {
     constructor() {
-      super({ css: style_default8, template: "<span></span>" });
+      super({ css: style_default9, template: "<span></span>" });
     }
     static observedAttributes = ["name", "svg"];
     attributeChangedCallback() {
@@ -30220,7 +30266,7 @@ p9r-token-input {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/template.html
-  var template_default11 = `<slot name="source-status"></slot>
+  var template_default12 = `<slot name="source-status"></slot>
 <cms-shell-detail>
     <button type="button" slot="back" data-back aria-label="Back to table">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -30231,10 +30277,12 @@ p9r-token-input {
     </button>
     <span slot="title" data-title><slot name="bound-title"></slot></span>
     <div slot="actions" class="w-detail-actions" data-actions><slot name="bound-actions"></slot></div>
-    <div slot="main" class="w-detail-main" data-main><slot name="bound-main"></slot></div>
-    <slot name="main-extra" slot="main"></slot>
-    <div slot="aside" class="w-detail-aside" data-aside><slot name="bound-aside"></slot></div>
-    <slot name="aside-extra" slot="aside"></slot>
+    <cms-shell-detail-body slot="body">
+        <div slot="main" class="w-detail-main" data-main><slot name="bound-main"></slot></div>
+        <slot name="main-extra" slot="main"></slot>
+        <div slot="aside" class="w-detail-aside" data-aside><slot name="bound-aside"></slot></div>
+        <slot name="aside-extra" slot="aside"></slot>
+    </cms-shell-detail-body>
 </cms-shell-detail>
 
 <slot name="footer"></slot>
@@ -30246,7 +30294,7 @@ p9r-token-input {
     fields;
     events;
     constructor() {
-      super({ css: base_default, template: template_default11 });
+      super({ css: base_default, template: template_default12 });
       this.fields = new DetailFieldState(this.shadowRoot, () => this.readBinding(), () => this.operationData());
       this.events = new DetailEvents(this, this.fields, () => this.operationData(), () => _i(this));
     }
@@ -30529,7 +30577,7 @@ p9r-token-input {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/style.css
-  var style_default9 = `:host {
+  var style_default10 = `:host {
     display: block;
     min-width: 0;
     --dashboard-table-columns: 46px 1fr;
@@ -30646,7 +30694,7 @@ slot {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/template.html
-  var template_default12 = `<section class="w-table-shell">
+  var template_default13 = `<section class="w-table-shell">
     <header class="w-table-header" data-header>
         <div>
             <h3 data-title></h3>
@@ -30678,7 +30726,7 @@ slot {
   class DashboardWTable extends l2 {
     rowsObserver = new MutationObserver(() => this.syncPresentation());
     constructor() {
-      super({ css: style_default9, template: template_default12 });
+      super({ css: style_default10, template: template_default13 });
     }
     set selected(value2) {
       this.setAttribute("data-selected", value2);
@@ -34466,7 +34514,7 @@ slot { display: contents; }
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/style.css
-  var style_default10 = `:host {
+  var style_default11 = `:host {
     display: block;
     max-inline-size: 960px;
 }
@@ -34510,7 +34558,7 @@ slot { display: contents; }
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/template.html
-  var template_default13 = `<section class="navigation-list-shell">
+  var template_default14 = `<section class="navigation-list-shell">
     <header class="navigation-list-header" data-header>
         <h3 data-title></h3>
         <div class="navigation-list-actions" data-actions><slot name="actions"></slot></div>
@@ -34527,7 +34575,7 @@ slot { display: contents; }
     rowsObserver = new MutationObserver(() => this.syncItems());
     dragging = null;
     constructor() {
-      super({ css: style_default10, template: template_default13 });
+      super({ css: style_default11, template: template_default14 });
     }
     static observedAttributes = ["heading"];
     attributeChangedCallback() {
@@ -35490,7 +35538,7 @@ p {
 `;
 
   // src/components/admin/Resources/Dashboards/view/template.html
-  var template_default14 = `<main class="content">
+  var template_default15 = `<main class="content">
     <slot name="source-status"></slot>
 
     <section class="panel empty" data-empty>
@@ -35523,7 +35571,7 @@ p {
 
   class DashboardView extends DashboardViewController {
     constructor() {
-      super(styles, template_default14);
+      super(styles, template_default15);
     }
     connectedCallback() {
       super.connectedCallback();
@@ -35751,7 +35799,7 @@ p {
   }
 
   // src/components/admin/DashboardWorkspace/nav/style.css
-  var style_default11 = `:host {
+  var style_default12 = `:host {
     display: block;
     height: 100%;
     min-width: 0;
@@ -35828,7 +35876,7 @@ w13c-lateral-menu {
 `;
 
   // src/components/admin/DashboardWorkspace/nav/template.html
-  var template_default15 = `<div class="dashboard-switcher" data-dashboard-switcher-container hidden></div>
+  var template_default16 = `<div class="dashboard-switcher" data-dashboard-switcher-container hidden></div>
 <div class="dashboard-profile" data-dashboard-profile-container hidden></div>
 <w13c-lateral-menu aria-label="Dashboard navigation" data-operator-navigation hidden>
     <span slot="header" data-level-heading hidden></span>
@@ -35839,7 +35887,7 @@ w13c-lateral-menu {
   class CmsDashboardNav extends l2 {
     selectedId = "";
     constructor() {
-      super({ css: style_default11, template: template_default15 });
+      super({ css: style_default12, template: template_default16 });
     }
     connectedCallback() {
       super.connectedCallback();
@@ -36258,7 +36306,7 @@ slot[name="profile"]::slotted(*) {
 `;
 
   // src/components/admin/DashboardWorkspace/workspace/template.html
-  var template_default16 = `<section class="workspace">
+  var template_default17 = `<section class="workspace">
     <div class="message" data-message>Loading dashboard…</div>
     <div data-content hidden>
         <span class="dashboard-icon" data-dashboard-icon hidden></span>
@@ -36376,7 +36424,7 @@ slot[name="profile"]::slotted(*) {
     session = null;
     sources = new WorkspaceSources;
     constructor() {
-      super({ css: `${base_default3}${navigation_default2}`, template: template_default16 });
+      super({ css: `${base_default3}${navigation_default2}`, template: template_default17 });
     }
     disconnectWorkspace() {
       this.sources.disconnect();
@@ -39578,7 +39626,7 @@ cms-dashboard-icon svg {
     return true;
   }
   // src/components/admin/DashboardWorkspace/configuration/style.css
-  var style_default12 = `:host {
+  var style_default13 = `:host {
     display: block;
     min-width: 0;
 }
@@ -39604,7 +39652,7 @@ p9r-modal {
 `;
 
   // src/components/admin/DashboardWorkspace/configuration/template.html
-  var template_default17 = `<div data-navigation-editor></div>
+  var template_default18 = `<div data-navigation-editor></div>
 
 <p9r-modal data-navigation-item-dialog aria-label="Navigation item settings">
     <span slot="title">Navigation item settings</span>
@@ -39639,7 +39687,7 @@ p9r-modal {
     views = [];
     internals = this.attachInternals();
     constructor() {
-      super({ css: `${style_default12}${navigation_default2}`, template: template_default17 });
+      super({ css: `${style_default13}${navigation_default2}`, template: template_default18 });
     }
     attributeChangedCallback() {
       if (this.isConnected) {
@@ -40280,7 +40328,7 @@ p9r-modal {
   }
 
   // src/components/admin/Resources/Functions/detail/style.css
-  var style_default13 = `:host {
+  var style_default14 = `:host {
     display: block;
 }
 * {
@@ -40505,7 +40553,7 @@ pre {
       }
     }
     renderState(message) {
-      this.replaceChildren(styleNode(style_default13), state(message));
+      this.replaceChildren(styleNode(style_default14), state(message));
     }
     renderDetail() {
       if (!this.detail) {
@@ -40513,8 +40561,11 @@ pre {
       }
       const shell = document.createElement("cms-shell-detail");
       shell.className = "functions-shell";
-      shell.append(backLink(), title(this.detail), headerActions(), inputsSection(this.detail, this.draft, (path) => void this.onInputChange(path)), resultSection(), functionSummarySection(this.detail), contractSection(this.detail));
-      this.replaceChildren(styleNode(style_default13), shell);
+      const body = document.createElement("cms-shell-detail-body");
+      body.slot = "body";
+      body.append(inputsSection(this.detail, this.draft, (path) => void this.onInputChange(path)), resultSection(), functionSummarySection(this.detail), contractSection(this.detail));
+      shell.append(backLink(), title(this.detail), headerActions(), body);
+      this.replaceChildren(styleNode(style_default14), shell);
       this.bindRefs();
       hydrateExecuteFields(this, this.detail, this.draft);
     }
@@ -41707,7 +41758,12 @@ details[open] > summary > .chevron {
   function appendCreateTemplate(shell) {
     const template6 = document.createElement("template");
     template6.innerHTML = templateHtml;
-    shell.append(template6.content.cloneNode(true));
+    const body = document.createElement("cms-shell-detail-body");
+    body.slot = "body";
+    for (const child of Array.from(template6.content.children)) {
+      (child.slot === "main" || child.slot === "aside" ? body : shell).append(child);
+    }
+    shell.append(body);
   }
 
   // src/components/admin/Resources/Functions/create/editor/shell.ts
@@ -41996,7 +42052,7 @@ details[open] > summary > .chevron {
   }
 
   // src/components/admin/Resources/Integrations/template.html
-  var template_default18 = `<div class="integrations-root">
+  var template_default19 = `<div class="integrations-root">
     <div class="binding-feeds" aria-hidden="true">
         <div data-installations-source cms-reload-on="integration:updated">
             <template>
@@ -42407,7 +42463,7 @@ details[open] > summary > .chevron {
   }
 
   // src/components/admin/Resources/Integrations/management/presentation/style.css
-  var style_default14 = `cms-integration-management { display: block; border: 1px solid var(--border-default); border-radius: 8px; padding: 1rem; }
+  var style_default15 = `cms-integration-management { display: block; border: 1px solid var(--border-default); border-radius: 8px; padding: 1rem; }
 .management-tabs { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; }
 .management-tabs button { padding: .5rem .8rem; border: 1px solid var(--border-default); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
 .management-tabs button[aria-pressed="true"] { font-weight: 700; border-color: currentColor; }
@@ -42417,7 +42473,7 @@ details[open] > summary > .chevron {
   // src/components/admin/Resources/Integrations/management/presentation/shell.ts
   function renderManagementShell(host, deploymentStatus, configurationLabel, panel, select2) {
     const style = document.createElement("style");
-    style.textContent = style_default14;
+    style.textContent = style_default15;
     const nav = document.createElement("nav");
     nav.className = "management-tabs";
     nav.setAttribute("aria-label", "Source settings");
@@ -43926,7 +43982,7 @@ button[slot="back"]:disabled {
       const style = document.createElement("style");
       style.textContent = styles_default7;
       const body = document.createElement("template");
-      body.innerHTML = template_default18;
+      body.innerHTML = template_default19;
       this.replaceChildren(style, body.content.cloneNode(true));
     }
   }
@@ -44090,7 +44146,7 @@ button[slot="back"]:disabled {
   customElements.define("cms-bloc-choice", BlocChoice);
 
   // src/components/admin/Resources/Blocs/artwork/style.css
-  var style_default15 = `:host { display: block; width: 100%; }
+  var style_default16 = `:host { display: block; width: 100%; }
 .artwork {
     position: relative;
     aspect-ratio: 16 / 9;
@@ -44123,7 +44179,7 @@ button[slot="back"]:disabled {
 `;
 
   // src/components/admin/Resources/Blocs/artwork/template.html
-  var template_default19 = `<div class="artwork">
+  var template_default20 = `<div class="artwork">
     <div class="illustration" aria-hidden="true">
         <div class="window window-back"><i></i><i></i><i></i></div>
         <div class="window window-front"><div class="window-bar"><i></i><i></i><i></i></div><div class="window-content"><span class="monogram"></span><div class="lines"><i></i><i></i><i></i></div></div></div>
@@ -44136,7 +44192,7 @@ button[slot="back"]:disabled {
   // src/components/admin/Resources/Blocs/artwork/LibraryArtwork.ts
   class LibraryArtwork extends l2 {
     constructor() {
-      super({ css: style_default15, template: template_default19 });
+      super({ css: style_default16, template: template_default20 });
     }
     static get observedAttributes() {
       return ["label"];
@@ -44169,7 +44225,7 @@ button[slot="back"]:disabled {
   customElements.define("cms-library-artwork", LibraryArtwork);
 
   // src/components/admin/Resources/Blocs/icons/style.css
-  var style_default16 = `:host { display: inline-flex; width: 16px; height: 16px; flex: none; }
+  var style_default17 = `:host { display: inline-flex; width: 16px; height: 16px; flex: none; }
 svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 `;
 
@@ -44186,7 +44242,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
 
   class LibraryIcon extends l2 {
     constructor() {
-      super({ css: style_default16, template: '<svg viewBox="0 0 24 24" aria-hidden="true"><path/></svg>' });
+      super({ css: style_default17, template: '<svg viewBox="0 0 24 24" aria-hidden="true"><path/></svg>' });
     }
     static get observedAttributes() {
       return ["name"];
@@ -44201,7 +44257,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
   customElements.define("cms-library-icon", LibraryIcon);
 
   // src/components/admin/Resources/Blocs/preview/style.css
-  var style_default17 = `:host {
+  var style_default18 = `:host {
     display: block;
     min-width: 0;
 }
@@ -44217,13 +44273,13 @@ iframe {
 `;
 
   // src/components/admin/Resources/Blocs/preview/template.html
-  var template_default20 = `<iframe loading="lazy" title="Read-only bloc preview" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>
+  var template_default21 = `<iframe loading="lazy" title="Read-only bloc preview" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>
 `;
 
   // src/components/admin/Resources/Blocs/preview/BlocPreview.ts
   class BlocPreview extends l2 {
     constructor() {
-      super({ css: style_default17, template: template_default20 });
+      super({ css: style_default18, template: template_default21 });
     }
     static get observedAttributes() {
       return ["src"];
@@ -44306,7 +44362,7 @@ iframe {
   customElements.define("cms-bloc-library", BlocLibrary);
 
   // src/components/admin/Resources/Triggers/template.html
-  var template_default21 = `<section class="triggers-surface">
+  var template_default22 = `<section class="triggers-surface">
     <div data-state="loading" class="state">Loading triggers...</div>
     <div data-state="error" class="state" hidden>Failed to load triggers.</div>
     <div data-state="empty" class="state" hidden>No triggers installed.</div>
@@ -44330,7 +44386,7 @@ iframe {
 `;
 
   // src/components/admin/Resources/Triggers/style.css
-  var style_default18 = `.triggers-surface {
+  var style_default19 = `.triggers-surface {
     max-width: 1120px;
 }
 
@@ -44563,9 +44619,9 @@ button.run:disabled {
     }
     mount() {
       const style = document.createElement("style");
-      style.textContent = style_default18;
+      style.textContent = style_default19;
       const body = document.createElement("template");
-      body.innerHTML = template_default21;
+      body.innerHTML = template_default22;
       this.replaceChildren(style, body.content.cloneNode(true));
       this.rows = this.querySelector("[data-role='rows']");
     }
@@ -45362,7 +45418,12 @@ details[open] > summary > .chevron {
   function appendCreateTemplate2(shell) {
     const template6 = document.createElement("template");
     template6.innerHTML = templateHtml2;
-    shell.append(template6.content.cloneNode(true));
+    const body = document.createElement("cms-shell-detail-body");
+    body.slot = "body";
+    for (const child of Array.from(template6.content.children)) {
+      (child.slot === "main" || child.slot === "aside" ? body : shell).append(child);
+    }
+    shell.append(body);
   }
 
   // src/components/admin/Resources/Triggers/create/view.ts
@@ -45572,7 +45633,7 @@ details[open] > summary > .chevron {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/template.html
-  var template_default22 = `<header class="topbar">
+  var template_default23 = `<header class="topbar">
     <div class="start">
         <a class="back" href="#">
             <span class="chevron">‹</span>
@@ -45944,7 +46005,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
   var template6 = document.createElement("template");
-  template6.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default22)}`;
+  template6.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default23)}`;
 
   class TopBar extends HTMLElement {
     _viewport = "bleed";
@@ -46073,7 +46134,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/template.html
-  var template_default23 = `<aside class="panel">
+  var template_default24 = `<aside class="panel">
     <div class="panel-head">
         <div class="title">
             <slot name="title"></slot>
@@ -46089,7 +46150,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/style.css
-  var style_default19 = `:host {
+  var style_default20 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -46189,7 +46250,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default19)}</style>${String(template_default23)}`;
+  template7.innerHTML = `<style>${String(style_default20)}</style>${String(template_default24)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -46815,7 +46876,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/template.html
-  var template_default24 = `<div class="backdrop" hidden>
+  var template_default25 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="data-source-picker-title">
         <header class="header">
             <div>
@@ -47358,7 +47419,7 @@ h2 {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/DataSourcePicker.ts
   var template8 = document.createElement("template");
-  template8.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default24)}`;
+  template8.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default25)}`;
 
   class DataSourcePicker extends HTMLElement {
     _sources = [];
@@ -47482,7 +47543,7 @@ h2 {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/template.html
-  var template_default25 = `<div class="backdrop" hidden>
+  var template_default26 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="condition-picker-title">
         <header class="header">
             <div>
@@ -47501,7 +47562,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/style.css
-  var style_default20 = `:host { display: contents; }
+  var style_default21 = `:host { display: contents; }
 * { box-sizing: border-box; }
 
 .backdrop {
@@ -47905,7 +47966,7 @@ textarea { min-height: 92px; resize: vertical; }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/ConditionPicker.ts
   var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${String(style_default20)}</style>${String(template_default25)}`;
+  template9.innerHTML = `<style>${String(style_default21)}</style>${String(template_default26)}`;
 
   class ConditionPicker extends HTMLElement {
     _mode = "source";
@@ -48098,7 +48159,7 @@ textarea { min-height: 92px; resize: vertical; }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/template.html
-  var template_default26 = `<div class="backdrop" hidden>
+  var template_default27 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="block-picker-title">
         <header class="header">
             <div>
@@ -48823,7 +48884,7 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/BlockPickerModal.ts
   var template10 = document.createElement("template");
-  template10.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default26)}`;
+  template10.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default27)}`;
 
   class BlockPickerModal extends HTMLElement {
     _groups = [];
@@ -50652,13 +50713,13 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/template.html
-  var template_default27 = `<nav class="structure-tree" aria-label="Page structure">
+  var template_default28 = `<nav class="structure-tree" aria-label="Page structure">
     <div class="empty">No editable elements</div>
 </nav>
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/style.css
-  var style_default21 = `:host {
+  var style_default22 = `:host {
     display: block;
     position: relative;
     min-height: 100%;
@@ -50829,8 +50890,8 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template11 = document.createElement("template");
-  template11.innerHTML = `<style>${[style_default21, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
-`)}</style>${String(template_default27)}`;
+  template11.innerHTML = `<style>${[style_default22, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
+`)}</style>${String(template_default28)}`;
 
   class StructureTree extends HTMLElement {
     controller;
@@ -50869,7 +50930,7 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/template.html
-  var template_default28 = `<main class="canvas">
+  var template_default29 = `<main class="canvas">
     <div class="viewport">
         <div class="page">
             <iframe class="editor-frame" data-frame-kind="editor" title="Page editor canvas" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
@@ -50880,7 +50941,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/style.css
-  var style_default22 = `:host {
+  var style_default23 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -50989,7 +51050,7 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
   var template12 = document.createElement("template");
-  template12.innerHTML = `<style>${String(style_default22)}</style>${String(template_default28)}`;
+  template12.innerHTML = `<style>${String(style_default23)}</style>${String(template_default29)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -51130,7 +51191,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/template.html
-  var template_default29 = `<section class="section">
+  var template_default30 = `<section class="section">
     <button class="head" type="button" aria-expanded="true">
         <span class="label"></span>
         <span class="chevron">⌄</span>
@@ -51142,7 +51203,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/style.css
-  var style_default23 = `:host {
+  var style_default24 = `:host {
     display: block;
 }
 
@@ -51231,7 +51292,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template13 = createFieldTemplate(template_default29, style_default23);
+  var template13 = createFieldTemplate(template_default30, style_default24);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -51255,7 +51316,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/template.html
-  var template_default30 = `<div class="field">
+  var template_default31 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <input>
@@ -51276,7 +51337,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/style.css
-  var style_default24 = `:host {
+  var style_default25 = `:host {
     display: block;
 }
 
@@ -51713,7 +51774,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template14 = createFieldTemplate(template_default30, `${String(style_default24)}${String(dynamicDataPicker_default)}`);
+  var template14 = createFieldTemplate(template_default31, `${String(style_default25)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -51773,7 +51834,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/template.html
-  var template_default31 = `<div class="field">
+  var template_default32 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <textarea rows="3"></textarea>
@@ -51794,7 +51855,7 @@ input:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/style.css
-  var style_default25 = `:host {
+  var style_default26 = `:host {
     display: block;
 }
 
@@ -51866,7 +51927,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template15 = createFieldTemplate(template_default31, `${String(style_default25)}${String(dynamicDataPicker_default)}`);
+  var template15 = createFieldTemplate(template_default32, `${String(style_default26)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -52301,7 +52362,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/template.html
-  var template_default32 = `<div class="field">
+  var template_default33 = `<div class="field">
     <span class="label"></span>
     <span class="toolbar" aria-label="Rich text tools"></span>
     <div class="data-picker" hidden role="dialog" aria-label="Insert data">
@@ -52557,7 +52618,7 @@ textarea:disabled {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts
   var template16 = document.createElement("template");
-  template16.innerHTML = `<style>${String(styles_default12)}</style>${String(template_default32)}`;
+  template16.innerHTML = `<style>${String(styles_default12)}</style>${String(template_default33)}`;
 
   class RichTextEditor extends HTMLElement {
     _range = new RichTextRangeCommands(() => this.editor, () => this.getSelection());
@@ -52690,7 +52751,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/template.html
-  var template_default33 = `<label class="field">
+  var template_default34 = `<label class="field">
     <span class="label"></span>
     <select></select>
     <span class="hint"></span>
@@ -52698,7 +52759,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/style.css
-  var style_default26 = `:host {
+  var style_default27 = `:host {
     display: block;
 }
 
@@ -52802,7 +52863,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template17 = createFieldTemplate(template_default33, style_default26);
+  var template17 = createFieldTemplate(template_default34, style_default27);
 
   class Select extends HTMLElement {
     constructor() {
@@ -52839,7 +52900,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/template.html
-  var template_default34 = `<button class="toggle" type="button" aria-pressed="false">
+  var template_default35 = `<button class="toggle" type="button" aria-pressed="false">
     <span class="copy">
         <span class="label"></span>
         <span class="hint"></span>
@@ -52849,7 +52910,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/style.css
-  var style_default27 = `:host {
+  var style_default28 = `:host {
     display: block;
 }
 
@@ -52962,7 +53023,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template18 = createFieldTemplate(template_default34, style_default27);
+  var template18 = createFieldTemplate(template_default35, style_default28);
 
   class Toggle extends HTMLElement {
     constructor() {
@@ -52979,13 +53040,13 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/template.html
-  var template_default35 = `<div class="segmented">
+  var template_default36 = `<div class="segmented">
     <slot></slot>
 </div>
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/style.css
-  var style_default28 = `:host {
+  var style_default29 = `:host {
     display: block;
 }
 
@@ -53031,7 +53092,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template19 = createFieldTemplate(template_default35, style_default28);
+  var template19 = createFieldTemplate(template_default36, style_default29);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
@@ -53741,7 +53802,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/template.html
-  var template_default36 = `<div class="settings-view">
+  var template_default37 = `<div class="settings-view">
     <div class="empty">Select an editable element</div>
 </div>
 `;
@@ -54023,7 +54084,7 @@ cms-editor-v2-segmented-control button svg:only-child {
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/SettingsView.ts
   var template20 = document.createElement("template");
-  template20.innerHTML = `<style>${String(styles_default13)}</style>${String(template_default36)}`;
+  template20.innerHTML = `<style>${String(styles_default13)}</style>${String(template_default37)}`;
   var SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
   var SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
   var SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
@@ -54096,7 +54157,7 @@ cms-editor-v2-segmented-control button svg:only-child {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/template.html
-  var template_default37 = `<div class="backdrop" hidden>
+  var template_default38 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="repeat-picker-title">
         <header class="header">
             <div>
@@ -54726,7 +54787,7 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/RepeatPicker.ts
   var template21 = document.createElement("template");
-  template21.innerHTML = `<style>${String(styles_default14)}</style>${String(template_default37)}`;
+  template21.innerHTML = `<style>${String(styles_default14)}</style>${String(template_default38)}`;
   var REPEAT_PICKER_SELECT_EVENT = "editor-v2:repeat-select";
 
   class RepeatPicker extends HTMLElement {
@@ -59655,7 +59716,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/template.html
-  var template_default38 = `<div class="shell">
+  var template_default39 = `<div class="shell">
     <cms-editor-v2-topbar></cms-editor-v2-topbar>
     <div class="workspace">
         <cms-editor-v2-panel class="structure-panel" side="left">
@@ -59728,7 +59789,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/style.css
-  var style_default29 = `:host {
+  var style_default30 = `:host {
     --editor-v2-bg: #f6f7f7;
     --editor-v2-surface: #ffffff;
     --editor-v2-surface-muted: #f9faf9;
@@ -59856,8 +59917,8 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellTemplate.ts
   function createShellTemplate() {
     const template22 = document.createElement("template");
-    template22.innerHTML = `<style>${[style_default29, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
-`)}</style>${String(template_default38)}`;
+    template22.innerHTML = `<style>${[style_default30, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
+`)}</style>${String(template_default39)}`;
     return template22;
   }
 
@@ -61204,7 +61265,7 @@ label {
   }
 
   // src/components/editorSystemV2/siteBloc/template.html
-  var template_default39 = `<div class="builder" aria-busy="true">
+  var template_default40 = `<div class="builder" aria-busy="true">
     <div class="feedback">
         <p class="status" data-status role="status" aria-live="polite">Loading bloc…</p>
         <p class="error" data-error role="alert" hidden></p>
@@ -61229,7 +61290,7 @@ label {
 `;
 
   // src/components/editorSystemV2/siteBloc/style.css
-  var style_default30 = `:host {
+  var style_default31 = `:host {
     --builder-accent: #165f4b;
     --builder-border: #dfe5e2;
     --builder-muted: #697873;
@@ -61277,7 +61338,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 
   // src/components/editorSystemV2/siteBloc/SiteBlocBuilder.ts
   var template22 = document.createElement("template");
-  template22.innerHTML = `<style>${String(style_default30)}</style>${String(template_default39)}`;
+  template22.innerHTML = `<style>${String(style_default31)}</style>${String(template_default40)}`;
 
   class SiteBlocBuilder extends HTMLElement {
     controller;
@@ -61416,7 +61477,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/CardMedia/template.html
-  var template_default40 = `<div class="card">
+  var template_default41 = `<div class="card">
     <div class="preview">
         <slot name="image">
             <span class="placeholder">
@@ -61438,7 +61499,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/CardMedia/style.css
-  var style_default31 = `:host {
+  var style_default32 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -61563,8 +61624,8 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   class CardMedia extends l2 {
     constructor() {
       super({
-        css: style_default31,
-        template: template_default40
+        css: style_default32,
+        template: template_default41
       });
     }
   }
@@ -61573,7 +61634,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/CropSystem/template.html
-  var template_default41 = `<div class="backdrop" id="backdrop">
+  var template_default42 = `<div class="backdrop" id="backdrop">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="crop-title">
         <div class="header">
             <h3 id="crop-title">Crop image</h3>
@@ -61818,7 +61879,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       super({
         css: [layout_default4, controls_default4].join(`
 `),
-        template: template_default41
+        template: template_default42
       });
     }
     connectedCallback() {
@@ -61856,7 +61917,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   customElements.define("p9r-crop-system", CropSystem);
 
   // src/components/media/DetailMedia/template.html
-  var template_default42 = `<div class="backdrop" id="backdrop">
+  var template_default43 = `<div class="backdrop" id="backdrop">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="title">
         <div class="header">
             <h3 id="title">File details</h3>
@@ -62115,7 +62176,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       super({
         css: [layout_default5, tools_default].join(`
 `),
-        template: template_default42
+        template: template_default43
       });
     }
     connectedCallback() {
@@ -62149,7 +62210,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/GridMedia/view/template.html
-  var template_default43 = `<div class="toolbar">
+  var template_default44 = `<div class="toolbar">
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-current">Root</span>
     </div>
@@ -63265,7 +63326,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       super({
         css: [navigation_default3, interactions_default, detail_default3].join(`
 `),
-        template: template_default43
+        template: template_default44
       });
     }
     get detail() {
@@ -63417,7 +63478,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/MediaCenter/template.html
-  var template_default44 = `<dialog>
+  var template_default45 = `<dialog>
     <div class="modal-container">
         <header class="modal-header">
             <h2>Media Center</h2>
@@ -64003,7 +64064,7 @@ dialog::backdrop {
       super({
         css: [chrome_default, content_default2, folder_default].join(`
 `),
-        template: template_default44
+        template: template_default45
       });
     }
     connectedCallback() {

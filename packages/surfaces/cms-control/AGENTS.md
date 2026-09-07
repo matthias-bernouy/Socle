@@ -41,6 +41,12 @@ server-only modules.
 - Static pages compose custom elements; avoid page-specific inline scripts.
 - Use `@bernouy/components` for `<p9r-*>`, `<w13c-*>`, and binding runtime.
 - Use Control-owned `<cms-*>` tags only for internal admin/editor components.
+- `cms-shell-detail` owns the `back`, `title`, `actions`, and `body` slots.
+  Put columns in `cms-shell-detail-body`, which owns `main` and `aside`.
+  A shared form can occupy `slot="body"` and contain that column component;
+  header submit buttons use `form="…"`. Keep controls and their owning form in
+  the same light DOM tree, and keep independent action forms outside it.
+  The existing `--w-detail-*` sizing variables apply through both shells.
 - Events that cross shadow boundaries should use a bubbles/composed event
   helper.
 - Design tokens come from `@bernouy/components/style.css`, exposed through

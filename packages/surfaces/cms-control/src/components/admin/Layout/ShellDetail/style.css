@@ -93,40 +93,14 @@ slot[name="actions"]::slotted(p9r-action-menu) {
     --action-menu-panel-min-width: 220px;
 }
 
-.shell-detail-layout {
-    display: grid;
-    grid-template-columns: minmax(0, var(--shell-detail-main-width)) minmax(0, var(--shell-detail-aside-width));
-    gap: var(--shell-detail-gap);
-    align-items: start;
-    min-width: 0;
-}
-
-.shell-detail-main,
-.shell-detail-aside {
-    display: grid;
-    gap: 16px;
-    min-width: 0;
-}
-
-.shell-detail-main {
-    width: 100%;
-}
-
-.shell-detail-aside {
-    width: 100%;
-}
-
-.shell-detail-main > slot,
-.shell-detail-aside > slot {
-    display: grid;
-    gap: 16px;
-    min-width: 0;
-}
-
-slot[name="main"]::slotted(*),
-slot[name="aside"]::slotted(*) {
+slot[name="body"],
+slot[name="body"]::slotted(*) {
     min-width: 0;
     max-width: 100%;
+}
+
+slot[name="body"]::slotted(form) {
+    margin: 0;
 }
 
 @media (max-width: 880px) {
@@ -141,12 +115,4 @@ slot[name="aside"]::slotted(*) {
         flex-direction: column;
     }
 
-    .shell-detail-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .shell-detail-main,
-    .shell-detail-aside {
-        width: auto;
-    }
 }

@@ -9,10 +9,12 @@
     </button>
     <span slot="title" data-title><slot name="bound-title"></slot></span>
     <div slot="actions" class="w-detail-actions" data-actions><slot name="bound-actions"></slot></div>
-    <div slot="main" class="w-detail-main" data-main><slot name="bound-main"></slot></div>
-    <slot name="main-extra" slot="main"></slot>
-    <div slot="aside" class="w-detail-aside" data-aside><slot name="bound-aside"></slot></div>
-    <slot name="aside-extra" slot="aside"></slot>
+    <cms-shell-detail-body slot="body">
+        <div slot="main" class="w-detail-main" data-main><slot name="bound-main"></slot></div>
+        <slot name="main-extra" slot="main"></slot>
+        <div slot="aside" class="w-detail-aside" data-aside><slot name="bound-aside"></slot></div>
+        <slot name="aside-extra" slot="aside"></slot>
+    </cms-shell-detail-body>
 </cms-shell-detail>
 
 <slot name="footer"></slot>

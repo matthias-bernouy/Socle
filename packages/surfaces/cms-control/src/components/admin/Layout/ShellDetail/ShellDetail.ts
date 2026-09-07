@@ -2,6 +2,7 @@ import { Component } from "@bernouy/components/base";
 import css from "./style.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
 import "./DetailSection";
+import "./body/ShellDetailBody";
 
 export class CmsShellDetail extends Component {
     private header: HTMLElement | null = null;
