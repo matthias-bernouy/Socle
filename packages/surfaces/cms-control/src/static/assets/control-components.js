@@ -26366,6 +26366,29 @@ w13c-lateral-menu-item {
     customElements.define("cms-dashboards-nav", DashboardNav);
   }
 
+  // src/components/admin/Resources/Dashboards/runtime/reload.ts
+  function detailReloadEvent(sourceId, dashboardId, collection, row) {
+    return `cms-dashboard:${encodePart(sourceId)}:${encodePart(dashboardId)}:${encodePart(collection)}:${encodePart(row || "new")}:reload`;
+  }
+  function encodePart(value2) {
+    return encodeURIComponent(value2);
+  }
+  function reloadCollection(root, widgetId) {
+    const widget = Array.from(root.querySelectorAll("[data-widget-id]")).find((element) => element.dataset.widgetId === widgetId);
+    const event = widget?.querySelector("[cms-source][cms-reload-on]")?.getAttribute("cms-reload-on");
+    if (event) {
+      root.ownerDocument.dispatchEvent(new Event(event));
+    }
+  }
+  function retryDashboardSource(event) {
+    const button = event.composedPath().find((node) => node instanceof HTMLElement && node.hasAttribute("data-dashboard-source-retry"));
+    const source2 = button?.closest("[cms-source][cms-reload-on]");
+    const name = source2?.getAttribute("cms-reload-on");
+    if (source2 && name) {
+      source2.ownerDocument.dispatchEvent(new Event(name));
+    }
+  }
+
   // src/components/admin/Resources/Dashboards/domain/detailResource.ts
   class DetailResourceState {
     value = null;
@@ -27342,13 +27365,14 @@ dd { margin: 0; min-width: 0; }
     "money"
   ]);
   function supportsBoundDetail(widget) {
-    return [...widget.main, ...widget.aside ?? []].every((section2) => !("widget" in section2) && section2.fields.every((field2) => supported.has(field2.type) && !(("lookup" in field2) && field2.lookup)));
+    return [...widget.main, ...widget.aside ?? []].every((section2) => ("widget" in section2) || section2.fields.every((field2) => supported.has(field2.type) && !(("lookup" in field2) && field2.lookup)));
   }
-  function composeDetail(widget) {
+  function composeDetail(widget, navigation) {
     const fragment = document.createDocumentFragment();
     const root = "detailValues";
     const title = document.createElement("span");
     title.slot = "bound-title";
+    title.setAttribute("cms-condition", "detailReady");
     if (widget.title?.path) {
       const path = widget.title.path === "." ? root : `${root}.${widget.title.path}`;
       const present = `${path} || ${path} == 0 || ${path} == false`;
@@ -27370,9 +27394,16 @@ dd { margin: 0; min-width: 0; }
     ]) {
       for (const section2 of sections2) {
         if ("widget" in section2) {
-          continue;
+          if (!navigation) {
+            throw new Error("Detail navigation must be composed with its source context.");
+          }
+          const child = navigation(section2);
+          child.slot = slot;
+          child.setAttribute("data-detail-ready", "{{ detailReady }}");
+          fragment.append(child);
+        } else {
+          fragment.append(sectionElement(section2, slot, root));
         }
-        fragment.append(sectionElement(section2, slot, root));
       }
     }
     return fragment;
@@ -31817,6 +31848,10 @@ cms-shell-detail {
     width: 100%;
 }
 
+.w-detail-main > slot::slotted([data-detail-ready]:not([data-detail-ready="true"])) {
+    display: none;
+}
+
 .w-detail-actions p9r-button,
 .w-detail-actions ::slotted(p9r-button) {
     --_btn-padding-y: 0.48rem;
@@ -32267,6 +32302,10 @@ p9r-token-input {
         emitWidgetEvent(this.host, WIDGET_BACK_EVENT, {});
       }
       const action = findEventTarget(event, "[data-action]");
+      const owner = action?.closest("[data-widget-id]");
+      if (owner && owner !== this.host && this.host.contains(owner)) {
+        return;
+      }
       const data = this.readData();
       if (action?.dataset.action && !this.fields.validate()) {
         return;
@@ -33415,7 +33454,6 @@ p9r-token-input {
       if (!this.hasAttribute("data-declarative") && supportsBoundDetail(widget)) {
         this.setAttribute("data-declarative", "");
         bindDetailContext(this, widget, (resource) => this.runtime.fields.draftForResource(resource), () => this.runtime.fields.displayDraft);
-        this.append(composeDetail(widget));
       }
     }
     setBindingValue(value2) {
@@ -35034,21 +35072,6 @@ slot {
 </div>
 `;
 
-  // src/components/admin/Resources/Dashboards/runtime/reload.ts
-  function detailReloadEvent(sourceId, dashboardId, collection, row) {
-    return `cms-dashboard:${encodePart(sourceId)}:${encodePart(dashboardId)}:${encodePart(collection)}:${encodePart(row || "new")}:reload`;
-  }
-  function encodePart(value2) {
-    return encodeURIComponent(value2);
-  }
-  function reloadCollection(root, widgetId) {
-    const widget = Array.from(root.querySelectorAll("[data-widget-id]")).find((element) => element.dataset.widgetId === widgetId);
-    const event = widget?.querySelector("[cms-source][cms-reload-on]")?.getAttribute("cms-reload-on");
-    if (event) {
-      root.ownerDocument.dispatchEvent(new Event(event));
-    }
-  }
-
   // src/static/admin/_content/sources/_runtime/source-states.html
   var source_states_default = `<p9r-alert type="info" role="status" cms-condition="!dashboardData &amp;&amp; !$source.error">Loading data…</p9r-alert>
 <p9r-alert type="error" cms-condition="$source.error" role="alert">
@@ -35079,7 +35102,6 @@ slot {
     const template5 = document.createElement("template");
     template5.innerHTML = source_states_default;
     wrapper.append(template5.content.cloneNode(true));
-    wrapper.addEventListener("click", retrySource);
     return wrapper;
   }
   function pendingSourceWrapper() {
@@ -35145,16 +35167,6 @@ slot {
   }
   function bindingPath(alias, path) {
     return `{{ ${path === "." ? alias : `${alias}.${path}`} }}`;
-  }
-  function retrySource(event) {
-    const target2 = event.target;
-    if (!(target2 instanceof Element) || !target2.closest("[data-dashboard-source-retry]")) {
-      return;
-    }
-    const source2 = event.currentTarget;
-    const name = source2.getAttribute("cms-reload-on") || `dashboard:retry:${++sourceSequence}`;
-    source2.setAttribute("cms-reload-on", name);
-    queueMicrotask(() => source2.ownerDocument.dispatchEvent(new Event(name)));
   }
 
   // src/components/admin/Resources/Dashboards/runtime/mounting/mountRelations.ts
@@ -35598,11 +35610,6 @@ slot { display: contents; }
       element.append(...Array.from(wrapper.childNodes));
       element.setAttribute("cms-source", wrapper.getAttribute("cms-source") ?? "");
       element.setAttribute("cms-reload-on", wrapper.getAttribute("cms-reload-on"));
-      element.addEventListener("click", (event) => {
-        if (event.target.closest("[data-dashboard-source-retry]")) {
-          element.ownerDocument.dispatchEvent(new Event(element.getAttribute("cms-reload-on")));
-        }
-      });
       return;
     }
     const input = document.createElement("cms-dashboard-input");
@@ -35626,14 +35633,17 @@ slot { display: contents; }
     };
     element.dataset.widgetId = widget.id;
     element.configure(config);
+    const selection = { collection: widget.id, row: rowKey };
+    if (element.hasAttribute("data-declarative")) {
+      element.append(composeDetail(widget, (child) => navigationListElement(child, context, selection)));
+    }
     if (directResource !== null) {
       publishDetailResource(element, widget, directResource.resource);
     }
     element.setAttribute("data-row-key", rowKey);
     element.setAttribute("data-source-id", context.dashboard.source);
-    const selection = { collection: widget.id, row: rowKey };
     for (const [index, mainItem] of widget.main.entries()) {
-      if ("widget" in mainItem) {
+      if ("widget" in mainItem && !element.hasAttribute("data-declarative")) {
         element.append(navigationListElement(mainItem, context, selection, `main-widget-${index}`));
       }
     }
@@ -36479,6 +36489,7 @@ p {
       this.disconnectBoundSource();
     }
     onClick = (event) => {
+      retryDashboardSource(event);
       const tabButton = event.target?.closest("[data-tab-key]");
       if (!tabButton?.dataset.tabKey || !tabButton.dataset.tabIndex) {
         return;

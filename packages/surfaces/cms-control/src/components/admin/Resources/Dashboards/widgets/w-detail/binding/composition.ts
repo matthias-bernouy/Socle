@@ -1,4 +1,4 @@
-import type { DashboardSection } from "@bernouy/cms-dashboards";
+import type { DashboardNavigationListWidget, DashboardSection } from "@bernouy/cms-dashboards";
 import type { DetailWidget } from "../runtime/fieldState";
 import { composeActions } from "./actions";
 import { fieldElement } from "./fields";
@@ -22,17 +22,21 @@ const supported = new Set([
 export function supportsBoundDetail(widget: DetailWidget): boolean {
     return [...widget.main, ...(widget.aside ?? [])].every(
         (section) =>
-            !("widget" in section) &&
+            "widget" in section ||
             section.fields.every((field) => supported.has(field.type) && !("lookup" in field && field.lookup)),
     );
 }
 
 /** Compose declarations once, before cms-source compiles; never receives response data. */
-export function composeDetail(widget: DetailWidget): DocumentFragment {
+export function composeDetail(
+    widget: DetailWidget,
+    navigation?: (widget: DashboardNavigationListWidget) => HTMLElement,
+): DocumentFragment {
     const fragment = document.createDocumentFragment();
     const root = "detailValues";
     const title = document.createElement("span");
     title.slot = "bound-title";
+    title.setAttribute("cms-condition", "detailReady");
     if (widget.title?.path) {
         const path = widget.title.path === "." ? root : `${root}.${widget.title.path}`;
         const present = `${path} || ${path} == 0 || ${path} == false`;
@@ -54,9 +58,17 @@ export function composeDetail(widget: DetailWidget): DocumentFragment {
     ] as const) {
         for (const section of sections) {
             if ("widget" in section) {
-                continue;
+                if (!navigation) {
+                    throw new Error("Detail navigation must be composed with its source context.");
+                }
+                const child = navigation(section);
+                child.slot = slot;
+                // Its source depends on selection, so fetch it alongside the parent.
+                child.setAttribute("data-detail-ready", "{{ detailReady }}");
+                fragment.append(child);
+            } else {
+                fragment.append(sectionElement(section, slot, root));
             }
-            fragment.append(sectionElement(section, slot, root));
         }
     }
     return fragment;

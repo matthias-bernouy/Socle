@@ -27,21 +27,18 @@ describe("dashboard detail main widgets", () => {
             detail,
         );
         const detailElement = root.querySelector<HTMLElement>("cms-dashboard-w-detail")!;
-        const wrapper = detailElement.querySelector<HTMLElement>('[slot="main-widget-1"]')!;
+        const wrapper = detailElement.querySelector<HTMLElement>('cms-dashboard-w-navigation-list[slot="bound-main"]')!;
         const navigation = wrapper;
         const source = new URL(
             wrapper.querySelector("[cms-source]")!.getAttribute("cms-source")!.split(" as ")[0]!,
             window.location.origin,
         );
-        document.body.append(root);
-        const widgetSlot = detailElement.shadowRoot!.querySelector<HTMLSlotElement>('slot[name="main-widget-1"]');
-        const mainChildren = Array.from(widgetSlot!.parentElement!.children).map((item) =>
-            item instanceof HTMLSlotElement ? `${item.tagName}:${item.name}` : item.tagName,
+        const mainChildren = Array.from(detailElement.querySelectorAll(':scope > [slot="bound-main"]')).map(
+            (item) => item.tagName,
         );
-
+        expect(detailElement.hasAttribute("data-declarative")).toBeTrue();
         expect(wrapper.parentElement).toBe(detailElement);
-        expect(widgetSlot?.parentElement?.hasAttribute("data-main")).toBeTrue();
-        expect(mainChildren).toEqual(["CMS-DETAIL-SECTION", "SLOT:main-widget-1", "CMS-DETAIL-SECTION"]);
+        expect(mainChildren).toEqual(["CMS-DETAIL-SECTION", "CMS-DASHBOARD-W-NAVIGATION-LIST", "CMS-DETAIL-SECTION"]);
         expect(navigation).not.toBeNull();
         expect(source.searchParams.get("context")).toBe("section-1");
         root.remove();

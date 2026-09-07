@@ -15,3 +15,18 @@ export function reloadCollection(root: HTMLElement, widgetId: string): void {
         root.ownerDocument.dispatchEvent(new Event(event));
     }
 }
+
+/** Delegate retries from the stable dashboard host, including cloned nested sources. */
+export function retryDashboardSource(event: Event): void {
+    const button = event
+        .composedPath()
+        .find(
+            (node): node is HTMLElement =>
+                node instanceof HTMLElement && node.hasAttribute("data-dashboard-source-retry"),
+        );
+    const source = button?.closest<HTMLElement>("[cms-source][cms-reload-on]");
+    const name = source?.getAttribute("cms-reload-on");
+    if (source && name) {
+        source.ownerDocument.dispatchEvent(new Event(name));
+    }
+}

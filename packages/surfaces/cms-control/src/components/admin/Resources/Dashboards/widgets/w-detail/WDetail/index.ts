@@ -1,6 +1,6 @@
 import { readSourceData, setSourceData, refreshSourceContext } from "@bernouy/components";
 import { bindDetailContext } from "../binding/context";
-import { composeDetail, supportsBoundDetail } from "../binding/composition";
+import { supportsBoundDetail } from "../binding/composition";
 import { valueAt } from "../../../runtime/expressions";
 import { Component } from "@bernouy/components/base";
 import { fieldValues } from "../../../runtime/mapping";
@@ -31,7 +31,6 @@ export class DashboardWDetail extends Component {
                 (resource) => this.runtime.fields.draftForResource(resource),
                 () => this.runtime.fields.displayDraft,
             );
-            this.append(composeDetail(widget));
         }
     }
     setBindingValue(value: unknown): void {

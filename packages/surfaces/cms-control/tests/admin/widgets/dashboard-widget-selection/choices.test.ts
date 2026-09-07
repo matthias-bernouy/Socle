@@ -1,3 +1,5 @@
+import type { DashboardWidget } from "@bernouy/cms-dashboards";
+import { composeDetail } from "cms-control/components/admin/Resources/Dashboards/widgets/w-detail/binding/composition";
 import { expect, test } from "bun:test";
 import { setSourceData } from "@bernouy/components";
 import { DashboardWDetail } from "cms-control/components/admin/Resources/Dashboards/widgets/w-detail/WDetail";
@@ -9,7 +11,7 @@ setupDashboardWidgetSelectionTests();
 test("bound choice controls preserve their options and emit typed edited values for saving", async () => {
     const core = document.createElement("cms-binding-core");
     const detail = new DashboardWDetail();
-    detail.configure({
+    const widget: Extract<DashboardWidget, { widget: "w-detail" }> = {
         widget: "w-detail",
         id: "choices",
         source: { endpoint: "item" },
@@ -45,7 +47,9 @@ test("bound choice controls preserve their options and emit typed edited values 
                 ],
             },
         ],
-    });
+    };
+    detail.configure(widget);
+    detail.append(composeDetail(widget));
     detail.setAttribute("cms-source", "/item as dashboardData");
     setSourceData(detail, { brand: "first", tags: ["one"] });
     core.append(detail);

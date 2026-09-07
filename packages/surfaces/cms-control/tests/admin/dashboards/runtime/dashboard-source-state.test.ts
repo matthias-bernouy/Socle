@@ -1,3 +1,4 @@
+import { retryDashboardSource } from "cms-control/components/admin/Resources/Dashboards/runtime/reload";
 import { afterEach, describe, expect, test } from "bun:test";
 import type { DashboardDto, DashboardWidget } from "@bernouy/cms-dashboards";
 import "cms-control/components";
@@ -28,6 +29,7 @@ describe("dashboard runtime source states", () => {
         }) as unknown as typeof fetch;
 
         const core = document.createElement("cms-binding-core");
+        core.addEventListener("click", retryDashboardSource);
         const wrapper = urlSourceWrapper("/settings", "dashboardData");
         const editable = document.createElement("section");
         editable.dataset.editableSettings = "true";

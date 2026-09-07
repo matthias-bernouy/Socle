@@ -344,3 +344,55 @@ suite (181 lines) remain cohesive despite crossing the size review threshold;
 the detail binding directory has eight entries (informational, not blocking).
 Complex widgets, nested composition, real local writes and final runtime
 activation remain incomplete, as does the full matrix above.
+
+## Nested detail navigation checkpoint
+
+A navigation list inside a supported detail no longer forces the whole detail
+onto its legacy renderer. The mounting layer composes the light-DOM declarations
+in their original order and with the owning selection context before source
+activation. `DashboardWDetail.configure` no longer constructs that markup.
+Sections and tabs continue to compose their definitions before their child
+sources activate; the browser fixture exercises a section containing tabs, a
+detail with a navigation list between two field sections, and another nested
+section/detail in the second tab. No new template-reference mechanism is used.
+
+Independent child reads remain parallel with the parent read. The child's
+binding declaration interpolates `data-detail-ready`; the detail's encapsulated
+slot styling hides that child until the parent has data. A condition that
+unmounted the child would serialize the reads, so the test deliberately holds
+the parent and requires the child response before releasing it. The title is
+also absent during initial loading, matching the original renderer.
+
+Source retries are delegated from the stable dashboard host to the closest
+source. This replaces listeners attached to composed nodes that binding can
+clone, and prevents a nested retry from also reloading its parent. Detail action
+handling ignores actions owned by nested widgets, so the parent neither runs
+child actions twice nor applies its own required-field validation to them.
+
+The controlled flow verifies initial loading, tab changes retaining edits,
+normalized parent and child saves, exact write payloads and fixture persistence
+through full reloads, browser back/forward, the UI back action, direct selection
+URLs, owning-context parameters, drag ordering and cancel/accept confirmations.
+A failed child read and retry leave the parent alone. During a held parent
+refresh, five frame samples preserve the scrolled list and secondary navigation
+geometry and the textarea draft; focus and selection survive completion, with
+no new child read. Confirmed clearing issues one write and remains empty after
+reload. These are route-fixture writes, not local database persistence.
+
+Six comparable captures (edit tab, information tab and initial loading, each at
+1440px and 390px) match the original goal bundle pixel-for-pixel; images were
+inspected. Geometry comparisons identify controls by field/widget identity,
+since light-DOM migration changes DOM traversal order without changing their
+positions. Evidence: `nested-captures/`, `nested-visual-*.log` and
+`nested-timings.json`. Five sequential controlled runs measured median initial
+readiness of 195.7ms before and 184.9ms after (ranges 181.9–199.1ms and
+176.6–188.4ms). Each source is read once; visiting and revisiting tabs adds no
+duplicate reads. These measurements do not establish real-service latency.
+
+Validation: all 179 dashboard/widget/detail tests and all fifteen dashboard
+browser files pass individually; the nested visual file has two scenarios.
+Build and all eight initial/final check:all gates pass, with unchanged UI-contract
+counts. The existing detail event file remains cohesive above the size-review
+threshold. Complex controls, table metadata/configuration, definition/navigation
+relays, examples, real local writes and final runtime activation remain open.
+The complete verification matrix is still pending.

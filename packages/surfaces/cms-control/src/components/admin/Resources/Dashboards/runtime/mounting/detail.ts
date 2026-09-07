@@ -1,6 +1,6 @@
 import { setSourceData } from "@bernouy/components";
 import { setValueAt } from "../expressions";
-import { supportsBoundDetail } from "../../widgets/w-detail/binding/composition";
+import { composeDetail, supportsBoundDetail } from "../../widgets/w-detail/binding/composition";
 import type { DetailSelection, RenderContext, RuntimeDetailWidget } from "../../domain";
 import { DashboardWDetail } from "../../widgets/w-detail/WDetail";
 import "./input";
@@ -60,11 +60,6 @@ export function attachDetailSource(
         element.append(...Array.from(wrapper.childNodes));
         element.setAttribute("cms-source", wrapper.getAttribute("cms-source") ?? "");
         element.setAttribute("cms-reload-on", wrapper.getAttribute("cms-reload-on")!);
-        element.addEventListener("click", (event) => {
-            if ((event.target as Element).closest("[data-dashboard-source-retry]")) {
-                element.ownerDocument.dispatchEvent(new Event(element.getAttribute("cms-reload-on")!));
-            }
-        });
         return;
     }
     const input = document.createElement("cms-dashboard-input");
@@ -97,14 +92,17 @@ function detailContent(
               };
     element.dataset.widgetId = widget.id;
     element.configure(config);
+    const selection = { collection: widget.id, row: rowKey };
+    if (element.hasAttribute("data-declarative")) {
+        element.append(composeDetail(widget, (child) => navigationListElement(child, context, selection)));
+    }
     if (directResource !== null) {
         publishDetailResource(element, widget, directResource.resource);
     }
     element.setAttribute("data-row-key", rowKey);
     element.setAttribute("data-source-id", context.dashboard.source);
-    const selection = { collection: widget.id, row: rowKey };
     for (const [index, mainItem] of widget.main.entries()) {
-        if ("widget" in mainItem) {
+        if ("widget" in mainItem && !element.hasAttribute("data-declarative")) {
             element.append(navigationListElement(mainItem, context, selection, `main-widget-${index}`));
         }
     }

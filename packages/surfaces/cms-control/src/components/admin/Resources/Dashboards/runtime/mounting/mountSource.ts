@@ -45,7 +45,6 @@ export function urlSourceWrapper(url: string, alias: string): HTMLElement {
     const template = document.createElement("template");
     template.innerHTML = states as unknown as string;
     wrapper.append(template.content.cloneNode(true));
-    wrapper.addEventListener("click", retrySource);
     return wrapper;
 }
 
@@ -123,15 +122,4 @@ function repeatPath(alias: string, path: string | undefined): string {
 
 function bindingPath(alias: string, path: string): string {
     return `{{ ${path === "." ? alias : `${alias}.${path}`} }}`;
-}
-
-function retrySource(event: Event): void {
-    const target = event.target;
-    if (!(target instanceof Element) || !target.closest("[data-dashboard-source-retry]")) {
-        return;
-    }
-    const source = event.currentTarget as HTMLElement;
-    const name = source.getAttribute("cms-reload-on") || `dashboard:retry:${++sourceSequence}`;
-    source.setAttribute("cms-reload-on", name);
-    queueMicrotask(() => source.ownerDocument.dispatchEvent(new Event(name)));
 }

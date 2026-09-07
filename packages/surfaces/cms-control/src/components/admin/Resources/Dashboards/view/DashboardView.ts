@@ -1,3 +1,4 @@
+import { retryDashboardSource } from "../runtime/reload";
 import { showToast } from "@bernouy/components";
 import { currentSelection, DASHBOARD_SELECTION_EVENT, pushSelectionUrl, type DashboardSelection } from "../api";
 import { detailKey } from "../domain";
@@ -60,6 +61,7 @@ export class DashboardView extends DashboardViewController {
     }
 
     private onClick = (event: Event): void => {
+        retryDashboardSource(event);
         const tabButton = (event.target as Element | null)?.closest<HTMLElement>("[data-tab-key]");
         if (!tabButton?.dataset.tabKey || !tabButton.dataset.tabIndex) {
             return;

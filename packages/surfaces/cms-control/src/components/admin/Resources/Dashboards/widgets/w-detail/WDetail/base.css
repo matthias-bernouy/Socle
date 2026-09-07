@@ -28,6 +28,10 @@ cms-shell-detail {
     width: 100%;
 }
 
+.w-detail-main > slot::slotted([data-detail-ready]:not([data-detail-ready="true"])) {
+    display: none;
+}
+
 .w-detail-actions p9r-button,
 .w-detail-actions ::slotted(p9r-button) {
     --_btn-padding-y: 0.48rem;

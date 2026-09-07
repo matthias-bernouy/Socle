@@ -62,6 +62,10 @@ export class DetailEvents {
             emitWidgetEvent(this.host, WIDGET_BACK_EVENT, {});
         }
         const action = findEventTarget(event, "[data-action]");
+        const owner = action?.closest<HTMLElement>("[data-widget-id]");
+        if (owner && owner !== this.host && this.host.contains(owner)) {
+            return;
+        }
         const data = this.readData();
         if (action?.dataset.action && !this.fields.validate()) {
             return;
