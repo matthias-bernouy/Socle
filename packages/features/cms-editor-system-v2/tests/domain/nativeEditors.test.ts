@@ -84,6 +84,30 @@ describe("platform native editors", () => {
         expect(isNativeEditorAttributeAllowed("section", "aria-label")).toBe(true);
         const formEntry = catalog.find((entry) => entry.tag === "form")!;
         const formSettings = new formEntry.editor(document.querySelector<HTMLElement>("form")!).getSettings();
+        expect(
+            formSettings[0]?.settings.find(
+                (setting) => "attribute" in setting && setting.attribute === CMS_BINDING_ATTRIBUTES.sourceInheritQuery,
+            ),
+        ).toMatchObject({
+            type: "segmented",
+            defaultValue: "true",
+            options: [
+                { label: "Yes", value: "true" },
+                { label: "No", value: "false" },
+            ],
+        });
+        const formTarget = document.querySelector<HTMLElement>("form")!;
+        const inheritedQuerySetting = formSettings[0]!.settings.find(
+            (setting) => "attribute" in setting && setting.attribute === CMS_BINDING_ATTRIBUTES.sourceInheritQuery,
+        ) as SettingControl;
+        const formSelection = new ShellSelection({ runtime: () => null } as never);
+        const formEditor = new formEntry.editor(formTarget);
+        for (const value of ["true", "false"]) {
+            expect(isNativeEditorSettingValueAllowed(formTarget, inheritedQuerySetting, value)).toBe(true);
+            formSelection.applySetting(formEditor, inheritedQuerySetting, value);
+            expect(formTarget.getAttribute(CMS_BINDING_ATTRIBUTES.sourceInheritQuery)).toBe(value);
+        }
+        expect(isNativeEditorSettingValueAllowed(formTarget, inheritedQuerySetting, "maybe")).toBe(false);
         expect(formSettings[0]?.settings[0]).toMatchObject({
             type: "endpoint-picker",
             attribute: CMS_BINDING_ATTRIBUTES.source,

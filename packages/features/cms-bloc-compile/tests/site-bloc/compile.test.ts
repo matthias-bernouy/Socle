@@ -220,7 +220,7 @@ describe("generated site bloc compilation", () => {
             ...base.draft,
             defaultContent: `<form cms-source="/.cms/sources/forms/contact"
                 cms-source-method="POST" cms-source-trigger="submit"
-                cms-source-success-reset="true"></form>`,
+                cms-source-inherit-query="false" cms-source-success-reset="true"></form>`,
         });
         expect(source["default.html"]).toContain('cms-source="/.cms/sources/forms/contact"');
     });

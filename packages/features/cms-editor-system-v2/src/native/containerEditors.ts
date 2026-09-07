@@ -45,6 +45,17 @@ export class NativeFormEditor extends Editor {
                         methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
                     },
                     {
+                        type: "segmented",
+                        label: "Include page query parameters",
+                        attribute: CMS_BINDING_ATTRIBUTES.sourceInheritQuery,
+                        defaultValue: "true",
+                        help: "Include the page URL parameters in the submission URL.",
+                        options: [
+                            { label: "Yes", value: "true" },
+                            { label: "No", value: "false" },
+                        ],
+                    },
+                    {
                         type: "page-link",
                         label: "Redirect after success",
                         attribute: CMS_BINDING_ATTRIBUTES.sourceSuccessRedirect,

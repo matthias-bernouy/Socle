@@ -21,6 +21,7 @@ const NATIVE_MUTABLE_BINDING_ATTRIBUTES: Readonly<Record<string, ReadonlySet<str
         CMS_BINDING_ATTRIBUTES.sourceMethod,
         CMS_BINDING_ATTRIBUTES.sourceSuccessRedirect,
         CMS_BINDING_ATTRIBUTES.sourceSuccessReset,
+        CMS_BINDING_ATTRIBUTES.sourceInheritQuery,
         CMS_BINDING_ATTRIBUTES.sourceTrigger,
     ]),
 };
@@ -40,6 +41,7 @@ const ALLOWED_SETTING_TYPES: Readonly<Record<string, Readonly<Record<string, Set
         [CMS_BINDING_ATTRIBUTES.source]: "endpoint-picker",
         [CMS_BINDING_ATTRIBUTES.sourceSuccessRedirect]: "page-link",
         [CMS_BINDING_ATTRIBUTES.sourceSuccessReset]: "segmented",
+        [CMS_BINDING_ATTRIBUTES.sourceInheritQuery]: "segmented",
         autocomplete: "select",
     },
     header: { "aria-label": "text" },
@@ -67,6 +69,7 @@ const CONTROLLED_VALUES: Readonly<Record<string, Readonly<Record<string, Readonl
     button: { type: new Set(["button", "submit"]) },
     form: {
         [CMS_BINDING_ATTRIBUTES.sourceSuccessReset]: new Set(["true", "false"]),
+        [CMS_BINDING_ATTRIBUTES.sourceInheritQuery]: new Set(["true", "false"]),
         autocomplete: new Set(["on", "off"]),
     },
     img: {
@@ -322,7 +325,10 @@ function systemAttributeValueAllowed(tag: string, attribute: string, value: stri
     if (attribute === CMS_BINDING_ATTRIBUTES.sourceTrigger) {
         return value === "submit";
     }
-    if (attribute === CMS_BINDING_ATTRIBUTES.sourceSuccessReset) {
+    if (
+        attribute === CMS_BINDING_ATTRIBUTES.sourceSuccessReset ||
+        attribute === CMS_BINDING_ATTRIBUTES.sourceInheritQuery
+    ) {
         return nativeBindingAttributeIssue(attribute, value) === null;
     }
     if (attribute === CMS_BINDING_ATTRIBUTES.sourceSuccessRedirect) {

@@ -66,6 +66,7 @@ export function removeSource(editor: Editor, confirmRemoveSourceDependents: (cou
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceBody);
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceId);
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod);
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceInheritQuery);
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourcePublish);
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceSuccessRedirect);
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceSuccessReset);

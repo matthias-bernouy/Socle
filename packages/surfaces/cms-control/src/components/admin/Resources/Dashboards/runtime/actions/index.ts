@@ -1,3 +1,5 @@
+import { submitEndpoint } from "./forms/endpoint";
+import type { SubmitAction } from "./forms";
 import type { DashboardDto, DashboardEndpointRef } from "@bernouy/cms-dashboards";
 import type { DetailSelection } from "../../domain";
 import type { DashboardSourceGroup } from "../../types";
@@ -7,7 +9,7 @@ import { matchesDashboardVisibility } from "../expressions";
 import { requireDetailResource } from "../source";
 import { fieldValues } from "../mapping";
 import { mediaValue } from "../media";
-import { sendSourceForm, sendSourceJson } from "../source";
+import { sourceUrl } from "../source";
 import { endpointMethod, executeEndpointAction, type DashboardActionResult } from "./endpoint";
 import { findCollectionAction, findDetailWidget, findMediaField } from "./widgets";
 
@@ -28,6 +30,7 @@ export async function executeDashboardAction(
     draft: Record<string, unknown>,
     currentResource: unknown,
     groups: DashboardSourceGroup[] = [group],
+    submit?: SubmitAction,
 ): Promise<DashboardActionResult> {
     const widget = findDetailWidget(dashboard.views, detail.collection);
     if (!widget) {
@@ -45,11 +48,17 @@ export async function executeDashboardAction(
     if (!matchesDashboardVisibility(action.visibleWhen, { resource, fields })) {
         throw new Error(`Dashboard action "${actionId}" is not available in the current state`);
     }
-    return executeEndpointAction(group, groups, action, {
-        selection: { id: detail.row },
-        resource,
-        fields,
-    });
+    return executeEndpointAction(
+        group,
+        groups,
+        action,
+        {
+            selection: { id: detail.row },
+            resource,
+            fields,
+        },
+        submit,
+    );
 }
 
 export async function executeDashboardTableAction(
@@ -61,6 +70,7 @@ export async function executeDashboardTableAction(
     groups: DashboardSourceGroup[] = [group],
     filters: Readonly<Record<string, string>> = {},
     detail?: DetailSelection,
+    submit?: SubmitAction,
 ): Promise<DashboardActionResult> {
     const action = findCollectionAction(dashboard.views, actionId, widgetId);
     if (!action) {
@@ -69,18 +79,24 @@ export async function executeDashboardTableAction(
     if (!action.endpoint && !action.management) {
         throw new Error(`Dashboard table action "${actionId}" does not declare an endpoint`);
     }
-    return executeEndpointAction(group, groups, action, {
-        filters: { ...filters },
-        value,
-        ...(detail
-            ? {
-                  selection: {
-                      id: detail.row,
-                      [detail.collection]: { id: detail.row },
-                  },
-              }
-            : {}),
-    });
+    return executeEndpointAction(
+        group,
+        groups,
+        action,
+        {
+            filters: { ...filters },
+            value,
+            ...(detail
+                ? {
+                      selection: {
+                          id: detail.row,
+                          [detail.collection]: { id: detail.row },
+                      },
+                  }
+                : {}),
+        },
+        submit,
+    );
 }
 
 export async function executeDashboardMediaAction(
@@ -90,6 +106,7 @@ export async function executeDashboardMediaAction(
     media: WidgetMediaActionDetail,
     draft: Record<string, unknown>,
     groups: DashboardSourceGroup[] = [group],
+    submit?: SubmitAction,
 ): Promise<DashboardMediaActionResult> {
     const widget = findDetailWidget(dashboard.views, detail.collection);
     if (!widget) {
@@ -107,23 +124,29 @@ export async function executeDashboardMediaAction(
     const files = media.files ?? (media.file ? [media.file] : []);
     const results = !files.length
         ? [
-              await sendSourceJson(group.source.id, ref, endpointMethod(group, groups, ref), {
-                  resource,
-                  fields,
-                  media: mediaVars,
-              }),
+              await submitEndpoint(
+                  group.source.id,
+                  ref,
+                  endpointMethod(group, groups, ref),
+                  {
+                      resource,
+                      fields,
+                      media: mediaVars,
+                  },
+                  submit,
+              ),
           ]
         : await Promise.all(
               files.map((file) => {
-                  const body = new FormData();
-                  body.set("file", file);
-                  return sendSourceForm(
-                      group.source.id,
-                      ref,
-                      endpointMethod(group, groups, ref),
-                      { resource, fields, media: mediaVars },
-                      body,
-                  );
+                  if (!submit) {
+                      throw new Error("Uploads require a page-owned action form");
+                  }
+                  return submit({
+                      url: sourceUrl(group.source.id, ref, { resource, fields, media: mediaVars }).href,
+                      method: endpointMethod(group, groups, ref),
+                      fields: {},
+                      file,
+                  });
               }),
           );
     const item = target.parent ? resultMediaItem(results[0], target.field, group.source.id) : undefined;

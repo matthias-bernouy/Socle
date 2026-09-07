@@ -1,5 +1,6 @@
 import {
     SOURCE_BODY_ATTR,
+    SOURCE_INHERIT_QUERY_ATTR,
     SOURCE_METHOD_ATTR,
     SOURCE_PUBLISH_ATTR,
     SOURCE_SUCCESS_REDIRECT_ATTR,
@@ -77,8 +78,10 @@ export class SourceSubmission {
 
     private submitUrl(url: string): string {
         const next = new URL(url, location.href);
-        for (const [key, value] of new URLSearchParams(location.search)) {
-            next.searchParams.append(key, value);
+        if (this.element.getAttribute(SOURCE_INHERIT_QUERY_ATTR)?.trim().toLowerCase() !== "false") {
+            for (const [key, value] of new URLSearchParams(location.search)) {
+                next.searchParams.append(key, value);
+            }
         }
         return next.toString();
     }

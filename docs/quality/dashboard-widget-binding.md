@@ -1720,3 +1720,80 @@ Evidence: `/tmp/cmscore-three-reads-{start,check-final,build,admin-final,binding
 `/tmp/cmscore-three-reads-browser/`, `/tmp/cmscore-three-reads-{visual,lookup-visual}/`,
 `/tmp/cmscore-three-reads-pixels.log`, and `/tmp/cmscore-three-reads-local.log`.
 The pre-change bundle is `/tmp/cmscore-three-reads-before-bundle.js`.
+
+
+## 2026-09-07 — Submit simple actions and uploads through page-owned forms
+
+Dashboard actions with flat string bodies, inline lookup creation with compatible
+fields, input-free integration management actions, and media uploads now submit
+real forms through the existing page binding core. The reusable form markup lives
+in `static/admin/_content/sources/_runtime/action-form.html`. `ActionForms` captures
+the operation's fields, supplies source context, transfers an upload's native File,
+and coordinates completion/disconnection. It does not fetch or render resource UI.
+
+The forms are temporary children of the stable dashboard or management host,
+outside the source-owned widget subtree. Each upload owns its own form, preserving
+parallel multi-file uploads. Canonical source events settle each operation; forms
+and observers are removed after success, failure or disconnection. Existing action
+coordination still owns confirmation, busy feedback, definition reloads, draft
+acknowledgement and protection against late responses.
+
+A small generic binding extension was necessary: submissions previously appended
+all current page query parameters to the endpoint URL.
+`cms-source-inherit-query="false"` opts out, preserving the exact action/upload
+URL. Omitting it preserves the previous behavior. The attribute is included in
+shared authoring constants, compiler externals, native validation and the native
+form editor, including mutation policy and cleanup when removing a source.
+
+Typed JSON bodies, absent bodies and field names that cannot be safely represented
+by native hidden inputs retain the existing JSON operation. This avoids changing
+booleans, numbers, arrays, objects, null, empty/absent-body semantics, hidden-input
+charset handling or DOM member access. Input-free management actions omit `input`;
+the existing management service defaults this parameter to an empty object. Binary
+downloads still require their response headers and Blob. No quality exemptions
+were added.
+
+Validation starts from `a87e7ebb1` in the same master workspace:
+
+- Initial and final `check:all`: 8 passed, 0 failed. UI contracts change from
+  0 errors / 74 warnings / 11 information to 0 / 73 / 11. The upload helper was
+  deleted; three shared warnings remain for typed source JSON, binary downloads
+  and integration management requests. Directory fanout has no blocking errors.
+- Workspace build and typecheck pass. Administration tests: 288 passed. Foundation
+  binding tests: 265 passed. Authoring/validation/compiler/editor domain tests:
+  226 passed, including the new option's default, permitted values and actual
+  editor mutation. Existing cohesive policy and native-editor test files remain
+  above the advisory size threshold; this checkpoint does not split their small
+  related additions into artificial files.
+- Browser regression: 24 tests across 17 files pass, including the separately
+  rerun Health visual test. Coverage includes save/reload in HTTP fixtures,
+  confirmation, exact request parameters, uploaded file contents, multiple files,
+  replacement, removal, reordering, rollback, failures, retry, duplicate clicks,
+  late responses and navigation while requests are pending. A final rerun covers
+  simple actions and delayed lookup creation after the hidden-field name guard.
+- Fourteen desktop/mobile before/after comparisons retain exact measured geometry.
+  Ten screenshot pairs are pixel-identical; four differ by 32 or 52 raw channel
+  values at control edges, without a measured layout change. Captures were also
+  inspected visually. The Health comparison removed an obsolete offset from an
+  older checkpoint and now requires exact equality with the current baseline.
+  Delayed-operation tests assert retained input values, focus, caret, scroll and
+  navigation/control geometry across animation frames. Fixture readiness was
+  below 300 ms in these captures; this is not a production performance guarantee.
+- Courtside local login, navigation through all 12 installed sources and the
+  public homepage (HTTP 200) pass, with no page JavaScript errors or failed HTTP
+  reads. Desktop/mobile screenshots were captured. This local smoke is read-only
+  apart from login; mutations above use intercepted HTTP fixtures, not real
+  provider calls or proof of persistence in the local database.
+
+Evidence: `/tmp/cmscore-actions-binding-{start,check-final,build,typecheck,admin,core,contracts}.log`,
+`/tmp/cmscore-actions-binding-browser/`, the final Health visual rerun
+`/tmp/cmscore-actions-binding-health-visual.log`,
+`/tmp/cmscore-actions-binding-{health-visual,media-visual,local}/`, and
+`/tmp/cmscore-actions-binding-{pixels,local,actions-final}.log`.
+The pre-change bundle is `/tmp/cmscore-actions-binding-before.js`.
+
+Separate existing visual finding: the local Price proposals table displays both
+"Loading data…" and "No rows". The previous checkpoint
+`/tmp/cmscore-three-reads-local/sources-desktop.png` already shows this combination.
+The navigation smoke does not assert all source loading/empty-state semantics;
+this finding is not fixed by the action/upload checkpoint.

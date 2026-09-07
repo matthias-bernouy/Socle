@@ -1,8 +1,11 @@
+import type { SubmitAction } from "./forms";
+import { submitEndpoint } from "./forms/endpoint";
+import { route } from "../../api";
 import type { DashboardAction } from "@bernouy/cms-dashboards";
 import type { DashboardSourceGroup } from "../../types";
 import { managementRequest } from "../../../Integrations/management/api";
 import { resolveBody } from "../expressions";
-import { sendSourceDownload, sendSourceJson } from "../source";
+import { sendSourceDownload } from "../source";
 
 type ActionResultMeta = {
     after?: DashboardAction["after"];
@@ -24,15 +27,24 @@ export async function executeEndpointAction(
         filters?: Record<string, unknown>;
         value?: unknown;
     },
+    submit?: SubmitAction,
 ): Promise<DashboardActionResult> {
     if (action.management) {
         const management = action.management;
         const input = resolveBody(management.body, vars) ?? vars.fields ?? {};
-        const result = await managementRequest<{ values: unknown }>(
-            management.installationId,
-            management.action === "action" ? "action" : "settings",
-            management.action === "action" ? { actionId: management.actionId, input } : input,
-        );
+        const result = (
+            management.action === "action" && management.actionId && Object.keys(input).length === 0 && submit
+                ? await submit({
+                      url: `${route("/api/integrations/management/action")}?id=${encodeURIComponent(management.installationId)}`,
+                      method: "POST",
+                      fields: { actionId: management.actionId },
+                  })
+                : await managementRequest(
+                      management.installationId,
+                      management.action === "action" ? "action" : "settings",
+                      management.action === "action" ? { actionId: management.actionId, input } : input,
+                  )
+        ) as { values: unknown };
         return { kind: "value", value: result.values, ...actionMeta(group, groups, action) };
     }
     if (!action.endpoint) {
@@ -50,7 +62,7 @@ export async function executeEndpointAction(
     }
     return {
         kind: "value",
-        value: await sendSourceJson(group.source.id, action.endpoint, method, vars),
+        value: await submitEndpoint(group.source.id, action.endpoint, method, vars, submit),
         ...actionMeta(group, groups, action),
     };
 }

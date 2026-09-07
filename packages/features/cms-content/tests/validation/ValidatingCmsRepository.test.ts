@@ -99,6 +99,10 @@ describe("ValidatingCmsRepository — pages", () => {
                     cms-source-body='{"safe":{"from":"raw","value":"yes"},"bad":{"from":"cookie"}}'></form>`,
                 /typed parameter map/,
             ],
+            [
+                `<form cms-source="/.cms/sources/forms/contact" cms-source-method="POST" cms-source-trigger="submit" cms-source-inherit-query="maybe"></form>`,
+                /query inheritance must be true or false/,
+            ],
         ] as const;
 
         for (const [content, message] of invalid) {
@@ -118,7 +122,7 @@ describe("ValidatingCmsRepository — pages", () => {
                     cms-source-id="newsletterSubscription"
                     cms-source-trigger="submit"
                     cms-source-method="POST"
-                    cms-source-success-reset="true">
+                    cms-source-inherit-query="false" cms-source-success-reset="true">
                     <fixture-input name="email"></fixture-input>
                     <fixture-button><button type="submit">Subscribe</button></fixture-button>
                     <p class="status" data-state="loading"

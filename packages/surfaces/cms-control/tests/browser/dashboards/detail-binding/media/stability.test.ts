@@ -45,6 +45,12 @@ test("media acknowledgements preserve drafts, focus, selection and scroll in sel
             await media.getByRole("button", { name: "Add media", exact: true }).click();
             await (await chooser).setFiles(imageFile);
             await request;
+            const form = page.locator("form[data-dashboard-action-form]");
+            expect(await form.count()).toBe(1);
+            expect(await form.getAttribute("cms-source-trigger")).toBe("submit");
+            expect(
+                await form.locator('input[type="file"]').evaluate((node: HTMLInputElement) => node.files?.[0]?.name),
+            ).toBe(imageFile.name);
             const notes = page.locator('[data-field-control="notes"] textarea');
             await notes.fill("Draft during the pending upload");
             await notes.evaluate((node: HTMLTextAreaElement) => node.setSelectionRange(2, 8));

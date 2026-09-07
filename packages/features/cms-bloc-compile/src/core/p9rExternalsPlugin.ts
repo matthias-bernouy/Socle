@@ -77,6 +77,7 @@ export const p9rExternalsPlugin: BunPlugin = {
                     `    repeat: "cms-repeat",\n` +
                     `    source: "cms-source",\n` +
                     `    sourceBody: "cms-source-body",\n` +
+                    `    sourceInheritQuery: "cms-source-inherit-query",\n` +
                     `    sourceId: "cms-source-id",\n` +
                     `    sourceMethod: "cms-source-method",\n` +
                     `    sourcePublish: "cms-source-publish",\n` +

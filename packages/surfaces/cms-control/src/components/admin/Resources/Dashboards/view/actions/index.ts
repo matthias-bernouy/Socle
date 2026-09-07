@@ -45,6 +45,7 @@ export async function runDashboardWidgetAction(
                   submittedFields,
                   action.resource,
                   context.groups ?? [group],
+                  context.submit,
               )
             : await executeDashboardTableAction(
                   group,
@@ -55,6 +56,7 @@ export async function runDashboardWidgetAction(
                   context.groups ?? [group],
                   context.filters?.get(action.widget ?? "") ?? {},
                   detail ?? undefined,
+                  context.submit,
               );
         let definitionsReloaded = false;
         if (result.invalidatesSchema && context.reloadDefinitions) {

@@ -1,0 +1,4 @@
+<form hidden data-dashboard-action-form cms-source-trigger="submit" cms-source-inherit-query="false" cms-source-success-reset="false">
+    <input type="hidden" cms-repeat="submissionFields as field" name="{{ field.name }}" value="{{ field.value }}">
+    <input type="file" name="file" data-submission-file cms-condition="submissionFile">
+</form>

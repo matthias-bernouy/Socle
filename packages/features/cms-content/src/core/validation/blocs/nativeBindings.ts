@@ -50,6 +50,9 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
     if (name === CMS_BINDING_ATTRIBUTES.sourceTrigger) {
         return isCmsSourceTrigger(value) ? null : "CMS source trigger is not controlled";
     }
+    if (name === CMS_BINDING_ATTRIBUTES.sourceInheritQuery) {
+        return value === "true" || value === "false" ? null : "CMS source query inheritance must be true or false";
+    }
     if (name === CMS_BINDING_ATTRIBUTES.sourceSuccessReset) {
         return value === "true" || value === "false" ? null : "CMS source reset behavior must be true or false";
     }
@@ -96,6 +99,7 @@ export function nativeFormBindingIssue(attributes: Readonly<Record<string, strin
     }
     for (const name of [
         CMS_BINDING_ATTRIBUTES.sourceBody,
+        CMS_BINDING_ATTRIBUTES.sourceInheritQuery,
         CMS_BINDING_ATTRIBUTES.sourceId,
         CMS_BINDING_ATTRIBUTES.sourcePublish,
         CMS_BINDING_ATTRIBUTES.sourceSuccessRedirect,

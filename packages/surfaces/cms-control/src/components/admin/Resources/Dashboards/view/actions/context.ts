@@ -1,8 +1,10 @@
+import type { SubmitAction } from "../../runtime/actions/forms";
 import type { DashboardDto } from "@bernouy/cms-dashboards";
 import type { DashboardActionCompletion, DetailSelection } from "../../domain";
 import type { DashboardSourceGroup } from "../../types";
 
 export type DashboardViewActionContext = {
+    submit?: SubmitAction;
     group: DashboardSourceGroup | null;
     groups?: DashboardSourceGroup[];
     dashboard: DashboardDto | null | undefined;

@@ -1,3 +1,4 @@
+import type { SubmitAction } from "cms-control/components/admin/Resources/Dashboards/runtime/actions/forms";
 import { configureDetail, mountDetail, setSourceData } from "../detail/boundDetail";
 import type { DashboardWDetail } from "cms-control/components/admin/Resources/Dashboards/widgets/w-detail/WDetail";
 import type { DetailWidget } from "cms-control/components/admin/Resources/Dashboards/widgets/w-detail/runtime/fieldState";
@@ -47,6 +48,8 @@ describe("dashboard nested media actions", () => {
                 files: [new File(["image"], "warm.png", { type: "image/png" })],
             },
             { imageOptions: [{ key: "warm", label: "Warm" }] },
+            [group()],
+            uploadSubmission,
         );
 
         expect(result).toMatchObject({ handled: true, nested: true, item: { id: "101" } });
@@ -87,6 +90,7 @@ describe("dashboard nested media actions", () => {
 
         await runDashboardMediaAction(
             {
+                submit: uploadSubmission,
                 group: group(),
                 dashboard: dashboard(),
                 detail: { collection: "questionDetail", row: "question-ref" },
@@ -198,3 +202,11 @@ function group(): DashboardSourceGroup {
         dashboards: [],
     };
 }
+
+// The runtime test checks upload arguments; browser tests exercise native file form submission.
+const uploadSubmission: SubmitAction = async ({ url, method, file }) => {
+    const body = new FormData();
+    body.set("file", file!);
+    const response = await fetch(url, { method, body });
+    return response.json();
+};

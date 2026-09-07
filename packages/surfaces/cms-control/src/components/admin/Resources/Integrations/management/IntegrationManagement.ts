@@ -1,3 +1,5 @@
+import { ActionForms } from "../../Dashboards/runtime/actions/forms";
+import { route } from "../api";
 import { readSourceData, setSourceData } from "@bernouy/components";
 import type { DashboardWDetail } from "../../Dashboards/widgets/w-detail/WDetail";
 import type { IntegrationManagement, IntegrationSettingsResponse } from "@bernouy/cms-integrations";
@@ -12,6 +14,7 @@ import { renderManagementShell } from "./presentation/shell";
 import { managementFeedback } from "./feedback";
 
 export class IntegrationManagementView extends HTMLElement {
+    private readonly actionForms = new ActionForms(this);
     private installation?: IntegrationInstallationDetail;
     private management?: IntegrationManagement;
     private busy = false;
@@ -29,6 +32,7 @@ export class IntegrationManagementView extends HTMLElement {
         void this.load();
     }
     disconnectedCallback(): void {
+        this.actionForms.disconnect();
         this.revision += 1;
         this.feedback?.disconnect();
     }
@@ -146,7 +150,11 @@ export class IntegrationManagementView extends HTMLElement {
         this.setBusy(true);
         this.status("Applying configuration…");
         try {
-            await managementRequest(this.installation!.id, "action", { actionId, input: {} });
+            await this.actionForms.submit({
+                url: `${route("/api/integrations/management/action")}?id=${encodeURIComponent(this.installation!.id)}`,
+                method: "POST",
+                fields: { actionId },
+            });
             if (!this.isConnected) {
                 return;
             }

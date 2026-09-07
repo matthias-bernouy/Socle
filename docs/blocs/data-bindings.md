@@ -194,13 +194,20 @@ Supported Source methods are `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, and
 `HEAD`. Let the endpoint contract and editor source picker produce advanced
 body mappings instead of hand-authoring opaque JSON where possible.
 
+Form submissions include the current page's query parameters by default.
+Set `cms-source-inherit-query="false"` on the form to send only the parameters
+explicitly declared in its Source URL (plus form fields for `GET`/`HEAD`). This
+preserves action endpoint contracts when the page URL also contains navigation
+or filter parameters. The option accepts `true` or `false`; omitting it retains
+the existing behavior. It does not disable explicit `#{param}` URL bindings.
+
 The global `cms-source:reload` event refreshes automatic Sources only; it does
 not submit forms. `cms-reload-on="event-name"` opts a Source into an explicit
 reload channel, including when its trigger is `submit` or `change`.
 
 The native form editor offers a required endpoint picker, `GET`, `POST`, `PUT`,
-`PATCH`, and `DELETE`, an internal-page redirect, reset-on-success, and
-autocomplete. It never exposes `action`, `onsubmit`, or arbitrary attributes.
+`PATCH`, and `DELETE`, page-query inheritance, an internal-page redirect,
+reset-on-success, and autocomplete. It never exposes `action`, `onsubmit`, or arbitrary attributes.
 Its default content already carries `cms-source-trigger="submit"`.
 
 Normal named controls serialize to query parameters for `GET`/`HEAD` and JSON

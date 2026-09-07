@@ -2,6 +2,7 @@ export const BINDING_CORE_TAG = "cms-binding-core";
 export const BINDING_DISABLED_ATTR = "cms-binding-disabled";
 export const SOURCE_STATE_FORCE_ATTR = "cms-source-state-force";
 export const SOURCE_ATTR = "cms-source";
+export const SOURCE_INHERIT_QUERY_ATTR = "cms-source-inherit-query";
 export const SOURCE_BODY_ATTR = "cms-source-body";
 export const SOURCE_ID_ATTR = "cms-source-id";
 export const SOURCE_TRIGGER_ATTR = "cms-source-trigger";

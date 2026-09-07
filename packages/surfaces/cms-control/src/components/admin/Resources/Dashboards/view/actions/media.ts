@@ -27,6 +27,7 @@ export async function runDashboardMediaAction(
             media,
             context.drafts.get(key) ?? {},
             context.groups ?? [group],
+            context.submit,
         );
         if (finishAction() === "stale") {
             return;

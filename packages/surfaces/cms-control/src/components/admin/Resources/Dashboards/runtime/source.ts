@@ -29,21 +29,6 @@ export async function sendSourceJson(
     return responseJson(response);
 }
 
-export async function sendSourceForm(
-    sourceId: string,
-    ref: DashboardEndpointRef,
-    method: string,
-    vars: RuntimeVars,
-    body: FormData,
-): Promise<unknown> {
-    const response = await requestBindingData(sourceUrl(sourceId, ref, vars).href, {
-        method,
-        headers: { Accept: "application/json" },
-        body,
-    });
-    return responseJson(response);
-}
-
 export async function sendSourceDownload(
     sourceId: string,
     ref: DashboardEndpointRef,

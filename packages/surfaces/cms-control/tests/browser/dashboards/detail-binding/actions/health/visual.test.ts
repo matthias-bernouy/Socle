@@ -60,22 +60,7 @@ test("Health preserves observation, recovery actions and operation presentation 
                     if (mode === "before") {
                         geometry.set(key, positions);
                     } else if (baseline) {
-                        // One reserved feedback line is the intentional change that prevents action jumps.
-                        const feedbackSpace = await page.locator("[data-management-status]").evaluate((node) => {
-                            const style = getComputedStyle(node);
-                            return Number.parseFloat(style.lineHeight) + Number.parseFloat(style.marginBottom);
-                        });
-                        expect(positions).toEqual(
-                            geometry
-                                .get(key)!
-                                .map(([text, x, y, width, height]) => [
-                                    text!,
-                                    x!,
-                                    Number(y) + feedbackSpace,
-                                    width!,
-                                    height!,
-                                ]),
-                        );
+                        expect(positions).toEqual(geometry.get(key)!);
                     }
                     expect(
                         await page.getByText("Observation issue: forbidden (HTTP 403)", { exact: true }).isVisible(),

@@ -8,6 +8,7 @@ export const CMS_BINDING_ATTRIBUTES = {
     repeat: "cms-repeat",
     source: "cms-source",
     sourceBody: "cms-source-body",
+    sourceInheritQuery: "cms-source-inherit-query",
     sourceId: "cms-source-id",
     sourceMethod: "cms-source-method",
     sourcePublish: "cms-source-publish",

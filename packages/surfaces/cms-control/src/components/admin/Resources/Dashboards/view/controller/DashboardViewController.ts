@@ -1,3 +1,4 @@
+import { ActionForms } from "../../runtime/actions/forms";
 import { DashboardDefinitions } from "./definitions";
 import { defaultDashboardSource, type DashboardSelection } from "../../api";
 import { detailReloadEvent, reloadCollection } from "../../runtime/reload";
@@ -8,6 +9,7 @@ import { DashboardStateController } from "./DashboardStateController";
 import type { DashboardWDetail } from "../../widgets/w-detail/WDetail";
 
 export class DashboardViewController extends DashboardStateController {
+    private readonly actionForms = new ActionForms(this);
     private readonly definitions = new DashboardDefinitions();
 
     protected startBoundSource(): void {
@@ -35,6 +37,7 @@ export class DashboardViewController extends DashboardStateController {
     }
 
     protected disconnectBoundSource(): void {
+        this.actionForms.disconnect();
         this.definitions.disconnect();
         this.disconnectState();
     }
@@ -91,6 +94,7 @@ export class DashboardViewController extends DashboardStateController {
 
     protected actionContext(): DashboardViewActionContext {
         return {
+            submit: this.actionForms.submit,
             group: this.activeGroup(),
             groups: this.groups,
             dashboard: this.activeDashboard(),

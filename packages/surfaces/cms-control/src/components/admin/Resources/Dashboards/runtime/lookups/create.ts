@@ -1,3 +1,5 @@
+import type { SubmitAction } from "../actions/forms";
+import { submitEndpoint } from "../actions/forms/endpoint";
 import type {
     DashboardDto,
     DashboardField,
@@ -9,7 +11,7 @@ import type { DetailSelection } from "../../domain";
 import type { DashboardSourceGroup } from "../../types";
 import { valueAt } from "../expressions";
 import { fieldValues } from "../mapping";
-import { requireDetailResource, sendSourceJson } from "../source";
+import { requireDetailResource } from "../source";
 
 type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
 type LookupField = Extract<DashboardField, { type: "combobox" | "tokens" }>;
@@ -24,6 +26,7 @@ export async function executeLookupCreate(
     nextDraft: Record<string, unknown>,
     groups: DashboardSourceGroup[] = [group],
     currentResource?: unknown,
+    submit?: SubmitAction,
 ): Promise<LookupCreateResult | undefined> {
     const widget = findDetailWidget(dashboard.views, detail.collection);
     const field = widget ? lookupField(widget, fieldId) : null;
@@ -41,11 +44,17 @@ export async function executeLookupCreate(
         return undefined;
     }
 
-    const created = await sendSourceJson(group.source.id, create, endpointMethod(group, groups, create), {
-        resource,
-        fields: { ...baseFields, ...previousDraft, [fieldId]: createdValue },
-        value: createdValue,
-    });
+    const created = await submitEndpoint(
+        group.source.id,
+        create,
+        endpointMethod(group, groups, create),
+        {
+            resource,
+            fields: { ...baseFields, ...previousDraft, [fieldId]: createdValue },
+            value: createdValue,
+        },
+        submit,
+    );
     const createdId = valueAt(created, create.valuePath);
     if (createdId === undefined || createdId === null || createdId === "") {
         return undefined;

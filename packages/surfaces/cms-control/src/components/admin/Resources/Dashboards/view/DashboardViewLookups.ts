@@ -30,6 +30,7 @@ export async function runDashboardLookupCreate(
             nextDraft,
             context.groups ?? [group],
             change.resource,
+            context.submit,
         );
         if (result === undefined) {
             return;
