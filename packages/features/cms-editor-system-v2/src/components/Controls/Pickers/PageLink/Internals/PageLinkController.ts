@@ -11,7 +11,11 @@ export class PageLinkController extends PageLinkState {
     connectedCallback(): void {
         this.syncFromAttributes();
         this.wire();
-        void this.loadPages();
+        queueMicrotask(() => {
+            if (this.isConnected) {
+                void this.loadPages();
+            }
+        });
         this.render();
     }
 

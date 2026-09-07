@@ -1,13 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
-import { detailField } from "../../../../src/components/admin/Resources/Dashboards/runtime/mapping/fields";
-import {
-    createFieldControl,
-    readFieldControlValue,
-} from "../../../../src/components/admin/Resources/Dashboards/widgets/w-detail/controls";
-import {
-    createItemControl,
-    readItemControl,
-} from "../../../../src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/controls";
+import { mountDetailFields } from "../../dashboards/detail/boundDetail";
 
 const originalFetch = globalThis.fetch;
 afterEach(() => {
@@ -21,28 +13,28 @@ test("reference controls reuse credentials and published-only page selection wit
         requests.push(String(url));
         return Response.json([{ path: "/terms", title: "Terms" }]);
     }) as typeof fetch;
-    const field = detailField(
-        { id: "page", label: "Legal page", path: "page", type: "page-link", publishedOnly: true },
-        { page: "/terms" },
-        {},
-        {},
-        "source",
+    const detail = await mountDetailFields(
+        [
+            { id: "page", label: "Legal page", path: "page", type: "page-link", publishedOnly: true },
+            {
+                id: "signing",
+                label: "Signing",
+                path: "signing",
+                type: "reorderable-list",
+                itemKey: "id",
+                fields: [{ id: "key", label: "Signing key", path: "signing.key", type: "secret-ref" }],
+            },
+        ],
+        { page: "/terms", signing: [{ id: "service", signing: { key: "${SIGNING_KEY}" } }] },
     );
-    const page = createFieldControl(field);
-    document.body.append(page);
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(requests).toEqual(["/api/page/links?visible=published"]);
+    const page = detail.querySelector("[data-field-control=page]")!;
     expect(page.getAttribute("allow-external")).toBe("false");
     expect(page.getAttribute("allow-media")).toBe("false");
-    expect(readFieldControlValue(field, page)).toBe("/terms");
-    const secret = createItemControl({ signing: { key: "${SIGNING_KEY}" } }, 0, {
-        id: "key",
-        label: "Signing key",
-        path: "signing.key",
-        type: "secret-ref",
-    });
-    document.body.append(secret);
-    expect(secret.tagName.toLowerCase()).toBe("cms-credential-select");
-    expect(readItemControl(secret)).toBe("${SIGNING_KEY}");
+    expect(detail.currentFieldValues().page).toBe("/terms");
+    const secret = detail.querySelector<HTMLElement & { value: string }>("[data-item-field=key]")!;
+    expect(secret.localName).toBe("cms-credential-select");
+    expect(secret.value).toBe("${SIGNING_KEY}");
     expect(secret.shadowRoot?.textContent).not.toContain("a-secret-value");
 });

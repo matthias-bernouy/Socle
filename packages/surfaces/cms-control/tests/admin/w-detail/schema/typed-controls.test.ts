@@ -1,9 +1,7 @@
+import { mountDetailFields } from "../../dashboards/detail/boundDetail";
 import { afterEach, describe, expect, test } from "bun:test";
 import { Combobox, P9rInput, P9rSelect, TokenInput } from "@bernouy/components";
-import {
-    createFieldControl,
-    readFieldControlValue,
-} from "../../../../src/components/admin/Resources/Dashboards/widgets/w-detail/controls";
+import { readFieldControlValue } from "../../../../src/components/admin/Resources/Dashboards/widgets/w-detail/controls";
 import { detailData } from "../../../../src/components/admin/Resources/Dashboards/runtime/mapping";
 import type { WDetailField } from "../../../../src/components/admin/Resources/Dashboards/widgets/w-detail/types";
 
@@ -26,19 +24,25 @@ afterEach(() => {
 });
 
 describe("typed dashboard detail controls", () => {
-    test("reads number and checkbox controls as their declared types", () => {
-        const number = createFieldControl({
-            id: "quantity",
-            label: "Quantity",
-            input: "number",
-            value: 2.5,
-            min: 0,
-            max: 10,
-            step: 0.5,
-            required: true,
-        });
-        const checkbox = createFieldControl({ id: "enabled", label: "Enabled", input: "checkbox", value: false });
-        document.body.append(number, checkbox);
+    test("reads number and checkbox controls as their declared types", async () => {
+        const detail = await mountDetailFields(
+            [
+                {
+                    id: "quantity",
+                    label: "Quantity",
+                    path: "quantity",
+                    type: "number",
+                    min: 0,
+                    max: 10,
+                    step: 0.5,
+                    required: true,
+                },
+                { id: "enabled", label: "Enabled", path: "enabled", type: "checkbox" },
+            ],
+            { quantity: 2.5, enabled: false },
+        );
+        const number = detail.querySelector<HTMLElement>("[data-field-control=quantity]")!;
+        const checkbox = detail.querySelector<HTMLInputElement>("[data-field-control=enabled]")!;
 
         expect({
             type: number.getAttribute("type"),
@@ -56,11 +60,23 @@ describe("typed dashboard detail controls", () => {
         expect(readFieldControlValue(numberField(), number)).toBe("");
     });
 
-    test("converts localized money inputs to minor units and can forbid decimals", () => {
+    test("converts localized money inputs to minor units and can forbid decimals", async () => {
         Object.defineProperty(navigator, "language", { configurable: true, value: "fr-FR" });
         const decimalField = moneyField(1526, true);
-        const decimal = createFieldControl(decimalField);
-        document.body.append(decimal);
+        const decimalDetail = await mountDetailFields(
+            [
+                {
+                    id: "amount",
+                    label: "Amount",
+                    path: "amount",
+                    type: "money",
+                    currencyPath: "currency",
+                    allowDecimals: true,
+                },
+            ],
+            { amount: 1526, currency: "EUR" },
+        );
+        const decimal = decimalDetail.querySelector<HTMLElement>("[data-field-control=amount]")!;
 
         expect({
             input: decimalField.input,
@@ -71,8 +87,20 @@ describe("typed dashboard detail controls", () => {
         expect(readFieldControlValue(decimalField, decimal)).toBe(1875);
 
         const wholeField = moneyField(1500, false);
-        const whole = createFieldControl(wholeField);
-        document.body.append(whole);
+        const wholeDetail = await mountDetailFields(
+            [
+                {
+                    id: "amount",
+                    label: "Amount",
+                    path: "amount",
+                    type: "money",
+                    currencyPath: "currency",
+                    allowDecimals: false,
+                },
+            ],
+            { amount: 1500, currency: "EUR" },
+        );
+        const whole = wholeDetail.querySelector<HTMLElement>("[data-field-control=amount]")!;
         expect((whole as HTMLElement & { value: string }).value).toBe("15");
         (whole as HTMLElement & { value: string }).value = "15,26";
         expect(readFieldControlValue(wholeField, whole)).toBe("");
@@ -118,7 +146,7 @@ describe("typed dashboard detail controls", () => {
         expect(whole.main[0]!.fields[0]).toMatchObject({ allowDecimals: false });
     });
 
-    test("maps readonly image fields to lazy previews", () => {
+    test("maps readonly image fields to lazy previews", async () => {
         const data = detailData(
             {
                 widget: "w-detail",
@@ -144,10 +172,19 @@ describe("typed dashboard detail controls", () => {
             "user-1",
         );
         const field = data.main[0]!.fields[0]!;
-        const control = createFieldControl(field) as HTMLImageElement;
+        const detail = await mountDetailFields(
+            [{ id: "avatarPreview", label: "Avatar", path: "avatarUrl", type: "readonly", format: "image" }],
+            { avatarUrl: "https://cdn.example.test/avatar.jpg" },
+        );
+        const control = detail.querySelector<HTMLImageElement>("img.detail-image")!;
 
         expect(field.input).toBe("image");
-        expect({ tag: control.tagName, src: control.src, alt: control.alt, loading: control.loading }).toEqual({
+        expect({
+            tag: control.tagName,
+            src: control.getAttribute("data-cms-src"),
+            alt: control.alt,
+            loading: control.loading,
+        }).toEqual({
             tag: "IMG",
             src: "https://cdn.example.test/avatar.jpg",
             alt: "Avatar",
@@ -155,7 +192,7 @@ describe("typed dashboard detail controls", () => {
         });
     });
 
-    test("uses declared table editors and preserves hidden row metadata", () => {
+    test("uses declared table editors and preserves hidden row metadata", async () => {
         const field: WDetailField = {
             id: "variants",
             label: "Variants",
@@ -199,8 +236,46 @@ describe("typed dashboard detail controls", () => {
                 { key: "tags", label: "Tags", path: "tags", editable: true, type: "tokens" },
             ],
         };
-        const control = createFieldControl(field);
-        document.body.append(control);
+        const detail = await mountDetailFields(
+            [
+                {
+                    id: "variants",
+                    label: "Variants",
+                    path: "variants",
+                    type: "table",
+                    editable: true,
+                    addLabel: "Add variant",
+                    columns: [
+                        { id: "name", label: "Name", path: "name", editable: true, type: "text" },
+                        {
+                            id: "status",
+                            label: "Status",
+                            path: "status",
+                            editable: true,
+                            type: "select",
+                            options: [
+                                { value: "draft", label: "Draft" },
+                                { value: "active", label: "Active" },
+                            ],
+                        },
+                        {
+                            id: "product",
+                            label: "Product",
+                            path: "productId",
+                            editable: true,
+                            type: "combobox",
+                            options: [
+                                { value: "product-1", label: "Racket" },
+                                { value: "product-2", label: "Shoes" },
+                            ],
+                        },
+                        { id: "tags", label: "Tags", path: "tags", editable: true, type: "tokens" },
+                    ],
+                },
+            ],
+            { variants: field.value },
+        );
+        const control = detail.querySelector<HTMLElement>("[data-field-control=variants]")!;
 
         expect(control.querySelector<HTMLButtonElement>("[data-table-add]")?.textContent).toBe("Add variant");
         expect(

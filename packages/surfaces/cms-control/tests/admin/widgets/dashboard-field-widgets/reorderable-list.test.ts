@@ -1,6 +1,8 @@
+import { WIDGET_MEDIA_ACTION_EVENT } from "cms-control/components/admin/Resources/Dashboards/widgets/shared";
+import { mountDetailFields } from "../../dashboards/detail/boundDetail";
+import type { ReorderableDefinition } from "cms-control/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/context";
+import type { ReorderableField } from "cms-control/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/Field";
 import { afterEach, describe, expect, test } from "bun:test";
-import "../../../../src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/WReorderableList";
-import type { DashboardWReorderableList } from "../../../../src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/WReorderableList";
 import {
     W_MEDIA_FIELD_ACTION_EVENT,
     type DashboardMediaActionDetail,
@@ -12,13 +14,12 @@ afterEach(() => {
 });
 
 describe("dashboard reorderable list widget", () => {
-    test("reorders items by drag and recomputes their persisted positions", () => {
-        const list = document.createElement("cms-dashboard-w-reorderable-list") as DashboardWReorderableList;
+    test("reorders items by drag and recomputes their persisted positions", async () => {
         const items = [
             { id: "agency", details: { value: "agency", label: "Agency" }, order: { position: 0 } },
             { id: "club", details: { value: "club", label: "Club" }, order: { position: 1 } },
         ];
-        list.data = {
+        const list = await mountList({
             items,
             itemKey: "id",
             positionPath: "order.position",
@@ -26,14 +27,15 @@ describe("dashboard reorderable list widget", () => {
                 { id: "value", label: "Value", path: "details.value", required: true },
                 { id: "label", label: "Label", path: "details.label", required: true },
             ],
-        };
-        document.body.append(list);
+        });
 
-        expect(list.shadowRoot!.querySelector("[data-header]")?.textContent).toBe("ValueLabel");
-        expect(list.shadowRoot!.querySelectorAll(".row label")).toHaveLength(0);
-        expect(list.shadowRoot!.querySelectorAll(".row p9r-input")).toHaveLength(4);
-        expect(list.shadowRoot!.querySelector("[data-item-path='details.value']")?.getAttribute("required")).toBe("");
-        const rows = list.shadowRoot!.querySelectorAll<HTMLElement>(".row");
+        expect(Array.from(list.querySelectorAll("[slot=heading]"), (node) => node.textContent).join("")).toBe(
+            "ValueLabel",
+        );
+        expect(list.querySelectorAll(".row label")).toHaveLength(0);
+        expect(list.querySelectorAll(".row p9r-input")).toHaveLength(4);
+        expect(list.querySelector("[data-item-path='details.value']")?.getAttribute("required")).toBe("");
+        const rows = list.querySelectorAll<HTMLElement>(".row");
         rows[0]!.querySelector<HTMLElement>(".handle")!.dispatchEvent(new Event("dragstart", { bubbles: true }));
         rows[1]!.dispatchEvent(new Event("drop", { bubbles: true, cancelable: true }));
 
@@ -47,32 +49,29 @@ describe("dashboard reorderable list widget", () => {
         expect(list.items[0]?.details).toEqual({ value: "club", label: "Club" });
     });
 
-    test("keeps the edited input mounted while its value changes", () => {
-        const list = document.createElement("cms-dashboard-w-reorderable-list") as DashboardWReorderableList;
-        list.data = {
+    test("keeps the edited input mounted while its value changes", async () => {
+        const list = await mountList({
             items: [{ id: "agency", value: "agency", label: "Agency", position: 0 }],
             itemKey: "id",
             fields: [
                 { id: "value", label: "Value", path: "value", required: true },
                 { id: "label", label: "Label", path: "label", required: true },
             ],
-        };
-        document.body.append(list);
+        });
 
-        const input = list.shadowRoot!.querySelector<HTMLElement & { value: string }>("[data-item-path='label']")!;
+        const input = list.querySelector<HTMLElement & { value: string }>("[data-item-path='label']")!;
         expect(input.tagName).toBe("P9R-INPUT");
         input.focus();
         input.value = "Agency updated";
         input.dispatchEvent(new Event("input", { bubbles: true }));
 
-        expect(list.shadowRoot!.querySelector("[data-item-path='label']")).toBe(input);
-        expect(list.shadowRoot!.activeElement).toBe(input);
+        expect(list.querySelector("[data-item-path='label']")).toBe(input);
+        expect(document.activeElement).toBe(input);
         expect(list.items[0]?.label).toBe("Agency updated");
     });
 
-    test("ignores unsafe nested item and position paths", () => {
-        const list = document.createElement("cms-dashboard-w-reorderable-list") as DashboardWReorderableList;
-        list.data = {
+    test("ignores unsafe nested item and position paths", async () => {
+        const list = await mountList({
             items: [{}],
             itemKey: "__proto__.dashboardPolluted",
             positionPath: "__proto__.dashboardPolluted",
@@ -83,21 +82,19 @@ describe("dashboard reorderable list widget", () => {
                     path: "__proto__.dashboardPolluted",
                 },
             ],
-        };
-        document.body.append(list);
+        });
 
-        const input = list.shadowRoot!.querySelector<HTMLElement & { value: string }>("[data-item-path]")!;
+        const input = list.querySelector<HTMLElement & { value: string }>("[data-item-path]")!;
         input.value = "polluted";
         input.dispatchEvent(new Event("input", { bubbles: true }));
 
         expect(list.items).toEqual([{}]);
-        expect(list.shadowRoot!.querySelector<HTMLElement>(".row")?.dataset.itemKey).toBe("0");
+        expect(list.querySelector<HTMLElement>(".row")?.dataset.itemKey).toBe("0");
         expect((Object.prototype as Record<string, unknown>).dashboardPolluted).toBeUndefined();
     });
 
-    test("renders media choices as cards and scopes nested media actions", () => {
-        const list = document.createElement("cms-dashboard-w-reorderable-list") as DashboardWReorderableList;
-        list.data = {
+    test("renders media choices as cards and scopes nested media actions", async () => {
+        const list = await mountList({
             items: [
                 {
                     key: "ocean",
@@ -108,20 +105,29 @@ describe("dashboard reorderable list widget", () => {
             itemKey: "key",
             layout: "cards",
             fields: [
-                { id: "image", label: "Image", path: "image", type: "media" },
+                {
+                    id: "image",
+                    label: "Image",
+                    path: "image",
+                    type: "media",
+                    item: { idPath: "id", urlPath: "url", altPath: "alt" },
+                },
                 { id: "label", label: "Label", path: "label" },
                 { id: "key", label: "Stable key", path: "key", secondary: true },
             ],
-        };
-        document.body.append(list);
+        });
 
-        const root = list.shadowRoot!;
-        expect(root.querySelector(".reorderable-list")?.getAttribute("data-layout")).toBe("cards");
-        expect(root.querySelector(".card-toolbar code")?.textContent).toBe("ocean");
-        expect(root.querySelector(".card-details")?.textContent).toContain("Stable key");
-        const media = root.querySelector<HTMLElement>("cms-dashboard-w-media-field")!;
+        const root = list;
+        expect(list.getAttribute("layout")).toBe("cards");
+        expect(root.querySelector(".identity")?.textContent).toBe("ocean");
+        expect(
+            root
+                .querySelector("cms-dashboard-reorderable-settings cms-dashboard-reorderable-cell")
+                ?.getAttribute("label"),
+        ).toBe("Stable key");
+        const media = root.querySelector<HTMLElement>("cms-dashboard-media-field")!;
         let detail: DashboardMediaActionDetail | undefined;
-        list.addEventListener(W_MEDIA_FIELD_ACTION_EVENT, (event) => {
+        list.closest("cms-dashboard-w-detail")!.addEventListener(WIDGET_MEDIA_ACTION_EVENT, (event) => {
             detail = (event as CustomEvent<DashboardMediaActionDetail>).detail;
         });
         media.dispatchEvent(
@@ -147,3 +153,14 @@ describe("dashboard reorderable list widget", () => {
         });
     });
 });
+
+async function mountList(
+    input: Omit<ReorderableDefinition, "type" | "id" | "label" | "path"> & { items: Record<string, unknown>[] },
+): Promise<ReorderableField> {
+    const { items, ...definition } = input;
+    const detail = await mountDetailFields(
+        [{ ...definition, type: "reorderable-list", id: "items", path: "items", label: "Items" }],
+        { items },
+    );
+    return detail.querySelector<ReorderableField>("cms-dashboard-reorderable-field")!;
+}

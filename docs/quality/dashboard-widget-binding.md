@@ -1416,3 +1416,64 @@ modules; their remaining compatibility branches must be removed next. The
 integration management controller, definition/navigation relays, complete
 operator/provider matrix, actual local persistence with cleanup, outstanding
 performance/overflow review and final local-runtime activation are also open.
+
+### Legacy control factories and standalone widgets removed
+
+The remaining manual field factories are deleted: basic/display inputs,
+reference editors, schema fields, table rows and the obsolete standalone media
+and reorderable components. Detail table mutations now update their draft and
+let binding render the rows; they no longer choose between a bound control and
+an imperative fallback. Readers, validation, media operations and drag feedback
+remain because they implement editing behavior rather than response rendering.
+The official page-link element is registered at the Control bundle entry point.
+
+The last factory-based tests now compose a real detail with a page-owned core.
+They retain assertions for typed values, readonly snapshots, opaque table
+metadata, nested media action scope, safe property paths, drag ordering and
+focused inputs. Media preview tests also install the real bound-image runtime,
+including URL changes and native load/error events. Happy DOM's sibling-shadow
+`activeElement` limitation requires blurring the second thumbnail before the
+unit End/Escape sequence; the Chromium preview test retains thumbnail focus and
+exercises the complete keyboard sequence and focus restoration.
+
+Page-link loading is deferred to the next microtask and checks connection first.
+This skips the briefly connected authored control that binding captures before
+mounting its compiled copy. The bound reference regression checks exactly one
+published-pages GET. The editor shell fixture now registers its test subclass
+in the current document instead of constructing a cached class owned by a
+previous test document and manually calling its connection callback.
+
+Verification for this checkpoint (all evidence below is under
+`/tmp/cmscore-widget-binding-20260907/`):
+
+- `legacy-controls-unit-final.log`: 363 passing tests in 107 files, covering all
+  Control admin and editor-system-v2 tests. The editor shell entry also runs its
+  isolated 101-case suite. The migrated preview/reorderable tests contribute
+  seven tests with 55 assertions.
+- `legacy-controls-browser/results.json`: 37 passing Chromium tests in 31 files,
+  covering scalar fields, schemas, readonly fields, tables, reorderable fields,
+  nested media and references, media operations/recovery and connection settings.
+  These are controlled HTTP fixtures, not proof of actual local persistence.
+- `legacy-controls-browser/pixel-comparison.json`: 44 before/after pairs, 41
+  pixel-identical. Mobile media differs by 26 pixels and empty schema screenshots
+  by 11–14 pixels. All geometry assertions pass. Inspected images include mobile
+  media before/after and expanded desktop reorderable cards. The immutable
+  reference is `legacy-controls-before-bundle.js` from `f56bddb42`.
+- The connection fixture records six initial requests in both versions and both
+  widths. Individual ready timings are 204.1/175.5 ms at 1440 pixels and
+  181.6/197.5 ms at 390 pixels. These single observations are not a claim of a
+  performance improvement; repeated performance analysis remains open.
+- `legacy-controls-build.log`: complete workspace build passes.
+  `legacy-controls-start.log` and `legacy-controls-quality-final.log` both pass
+  all eight checks. UI contracts remain at 0 errors, 77 warnings, 11 information;
+  no exemption or directory fanout error was introduced. The typed-control test
+  remains a cohesive scenario suite despite its advisory size finding.
+
+This cleanup does not finish the goal. The integration management outer
+controller still replaces its panel after save and renders health reports
+imperatively; its shell injects CSS into light DOM. Definition/navigation
+`cms-dashboard-input` relays also remain. These must be migrated, followed by
+completion of the operator/provider coverage matrix, real local persistence and
+cleanup, repeated timing/request review, the known example mobile overflow and
+final activation of the validated local runtime. No production or external
+provider operation was performed for this checkpoint.

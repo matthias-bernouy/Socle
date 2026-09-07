@@ -1,7 +1,6 @@
 import { deriveTableRows } from "../controls/table/derive";
 import { readBoundTableRows } from "../controls/table/context";
-import { readFieldControlValue, tableRow } from "../controls";
-import type { WDetailField } from "../types";
+import { readFieldControlValue } from "../controls";
 import { DetailFieldState } from "./fieldState";
 
 type EmitFieldChange = (control: HTMLElement, draft?: unknown) => void;
@@ -24,15 +23,9 @@ export function addTableRow(
     if (!control || !field || field.input !== "table") {
         return;
     }
-    if (control.localName === "cms-dashboard-table-field") {
-        const rows = [...readBoundTableRows(field, control), {}];
-        emitFieldChange(control, rows);
-        updateDerivedTables(field.id, fields, rows);
-        return;
-    }
-    control.insertBefore(tableRow(field, {}), button);
-    emitFieldChange(control);
-    updateDerivedTables(field.id, fields);
+    const rows = [...readBoundTableRows(field, control), {}];
+    emitFieldChange(control, rows);
+    updateDerivedTables(field.id, fields, rows);
 }
 
 export function removeTableRow(
@@ -45,20 +38,14 @@ export function removeTableRow(
     if (!control || !row) {
         return;
     }
-    if (control.localName === "cms-dashboard-table-field") {
-        const field = fields.find(control.dataset.fieldControl ?? "");
-        if (!field) {
-            return;
-        }
-        const rows = readBoundTableRows(field, control);
-        rows.splice(Number((row as HTMLElement).dataset.tableIndex), 1);
-        emitFieldChange(control, rows);
-        updateDerivedTables(field.id, fields, rows);
+    const field = fields.find(control.dataset.fieldControl ?? "");
+    if (!field) {
         return;
     }
-    row.remove();
-    emitFieldChange(control);
-    updateDerivedTables(control.dataset.fieldControl ?? "", fields);
+    const rows = readBoundTableRows(field, control);
+    rows.splice(Number((row as HTMLElement).dataset.tableIndex), 1);
+    emitFieldChange(control, rows);
+    updateDerivedTables(field.id, fields, rows);
 }
 
 export function updateDerivedTables(sourceFieldId: string, fields: DetailFieldState, sourceDraft?: unknown): void {
@@ -78,18 +65,6 @@ export function updateDerivedTables(sourceFieldId: string, fields: DetailFieldSt
         }
         const rows = deriveTableRows(field, sourceValue);
         field.value = rows;
-        if (control.localName === "cms-dashboard-table-field") {
-            fields.record(field.id, rows);
-        } else {
-            replaceTableRows(control, field, rows);
-        }
-    }
-}
-
-function replaceTableRows(control: HTMLElement, field: WDetailField, rows: Record<string, unknown>[]): void {
-    control.querySelectorAll("[data-table-row]").forEach((row) => row.remove());
-    const anchor = control.querySelector("[data-table-add]");
-    for (const row of rows) {
-        control.insertBefore(tableRow(field, row), anchor);
+        fields.record(field.id, rows);
     }
 }

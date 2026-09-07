@@ -1,6 +1,13 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import type { DashboardWMediaField } from "../../../../src/components/admin/Resources/Dashboards/widgets/w-media-field/legacy/WMediaField";
-import "../../../../src/components/admin/Resources/Dashboards/widgets/w-media-field/legacy/WMediaField";
+import {
+    createResponsiveSourceImageBrowserApi,
+    installBoundImageRuntime,
+    type BoundImageRuntime,
+} from "@bernouy/cms-source-images/browser-host";
+import type { DashboardMediaField } from "cms-control/components/admin/Resources/Dashboards/widgets/w-media-field/binding/MediaField";
+import { mountDetailFields } from "../../dashboards/detail/boundDetail";
+import { waitForDetail } from "../../dashboards/detail/detailTestHelpers";
+let imageRuntime: BoundImageRuntime | undefined;
 import {
     W_MEDIA_FIELD_ACTION_EVENT,
     type DashboardMediaItem,
@@ -24,12 +31,13 @@ const items: DashboardMediaItem[] = [
 ];
 
 afterEach(() => {
+    imageRuntime?.disconnect();
     document.body.replaceChildren();
 });
 
 describe("dashboard media field preview", () => {
-    test("opens originals and navigates without entering the edit flow", () => {
-        const field = createField(items);
+    test("opens originals and navigates without entering the edit flow", async () => {
+        const { field } = await createField(items);
         const root = field.shadowRoot!;
         const trigger = root.querySelector<HTMLButtonElement>("[data-preview-open]")!;
         const fileInput = root.querySelector<HTMLInputElement>("[data-file]")!;
@@ -44,57 +52,66 @@ describe("dashboard media field preview", () => {
 
         trigger.focus();
         trigger.click();
+        await waitForDetail(() => Boolean(field.querySelector<HTMLImageElement>("[data-preview-image]")?.src));
 
         const dialog = root.querySelector<HTMLDialogElement>("[data-preview-dialog]")!;
-        const previewImage = root.querySelector<HTMLImageElement>("[data-preview-image]")!;
+        const previewImage = field.querySelector<HTMLImageElement>("[data-preview-image]")!;
         expect(dialog.open).toBe(true);
         expect(previewImage.src.endsWith("/media/first.jpg")).toBe(true);
-        expect(root.querySelector("[data-preview-caption]")?.textContent).toBe("First racket");
-        expect(root.querySelector("[data-preview-counter]")?.textContent).toBe("1 / 2");
+        expect(field.querySelector("[slot=caption]")?.textContent).toBe("First racket");
+        expect(field.querySelector("[slot=counter]")?.textContent).toBe("1 / 2");
         expect(root.activeElement).toBe(root.querySelector("[data-preview-action='close']"));
-        expect(root.querySelector<HTMLImageElement>(".preview-thumb img")?.src.endsWith("/thumbnails/first.avif")).toBe(
-            true,
-        );
-        expect(root.querySelectorAll("img[src$='/media/second.jpg']")).toHaveLength(0);
+        expect(
+            field
+                .querySelector<HTMLImageElement>("cms-dashboard-media-thumbnail img")
+                ?.src.endsWith("/thumbnails/first.avif"),
+        ).toBe(true);
+        expect(field.querySelectorAll("img[src$='/media/second.jpg']")).toHaveLength(0);
 
         root.querySelector<HTMLButtonElement>("[data-preview-action='next']")!.click();
+        await waitForDetail(() => previewImage.src.endsWith("/media/second.jpg"));
         expect(previewImage.src.endsWith("/media/second.jpg")).toBe(true);
-        expect(root.querySelector("[data-preview-counter]")?.textContent).toBe("2 / 2");
-        expect(root.querySelector<HTMLButtonElement>("[data-preview-index='1']")?.getAttribute("aria-current")).toBe(
-            "true",
-        );
+        expect(field.querySelector("[slot=counter]")?.textContent).toBe("2 / 2");
+        expect(thumbnail(field, 1)?.getAttribute("aria-current")).toBe("true");
 
-        const firstThumbnail = root.querySelector<HTMLButtonElement>("[data-preview-index='0']")!;
+        const firstThumbnail = thumbnail(field, 0)!;
         firstThumbnail.click();
+        await waitForDetail(() => previewImage.src.endsWith("/media/first.jpg"));
         expect(previewImage.src.endsWith("/media/first.jpg")).toBe(true);
-        expect(root.activeElement).toBe(root.querySelector("[data-preview-index='0']"));
+        expect(thumbnail(field, 0).getRootNode()).toHaveProperty("activeElement", thumbnail(field, 0));
         dialog.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true }));
+        await waitForDetail(() => previewImage.src.endsWith("/media/second.jpg"));
         expect(previewImage.src.endsWith("/media/second.jpg")).toBe(true);
-        expect(root.activeElement).toBe(root.querySelector("[data-preview-index='1']"));
+        expect(thumbnail(field, 1).getRootNode()).toHaveProperty("activeElement", thumbnail(field, 1));
+        // Happy DOM cannot read activeElement across sibling shadow roots.
+        // Chromium E2E exercises End/Escape while the second thumbnail keeps focus.
+        thumbnail(field, 1).blur();
         dialog.dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true }));
         expect(previewImage.src.endsWith("/media/second.jpg")).toBe(true);
 
         dialog.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
-        expect(dialog.open).toBe(false);
-        expect(previewImage.hasAttribute("src")).toBe(false);
+        await waitForDetail(() => !dialog.open);
+        await waitForDetail(() => !field.querySelector("[data-preview-image]"));
         expect(root.activeElement).toBe(trigger);
         expect(pickerClicks).toBe(0);
         expect(mediaActions).toBe(0);
     });
 
-    test("tracks item changes and closes safely when the gallery becomes empty", () => {
-        const field = createField([]);
+    test("tracks item changes and closes safely when the gallery becomes empty", async () => {
+        const { field, detail } = await createField([]);
         const root = field.shadowRoot!;
         const trigger = root.querySelector<HTMLButtonElement>("[data-preview-open]")!;
         expect(trigger.hidden).toBe(true);
         expect(getComputedStyle(trigger).display).toBe("none");
 
-        field.items = [items[0]!];
+        detail.applyFieldDraft("photos", [items[0]!]);
+        await waitForDetail(() => !trigger.hidden);
         expect(trigger.hidden).toBe(false);
         trigger.click();
+        await waitForDetail(() => Boolean(field.querySelector<HTMLImageElement>("[data-preview-image]")?.src));
 
         const dialog = root.querySelector<HTMLDialogElement>("[data-preview-dialog]")!;
-        const previewImage = root.querySelector<HTMLImageElement>("[data-preview-image]")!;
+        const previewImage = field.querySelector<HTMLImageElement>("[data-preview-image]")!;
         expect(dialog.open).toBe(true);
         expect(root.querySelector<HTMLButtonElement>("[data-preview-action='previous']")?.hidden).toBe(true);
         expect(root.querySelector<HTMLElement>("[data-preview-strip]")?.hidden).toBe(true);
@@ -104,19 +121,21 @@ describe("dashboard media field preview", () => {
         previewImage.dispatchEvent(new Event("error"));
         expect(root.querySelector("[data-preview-status]")?.textContent).toBe("Unable to load this image.");
 
-        field.items = [items[1]!];
+        detail.applyFieldDraft("photos", [items[1]!]);
+        await waitForDetail(() => previewImage.src.endsWith("/media/second.jpg"));
         expect(previewImage.src.endsWith("/media/second.jpg")).toBe(true);
-        expect(root.querySelector("[data-preview-caption]")?.textContent).toBe("Second racket");
+        expect(field.querySelector("[slot=caption]")?.textContent).toBe("Second racket");
         expect(root.querySelector("[data-preview-status]")?.textContent).toBe("Loading image…");
 
-        field.items = [];
+        detail.applyFieldDraft("photos", []);
+        await waitForDetail(() => !dialog.open);
         expect(dialog.open).toBe(false);
         expect(trigger.hidden).toBe(true);
-        expect(previewImage.hasAttribute("src")).toBe(false);
+        await waitForDetail(() => !field.querySelector("[data-preview-image]"));
     });
 
-    test("closes from both explicit and backdrop controls", () => {
-        const field = createField(items);
+    test("closes from both explicit and backdrop controls", async () => {
+        const { field } = await createField(items);
         const root = field.shadowRoot!;
         const trigger = root.querySelector<HTMLButtonElement>("[data-preview-open]")!;
         const dialog = root.querySelector<HTMLDialogElement>("[data-preview-dialog]")!;
@@ -133,10 +152,30 @@ describe("dashboard media field preview", () => {
     });
 });
 
-function createField(value: DashboardMediaItem[]): DashboardWMediaField {
-    const field = document.createElement("cms-dashboard-w-media-field") as DashboardWMediaField;
-    field.setAttribute("label", "Images");
-    field.items = value;
-    document.body.append(field);
-    return field;
+async function createField(value: DashboardMediaItem[]) {
+    imageRuntime = installBoundImageRuntime(
+        document,
+        createResponsiveSourceImageBrowserApi({ public: false, private: false }),
+    );
+    const detail = await mountDetailFields(
+        [
+            {
+                type: "media",
+                id: "photos",
+                path: "photos",
+                label: "Images",
+                multiple: true,
+                item: { idPath: "id", urlPath: "url", altPath: "alt" },
+            },
+        ],
+        { photos: [] },
+    );
+    detail.applyFieldDraft("photos", value);
+    const field = detail.querySelector<DashboardMediaField>("cms-dashboard-media-field")!;
+    await waitForDetail(() => field.items.length === value.length);
+    return { field, detail };
+}
+
+function thumbnail(field: HTMLElement, index: number): HTMLButtonElement {
+    return field.querySelector(`cms-dashboard-media-thumbnail[index="${index}"]`)!.shadowRoot!.querySelector("button")!;
 }

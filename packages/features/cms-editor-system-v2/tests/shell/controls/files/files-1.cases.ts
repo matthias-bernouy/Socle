@@ -46,13 +46,15 @@ describe("Shell", () => {
         }) as typeof fetch;
 
         const { PageLink } = await import("../../../../src/components/Controls/Pickers/PageLink/PageLink");
-        const control = new PageLink();
+        class TestPageLink extends PageLink {}
+        customElements.define("test-page-link", TestPageLink);
+        const control = document.createElement("test-page-link") as PageLink;
         const values: string[] = [];
         control.addEventListener("input", (event) => {
             values.push((event as CustomEvent<{ value: string }>).detail.value);
         });
         document.body.append(control);
-        control.connectedCallback();
+        expect(control.isConnected).toBe(true);
         await new Promise((resolve) => setTimeout(resolve, 0));
 
         expect(calls).toEqual(["/cms/api/page/links"]);

@@ -1,11 +1,9 @@
+import { mountDetailFields } from "../dashboards/detail/boundDetail";
 import { configureDetail, setSourceData, mountDetail } from "../dashboards/detail/boundDetail";
 import { afterEach, describe, expect, test } from "bun:test";
 import { P9rInput, Button, Combobox, P9rSelect, TokenInput } from "@bernouy/components";
 import "../../../src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail";
-import {
-    createFieldControl,
-    readFieldControlValue,
-} from "../../../src/components/admin/Resources/Dashboards/widgets/w-detail/controls";
+import { readFieldControlValue } from "../../../src/components/admin/Resources/Dashboards/widgets/w-detail/controls";
 import {
     WIDGET_ACTION_EVENT,
     type WidgetActionDetail,
@@ -116,7 +114,7 @@ describe("dashboard detail widget actions", () => {
         });
     });
 
-    test("returns deep snapshots for readonly table values", () => {
+    test("returns deep snapshots for readonly table values", async () => {
         const source = [{ id: "axis", details: { label: "Size" } }];
         const field: WDetailField = {
             id: "axes",
@@ -125,7 +123,21 @@ describe("dashboard detail widget actions", () => {
             value: source,
             columns: [{ key: "label", label: "Label", path: "details.label" }],
         };
-        const value = readFieldControlValue(field, createFieldControl(field)) as Array<Record<string, unknown>>;
+        const detail = await mountDetailFields(
+            [
+                {
+                    id: "axes",
+                    label: "Axes",
+                    path: "axes",
+                    type: "table",
+                    columns: [{ id: "label", label: "Label", path: "details.label" }],
+                },
+            ],
+            { axes: source },
+        );
+        const value = readFieldControlValue(field, detail.querySelector("[data-field-control=axes]")!) as Array<
+            Record<string, unknown>
+        >;
 
         (value[0]!.details as Record<string, unknown>).label = "Changed";
 

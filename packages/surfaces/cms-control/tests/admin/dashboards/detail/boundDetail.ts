@@ -1,5 +1,6 @@
 import "cms-control/components";
 import { READY_ATTR, setSourceData } from "@bernouy/components";
+import type { DashboardField } from "@bernouy/cms-dashboards";
 import { DashboardWDetail } from "cms-control/components/admin/Resources/Dashboards/widgets/w-detail/WDetail";
 import { composeDetail } from "cms-control/components/admin/Resources/Dashboards/widgets/w-detail/binding/composition";
 import type { DetailWidget } from "cms-control/components/admin/Resources/Dashboards/widgets/w-detail/runtime/fieldState";
@@ -18,6 +19,22 @@ export async function mountDetail(detail: HTMLElement): Promise<void> {
     core.append(detail);
     document.body.append(core);
     await waitForDetail(() => detail.hasAttribute(READY_ATTR));
+}
+
+export async function mountDetailFields(
+    fields: DashboardField[],
+    values: Record<string, unknown>,
+): Promise<DashboardWDetail> {
+    const detail = new DashboardWDetail();
+    configureDetail(detail, {
+        widget: "w-detail",
+        id: "fields",
+        source: { endpoint: "" },
+        main: [{ id: "fields", title: "Fields", fields }],
+    });
+    setSourceData(detail, values);
+    await mountDetail(detail);
+    return detail;
 }
 
 export { setSourceData };

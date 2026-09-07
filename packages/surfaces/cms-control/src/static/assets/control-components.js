@@ -18222,8 +18222,1528 @@ ${followMessage}`)) {
     customElements.define("cms-credential-select", CredentialSelect);
   }
 
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/template.html
+  var template_default2 = `<div class="page-link">
+    <div class="head">
+        <span class="label"></span>
+        <span class="hint"></span>
+    </div>
+    <div class="tabs" role="tablist"></div>
+    <div class="panel page-panel">
+        <input class="search" type="search" placeholder="Search pages" />
+        <div class="picker" hidden>
+            <div class="page-list" role="listbox"></div>
+            <div class="empty" hidden>No pages found</div>
+        </div>
+    </div>
+    <div class="panel external-panel" hidden>
+        <input class="external-input" type="url" placeholder="https://example.com" />
+    </div>
+    <div class="panel media-panel" hidden>
+        <button class="file-button" type="button">
+            <span class="file-preview" aria-hidden="true"></span>
+            <span class="file-copy">
+                <strong class="file-title">Choose file</strong>
+                <code class="file-value">No file selected</code>
+            </span>
+            <span class="file-action">Change</span>
+        </button>
+    </div>
+    <div class="target">
+        <span class="icon">↗</span>
+        <span class="copy">
+            <strong></strong>
+            <code></code>
+        </span>
+    </div>
+</div>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-1.css
+  var part_1_default = `:host {
+    --_page-link-surface: var(--editor-v2-surface, var(--bg-surface, #ffffff));
+    --_page-link-surface-muted: var(--editor-v2-surface-muted, var(--bg-subtle, #f9faf9));
+    --_page-link-border: var(--editor-v2-border, var(--border-default, #e2e6e4));
+    --_page-link-text: var(--editor-v2-text, var(--text-default, #151b19));
+    --_page-link-label: var(--editor-v2-label, var(--text-muted, #5f6d68));
+    --_page-link-muted: var(--editor-v2-muted, var(--text-muted, #87948f));
+    --_page-link-accent: var(--editor-v2-accent, var(--primary-base, #165f4b));
+    display: block;
+}
+
+:host([disabled]) {
+    cursor: not-allowed;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.page-link {
+    display: grid;
+    gap: 7px;
+}
+
+.head {
+    display: grid;
+    gap: 2px;
+}
+
+.label {
+    color: var(--_page-link-label);
+    font-size: 12px;
+    font-weight: 720;
+}
+
+.hint {
+    color: var(--_page-link-muted);
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.tabs {
+    display: flex;
+    gap: 2px;
+    border: 1px solid var(--_page-link-border);
+    border-radius: 8px;
+    background: var(--_page-link-surface-muted);
+    padding: 3px;
+}
+
+.tabs:empty {
+    display: none;
+}
+
+.tabs[hidden] {
+    display: none;
+}
+
+button {
+    font: inherit;
+}
+
+.tabs button {
+    flex: 1;
+    min-height: 28px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--_page-link-muted);
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.tabs button[aria-selected="true"] {
+    background: var(--_page-link-surface);
+    color: var(--_page-link-text);
+    box-shadow: 0 1px 2px rgba(16, 24, 21, .08);
+}
+
+.panel {
+    display: grid;
+    gap: 6px;
+}
+
+.panel[hidden] {
+    display: none;
+}
+
+.page-panel {
+    position: relative;
+}
+
+.search,
+.external-input {
+    width: 100%;
+    min-height: 32px;
+    border: 1px solid var(--_page-link-border);
+    border-radius: 7px;
+    background: var(--_page-link-surface);
+    color: var(--_page-link-text);
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+    padding: 0 10px;
+}
+
+.file-button {
+    display: grid;
+    gap: 8px;
+    width: 100%;
+    border: 1px solid color-mix(in srgb, var(--_page-link-border) 76%, transparent);
+    border-radius: 8px;
+    background: var(--_page-link-surface-muted);
+    color: var(--_page-link-text);
+    padding: 8px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.file-button:hover {
+    border-color: color-mix(in srgb, var(--_page-link-accent) 32%, var(--_page-link-border));
+    background: color-mix(in srgb, var(--_page-link-accent) 4%, var(--_page-link-surface));
+}
+
+.file-preview {
+    display: grid;
+    overflow: hidden;
+    place-items: center;
+    width: 100%;
+    min-height: 112px;
+    aspect-ratio: 16 / 9;
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--_page-link-accent) 10%, var(--_page-link-surface));
+    color: var(--_page-link-accent);
+    font-size: 18px;
+}
+
+.file-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.file-copy {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+}
+
+.file-title,
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-2.css
+  var part_2_default = `.file-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-value[hidden] {
+    display: none;
+}
+
+.file-action {
+    justify-self: start;
+    color: var(--_page-link-accent);
+    font-size: 11px;
+    font-weight: 720;
+}
+
+.search:focus,
+.external-input:focus {
+    border-color: color-mix(in srgb, var(--_page-link-accent) 46%, var(--_page-link-border));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--_page-link-accent) 10%, transparent);
+}
+
+.picker {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 4px);
+    right: 0;
+    left: 0;
+    overflow: hidden;
+    border: 1px solid var(--_page-link-border);
+    border-radius: 8px;
+    background: var(--_page-link-surface);
+    box-shadow: 0 12px 28px rgba(16, 24, 21, .14);
+}
+
+.picker[hidden] {
+    display: none;
+}
+
+.page-list {
+    display: grid;
+    max-height: 184px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 4px;
+}
+
+.page-option {
+    display: grid;
+    gap: 2px;
+    min-height: 34px;
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--_page-link-text);
+    padding: 6px 7px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.page-option:hover {
+    background: color-mix(in srgb, var(--_page-link-accent) 4%, var(--_page-link-surface));
+}
+
+.page-option[aria-selected="true"] {
+    background: color-mix(in srgb, var(--_page-link-accent) 8%, var(--_page-link-surface));
+    color: var(--_page-link-accent);
+}
+
+.page-title {
+    overflow: hidden;
+    min-width: 0;
+    font-size: 12px;
+    font-weight: 720;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.page-path {
+    overflow: hidden;
+    min-width: 0;
+    color: var(--_page-link-muted);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.empty {
+    color: var(--_page-link-muted);
+    font-size: 12px;
+    padding: 10px 11px;
+}
+
+.target {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 34px;
+    border: 1px solid color-mix(in srgb, var(--_page-link-border) 76%, transparent);
+    border-radius: 7px;
+    background: var(--_page-link-surface-muted);
+    padding: 6px 8px;
+    cursor: pointer;
+}
+
+.target[hidden] {
+    display: none;
+}
+
+.icon {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--_page-link-accent) 12%, var(--_page-link-surface));
+    color: var(--_page-link-accent);
+    font-size: 12px;
+}
+
+.copy {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+
+strong {
+    overflow: hidden;
+    color: var(--_page-link-text);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+code {
+    overflow: hidden;
+    color: var(--_page-link-muted);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-3.css
+  var part_3_default = `
+:host([disabled]) button,
+:host([disabled]) input,
+:host([disabled]) .target {
+    opacity: .62;
+    cursor: not-allowed;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/index.ts
+  var styles_default = [String(part_1_default), String(part_2_default), String(part_3_default)].join("");
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkDomain.ts
+  function allowedLinkModes(options) {
+    const modes = [];
+    if (options.allowPage) {
+      modes.push("page");
+    }
+    if (options.allowExternal) {
+      modes.push("external");
+    }
+    if (options.allowMedia) {
+      modes.push("media");
+    }
+    return modes;
+  }
+  function modeForLinkValue(value, options) {
+    if (value && isMediaLink(value)) {
+      return "media";
+    }
+    if (value && isExternalLink(value)) {
+      return "external";
+    }
+    if (!options.allowPage && !options.allowExternal && options.allowMedia) {
+      return "media";
+    }
+    if (!options.allowPage && options.allowExternal) {
+      return "external";
+    }
+    return "page";
+  }
+  function isExternalLink(value) {
+    return /^[a-z][a-z0-9+.-]*:/i.test(value) || value.startsWith("//");
+  }
+  function isMediaLink(value) {
+    return value.includes("/.cms/files/by-id/");
+  }
+  function isImageMediaLink(value) {
+    return /\.(avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(value) || value.includes("/.cms/files/by-id/");
+  }
+  function mediaDisplayName(value, isImage2, mediaLabel = "") {
+    if (mediaLabel) {
+      return mediaLabel;
+    }
+    if (value.includes("/.cms/files/by-id/")) {
+      return isImage2 ? "Image" : "Selected file";
+    }
+    const clean = value.split(/[?#]/, 1)[0] ?? value;
+    const segment = clean.split("/").filter(Boolean).at(-1);
+    if (!segment) {
+      return "File";
+    }
+    try {
+      return decodeURIComponent(segment);
+    } catch {
+      return segment;
+    }
+  }
+  function mediaSelectionLabel(isImage2) {
+    return isImage2 ? "Image" : "File selected";
+  }
+  function linkSummaryFallback(mode) {
+    if (mode === "external") {
+      return "External URL";
+    }
+    if (mode === "media") {
+      return "File";
+    }
+    return "Internal page";
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkMediaView.ts
+  function renderPageLinkPanels(input) {
+    const { elements } = input;
+    elements.pagePanel.hidden = input.mode !== "page" || !input.allowPage;
+    elements.externalPanel.hidden = input.mode !== "external" || !input.allowExternal;
+    elements.mediaPanel.hidden = input.mode !== "media" || !input.allowMedia;
+    elements.searchInput.disabled = input.disabled;
+    elements.externalInput.disabled = input.disabled;
+    elements.fileButton.disabled = input.disabled;
+    elements.picker.hidden = !input.pickerOpen || elements.pagePanel.hidden;
+    if (input.mode === "external") {
+      elements.externalInput.value = input.value;
+    }
+    renderPageLinkMedia(elements, input.mode, input.value, input.mediaLabel);
+  }
+  function renderPageLinkMedia(elements, mode, value, mediaLabel) {
+    const hasValue = mode === "media" && value !== "";
+    const isImage2 = hasValue && isImageMediaLink(value);
+    elements.fileTitle.textContent = hasValue ? mediaDisplayName(value, isImage2, mediaLabel) : "Choose file";
+    elements.fileValue.textContent = hasValue ? mediaSelectionLabel(isImage2) : "No file selected";
+    elements.fileValue.toggleAttribute("hidden", hasValue && isImage2);
+    elements.fileAction.textContent = hasValue ? "Change" : "Choose";
+    elements.filePreview.replaceChildren();
+    elements.filePreview.dataset.kind = isImage2 ? "image" : "file";
+    if (isImage2) {
+      const image = document.createElement("img");
+      image.src = value;
+      image.alt = "";
+      image.loading = "lazy";
+      elements.filePreview.append(image);
+      return;
+    }
+    elements.filePreview.textContent = "↗";
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkNavigationView.ts
+  function renderPageLinkTabs(input) {
+    input.elements.tabs.replaceChildren();
+    if (input.allowedModes.length <= 1) {
+      input.elements.tabs.hidden = true;
+      return;
+    }
+    input.elements.tabs.hidden = false;
+    for (const mode of input.allowedModes) {
+      input.elements.tabs.append(modeTab(mode, input.mode, input.disabled, input.onMode));
+    }
+  }
+  function renderPageLinkPages(input) {
+    input.elements.pageList.replaceChildren();
+    input.elements.picker.hidden = !input.pickerOpen || input.elements.pagePanel.hidden;
+    const query = input.query.trim().toLowerCase();
+    const pages = input.pages.filter((page) => !query || page.title.toLowerCase().includes(query) || page.path.toLowerCase().includes(query));
+    input.elements.empty.hidden = !input.pickerOpen || pages.length > 0;
+    for (const page of pages) {
+      const button = document.createElement("button");
+      button.className = "page-option";
+      button.type = "button";
+      button.ariaSelected = String(page.path === input.value);
+      button.disabled = input.disabled;
+      button.addEventListener("click", () => {
+        if (!input.disabled) {
+          input.onSelect(page.path);
+        }
+      });
+      const title = document.createElement("span");
+      title.className = "page-title";
+      title.textContent = page.title;
+      const path = document.createElement("span");
+      path.className = "page-path";
+      path.textContent = page.path;
+      button.append(title, path);
+      input.elements.pageList.append(button);
+    }
+  }
+  function renderPageLinkSummary(elements, pages, mode, value) {
+    const page = pages.find((candidate) => candidate.path === value);
+    elements.summaryTitle.textContent = page?.title ?? (value ? linkSummaryFallback(mode) : "No link selected");
+    elements.summaryValue.textContent = value || "Choose a target";
+    elements.target.hidden = !value || mode === "media";
+  }
+  function modeTab(mode, activeMode, disabled, onMode) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.role = "tab";
+    button.textContent = mode === "page" ? "Page" : mode === "external" ? "External" : "Media";
+    button.ariaSelected = String(activeMode === mode);
+    button.disabled = disabled;
+    button.addEventListener("click", () => {
+      if (!disabled) {
+        onMode(mode);
+      }
+    });
+    return button;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkElements.ts
+  function queryPageLinkElements(root) {
+    const query = (selector) => root.querySelector(selector);
+    return {
+      empty: query(".empty"),
+      externalInput: query(".external-input"),
+      externalPanel: query(".external-panel"),
+      fileAction: query(".file-action"),
+      fileButton: query(".file-button"),
+      filePreview: query(".file-preview"),
+      fileTitle: query(".file-title"),
+      fileValue: query(".file-value"),
+      hint: query(".hint"),
+      label: query(".label"),
+      mediaPanel: query(".media-panel"),
+      pageList: query(".page-list"),
+      pagePanel: query(".page-panel"),
+      picker: query(".picker"),
+      searchInput: query(".search"),
+      summaryTitle: query(".target strong"),
+      summaryValue: query(".target code"),
+      tabs: query(".tabs"),
+      target: query(".target")
+    };
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/template.html
+  var template_default3 = `<div class="backdrop" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="files-title">
+        <header class="top">
+            <div>
+                <h2 id="files-title">Choose file</h2>
+                <p>Select a file from the CMS library.</p>
+            </div>
+            <button class="icon-button close" type="button" aria-label="Close">×</button>
+        </header>
+
+        <div class="toolbar">
+            <nav class="breadcrumb" aria-label="Current folder"></nav>
+            <input class="search" type="search" placeholder="Search files" />
+        </div>
+
+        <div class="grid" role="listbox"></div>
+        <div class="empty" hidden>No files found</div>
+
+        <footer class="footer">
+            <div class="selection">
+                <strong>No file selected</strong>
+                <code>Choose a file</code>
+            </div>
+            <div class="actions">
+                <button class="secondary cancel" type="button">Cancel</button>
+                <button class="primary select" type="button" disabled>Select file</button>
+            </div>
+        </footer>
+    </section>
+</div>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-1.css
+  var part_1_default2 = `:host {
+    color: var(--editor-v2-text, #111);
+    font: 12px/1.35 system-ui, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.backdrop {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: grid;
+    place-items: start center;
+    overflow: auto;
+    background: rgba(16, 24, 21, .34);
+    padding: 72px 24px 24px;
+}
+
+.backdrop[hidden] {
+    display: none;
+}
+
+.modal {
+    display: grid;
+    grid-template-rows: auto auto minmax(180px, 1fr) auto;
+    width: min(940px, calc(100vw - 48px));
+    max-height: min(760px, calc(100vh - 96px));
+    overflow: hidden;
+    border: 1px solid var(--editor-v2-border, #d7ddd9);
+    border-radius: 8px;
+    background: var(--editor-v2-surface, #fff);
+    box-shadow: 0 24px 70px rgba(16, 24, 21, .22);
+}
+
+.top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--editor-v2-border, #d7ddd9);
+    padding: 16px 18px;
+}
+
+h2,
+p {
+    margin: 0;
+}
+
+h2 {
+    font-size: 15px;
+    font-weight: 760;
+}
+
+p {
+    margin-top: 3px;
+    color: var(--editor-v2-muted, #708078);
+}
+
+button,
+input {
+    font: inherit;
+}
+
+.icon-button {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--editor-v2-border, #d7ddd9);
+    border-radius: 7px;
+    background: var(--editor-v2-surface, #fff);
+    cursor: pointer;
+}
+
+.toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 10px;
+    align-items: center;
+    border-bottom: 1px solid var(--editor-v2-border, #d7ddd9);
+    padding: 10px 12px;
+}
+
+.breadcrumb {
+    display: flex;
+    min-width: 0;
+    gap: 4px;
+    overflow: hidden;
+}
+
+.breadcrumb button {
+    min-width: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--editor-v2-muted, #708078);
+    cursor: pointer;
+    font-weight: 650;
+    padding: 5px 7px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.breadcrumb button:hover,
+.breadcrumb button[aria-current="page"] {
+    background: var(--editor-v2-surface-muted, #f5f7f6);
+    color: var(--editor-v2-text, #111);
+}
+
+.search {
+    min-height: 32px;
+    min-width: 0;
+    border: 1px solid var(--editor-v2-border, #d7ddd9);
+    border-radius: 7px;
+    outline: none;
+    padding: 0 10px;
+}
+
+.search:focus {
+    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 46%, var(--editor-v2-border, #d7ddd9));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent, #176b58) 10%, transparent);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    align-content: start;
+    gap: 10px;
+    justify-items: center;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 12px;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-2.css
+  var part_2_default2 = `.item {
+    display: grid;
+    grid-template-rows: 108px auto;
+    gap: 8px;
+    width: 100%;
+    max-width: 180px;
+    min-height: 168px;
+    min-width: 0;
+    border: 1px solid var(--editor-v2-border, #d7ddd9);
+    border-radius: 7px;
+    background: var(--editor-v2-surface, #fff);
+    color: var(--editor-v2-text, #111);
+    cursor: pointer;
+    padding: 8px;
+    text-align: left;
+}
+
+.item:hover {
+    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 34%, var(--editor-v2-border, #d7ddd9));
+    background: color-mix(in srgb, var(--editor-v2-accent, #176b58) 4%, var(--editor-v2-surface, #fff));
+}
+
+.item[aria-selected="true"] {
+    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 66%, var(--editor-v2-border, #d7ddd9));
+    background: color-mix(in srgb, var(--editor-v2-accent, #176b58) 8%, var(--editor-v2-surface, #fff));
+}
+
+.preview {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    width: 100%;
+    height: 108px;
+    border-radius: 6px;
+    background: var(--editor-v2-surface-muted, #f5f7f6);
+    color: var(--editor-v2-accent, #176b58);
+}
+
+.preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.preview svg {
+    width: 46px;
+    height: 46px;
+    fill: color-mix(in srgb, var(--editor-v2-accent, #176b58) 72%, var(--editor-v2-text, #111));
+    opacity: .9;
+}
+
+.item[data-type="folder"] .preview {
+    background: color-mix(in srgb, #e2b45c 16%, var(--editor-v2-surface-muted, #f5f7f6));
+    color: #9a6a10;
+}
+
+.item[data-type="folder"] .preview svg {
+    fill: currentColor;
+}
+
+.item[data-type="pdf"] .preview {
+    background: color-mix(in srgb, #c84d4d 12%, var(--editor-v2-surface-muted, #f5f7f6));
+    color: #9d3030;
+}
+
+.preview text {
+    fill: currentColor;
+    font: 700 5px system-ui, sans-serif;
+}
+
+.copy {
+    display: grid;
+    min-width: 0;
+    gap: 1px;
+}
+
+.name,
+.meta,
+.selection strong,
+.selection code {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.name {
+    font-weight: 720;
+}
+
+.meta,
+.selection code {
+    color: var(--editor-v2-muted, #708078);
+    font-size: 11px;
+}
+
+.empty {
+    color: var(--editor-v2-muted, #708078);
+    padding: 18px;
+}
+
+.footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border-top: 1px solid var(--editor-v2-border, #d7ddd9);
+    padding: 12px;
+}
+
+.selection {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+}
+
+.actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 8px;
+}
+
+.secondary,
+.primary {
+    min-height: 32px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: 720;
+    padding: 0 12px;
+}
+
+.secondary {
+    border: 1px solid var(--editor-v2-border, #d7ddd9);
+    background: var(--editor-v2-surface, #fff);
+    color: var(--editor-v2-text, #111);
+}
+
+.primary {
+    border: 1px solid var(--editor-v2-accent, #176b58);
+    background: var(--editor-v2-accent, #176b58);
+    color: #fff;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-3.css
+  var part_3_default2 = `.primary:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+    .toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .modal {
+        width: calc(100vw - 24px);
+    }
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/index.ts
+  var styles_default2 = [String(part_1_default2), String(part_2_default2), String(part_3_default2)].join(`
+`);
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterDomain.ts
+  async function loadFilesPage(basePath, folder, accept) {
+    const params = new URLSearchParams;
+    if (folder) {
+      params.set("parentId", folder);
+    }
+    params.set("accept", accept.join(","));
+    params.set("sortBy", "name");
+    params.set("limit", "10000");
+    const response = await fetch(`${basePath}/api/files?${params.toString()}`);
+    if (!response.ok) {
+      return [];
+    }
+    return (await response.json()).items;
+  }
+  function fileUrl(basePath, id2) {
+    return `${basePath}/.cms/files/by-id/${encodeURIComponent(id2)}`;
+  }
+  function isCmsFileSource(value) {
+    return value.startsWith("/") && !value.startsWith("//") && !/[\u0000-\u0020\u007F]/.test(value) && /\/\.cms\/files\/by-id\/[^/?#]+(?:[?#].*)?$/.test(value);
+  }
+  function fileDetail(basePath, item) {
+    return {
+      id: item.id,
+      label: item.name,
+      src: fileUrl(basePath, item.id),
+      mimeType: item.mimeType
+    };
+  }
+  function fileKind(item) {
+    if (item.mimeType?.startsWith("image/")) {
+      return "image";
+    }
+    if (item.mimeType?.includes("pdf")) {
+      return "pdf";
+    }
+    return "file";
+  }
+  function matchesFileAccept(item, accept) {
+    if (!accept || accept.length === 0) {
+      return true;
+    }
+    const mimeType = item.mimeType?.split(";", 1)[0]?.trim().toLowerCase() ?? "";
+    if (accept.includes("image") && mimeType.startsWith("image/")) {
+      return true;
+    }
+    if (accept.includes("svg") && mimeType === "image/svg+xml") {
+      return true;
+    }
+    if (accept.includes("bitmap") && mimeType.startsWith("image/") && mimeType !== "image/svg+xml") {
+      return true;
+    }
+    if (accept.includes("video") && mimeType.startsWith("video/")) {
+      return true;
+    }
+    if (accept.includes("audio") && mimeType.startsWith("audio/")) {
+      return true;
+    }
+    if (accept.includes("document") && !mimeType.startsWith("image/") && !mimeType.startsWith("video/") && !mimeType.startsWith("audio/")) {
+      return true;
+    }
+    return false;
+  }
+  function fileMeta(item) {
+    const parts = [item.mimeType ?? "File"];
+    if (typeof item.size === "number") {
+      parts.push(formatFileSize(item.size));
+    }
+    return parts.join(" · ");
+  }
+  function formatFileSize(size) {
+    if (size < 1024) {
+      return `${size} B`;
+    }
+    if (size < 1024 * 1024) {
+      return `${Math.round(size / 1024)} KB`;
+    }
+    return `${(size / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterElements.ts
+  function queryFilesCenterElements(root) {
+    const query = (selector) => root.querySelector(selector);
+    return {
+      backdrop: query(".backdrop"),
+      breadcrumb: query(".breadcrumb"),
+      cancelButton: query(".cancel"),
+      closeButton: query(".close"),
+      empty: query(".empty"),
+      grid: query(".grid"),
+      searchInput: query(".search"),
+      selectButton: query(".select"),
+      selectionTitle: query(".selection strong"),
+      selectionValue: query(".selection code")
+    };
+  }
+  function wireFilesCenterElements(elements, callbacks) {
+    elements.closeButton.addEventListener("click", callbacks.close);
+    elements.cancelButton.addEventListener("click", callbacks.close);
+    elements.backdrop.addEventListener("click", (event) => {
+      if (event.target === elements.backdrop) {
+        callbacks.close();
+      }
+    });
+    elements.selectButton.addEventListener("click", callbacks.confirm);
+    elements.searchInput.addEventListener("input", callbacks.search);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterList.ts
+  function renderFilesBreadcrumb(container, trail, onOpen) {
+    container.replaceChildren();
+    trail.forEach((entry, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = entry.label;
+      button.ariaCurrent = index === trail.length - 1 ? "page" : null;
+      button.addEventListener("click", () => onOpen(entry, index));
+      container.append(button);
+    });
+  }
+  function renderFilesList(input) {
+    input.grid.replaceChildren();
+    const query = input.query.trim().toLowerCase();
+    const items = input.items.filter((item) => {
+      if (item.type === "file" && !matchesFileAccept(item, input.fileAccept)) {
+        return false;
+      }
+      return !query || item.name.toLowerCase().includes(query);
+    });
+    input.empty.hidden = items.length > 0;
+    for (const item of items) {
+      const button = document.createElement("button");
+      button.className = "item";
+      button.dataset.type = item.type === "folder" ? "folder" : fileKind(item);
+      button.type = "button";
+      button.ariaSelected = String(input.isSelected(item));
+      button.addEventListener("click", () => {
+        if (item.type === "folder") {
+          input.onOpenFolder(item);
+          return;
+        }
+        input.onSelectFile(item);
+      });
+      button.addEventListener("dblclick", () => {
+        if (item.type === "file" && !input.multiple) {
+          input.onConfirm();
+        }
+      });
+      button.append(renderFilePreview(item, input.basePath), renderFileCopy(item));
+      input.grid.append(button);
+    }
+  }
+  function renderFileCopy(item) {
+    const copy = document.createElement("span");
+    copy.className = "copy";
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = item.name;
+    const meta = document.createElement("span");
+    meta.className = "meta";
+    meta.textContent = item.type === "folder" ? "Folder" : fileMeta(item);
+    copy.append(name, meta);
+    return copy;
+  }
+  function renderFilePreview(item, basePath) {
+    const preview = document.createElement("span");
+    preview.className = "preview";
+    if (item.type === "folder") {
+      preview.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.8A2.8 2.8 0 0 1 5.8 4h4.1l2 2H18.2A2.8 2.8 0 0 1 21 8.8v8.4a2.8 2.8 0 0 1-2.8 2.8H5.8A2.8 2.8 0 0 1 3 17.2Z"/></svg>`;
+      return preview;
+    }
+    if (item.mimeType?.startsWith("image/")) {
+      const image = document.createElement("img");
+      image.alt = "";
+      image.loading = "lazy";
+      image.src = fileUrl(basePath, item.id);
+      preview.append(image);
+      return preview;
+    }
+    preview.innerHTML = fileKind(item) === "pdf" ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/><text x="7" y="17">PDF</text></svg>` : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></svg>`;
+    return preview;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterSelection.ts
+  function renderFilesSelection(elements, selection) {
+    if (selection.multiple) {
+      const count = selection.selectedMany.length;
+      elements.selectButton.disabled = count === 0;
+      elements.selectButton.textContent = count === 1 ? "Select 1 file" : `Select ${count} files`;
+      elements.selectionTitle.textContent = count === 0 ? "No files selected" : `${count} files selected`;
+      elements.selectionValue.textContent = selection.maxSelection ? `Up to ${selection.maxSelection} files` : "Choose files";
+      return;
+    }
+    elements.selectButton.disabled = !selection.selected;
+    elements.selectButton.textContent = "Select file";
+    elements.selectionTitle.textContent = selection.selected?.name ?? "No file selected";
+    elements.selectionValue.textContent = selection.selected ? fileMeta(selection.selected) : "Choose a file";
+  }
+  function toggleSelectedFile(item, selection) {
+    if (!selection.multiple) {
+      return item;
+    }
+    const existingIndex = selection.selectedMany.findIndex((selected) => selected.id === item.id);
+    if (existingIndex >= 0) {
+      selection.selectedMany.splice(existingIndex, 1);
+      return selection.selected;
+    }
+    if (!selection.maxSelection || selection.selectedMany.length < selection.maxSelection) {
+      selection.selectedMany.push(item);
+    }
+    return selection.selected;
+  }
+  function isFileSelected(item, selection) {
+    return selection.multiple ? selection.selectedMany.some((selected) => selected.id === item.id) : selection.selected?.id === item.id;
+  }
+  function dispatchFilesSelection(host, basePath, selection) {
+    if (selection.multiple) {
+      if (selection.selectedMany.length === 0) {
+        return false;
+      }
+      host.dispatchEvent(new CustomEvent("select-files", {
+        bubbles: true,
+        composed: true,
+        detail: { files: selection.selectedMany.map((file) => fileDetail(basePath, file)) }
+      }));
+      return true;
+    }
+    if (!selection.selected) {
+      return false;
+    }
+    host.dispatchEvent(new CustomEvent("select-file", {
+      bubbles: true,
+      composed: true,
+      detail: fileDetail(basePath, selection.selected)
+    }));
+    return true;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts
+  var template = document.createElement("template");
+  template.innerHTML = `<style>${String(styles_default2)}</style>${String(template_default3)}`;
+
+  class FilesCenter extends HTMLElement {
+    _folder = null;
+    _trail = [{ id: null, label: "Files" }];
+    _items = [];
+    _selected = null;
+    _selectedMany = [];
+    _wired = false;
+    _accept = ["folder", "file"];
+    _fileAccept = null;
+    _multiple = false;
+    _maxSelection = null;
+    elements;
+    constructor() {
+      super();
+      const shadowRoot = this.attachShadow({ mode: "open" });
+      shadowRoot.append(template.content.cloneNode(true));
+      this.elements = queryFilesCenterElements(shadowRoot);
+    }
+    connectedCallback() {
+      this._wire();
+    }
+    show(options = {}) {
+      this._wire();
+      this._accept = options.accept ?? ["folder", "file"];
+      this._fileAccept = options.fileAccept ?? null;
+      this._multiple = options.multiple === true;
+      this._maxSelection = typeof options.maxSelection === "number" ? Math.max(1, options.maxSelection) : null;
+      this._folder = null;
+      this._trail = [{ id: null, label: "Files" }];
+      this._selected = null;
+      this._selectedMany = [];
+      this.elements.searchInput.value = "";
+      this.elements.backdrop.hidden = false;
+      this._load();
+    }
+    _wire() {
+      if (this._wired) {
+        return;
+      }
+      this._wired = true;
+      wireFilesCenterElements(this.elements, {
+        close: () => this._close(),
+        confirm: () => this._confirm(),
+        search: () => this._renderItems()
+      });
+    }
+    async _load() {
+      this._selected = null;
+      this._updateSelection();
+      this._items = await loadFilesPage(this._basePath(), this._folder, this._accept);
+      this._render();
+    }
+    _render() {
+      this._renderBreadcrumb();
+      this._renderItems();
+      this._updateSelection();
+    }
+    _renderBreadcrumb() {
+      renderFilesBreadcrumb(this.elements.breadcrumb, this._trail, (entry, index) => {
+        this._folder = entry.id;
+        this._trail = this._trail.slice(0, index + 1);
+        this._load();
+      });
+    }
+    _renderItems() {
+      renderFilesList({
+        basePath: this._basePath(),
+        empty: this.elements.empty,
+        fileAccept: this._fileAccept,
+        grid: this.elements.grid,
+        isSelected: (item) => this._isSelected(item),
+        items: this._items,
+        multiple: this._multiple,
+        onConfirm: () => this._confirm(),
+        onOpenFolder: (item) => this._openFolder(item),
+        onSelectFile: (item) => {
+          this._selectFile(item);
+          this._renderItems();
+          this._updateSelection();
+        },
+        query: this.elements.searchInput.value
+      });
+    }
+    _openFolder(item) {
+      this._folder = item.id;
+      this._trail.push({ id: item.id, label: item.name });
+      this.elements.searchInput.value = "";
+      this._load();
+    }
+    _updateSelection() {
+      renderFilesSelection(this.elements, this._selection());
+    }
+    _confirm() {
+      if (dispatchFilesSelection(this, this._basePath(), this._selection())) {
+        this._close();
+      }
+    }
+    _selectFile(item) {
+      this._selected = toggleSelectedFile(item, this._selection());
+    }
+    _isSelected(item) {
+      return isFileSelected(item, this._selection());
+    }
+    _close() {
+      this.elements.backdrop.hidden = true;
+      this.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
+    }
+    _basePath() {
+      return document.querySelector('meta[name="basePath"]')?.content ?? "";
+    }
+    _selection() {
+      return {
+        maxSelection: this._maxSelection,
+        multiple: this._multiple,
+        selected: this._selected,
+        selectedMany: this._selectedMany
+      };
+    }
+  }
+  if (!customElements.get("cms-editor-v2-files-center")) {
+    customElements.define("cms-editor-v2-files-center", FilesCenter);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkMediaPicker.ts
+  function openPageLinkMediaPicker(onSelect, accept) {
+    const center = new FilesCenter;
+    const cleanup = () => center.remove();
+    center.addEventListener("close", cleanup, { once: true });
+    center.addEventListener("select-file", (event) => {
+      const detail = event.detail;
+      if (detail?.src && isCmsFileSource(detail.src) && matchesMediaDetail(detail, accept)) {
+        onSelect(detail.src, detail.label);
+      }
+    }, { once: true });
+    document.body.append(center);
+    center.show({ accept: ["folder", "file"], fileAccept: accept });
+  }
+  function matchesMediaDetail(detail, accept) {
+    return matchesFileAccept({
+      id: detail.id,
+      name: detail.label,
+      parentId: null,
+      type: "file",
+      mimeType: detail.mimeType
+    }, accept ?? null);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkState.ts
+  class PageLinkState extends HTMLElement {
+    pages = [];
+    mode = "page";
+    currentValue = "";
+    loaded = false;
+    wired = false;
+    pickerOpen = false;
+    reflectingValue = false;
+    mediaLabel = "";
+    elements;
+    constructor(template2) {
+      super();
+      const shadowRoot = this.attachShadow({ mode: "open" });
+      shadowRoot.append(template2.content.cloneNode(true));
+      this.elements = queryPageLinkElements(shadowRoot);
+    }
+    static get observedAttributes() {
+      return ["label", "hint", "value", "allow-page", "allow-external", "allow-media", "media-accept", "disabled"];
+    }
+    attributeChangedCallback() {
+      if (!this.shadowRoot || this.reflectingValue) {
+        return;
+      }
+      this.syncFromAttributes();
+      this.render();
+    }
+    get value() {
+      return this.currentValue;
+    }
+    set value(value) {
+      this.currentValue = value;
+      this.reflectValue(value);
+      this.render();
+    }
+    syncFromAttributes() {
+      this.currentValue = this.getAttribute("value") ?? "";
+      this.mode = modeForLinkValue(this.currentValue, this.modeOptions());
+    }
+    setValue(value) {
+      if (!isSafeNavigationalUrl(value)) {
+        return;
+      }
+      this.currentValue = value;
+      this.reflectValue(value);
+      this.renderPages();
+      this.renderSummary();
+      this.renderMediaFile();
+      this.dispatchEvent(new CustomEvent("input", {
+        bubbles: true,
+        composed: true,
+        detail: { value }
+      }));
+    }
+    openPicker() {
+      if (this.disabled || this.mode !== "page") {
+        return;
+      }
+      this.pickerOpen = true;
+      this.renderPages();
+    }
+    closePicker() {
+      this.pickerOpen = false;
+      this.renderPages();
+    }
+    openFilesCenter() {
+      if (this.disabled) {
+        return;
+      }
+      openPageLinkMediaPicker((source2, label) => {
+        this.mode = "media";
+        this.mediaLabel = label;
+        this.setValue(source2);
+      }, this.mediaAccept());
+    }
+    renderMediaFile() {
+      renderPageLinkMedia(this.elements, this.mode, this.currentValue, this.mediaLabel);
+    }
+    allowedModes() {
+      return allowedLinkModes(this.modeOptions());
+    }
+    allowPage() {
+      return this.getAttribute("allow-page") !== "false";
+    }
+    allowExternal() {
+      return this.getAttribute("allow-external") !== "false";
+    }
+    allowMedia() {
+      return this.getAttribute("allow-media") !== "false";
+    }
+    mediaAccept() {
+      const allowed = new Set(["image", "bitmap", "svg", "video", "audio", "document"]);
+      const values = (this.getAttribute("media-accept") ?? "").split(",").map((value) => value.trim()).filter((value) => allowed.has(value));
+      return values.length > 0 ? values : undefined;
+    }
+    basePath() {
+      return document.querySelector('meta[name="basePath"]')?.content ?? "";
+    }
+    get disabled() {
+      return this.hasAttribute("disabled");
+    }
+    modeOptions() {
+      return {
+        allowPage: this.allowPage(),
+        allowExternal: this.allowExternal(),
+        allowMedia: this.allowMedia()
+      };
+    }
+    reflectValue(value) {
+      this.reflectingValue = true;
+      this.setAttribute("value", value);
+      this.reflectingValue = false;
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkController.ts
+  class PageLinkController extends PageLinkState {
+    constructor(template2) {
+      super(template2);
+    }
+    connectedCallback() {
+      this.syncFromAttributes();
+      this.wire();
+      queueMicrotask(() => {
+        if (this.isConnected) {
+          this.loadPages();
+        }
+      });
+      this.render();
+    }
+    render() {
+      this.elements.label.textContent = this.getAttribute("label") ?? "Link";
+      this.elements.hint.textContent = this.getAttribute("hint") ?? "";
+      this.elements.hint.toggleAttribute("hidden", !this.elements.hint.textContent);
+      this.renderTabs();
+      this.renderPanels();
+      this.renderPages();
+      this.renderSummary();
+    }
+    renderPages() {
+      renderPageLinkPages({
+        disabled: this.disabled,
+        elements: this.elements,
+        onSelect: (value) => {
+          this.setValue(value);
+          this.elements.searchInput.value = "";
+          this.closePicker();
+        },
+        pages: this.pages,
+        pickerOpen: this.pickerOpen,
+        query: this.elements.searchInput.value,
+        value: this.currentValue
+      });
+    }
+    renderSummary() {
+      renderPageLinkSummary(this.elements, this.pages, this.mode, this.currentValue);
+    }
+    wire() {
+      if (this.wired) {
+        return;
+      }
+      this.wired = true;
+      this.elements.searchInput.addEventListener("focus", () => this.openPicker());
+      this.elements.searchInput.addEventListener("click", () => this.openPicker());
+      this.elements.searchInput.addEventListener("input", () => {
+        this.pickerOpen = true;
+        this.renderPages();
+      });
+      this.elements.externalInput.addEventListener("input", () => {
+        if (!this.disabled) {
+          this.setValue(this.elements.externalInput.value);
+        }
+      });
+      this.elements.fileButton.addEventListener("click", () => this.openFilesCenter());
+      this.elements.pagePanel.addEventListener("focusout", () => {
+        setTimeout(() => {
+          if (this.shadowRoot?.activeElement && this.elements.pagePanel.contains(this.shadowRoot.activeElement)) {
+            return;
+          }
+          this.closePicker();
+        }, 0);
+      });
+      this.elements.target.addEventListener("click", () => {
+        if (!this.disabled && this.mode === "page") {
+          this.elements.searchInput.focus();
+          this.openPicker();
+        }
+      });
+    }
+    async loadPages() {
+      if (this.loaded || !this.allowPage()) {
+        return;
+      }
+      this.loaded = true;
+      try {
+        const published = this.getAttribute("published-only") === "true" ? "?visible=published" : "";
+        const response = await fetch(`${this.basePath()}/api/page/links${published}`);
+        if (!response.ok) {
+          return;
+        }
+        this.pages = await response.json();
+        this.renderPages();
+        this.renderSummary();
+      } catch {
+        this.pages = [];
+        this.renderPages();
+      }
+    }
+    renderTabs() {
+      renderPageLinkTabs({
+        allowedModes: this.allowedModes(),
+        disabled: this.disabled,
+        elements: this.elements,
+        mode: this.mode,
+        onMode: (mode) => {
+          this.mode = mode;
+          if (mode !== "page") {
+            this.pickerOpen = false;
+          }
+          if (mode === "external") {
+            this.elements.externalInput.value = this.currentValue;
+          }
+          this.render();
+        }
+      });
+    }
+    renderPanels() {
+      renderPageLinkPanels({
+        allowExternal: this.allowExternal(),
+        allowMedia: this.allowMedia(),
+        allowPage: this.allowPage(),
+        disabled: this.disabled,
+        elements: this.elements,
+        mediaLabel: this.mediaLabel,
+        mode: this.mode,
+        pickerOpen: this.pickerOpen,
+        value: this.currentValue
+      });
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
+  var template2 = document.createElement("template");
+  template2.innerHTML = `<style>${String(styles_default)}</style>${String(template_default2)}`;
+
+  class PageLink extends PageLinkController {
+    constructor() {
+      super(template2);
+    }
+  }
+  if (!customElements.get("cms-editor-v2-page-link")) {
+    customElements.define("cms-editor-v2-page-link", PageLink);
+  }
   // src/components/admin/Common/EmptyState/template.html
-  var template_default2 = `<div class="cell">
+  var template_default4 = `<div class="cell">
     <slot name="icon"></slot>
     <slot name="title"></slot>
     <slot name="hint"></slot>
@@ -18288,7 +19808,7 @@ ${followMessage}`)) {
     constructor() {
       super({
         css: style_default2,
-        template: template_default2
+        template: template_default4
       });
     }
     static create(opts) {
@@ -18950,7 +20470,7 @@ p9r-action-menu {
 `;
 
   // src/components/admin/Actions/UserActions/template.html
-  var template_default3 = `<p9r-action-menu label="Actions">
+  var template_default5 = `<p9r-action-menu label="Actions">
     <p9r-action-menu-section label="Account">
         <p9r-action-menu-item data-action="password-reset">Send password reset</p9r-action-menu-item>
         <p9r-action-menu-item data-action="email-verification">Send verification email</p9r-action-menu-item>
@@ -18975,7 +20495,7 @@ p9r-action-menu {
       return ["password-reset", "email-verification", "mark-verified"];
     }
     constructor() {
-      super({ css: style_default3, template: template_default3 });
+      super({ css: style_default3, template: template_default5 });
     }
     connectedCallback() {
       this.addEventListener("click", this.onClick);
@@ -19153,7 +20673,7 @@ p9r-action-menu {
   customElements.define("cms-token-create", CmsTokenCreate);
 
   // src/components/admin/Secrets/template.html
-  var template_default4 = `<div data-role="list"></div>
+  var template_default6 = `<div data-role="list"></div>
 
 <template data-role="row-template">
     <div class="row">
@@ -19399,7 +20919,7 @@ p9r-action-menu {
     _configureDialog;
     _onReload = () => this._reload();
     constructor() {
-      super({ css: style_default4, template: template_default4 });
+      super({ css: style_default4, template: template_default6 });
       this._configureDialog = new SecretConfigureDialog(this.shadowRoot, () => this._api);
     }
     connectedCallback() {
@@ -19471,7 +20991,7 @@ w13c-lateral-menu-item {
 `;
 
   // src/components/admin/Layout/SettingsSections/template.html
-  var template_default5 = `<w13c-lateral-menu
+  var template_default7 = `<w13c-lateral-menu
     aria-label="Settings navigation"
     style="width: 100%; height: 100%; --menu-brand-mark-display: none; --menu-header-font-size: .875rem; --menu-item-font-size: .875rem; --menu-section-font-size: .6875rem;"
 >
@@ -19573,7 +21093,7 @@ w13c-lateral-menu-item {
 
   class CmsSettingsNav extends l2 {
     constructor() {
-      super({ css: style_default5, template: template_default5 });
+      super({ css: style_default5, template: template_default7 });
     }
     connectedCallback() {
       super.connectedCallback();
@@ -19966,7 +21486,7 @@ button {
 `;
 
   // src/components/admin/Layout/AnalyticsPrivacySettings/template.html
-  var template_default6 = `<div class="governance-state" data-state="loading">Loading analytics governance…</div>
+  var template_default8 = `<div class="governance-state" data-state="loading">Loading analytics governance…</div>
 <div class="governance-state governance-state--error" data-state="error" hidden>
     <strong>Analytics settings could not be loaded.</strong>
     <span data-error-message></span>
@@ -20025,7 +21545,7 @@ button {
     request = null;
     connectedCallback() {
       if (!this.hasChildNodes()) {
-        this.innerHTML = `<style>${style_default6}</style>${template_default6}`;
+        this.innerHTML = `<style>${style_default6}</style>${template_default8}`;
         this.query("[data-retry]").addEventListener("click", () => void this.load());
         this.query("[data-settings-form]").addEventListener("submit", (event) => void this.saveSettings(event));
         this.query("[data-snapshot-form]").addEventListener("submit", (event) => void this.saveSnapshot(event));
@@ -20309,7 +21829,7 @@ slot[name="aside"]::slotted(*) {
 `;
 
   // src/components/admin/Layout/ShellDetail/template.html
-  var template_default7 = `<article class="shell-detail">
+  var template_default9 = `<article class="shell-detail">
     <header class="shell-detail-header">
         <div class="shell-detail-identity">
             <slot name="back"></slot>
@@ -20477,7 +21997,7 @@ p {
     actions = null;
     chromeSlots = [];
     constructor() {
-      super({ css: style_default7, template: template_default7 });
+      super({ css: style_default7, template: template_default9 });
     }
     connectedCallback() {
       super.connectedCallback();
@@ -21727,9 +23247,9 @@ w13c-lateral-menu-item {
       const shell = document.createElement("template");
       shell.innerHTML = shell_default;
       this.replaceChildren(style, shell.content.cloneNode(true));
-      const template = document.createElement("template");
-      template.innerHTML = VIEW_TEMPLATES[this.view()];
-      this.query("[data-view-host]").replaceChildren(template.content.cloneNode(true));
+      const template3 = document.createElement("template");
+      template3.innerHTML = VIEW_TEMPLATES[this.view()];
+      this.query("[data-view-host]").replaceChildren(template3.content.cloneNode(true));
       this.query("[data-retry]").addEventListener("click", () => void this.load());
     }
     async load() {
@@ -22647,7 +24167,7 @@ circle.endpoint-timeline__errors {
 `;
 
   // src/components/admin/Layout/EndpointPerformance/template.html
-  var template_default8 = `<section class="analytics-surface endpoint-performance">
+  var template_default10 = `<section class="analytics-surface endpoint-performance">
     <div class="analytics-loading" data-view-state="loading" aria-label="Loading endpoint performance">
         <div class="skeleton skeleton--heading"></div>
         <div class="endpoint-skeleton-grid">
@@ -22830,11 +24350,11 @@ circle.endpoint-timeline__errors {
     }
     mount() {
       const style = document.createElement("style");
-      const template = document.createElement("template");
+      const template3 = document.createElement("template");
       style.textContent = [dashboard_default, data_default, states_default, layout_default, table_default, chart_default2].join(`
 `);
-      template.innerHTML = template_default8;
-      this.replaceChildren(style, template.content.cloneNode(true));
+      template3.innerHTML = template_default10;
+      this.replaceChildren(style, template3.content.cloneNode(true));
       this.query("[data-filters]").addEventListener("submit", this.applyFilters);
       this.query("[data-reset]").addEventListener("click", this.resetFilters);
       this.query("[data-retry]").addEventListener("click", () => void this.load());
@@ -24396,7 +25916,7 @@ p9r-modal[data-variable-edit-modal]::part(footer) {
 `;
 
   // src/components/admin/Theme/editor/styles/index.ts
-  var styles_default = [editor_default, explorer_default, tokens_default].join(`
+  var styles_default3 = [editor_default, explorer_default, tokens_default].join(`
 `);
 
   // src/components/admin/Theme/editor/ThemeEditor.html
@@ -24528,7 +26048,7 @@ p9r-modal[data-variable-edit-modal]::part(footer) {
     state = new ThemeEditorState;
     dialogs;
     constructor() {
-      super({ css: styles_default, template: ThemeEditor_default });
+      super({ css: styles_default3, template: ThemeEditor_default });
       this.dialogs = new ThemeEditorDialogs(this.shadowRoot);
     }
     connectedCallback() {
@@ -25053,7 +26573,7 @@ w13c-lateral-menu-item.category-item::part(item) {
 `;
 
   // src/components/admin/Theme/nav/styles.ts
-  var styles_default2 = `${ThemeNav_default2}
+  var styles_default4 = `${ThemeNav_default2}
 ${ThemeNavActions_default}`;
 
   // src/components/admin/Resources/Integrations/ui/resources/format.ts
@@ -25318,9 +26838,9 @@ ${ThemeNavActions_default}`;
   var registry = document.createElement("template");
   registry.innerHTML = [browser_default, detail_default, icons_default, importing_default, items_default, setup_default].join("");
   function cloneElement(name) {
-    const template = registry.content.querySelector(`template[data-template="${name}"]`);
+    const template3 = registry.content.querySelector(`template[data-template="${name}"]`);
     const container = document.createElement("div");
-    container.innerHTML = template?.innerHTML ?? "";
+    container.innerHTML = template3?.innerHTML ?? "";
     const element = container.firstElementChild;
     if (!(element instanceof HTMLElement)) {
       throw new Error(`Missing integration template: ${name}`);
@@ -25328,8 +26848,8 @@ ${ThemeNavActions_default}`;
     return element;
   }
   function cloneIcon(name) {
-    const template = registry.content.querySelector(`template[data-icon="${name}"]`) ?? registry.content.querySelector('template[data-icon="grid"]');
-    const icon = template?.content.firstElementChild?.cloneNode(true);
+    const template3 = registry.content.querySelector(`template[data-icon="${name}"]`) ?? registry.content.querySelector('template[data-icon="grid"]');
+    const icon = template3?.content.firstElementChild?.cloneNode(true);
     if (!icon) {
       throw new Error(`Missing integration icon: ${name}`);
     }
@@ -25767,7 +27287,7 @@ ${ThemeNavActions_default}`;
     selection = { sourceId: "", categoryId: "" };
     integrationDefinitions = new Map;
     constructor() {
-      super({ css: styles_default2, template: ThemeNav_default });
+      super({ css: styles_default4, template: ThemeNav_default });
     }
     connectedCallback() {
       super.connectedCallback();
@@ -26142,9 +27662,9 @@ ${ThemeNavActions_default}`;
   function createIcon(svg2, icon, fallback) {
     const iconName = toIconName(icon);
     const source2 = sanitizeSvg(svg2) ?? (iconName ? DASHBOARD_ICONS[iconName] : undefined) ?? DASHBOARD_ICONS[fallback];
-    const template = document.createElement("template");
-    template.innerHTML = source2.trim();
-    const element = template.content.firstElementChild;
+    const template3 = document.createElement("template");
+    template3.innerHTML = source2.trim();
+    const element = template3.content.firstElementChild;
     if (!element || element.tagName.toLowerCase() !== "svg") {
       return null;
     }
@@ -26354,12 +27874,12 @@ w13c-lateral-menu-item {
         return;
       }
       if (!this.querySelector("[data-nav-list-source]")) {
-        const template = document.createElement("template");
-        template.innerHTML = navigation_default;
-        for (const source2 of Array.from(template.content.querySelectorAll("[cms-source]"))) {
+        const template3 = document.createElement("template");
+        template3.innerHTML = navigation_default;
+        for (const source2 of Array.from(template3.content.querySelectorAll("[cms-source]"))) {
           source2.setAttribute("cms-source", route2(source2.getAttribute("cms-source")));
         }
-        this.append(template.content.cloneNode(true));
+        this.append(template3.content.cloneNode(true));
       }
     }
     select(sourceId, dashboardId = "") {
@@ -26932,1539 +28452,7 @@ w13c-lateral-menu-item {
     };
   }
 
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/template.html
-  var template_default9 = `<div class="page-link">
-    <div class="head">
-        <span class="label"></span>
-        <span class="hint"></span>
-    </div>
-    <div class="tabs" role="tablist"></div>
-    <div class="panel page-panel">
-        <input class="search" type="search" placeholder="Search pages" />
-        <div class="picker" hidden>
-            <div class="page-list" role="listbox"></div>
-            <div class="empty" hidden>No pages found</div>
-        </div>
-    </div>
-    <div class="panel external-panel" hidden>
-        <input class="external-input" type="url" placeholder="https://example.com" />
-    </div>
-    <div class="panel media-panel" hidden>
-        <button class="file-button" type="button">
-            <span class="file-preview" aria-hidden="true"></span>
-            <span class="file-copy">
-                <strong class="file-title">Choose file</strong>
-                <code class="file-value">No file selected</code>
-            </span>
-            <span class="file-action">Change</span>
-        </button>
-    </div>
-    <div class="target">
-        <span class="icon">↗</span>
-        <span class="copy">
-            <strong></strong>
-            <code></code>
-        </span>
-    </div>
-</div>
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-1.css
-  var part_1_default = `:host {
-    --_page-link-surface: var(--editor-v2-surface, var(--bg-surface, #ffffff));
-    --_page-link-surface-muted: var(--editor-v2-surface-muted, var(--bg-subtle, #f9faf9));
-    --_page-link-border: var(--editor-v2-border, var(--border-default, #e2e6e4));
-    --_page-link-text: var(--editor-v2-text, var(--text-default, #151b19));
-    --_page-link-label: var(--editor-v2-label, var(--text-muted, #5f6d68));
-    --_page-link-muted: var(--editor-v2-muted, var(--text-muted, #87948f));
-    --_page-link-accent: var(--editor-v2-accent, var(--primary-base, #165f4b));
-    display: block;
-}
-
-:host([disabled]) {
-    cursor: not-allowed;
-}
-
-* {
-    box-sizing: border-box;
-}
-
-.page-link {
-    display: grid;
-    gap: 7px;
-}
-
-.head {
-    display: grid;
-    gap: 2px;
-}
-
-.label {
-    color: var(--_page-link-label);
-    font-size: 12px;
-    font-weight: 720;
-}
-
-.hint {
-    color: var(--_page-link-muted);
-    font-size: 11px;
-    line-height: 1.35;
-}
-
-.tabs {
-    display: flex;
-    gap: 2px;
-    border: 1px solid var(--_page-link-border);
-    border-radius: 8px;
-    background: var(--_page-link-surface-muted);
-    padding: 3px;
-}
-
-.tabs:empty {
-    display: none;
-}
-
-.tabs[hidden] {
-    display: none;
-}
-
-button {
-    font: inherit;
-}
-
-.tabs button {
-    flex: 1;
-    min-height: 28px;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--_page-link-muted);
-    font-size: 12px;
-    font-weight: 650;
-}
-
-.tabs button[aria-selected="true"] {
-    background: var(--_page-link-surface);
-    color: var(--_page-link-text);
-    box-shadow: 0 1px 2px rgba(16, 24, 21, .08);
-}
-
-.panel {
-    display: grid;
-    gap: 6px;
-}
-
-.panel[hidden] {
-    display: none;
-}
-
-.page-panel {
-    position: relative;
-}
-
-.search,
-.external-input {
-    width: 100%;
-    min-height: 32px;
-    border: 1px solid var(--_page-link-border);
-    border-radius: 7px;
-    background: var(--_page-link-surface);
-    color: var(--_page-link-text);
-    font: inherit;
-    font-size: 12px;
-    outline: none;
-    padding: 0 10px;
-}
-
-.file-button {
-    display: grid;
-    gap: 8px;
-    width: 100%;
-    border: 1px solid color-mix(in srgb, var(--_page-link-border) 76%, transparent);
-    border-radius: 8px;
-    background: var(--_page-link-surface-muted);
-    color: var(--_page-link-text);
-    padding: 8px;
-    cursor: pointer;
-    text-align: left;
-}
-
-.file-button:hover {
-    border-color: color-mix(in srgb, var(--_page-link-accent) 32%, var(--_page-link-border));
-    background: color-mix(in srgb, var(--_page-link-accent) 4%, var(--_page-link-surface));
-}
-
-.file-preview {
-    display: grid;
-    overflow: hidden;
-    place-items: center;
-    width: 100%;
-    min-height: 112px;
-    aspect-ratio: 16 / 9;
-    border-radius: 7px;
-    background: color-mix(in srgb, var(--_page-link-accent) 10%, var(--_page-link-surface));
-    color: var(--_page-link-accent);
-    font-size: 18px;
-}
-
-.file-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-}
-
-.file-copy {
-    display: grid;
-    min-width: 0;
-    gap: 2px;
-}
-
-.file-title,
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-2.css
-  var part_2_default = `.file-value {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.file-value[hidden] {
-    display: none;
-}
-
-.file-action {
-    justify-self: start;
-    color: var(--_page-link-accent);
-    font-size: 11px;
-    font-weight: 720;
-}
-
-.search:focus,
-.external-input:focus {
-    border-color: color-mix(in srgb, var(--_page-link-accent) 46%, var(--_page-link-border));
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--_page-link-accent) 10%, transparent);
-}
-
-.picker {
-    position: absolute;
-    z-index: 20;
-    top: calc(100% + 4px);
-    right: 0;
-    left: 0;
-    overflow: hidden;
-    border: 1px solid var(--_page-link-border);
-    border-radius: 8px;
-    background: var(--_page-link-surface);
-    box-shadow: 0 12px 28px rgba(16, 24, 21, .14);
-}
-
-.picker[hidden] {
-    display: none;
-}
-
-.page-list {
-    display: grid;
-    max-height: 184px;
-    overflow-x: hidden;
-    overflow-y: auto;
-    padding: 4px;
-}
-
-.page-option {
-    display: grid;
-    gap: 2px;
-    min-height: 34px;
-    width: 100%;
-    min-width: 0;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--_page-link-text);
-    padding: 6px 7px;
-    text-align: left;
-    cursor: pointer;
-}
-
-.page-option:hover {
-    background: color-mix(in srgb, var(--_page-link-accent) 4%, var(--_page-link-surface));
-}
-
-.page-option[aria-selected="true"] {
-    background: color-mix(in srgb, var(--_page-link-accent) 8%, var(--_page-link-surface));
-    color: var(--_page-link-accent);
-}
-
-.page-title {
-    overflow: hidden;
-    min-width: 0;
-    font-size: 12px;
-    font-weight: 720;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.page-path {
-    overflow: hidden;
-    min-width: 0;
-    color: var(--_page-link-muted);
-    font-size: 11px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.empty {
-    color: var(--_page-link-muted);
-    font-size: 12px;
-    padding: 10px 11px;
-}
-
-.target {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 34px;
-    border: 1px solid color-mix(in srgb, var(--_page-link-border) 76%, transparent);
-    border-radius: 7px;
-    background: var(--_page-link-surface-muted);
-    padding: 6px 8px;
-    cursor: pointer;
-}
-
-.target[hidden] {
-    display: none;
-}
-
-.icon {
-    display: grid;
-    flex: 0 0 auto;
-    place-items: center;
-    width: 22px;
-    height: 22px;
-    border-radius: 6px;
-    background: color-mix(in srgb, var(--_page-link-accent) 12%, var(--_page-link-surface));
-    color: var(--_page-link-accent);
-    font-size: 12px;
-}
-
-.copy {
-    min-width: 0;
-    display: grid;
-    gap: 2px;
-}
-
-strong {
-    overflow: hidden;
-    color: var(--_page-link-text);
-    font-size: 12px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-code {
-    overflow: hidden;
-    color: var(--_page-link-muted);
-    font-size: 11px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-3.css
-  var part_3_default = `
-:host([disabled]) button,
-:host([disabled]) input,
-:host([disabled]) .target {
-    opacity: .62;
-    cursor: not-allowed;
-}
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/index.ts
-  var styles_default3 = [String(part_1_default), String(part_2_default), String(part_3_default)].join("");
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkDomain.ts
-  function allowedLinkModes(options) {
-    const modes = [];
-    if (options.allowPage) {
-      modes.push("page");
-    }
-    if (options.allowExternal) {
-      modes.push("external");
-    }
-    if (options.allowMedia) {
-      modes.push("media");
-    }
-    return modes;
-  }
-  function modeForLinkValue(value2, options) {
-    if (value2 && isMediaLink(value2)) {
-      return "media";
-    }
-    if (value2 && isExternalLink(value2)) {
-      return "external";
-    }
-    if (!options.allowPage && !options.allowExternal && options.allowMedia) {
-      return "media";
-    }
-    if (!options.allowPage && options.allowExternal) {
-      return "external";
-    }
-    return "page";
-  }
-  function isExternalLink(value2) {
-    return /^[a-z][a-z0-9+.-]*:/i.test(value2) || value2.startsWith("//");
-  }
-  function isMediaLink(value2) {
-    return value2.includes("/.cms/files/by-id/");
-  }
-  function isImageMediaLink(value2) {
-    return /\.(avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(value2) || value2.includes("/.cms/files/by-id/");
-  }
-  function mediaDisplayName(value2, isImage2, mediaLabel = "") {
-    if (mediaLabel) {
-      return mediaLabel;
-    }
-    if (value2.includes("/.cms/files/by-id/")) {
-      return isImage2 ? "Image" : "Selected file";
-    }
-    const clean = value2.split(/[?#]/, 1)[0] ?? value2;
-    const segment = clean.split("/").filter(Boolean).at(-1);
-    if (!segment) {
-      return "File";
-    }
-    try {
-      return decodeURIComponent(segment);
-    } catch {
-      return segment;
-    }
-  }
-  function mediaSelectionLabel(isImage2) {
-    return isImage2 ? "Image" : "File selected";
-  }
-  function linkSummaryFallback(mode) {
-    if (mode === "external") {
-      return "External URL";
-    }
-    if (mode === "media") {
-      return "File";
-    }
-    return "Internal page";
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkMediaView.ts
-  function renderPageLinkPanels(input) {
-    const { elements } = input;
-    elements.pagePanel.hidden = input.mode !== "page" || !input.allowPage;
-    elements.externalPanel.hidden = input.mode !== "external" || !input.allowExternal;
-    elements.mediaPanel.hidden = input.mode !== "media" || !input.allowMedia;
-    elements.searchInput.disabled = input.disabled;
-    elements.externalInput.disabled = input.disabled;
-    elements.fileButton.disabled = input.disabled;
-    elements.picker.hidden = !input.pickerOpen || elements.pagePanel.hidden;
-    if (input.mode === "external") {
-      elements.externalInput.value = input.value;
-    }
-    renderPageLinkMedia(elements, input.mode, input.value, input.mediaLabel);
-  }
-  function renderPageLinkMedia(elements, mode, value2, mediaLabel) {
-    const hasValue = mode === "media" && value2 !== "";
-    const isImage2 = hasValue && isImageMediaLink(value2);
-    elements.fileTitle.textContent = hasValue ? mediaDisplayName(value2, isImage2, mediaLabel) : "Choose file";
-    elements.fileValue.textContent = hasValue ? mediaSelectionLabel(isImage2) : "No file selected";
-    elements.fileValue.toggleAttribute("hidden", hasValue && isImage2);
-    elements.fileAction.textContent = hasValue ? "Change" : "Choose";
-    elements.filePreview.replaceChildren();
-    elements.filePreview.dataset.kind = isImage2 ? "image" : "file";
-    if (isImage2) {
-      const image = document.createElement("img");
-      image.src = value2;
-      image.alt = "";
-      image.loading = "lazy";
-      elements.filePreview.append(image);
-      return;
-    }
-    elements.filePreview.textContent = "↗";
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkNavigationView.ts
-  function renderPageLinkTabs(input) {
-    input.elements.tabs.replaceChildren();
-    if (input.allowedModes.length <= 1) {
-      input.elements.tabs.hidden = true;
-      return;
-    }
-    input.elements.tabs.hidden = false;
-    for (const mode of input.allowedModes) {
-      input.elements.tabs.append(modeTab(mode, input.mode, input.disabled, input.onMode));
-    }
-  }
-  function renderPageLinkPages(input) {
-    input.elements.pageList.replaceChildren();
-    input.elements.picker.hidden = !input.pickerOpen || input.elements.pagePanel.hidden;
-    const query4 = input.query.trim().toLowerCase();
-    const pages = input.pages.filter((page) => !query4 || page.title.toLowerCase().includes(query4) || page.path.toLowerCase().includes(query4));
-    input.elements.empty.hidden = !input.pickerOpen || pages.length > 0;
-    for (const page of pages) {
-      const button = document.createElement("button");
-      button.className = "page-option";
-      button.type = "button";
-      button.ariaSelected = String(page.path === input.value);
-      button.disabled = input.disabled;
-      button.addEventListener("click", () => {
-        if (!input.disabled) {
-          input.onSelect(page.path);
-        }
-      });
-      const title = document.createElement("span");
-      title.className = "page-title";
-      title.textContent = page.title;
-      const path = document.createElement("span");
-      path.className = "page-path";
-      path.textContent = page.path;
-      button.append(title, path);
-      input.elements.pageList.append(button);
-    }
-  }
-  function renderPageLinkSummary(elements, pages, mode, value2) {
-    const page = pages.find((candidate) => candidate.path === value2);
-    elements.summaryTitle.textContent = page?.title ?? (value2 ? linkSummaryFallback(mode) : "No link selected");
-    elements.summaryValue.textContent = value2 || "Choose a target";
-    elements.target.hidden = !value2 || mode === "media";
-  }
-  function modeTab(mode, activeMode, disabled, onMode) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.role = "tab";
-    button.textContent = mode === "page" ? "Page" : mode === "external" ? "External" : "Media";
-    button.ariaSelected = String(activeMode === mode);
-    button.disabled = disabled;
-    button.addEventListener("click", () => {
-      if (!disabled) {
-        onMode(mode);
-      }
-    });
-    return button;
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkElements.ts
-  function queryPageLinkElements(root) {
-    const query4 = (selector) => root.querySelector(selector);
-    return {
-      empty: query4(".empty"),
-      externalInput: query4(".external-input"),
-      externalPanel: query4(".external-panel"),
-      fileAction: query4(".file-action"),
-      fileButton: query4(".file-button"),
-      filePreview: query4(".file-preview"),
-      fileTitle: query4(".file-title"),
-      fileValue: query4(".file-value"),
-      hint: query4(".hint"),
-      label: query4(".label"),
-      mediaPanel: query4(".media-panel"),
-      pageList: query4(".page-list"),
-      pagePanel: query4(".page-panel"),
-      picker: query4(".picker"),
-      searchInput: query4(".search"),
-      summaryTitle: query4(".target strong"),
-      summaryValue: query4(".target code"),
-      tabs: query4(".tabs"),
-      target: query4(".target")
-    };
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/template.html
-  var template_default10 = `<div class="backdrop" hidden>
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="files-title">
-        <header class="top">
-            <div>
-                <h2 id="files-title">Choose file</h2>
-                <p>Select a file from the CMS library.</p>
-            </div>
-            <button class="icon-button close" type="button" aria-label="Close">×</button>
-        </header>
-
-        <div class="toolbar">
-            <nav class="breadcrumb" aria-label="Current folder"></nav>
-            <input class="search" type="search" placeholder="Search files" />
-        </div>
-
-        <div class="grid" role="listbox"></div>
-        <div class="empty" hidden>No files found</div>
-
-        <footer class="footer">
-            <div class="selection">
-                <strong>No file selected</strong>
-                <code>Choose a file</code>
-            </div>
-            <div class="actions">
-                <button class="secondary cancel" type="button">Cancel</button>
-                <button class="primary select" type="button" disabled>Select file</button>
-            </div>
-        </footer>
-    </section>
-</div>
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-1.css
-  var part_1_default2 = `:host {
-    color: var(--editor-v2-text, #111);
-    font: 12px/1.35 system-ui, sans-serif;
-}
-
-* {
-    box-sizing: border-box;
-}
-
-.backdrop {
-    position: fixed;
-    z-index: 1000;
-    inset: 0;
-    display: grid;
-    place-items: start center;
-    overflow: auto;
-    background: rgba(16, 24, 21, .34);
-    padding: 72px 24px 24px;
-}
-
-.backdrop[hidden] {
-    display: none;
-}
-
-.modal {
-    display: grid;
-    grid-template-rows: auto auto minmax(180px, 1fr) auto;
-    width: min(940px, calc(100vw - 48px));
-    max-height: min(760px, calc(100vh - 96px));
-    overflow: hidden;
-    border: 1px solid var(--editor-v2-border, #d7ddd9);
-    border-radius: 8px;
-    background: var(--editor-v2-surface, #fff);
-    box-shadow: 0 24px 70px rgba(16, 24, 21, .22);
-}
-
-.top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    border-bottom: 1px solid var(--editor-v2-border, #d7ddd9);
-    padding: 16px 18px;
-}
-
-h2,
-p {
-    margin: 0;
-}
-
-h2 {
-    font-size: 15px;
-    font-weight: 760;
-}
-
-p {
-    margin-top: 3px;
-    color: var(--editor-v2-muted, #708078);
-}
-
-button,
-input {
-    font: inherit;
-}
-
-.icon-button {
-    display: grid;
-    place-items: center;
-    width: 28px;
-    height: 28px;
-    border: 1px solid var(--editor-v2-border, #d7ddd9);
-    border-radius: 7px;
-    background: var(--editor-v2-surface, #fff);
-    cursor: pointer;
-}
-
-.toolbar {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 240px;
-    gap: 10px;
-    align-items: center;
-    border-bottom: 1px solid var(--editor-v2-border, #d7ddd9);
-    padding: 10px 12px;
-}
-
-.breadcrumb {
-    display: flex;
-    min-width: 0;
-    gap: 4px;
-    overflow: hidden;
-}
-
-.breadcrumb button {
-    min-width: 0;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--editor-v2-muted, #708078);
-    cursor: pointer;
-    font-weight: 650;
-    padding: 5px 7px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.breadcrumb button:hover,
-.breadcrumb button[aria-current="page"] {
-    background: var(--editor-v2-surface-muted, #f5f7f6);
-    color: var(--editor-v2-text, #111);
-}
-
-.search {
-    min-height: 32px;
-    min-width: 0;
-    border: 1px solid var(--editor-v2-border, #d7ddd9);
-    border-radius: 7px;
-    outline: none;
-    padding: 0 10px;
-}
-
-.search:focus {
-    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 46%, var(--editor-v2-border, #d7ddd9));
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent, #176b58) 10%, transparent);
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    align-content: start;
-    gap: 10px;
-    justify-items: center;
-    overflow-x: hidden;
-    overflow-y: auto;
-    padding: 12px;
-}
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-2.css
-  var part_2_default2 = `.item {
-    display: grid;
-    grid-template-rows: 108px auto;
-    gap: 8px;
-    width: 100%;
-    max-width: 180px;
-    min-height: 168px;
-    min-width: 0;
-    border: 1px solid var(--editor-v2-border, #d7ddd9);
-    border-radius: 7px;
-    background: var(--editor-v2-surface, #fff);
-    color: var(--editor-v2-text, #111);
-    cursor: pointer;
-    padding: 8px;
-    text-align: left;
-}
-
-.item:hover {
-    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 34%, var(--editor-v2-border, #d7ddd9));
-    background: color-mix(in srgb, var(--editor-v2-accent, #176b58) 4%, var(--editor-v2-surface, #fff));
-}
-
-.item[aria-selected="true"] {
-    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 66%, var(--editor-v2-border, #d7ddd9));
-    background: color-mix(in srgb, var(--editor-v2-accent, #176b58) 8%, var(--editor-v2-surface, #fff));
-}
-
-.preview {
-    display: grid;
-    place-items: center;
-    overflow: hidden;
-    width: 100%;
-    height: 108px;
-    border-radius: 6px;
-    background: var(--editor-v2-surface-muted, #f5f7f6);
-    color: var(--editor-v2-accent, #176b58);
-}
-
-.preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.preview svg {
-    width: 46px;
-    height: 46px;
-    fill: color-mix(in srgb, var(--editor-v2-accent, #176b58) 72%, var(--editor-v2-text, #111));
-    opacity: .9;
-}
-
-.item[data-type="folder"] .preview {
-    background: color-mix(in srgb, #e2b45c 16%, var(--editor-v2-surface-muted, #f5f7f6));
-    color: #9a6a10;
-}
-
-.item[data-type="folder"] .preview svg {
-    fill: currentColor;
-}
-
-.item[data-type="pdf"] .preview {
-    background: color-mix(in srgb, #c84d4d 12%, var(--editor-v2-surface-muted, #f5f7f6));
-    color: #9d3030;
-}
-
-.preview text {
-    fill: currentColor;
-    font: 700 5px system-ui, sans-serif;
-}
-
-.copy {
-    display: grid;
-    min-width: 0;
-    gap: 1px;
-}
-
-.name,
-.meta,
-.selection strong,
-.selection code {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.name {
-    font-weight: 720;
-}
-
-.meta,
-.selection code {
-    color: var(--editor-v2-muted, #708078);
-    font-size: 11px;
-}
-
-.empty {
-    color: var(--editor-v2-muted, #708078);
-    padding: 18px;
-}
-
-.footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    border-top: 1px solid var(--editor-v2-border, #d7ddd9);
-    padding: 12px;
-}
-
-.selection {
-    display: grid;
-    min-width: 0;
-    gap: 2px;
-}
-
-.actions {
-    display: flex;
-    flex: 0 0 auto;
-    gap: 8px;
-}
-
-.secondary,
-.primary {
-    min-height: 32px;
-    border-radius: 7px;
-    cursor: pointer;
-    font-weight: 720;
-    padding: 0 12px;
-}
-
-.secondary {
-    border: 1px solid var(--editor-v2-border, #d7ddd9);
-    background: var(--editor-v2-surface, #fff);
-    color: var(--editor-v2-text, #111);
-}
-
-.primary {
-    border: 1px solid var(--editor-v2-accent, #176b58);
-    background: var(--editor-v2-accent, #176b58);
-    color: #fff;
-}
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-3.css
-  var part_3_default2 = `.primary:disabled {
-    opacity: .45;
-    cursor: not-allowed;
-}
-
-@media (max-width: 720px) {
-    .toolbar {
-        grid-template-columns: 1fr;
-    }
-
-    .modal {
-        width: calc(100vw - 24px);
-    }
-}
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/index.ts
-  var styles_default4 = [String(part_1_default2), String(part_2_default2), String(part_3_default2)].join(`
-`);
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterDomain.ts
-  async function loadFilesPage(basePath3, folder, accept) {
-    const params = new URLSearchParams;
-    if (folder) {
-      params.set("parentId", folder);
-    }
-    params.set("accept", accept.join(","));
-    params.set("sortBy", "name");
-    params.set("limit", "10000");
-    const response = await fetch(`${basePath3}/api/files?${params.toString()}`);
-    if (!response.ok) {
-      return [];
-    }
-    return (await response.json()).items;
-  }
-  function fileUrl(basePath3, id2) {
-    return `${basePath3}/.cms/files/by-id/${encodeURIComponent(id2)}`;
-  }
-  function isCmsFileSource(value2) {
-    return value2.startsWith("/") && !value2.startsWith("//") && !/[\u0000-\u0020\u007F]/.test(value2) && /\/\.cms\/files\/by-id\/[^/?#]+(?:[?#].*)?$/.test(value2);
-  }
-  function fileDetail(basePath3, item) {
-    return {
-      id: item.id,
-      label: item.name,
-      src: fileUrl(basePath3, item.id),
-      mimeType: item.mimeType
-    };
-  }
-  function fileKind(item) {
-    if (item.mimeType?.startsWith("image/")) {
-      return "image";
-    }
-    if (item.mimeType?.includes("pdf")) {
-      return "pdf";
-    }
-    return "file";
-  }
-  function matchesFileAccept(item, accept) {
-    if (!accept || accept.length === 0) {
-      return true;
-    }
-    const mimeType = item.mimeType?.split(";", 1)[0]?.trim().toLowerCase() ?? "";
-    if (accept.includes("image") && mimeType.startsWith("image/")) {
-      return true;
-    }
-    if (accept.includes("svg") && mimeType === "image/svg+xml") {
-      return true;
-    }
-    if (accept.includes("bitmap") && mimeType.startsWith("image/") && mimeType !== "image/svg+xml") {
-      return true;
-    }
-    if (accept.includes("video") && mimeType.startsWith("video/")) {
-      return true;
-    }
-    if (accept.includes("audio") && mimeType.startsWith("audio/")) {
-      return true;
-    }
-    if (accept.includes("document") && !mimeType.startsWith("image/") && !mimeType.startsWith("video/") && !mimeType.startsWith("audio/")) {
-      return true;
-    }
-    return false;
-  }
-  function fileMeta(item) {
-    const parts = [item.mimeType ?? "File"];
-    if (typeof item.size === "number") {
-      parts.push(formatFileSize(item.size));
-    }
-    return parts.join(" · ");
-  }
-  function formatFileSize(size) {
-    if (size < 1024) {
-      return `${size} B`;
-    }
-    if (size < 1024 * 1024) {
-      return `${Math.round(size / 1024)} KB`;
-    }
-    return `${(size / 1024 / 1024).toFixed(1)} MB`;
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterElements.ts
-  function queryFilesCenterElements(root) {
-    const query4 = (selector) => root.querySelector(selector);
-    return {
-      backdrop: query4(".backdrop"),
-      breadcrumb: query4(".breadcrumb"),
-      cancelButton: query4(".cancel"),
-      closeButton: query4(".close"),
-      empty: query4(".empty"),
-      grid: query4(".grid"),
-      searchInput: query4(".search"),
-      selectButton: query4(".select"),
-      selectionTitle: query4(".selection strong"),
-      selectionValue: query4(".selection code")
-    };
-  }
-  function wireFilesCenterElements(elements, callbacks) {
-    elements.closeButton.addEventListener("click", callbacks.close);
-    elements.cancelButton.addEventListener("click", callbacks.close);
-    elements.backdrop.addEventListener("click", (event) => {
-      if (event.target === elements.backdrop) {
-        callbacks.close();
-      }
-    });
-    elements.selectButton.addEventListener("click", callbacks.confirm);
-    elements.searchInput.addEventListener("input", callbacks.search);
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterList.ts
-  function renderFilesBreadcrumb(container, trail, onOpen) {
-    container.replaceChildren();
-    trail.forEach((entry, index) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.textContent = entry.label;
-      button.ariaCurrent = index === trail.length - 1 ? "page" : null;
-      button.addEventListener("click", () => onOpen(entry, index));
-      container.append(button);
-    });
-  }
-  function renderFilesList(input) {
-    input.grid.replaceChildren();
-    const query4 = input.query.trim().toLowerCase();
-    const items = input.items.filter((item) => {
-      if (item.type === "file" && !matchesFileAccept(item, input.fileAccept)) {
-        return false;
-      }
-      return !query4 || item.name.toLowerCase().includes(query4);
-    });
-    input.empty.hidden = items.length > 0;
-    for (const item of items) {
-      const button = document.createElement("button");
-      button.className = "item";
-      button.dataset.type = item.type === "folder" ? "folder" : fileKind(item);
-      button.type = "button";
-      button.ariaSelected = String(input.isSelected(item));
-      button.addEventListener("click", () => {
-        if (item.type === "folder") {
-          input.onOpenFolder(item);
-          return;
-        }
-        input.onSelectFile(item);
-      });
-      button.addEventListener("dblclick", () => {
-        if (item.type === "file" && !input.multiple) {
-          input.onConfirm();
-        }
-      });
-      button.append(renderFilePreview(item, input.basePath), renderFileCopy(item));
-      input.grid.append(button);
-    }
-  }
-  function renderFileCopy(item) {
-    const copy = document.createElement("span");
-    copy.className = "copy";
-    const name = document.createElement("span");
-    name.className = "name";
-    name.textContent = item.name;
-    const meta = document.createElement("span");
-    meta.className = "meta";
-    meta.textContent = item.type === "folder" ? "Folder" : fileMeta(item);
-    copy.append(name, meta);
-    return copy;
-  }
-  function renderFilePreview(item, basePath3) {
-    const preview = document.createElement("span");
-    preview.className = "preview";
-    if (item.type === "folder") {
-      preview.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.8A2.8 2.8 0 0 1 5.8 4h4.1l2 2H18.2A2.8 2.8 0 0 1 21 8.8v8.4a2.8 2.8 0 0 1-2.8 2.8H5.8A2.8 2.8 0 0 1 3 17.2Z"/></svg>`;
-      return preview;
-    }
-    if (item.mimeType?.startsWith("image/")) {
-      const image = document.createElement("img");
-      image.alt = "";
-      image.loading = "lazy";
-      image.src = fileUrl(basePath3, item.id);
-      preview.append(image);
-      return preview;
-    }
-    preview.innerHTML = fileKind(item) === "pdf" ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/><text x="7" y="17">PDF</text></svg>` : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></svg>`;
-    return preview;
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterSelection.ts
-  function renderFilesSelection(elements, selection) {
-    if (selection.multiple) {
-      const count = selection.selectedMany.length;
-      elements.selectButton.disabled = count === 0;
-      elements.selectButton.textContent = count === 1 ? "Select 1 file" : `Select ${count} files`;
-      elements.selectionTitle.textContent = count === 0 ? "No files selected" : `${count} files selected`;
-      elements.selectionValue.textContent = selection.maxSelection ? `Up to ${selection.maxSelection} files` : "Choose files";
-      return;
-    }
-    elements.selectButton.disabled = !selection.selected;
-    elements.selectButton.textContent = "Select file";
-    elements.selectionTitle.textContent = selection.selected?.name ?? "No file selected";
-    elements.selectionValue.textContent = selection.selected ? fileMeta(selection.selected) : "Choose a file";
-  }
-  function toggleSelectedFile(item, selection) {
-    if (!selection.multiple) {
-      return item;
-    }
-    const existingIndex = selection.selectedMany.findIndex((selected2) => selected2.id === item.id);
-    if (existingIndex >= 0) {
-      selection.selectedMany.splice(existingIndex, 1);
-      return selection.selected;
-    }
-    if (!selection.maxSelection || selection.selectedMany.length < selection.maxSelection) {
-      selection.selectedMany.push(item);
-    }
-    return selection.selected;
-  }
-  function isFileSelected(item, selection) {
-    return selection.multiple ? selection.selectedMany.some((selected2) => selected2.id === item.id) : selection.selected?.id === item.id;
-  }
-  function dispatchFilesSelection(host, basePath3, selection) {
-    if (selection.multiple) {
-      if (selection.selectedMany.length === 0) {
-        return false;
-      }
-      host.dispatchEvent(new CustomEvent("select-files", {
-        bubbles: true,
-        composed: true,
-        detail: { files: selection.selectedMany.map((file) => fileDetail(basePath3, file)) }
-      }));
-      return true;
-    }
-    if (!selection.selected) {
-      return false;
-    }
-    host.dispatchEvent(new CustomEvent("select-file", {
-      bubbles: true,
-      composed: true,
-      detail: fileDetail(basePath3, selection.selected)
-    }));
-    return true;
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts
-  var template = document.createElement("template");
-  template.innerHTML = `<style>${String(styles_default4)}</style>${String(template_default10)}`;
-
-  class FilesCenter extends HTMLElement {
-    _folder = null;
-    _trail = [{ id: null, label: "Files" }];
-    _items = [];
-    _selected = null;
-    _selectedMany = [];
-    _wired = false;
-    _accept = ["folder", "file"];
-    _fileAccept = null;
-    _multiple = false;
-    _maxSelection = null;
-    elements;
-    constructor() {
-      super();
-      const shadowRoot = this.attachShadow({ mode: "open" });
-      shadowRoot.append(template.content.cloneNode(true));
-      this.elements = queryFilesCenterElements(shadowRoot);
-    }
-    connectedCallback() {
-      this._wire();
-    }
-    show(options = {}) {
-      this._wire();
-      this._accept = options.accept ?? ["folder", "file"];
-      this._fileAccept = options.fileAccept ?? null;
-      this._multiple = options.multiple === true;
-      this._maxSelection = typeof options.maxSelection === "number" ? Math.max(1, options.maxSelection) : null;
-      this._folder = null;
-      this._trail = [{ id: null, label: "Files" }];
-      this._selected = null;
-      this._selectedMany = [];
-      this.elements.searchInput.value = "";
-      this.elements.backdrop.hidden = false;
-      this._load();
-    }
-    _wire() {
-      if (this._wired) {
-        return;
-      }
-      this._wired = true;
-      wireFilesCenterElements(this.elements, {
-        close: () => this._close(),
-        confirm: () => this._confirm(),
-        search: () => this._renderItems()
-      });
-    }
-    async _load() {
-      this._selected = null;
-      this._updateSelection();
-      this._items = await loadFilesPage(this._basePath(), this._folder, this._accept);
-      this._render();
-    }
-    _render() {
-      this._renderBreadcrumb();
-      this._renderItems();
-      this._updateSelection();
-    }
-    _renderBreadcrumb() {
-      renderFilesBreadcrumb(this.elements.breadcrumb, this._trail, (entry, index) => {
-        this._folder = entry.id;
-        this._trail = this._trail.slice(0, index + 1);
-        this._load();
-      });
-    }
-    _renderItems() {
-      renderFilesList({
-        basePath: this._basePath(),
-        empty: this.elements.empty,
-        fileAccept: this._fileAccept,
-        grid: this.elements.grid,
-        isSelected: (item) => this._isSelected(item),
-        items: this._items,
-        multiple: this._multiple,
-        onConfirm: () => this._confirm(),
-        onOpenFolder: (item) => this._openFolder(item),
-        onSelectFile: (item) => {
-          this._selectFile(item);
-          this._renderItems();
-          this._updateSelection();
-        },
-        query: this.elements.searchInput.value
-      });
-    }
-    _openFolder(item) {
-      this._folder = item.id;
-      this._trail.push({ id: item.id, label: item.name });
-      this.elements.searchInput.value = "";
-      this._load();
-    }
-    _updateSelection() {
-      renderFilesSelection(this.elements, this._selection());
-    }
-    _confirm() {
-      if (dispatchFilesSelection(this, this._basePath(), this._selection())) {
-        this._close();
-      }
-    }
-    _selectFile(item) {
-      this._selected = toggleSelectedFile(item, this._selection());
-    }
-    _isSelected(item) {
-      return isFileSelected(item, this._selection());
-    }
-    _close() {
-      this.elements.backdrop.hidden = true;
-      this.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
-    }
-    _basePath() {
-      return document.querySelector('meta[name="basePath"]')?.content ?? "";
-    }
-    _selection() {
-      return {
-        maxSelection: this._maxSelection,
-        multiple: this._multiple,
-        selected: this._selected,
-        selectedMany: this._selectedMany
-      };
-    }
-  }
-  if (!customElements.get("cms-editor-v2-files-center")) {
-    customElements.define("cms-editor-v2-files-center", FilesCenter);
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkMediaPicker.ts
-  function openPageLinkMediaPicker(onSelect, accept) {
-    const center = new FilesCenter;
-    const cleanup = () => center.remove();
-    center.addEventListener("close", cleanup, { once: true });
-    center.addEventListener("select-file", (event) => {
-      const detail = event.detail;
-      if (detail?.src && isCmsFileSource(detail.src) && matchesMediaDetail(detail, accept)) {
-        onSelect(detail.src, detail.label);
-      }
-    }, { once: true });
-    document.body.append(center);
-    center.show({ accept: ["folder", "file"], fileAccept: accept });
-  }
-  function matchesMediaDetail(detail, accept) {
-    return matchesFileAccept({
-      id: detail.id,
-      name: detail.label,
-      parentId: null,
-      type: "file",
-      mimeType: detail.mimeType
-    }, accept ?? null);
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkState.ts
-  class PageLinkState extends HTMLElement {
-    pages = [];
-    mode = "page";
-    currentValue = "";
-    loaded = false;
-    wired = false;
-    pickerOpen = false;
-    reflectingValue = false;
-    mediaLabel = "";
-    elements;
-    constructor(template2) {
-      super();
-      const shadowRoot = this.attachShadow({ mode: "open" });
-      shadowRoot.append(template2.content.cloneNode(true));
-      this.elements = queryPageLinkElements(shadowRoot);
-    }
-    static get observedAttributes() {
-      return ["label", "hint", "value", "allow-page", "allow-external", "allow-media", "media-accept", "disabled"];
-    }
-    attributeChangedCallback() {
-      if (!this.shadowRoot || this.reflectingValue) {
-        return;
-      }
-      this.syncFromAttributes();
-      this.render();
-    }
-    get value() {
-      return this.currentValue;
-    }
-    set value(value2) {
-      this.currentValue = value2;
-      this.reflectValue(value2);
-      this.render();
-    }
-    syncFromAttributes() {
-      this.currentValue = this.getAttribute("value") ?? "";
-      this.mode = modeForLinkValue(this.currentValue, this.modeOptions());
-    }
-    setValue(value2) {
-      if (!isSafeNavigationalUrl(value2)) {
-        return;
-      }
-      this.currentValue = value2;
-      this.reflectValue(value2);
-      this.renderPages();
-      this.renderSummary();
-      this.renderMediaFile();
-      this.dispatchEvent(new CustomEvent("input", {
-        bubbles: true,
-        composed: true,
-        detail: { value: value2 }
-      }));
-    }
-    openPicker() {
-      if (this.disabled || this.mode !== "page") {
-        return;
-      }
-      this.pickerOpen = true;
-      this.renderPages();
-    }
-    closePicker() {
-      this.pickerOpen = false;
-      this.renderPages();
-    }
-    openFilesCenter() {
-      if (this.disabled) {
-        return;
-      }
-      openPageLinkMediaPicker((source2, label2) => {
-        this.mode = "media";
-        this.mediaLabel = label2;
-        this.setValue(source2);
-      }, this.mediaAccept());
-    }
-    renderMediaFile() {
-      renderPageLinkMedia(this.elements, this.mode, this.currentValue, this.mediaLabel);
-    }
-    allowedModes() {
-      return allowedLinkModes(this.modeOptions());
-    }
-    allowPage() {
-      return this.getAttribute("allow-page") !== "false";
-    }
-    allowExternal() {
-      return this.getAttribute("allow-external") !== "false";
-    }
-    allowMedia() {
-      return this.getAttribute("allow-media") !== "false";
-    }
-    mediaAccept() {
-      const allowed = new Set(["image", "bitmap", "svg", "video", "audio", "document"]);
-      const values = (this.getAttribute("media-accept") ?? "").split(",").map((value2) => value2.trim()).filter((value2) => allowed.has(value2));
-      return values.length > 0 ? values : undefined;
-    }
-    basePath() {
-      return document.querySelector('meta[name="basePath"]')?.content ?? "";
-    }
-    get disabled() {
-      return this.hasAttribute("disabled");
-    }
-    modeOptions() {
-      return {
-        allowPage: this.allowPage(),
-        allowExternal: this.allowExternal(),
-        allowMedia: this.allowMedia()
-      };
-    }
-    reflectValue(value2) {
-      this.reflectingValue = true;
-      this.setAttribute("value", value2);
-      this.reflectingValue = false;
-    }
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkController.ts
-  class PageLinkController extends PageLinkState {
-    constructor(template2) {
-      super(template2);
-    }
-    connectedCallback() {
-      this.syncFromAttributes();
-      this.wire();
-      this.loadPages();
-      this.render();
-    }
-    render() {
-      this.elements.label.textContent = this.getAttribute("label") ?? "Link";
-      this.elements.hint.textContent = this.getAttribute("hint") ?? "";
-      this.elements.hint.toggleAttribute("hidden", !this.elements.hint.textContent);
-      this.renderTabs();
-      this.renderPanels();
-      this.renderPages();
-      this.renderSummary();
-    }
-    renderPages() {
-      renderPageLinkPages({
-        disabled: this.disabled,
-        elements: this.elements,
-        onSelect: (value2) => {
-          this.setValue(value2);
-          this.elements.searchInput.value = "";
-          this.closePicker();
-        },
-        pages: this.pages,
-        pickerOpen: this.pickerOpen,
-        query: this.elements.searchInput.value,
-        value: this.currentValue
-      });
-    }
-    renderSummary() {
-      renderPageLinkSummary(this.elements, this.pages, this.mode, this.currentValue);
-    }
-    wire() {
-      if (this.wired) {
-        return;
-      }
-      this.wired = true;
-      this.elements.searchInput.addEventListener("focus", () => this.openPicker());
-      this.elements.searchInput.addEventListener("click", () => this.openPicker());
-      this.elements.searchInput.addEventListener("input", () => {
-        this.pickerOpen = true;
-        this.renderPages();
-      });
-      this.elements.externalInput.addEventListener("input", () => {
-        if (!this.disabled) {
-          this.setValue(this.elements.externalInput.value);
-        }
-      });
-      this.elements.fileButton.addEventListener("click", () => this.openFilesCenter());
-      this.elements.pagePanel.addEventListener("focusout", () => {
-        setTimeout(() => {
-          if (this.shadowRoot?.activeElement && this.elements.pagePanel.contains(this.shadowRoot.activeElement)) {
-            return;
-          }
-          this.closePicker();
-        }, 0);
-      });
-      this.elements.target.addEventListener("click", () => {
-        if (!this.disabled && this.mode === "page") {
-          this.elements.searchInput.focus();
-          this.openPicker();
-        }
-      });
-    }
-    async loadPages() {
-      if (this.loaded || !this.allowPage()) {
-        return;
-      }
-      this.loaded = true;
-      try {
-        const published = this.getAttribute("published-only") === "true" ? "?visible=published" : "";
-        const response = await fetch(`${this.basePath()}/api/page/links${published}`);
-        if (!response.ok) {
-          return;
-        }
-        this.pages = await response.json();
-        this.renderPages();
-        this.renderSummary();
-      } catch {
-        this.pages = [];
-        this.renderPages();
-      }
-    }
-    renderTabs() {
-      renderPageLinkTabs({
-        allowedModes: this.allowedModes(),
-        disabled: this.disabled,
-        elements: this.elements,
-        mode: this.mode,
-        onMode: (mode) => {
-          this.mode = mode;
-          if (mode !== "page") {
-            this.pickerOpen = false;
-          }
-          if (mode === "external") {
-            this.elements.externalInput.value = this.currentValue;
-          }
-          this.render();
-        }
-      });
-    }
-    renderPanels() {
-      renderPageLinkPanels({
-        allowExternal: this.allowExternal(),
-        allowMedia: this.allowMedia(),
-        allowPage: this.allowPage(),
-        disabled: this.disabled,
-        elements: this.elements,
-        mediaLabel: this.mediaLabel,
-        mode: this.mode,
-        pickerOpen: this.pickerOpen,
-        value: this.currentValue
-      });
-    }
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
-  var template2 = document.createElement("template");
-  template2.innerHTML = `<style>${String(styles_default3)}</style>${String(template_default9)}`;
-
-  class PageLink extends PageLinkController {
-    constructor() {
-      super(template2);
-    }
-  }
-  if (!customElements.get("cms-editor-v2-page-link")) {
-    customElements.define("cms-editor-v2-page-link", PageLink);
-  }
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/shared.ts
-  function applyRemoteLookupMetadata(control, field2) {
-    if (field2.lookupKey) {
-      control.dataset.lookupTarget = field2.lookupKey;
-    }
-    control.toggleAttribute("remote-search", field2.remoteSearch === true);
-    control.toggleAttribute("remote-pagination", field2.remotePagination === true);
-    control.toggleAttribute("loading", field2.lookupLoading === true);
-    control.toggleAttribute("has-more", field2.lookupHasMore === true);
-  }
-  function optionElement(option2, value2) {
-    const element = document.createElement("option");
-    element.value = option2.value;
-    element.textContent = option2.label;
-    element.selected = option2.value === value2;
-    return element;
-  }
   function isValueControl(control) {
     return "value" in control && typeof control.value === "string";
   }
@@ -28473,15 +28461,6 @@ input {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/editors.ts
-  function createTableEditor(column, value2) {
-    if (column.editable !== true) {
-      throw new Error("Cannot create an editor for a readonly column");
-    }
-    const control = column.type === "select" ? selectEditor(column, value2) : column.type === "combobox" ? comboboxEditor(column, value2) : column.type === "tokens" ? tokensEditor(value2) : textEditor(value2);
-    control.dataset.tableColumn = column.key;
-    control.setAttribute("aria-label", column.label);
-    return control;
-  }
   function readTableEditor(column, control) {
     if (column.editable !== true) {
       return;
@@ -28490,54 +28469,6 @@ input {
       return isTokenControl(control) ? [...control.values] : [];
     }
     return isValueControl(control) ? control.value : "";
-  }
-  function textEditor(value2) {
-    const input = document.createElement("p9r-input");
-    const text5 = textValue2(value2);
-    input.setAttribute("value", text5);
-    input.value = text5;
-    return input;
-  }
-  function selectEditor(column, value2) {
-    const input = document.createElement("p9r-select");
-    const text5 = textValue2(value2);
-    input.setAttribute("value", text5);
-    input.replaceChildren(...column.options.map((option2) => optionElement(option2, text5)));
-    return input;
-  }
-  function comboboxEditor(column, value2) {
-    const input = document.createElement("p9r-combobox");
-    const text5 = textValue2(value2);
-    input.setAttribute("value", text5);
-    input.replaceChildren(...column.options.map((option2) => optionElement(option2, text5)));
-    applyRemoteLookupMetadata(input, column);
-    input.value = text5;
-    return input;
-  }
-  function tokensEditor(value2) {
-    const input = document.createElement("p9r-token-input");
-    const values = Array.isArray(value2) ? value2.map(textValue2).filter(Boolean) : [];
-    input.setAttribute("value", values.join(","));
-    input.setAttribute("creatable", "");
-    return input;
-  }
-  function textValue2(value2) {
-    return value2 === null || value2 === undefined ? "" : String(value2);
-  }
-  function createReferenceEditor(field2, value2) {
-    const control = document.createElement(field2.type === "secret-ref" ? "cms-credential-select" : "cms-editor-v2-page-link");
-    control.setAttribute("label", field2.label);
-    control.setAttribute("value", textValue2(value2));
-    if (field2.type === "page-link") {
-      control.setAttribute("allow-external", String(field2.allowExternal === true));
-      control.setAttribute("allow-media", String(field2.allowMedia === true));
-      control.setAttribute("published-only", String(field2.publishedOnly === true));
-      control.addEventListener("input", () => control.dispatchEvent(new Event("change", { bubbles: true, composed: true })));
-    } else {
-      const base = document.querySelector('meta[name="basePath"]')?.content ?? "";
-      control.setAttribute("api", `${base}/api/secrets`);
-    }
-    return control;
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/context.ts
@@ -29564,969 +29495,6 @@ input {
     return invalid2;
   }
 
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/field.css
-  var field_default = `:host {
-    --media-grid-item-max: 120px;
-    --media-grid-item-max-mobile: 112px;
-    --media-grid-featured-item-max: calc((var(--media-grid-item-max) * 2) + 8px);
-
-    display: block;
-}
-
-.media-field { display: grid; gap: 10px; }
-
-.label-row {
-    align-items: center;
-    color: var(--text-muted);
-    display: flex;
-    font-size: 11px;
-    font-weight: 750;
-    justify-content: space-between;
-    letter-spacing: 0;
-    text-transform: uppercase;
-}
-
-:host([required]) .label-row::after {
-    color: var(--text-muted, #94a3b8);
-    content: "* Required";
-    flex-shrink: 0;
-    font-size: 10px;
-    font-weight: 650;
-    letter-spacing: 0;
-    margin-inline-start: auto;
-    text-transform: none;
-}
-
-:host([required][invalid]) .label-row::after {
-    color: var(--danger-base, #dc2626);
-}
-
-.preview-trigger {
-    background: var(--bg-surface, #fff);
-    color: var(--text-main, #17211e);
-    gap: 6px;
-    min-height: 30px;
-    padding: 5px 10px;
-    text-transform: none;
-}
-
-.preview-trigger[hidden] {
-    display: none;
-}
-
-.preview-trigger:hover {
-    background: var(--bg-hover, #f3f6f5);
-    border-color: var(--border-strong, #aab6b2);
-}
-
-.preview-trigger:focus-visible {
-    border-color: var(--primary-base, #165f4b);
-    outline: 2px solid var(--primary-muted, #e3f2ed);
-    outline-offset: 2px;
-}
-
-.preview-trigger svg {
-    fill: none;
-    height: 15px;
-    stroke: currentcolor;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-width: 1.8;
-    width: 15px;
-}
-
-.media-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
-    gap: 8px;
-    justify-items: center;
-    max-width: 100%;
-}
-
-.media-grid > * {
-    max-width: var(--media-grid-item-max);
-    width: 100%;
-}
-
-.media-tile,
-.add-tile {
-    align-items: center;
-    aspect-ratio: 1;
-    border-radius: 8px;
-    display: grid;
-    justify-items: center;
-    overflow: hidden;
-    position: relative;
-    width: 100%;
-}
-
-.media-tile {
-    background: #f4f1ec;
-    border: 1px solid var(--border-default);
-    cursor: pointer;
-    min-height: 92px;
-    transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
-}
-
-.media-tile:first-child {
-    grid-column: span 2;
-    grid-row: span 2;
-    max-width: var(--media-grid-featured-item-max);
-}
-
-.media-tile:hover,
-.media-tile:focus-visible {
-    border-color: #0f6b53;
-    box-shadow: 0 0 0 2px rgb(15 107 83 / 12%);
-}
-
-.media-tile:active { cursor: grabbing; }
-
-.media-tile[data-dragging] { opacity: 0.48; transform: scale(0.985); }
-
-.media-tile[data-drop-target] {
-    border-color: #0f6b53;
-    box-shadow: inset 0 0 0 2px rgb(15 107 83 / 24%);
-}
-
-.media-tile img {
-    height: 100%;
-    object-fit: cover;
-    width: 100%;
-}
-
-button {
-    align-items: center;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
-    cursor: pointer;
-    display: inline-flex;
-    font: inherit;
-    justify-content: center;
-}
-
-.tile-action {
-    background: rgb(255 255 255 / 94%);
-    color: var(--text-main);
-    font-size: 14px;
-    font-weight: 760;
-    height: 24px;
-    opacity: 0;
-    padding: 0;
-    position: absolute;
-    right: 6px;
-    top: 6px;
-    transition: opacity 120ms ease, background 120ms ease;
-    width: 24px;
-}
-
-.media-tile:hover .tile-action,
-.media-tile:focus-within .tile-action {
-    opacity: 1;
-}
-
-.tile-action[data-danger] { color: #c52635; }
-
-.tile-action:hover { background: #f6f8f7; }
-
-.add-tile {
-    background: transparent;
-    border: 1px dashed #aab6b2;
-    color: #394944;
-    font-size: 24px;
-    min-height: 92px;
-}
-
-.add-tile:hover {
-    background: #f6f8f7;
-    border-color: #7d8d88;
-}
-
-:host([layout="card"]) {
-    --media-grid-featured-item-max: none;
-    --media-grid-item-max: none;
-}
-
-:host([layout="card"]) .media-grid {
-    grid-template-columns: minmax(0, 1fr);
-}
-
-:host([layout="card"]) .media-tile:first-child {
-    grid-column: auto;
-    grid-row: auto;
-    max-width: none;
-}
-
-:host([layout="card"]) .media-tile,
-:host([layout="card"]) .add-tile {
-    aspect-ratio: 4 / 3;
-    max-width: none;
-}
-
-@media (max-width: 720px) {
-    .media-grid {
-        grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
-    }
-
-    .media-grid > * {
-        max-width: var(--media-grid-item-max-mobile);
-    }
-
-    .media-tile:first-child {
-        grid-column: span 1;
-        grid-row: span 1;
-        max-width: var(--media-grid-item-max-mobile);
-    }
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/preview-layout.css
-  var preview_layout_default = `.media-preview {
-    background: #111916;
-    border: 1px solid rgb(255 255 255 / 14%);
-    border-radius: 12px;
-    box-sizing: border-box;
-    box-shadow: 0 24px 72px rgb(0 0 0 / 48%);
-    color: #fff;
-    height: min(780px, calc(100dvh - 32px));
-    margin: auto;
-    max-height: none;
-    max-width: none;
-    overflow: hidden;
-    padding: 0;
-    width: min(1120px, calc(100vw - 32px));
-}
-
-.media-preview::backdrop {
-    backdrop-filter: blur(3px);
-    background: rgb(4 8 7 / 78%);
-}
-
-.preview-shell {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    height: 100%;
-    min-height: 0;
-}
-
-.preview-header {
-    align-items: center;
-    border-bottom: 1px solid rgb(255 255 255 / 12%);
-    display: flex;
-    justify-content: space-between;
-    padding: 14px 16px;
-}
-
-.preview-title,
-.preview-counter {
-    margin: 0;
-}
-
-.preview-title {
-    font-size: 15px;
-    font-weight: 760;
-}
-
-.preview-counter {
-    color: rgb(255 255 255 / 68%);
-    font-size: 12px;
-    margin-top: 2px;
-}
-
-.preview-close {
-    background: rgb(255 255 255 / 10%);
-    border-color: rgb(255 255 255 / 22%);
-    color: #fff;
-    gap: 8px;
-    min-height: 44px;
-    min-width: 44px;
-    padding: 6px 10px;
-}
-
-.preview-close span:last-child {
-    font-size: 20px;
-    line-height: 1;
-}
-
-.preview-close:hover,
-.preview-nav:hover {
-    background: rgb(255 255 255 / 18%);
-}
-
-.preview-close:focus-visible,
-.preview-nav:focus-visible,
-.preview-thumb:focus-visible {
-    outline: 2px solid #fff;
-    outline-offset: 2px;
-}
-
-.preview-stage {
-    display: grid;
-    gap: 12px;
-    grid-template-columns: 44px minmax(0, 1fr) 44px;
-    min-height: 0;
-    padding: 12px 16px;
-}
-
-.preview-figure {
-    grid-column: 2;
-}
-
-.preview-nav {
-    align-self: center;
-    background: rgb(255 255 255 / 10%);
-    border-color: rgb(255 255 255 / 22%);
-    border-radius: 999px;
-    color: #fff;
-    font-size: 30px;
-    height: 44px;
-    padding: 0 0 3px;
-    width: 44px;
-}
-
-.media-preview [hidden] {
-    display: none !important;
-}
-
-@media (max-width: 720px) {
-    .media-preview {
-        border-radius: 0;
-        height: 100dvh;
-        width: 100vw;
-    }
-
-    .preview-stage {
-        gap: 4px;
-        grid-template-columns: 44px minmax(0, 1fr) 44px;
-        padding-inline: 8px;
-    }
-
-    .preview-nav {
-        font-size: 28px;
-        height: 44px;
-        width: 44px;
-    }
-
-    .preview-trigger {
-        min-height: 44px;
-    }
-
-    .preview-close span:first-child {
-        display: none;
-    }
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/preview-media.css
-  var preview_media_default = `.preview-figure {
-    display: grid;
-    gap: 10px;
-    grid-template-rows: minmax(0, 1fr) auto;
-    margin: 0;
-    min-height: 0;
-    overflow: hidden;
-}
-
-.preview-media {
-    display: grid;
-    min-height: 0;
-    overflow: hidden;
-    place-items: center;
-}
-
-.preview-image {
-    grid-area: 1 / 1;
-    height: 100%;
-    min-height: 0;
-    object-fit: contain;
-    transition: opacity 120ms ease;
-    width: 100%;
-}
-
-.preview-image[data-state="loading"],
-.preview-image[data-state="error"] {
-    opacity: 0.12;
-}
-
-.preview-status {
-    color: rgb(255 255 255 / 82%);
-    font-size: 13px;
-    grid-area: 1 / 1;
-    margin: 0;
-    text-align: center;
-}
-
-.preview-figure figcaption {
-    color: rgb(255 255 255 / 82%);
-    font-size: 13px;
-    line-height: 1.4;
-    overflow: hidden;
-    text-align: center;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.preview-strip {
-    border-top: 1px solid rgb(255 255 255 / 12%);
-    box-sizing: border-box;
-    display: flex;
-    gap: 8px;
-    min-height: 82px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 10px 16px;
-    scrollbar-width: thin;
-}
-
-.preview-thumb {
-    background: #202925;
-    border-color: transparent;
-    border-radius: 7px;
-    flex: 0 0 72px;
-    height: 60px;
-    opacity: 0.64;
-    overflow: hidden;
-    padding: 0;
-    width: 72px;
-}
-
-.preview-thumb[aria-current="true"] {
-    border-color: #fff;
-    box-shadow: 0 0 0 1px #fff;
-    opacity: 1;
-}
-
-.preview-thumb img {
-    height: 100%;
-    object-fit: contain;
-    width: 100%;
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/index.ts
-  var styles_default5 = [field_default, preview_layout_default, preview_media_default].join(`
-`);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/legacy/template.html
-  var template_default11 = `<section class="media-field">
-    <div class="label-row">
-        <span data-label></span>
-        <button class="preview-trigger" data-preview-open type="button" hidden>
-            <svg aria-hidden="true" viewBox="0 0 24 24">
-                <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
-                <circle cx="12" cy="12" r="2.75"></circle>
-            </svg>
-            <span>Preview</span>
-        </button>
-    </div>
-    <div class="media-grid" data-grid></div>
-    <input data-file type="file" hidden>
-    <dialog class="media-preview" data-preview-dialog aria-labelledby="media-preview-title">
-        <div class="preview-shell">
-            <header class="preview-header">
-                <div>
-                    <p class="preview-title" id="media-preview-title">Image preview</p>
-                    <p class="preview-counter" data-preview-counter aria-live="polite"></p>
-                </div>
-                <button class="preview-close" data-preview-action="close" type="button">
-                    <span>Close</span>
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </header>
-            <div class="preview-stage">
-                <button
-                    class="preview-nav"
-                    data-preview-action="previous"
-                    type="button"
-                    aria-label="Previous image"
-                >&lsaquo;</button>
-                <figure class="preview-figure">
-                    <div class="preview-media">
-                        <img class="preview-image" data-preview-image decoding="async" alt="">
-                        <p class="preview-status" data-preview-status role="status" hidden></p>
-                    </div>
-                    <figcaption data-preview-caption></figcaption>
-                </figure>
-                <button
-                    class="preview-nav"
-                    data-preview-action="next"
-                    type="button"
-                    aria-label="Next image"
-                >&rsaquo;</button>
-            </div>
-            <div class="preview-strip" data-preview-strip role="group" aria-label="Choose an image"></div>
-        </div>
-    </dialog>
-</section>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/controllers/drag.ts
-  class MediaDragController {
-    root;
-    move;
-    setSuppressClick;
-    dragFrom = null;
-    constructor(root, move, setSuppressClick) {
-      this.root = root;
-      this.move = move;
-      this.setSuppressClick = setSuppressClick;
-    }
-    start = (event) => {
-      const tile = tileFromEvent(event);
-      const index = numberData(tile?.dataset.index);
-      if (!tile || index === null) {
-        return;
-      }
-      const dragEvent = event;
-      this.dragFrom = index;
-      this.setSuppressClick(true);
-      tile.toggleAttribute("data-dragging", true);
-      dragEvent.dataTransfer?.setData("text/plain", String(index));
-      if (dragEvent.dataTransfer) {
-        dragEvent.dataTransfer.effectAllowed = "move";
-      }
-    };
-    over = (event) => {
-      if (this.dragFrom === null) {
-        return;
-      }
-      event.preventDefault();
-      const dragEvent = event;
-      if (dragEvent.dataTransfer) {
-        dragEvent.dataTransfer.dropEffect = "move";
-      }
-      this.markDropTarget(tileFromEvent(event));
-    };
-    drop = (event) => {
-      if (this.dragFrom === null) {
-        return;
-      }
-      event.preventDefault();
-      const to2 = numberData(tileFromEvent(event)?.dataset.index);
-      if (to2 !== null) {
-        this.move(this.dragFrom, to2);
-      }
-      this.clear();
-    };
-    end = () => this.clear();
-    markDropTarget(target2) {
-      this.root().querySelectorAll("[data-drop-target]").forEach((tile) => tile.removeAttribute("data-drop-target"));
-      if (target2 && numberData(target2.dataset.index) !== this.dragFrom) {
-        target2.toggleAttribute("data-drop-target", true);
-      }
-    }
-    clear() {
-      this.dragFrom = null;
-      this.root().querySelectorAll("[data-dragging], [data-drop-target]").forEach((tile) => {
-        tile.removeAttribute("data-dragging");
-        tile.removeAttribute("data-drop-target");
-      });
-      window.setTimeout(() => this.setSuppressClick(false), 0);
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/controllers/previewView.ts
-  function mediaPreviewElements(root) {
-    return {
-      openButton: query4(root, "[data-preview-open]"),
-      dialog: query4(root, "[data-preview-dialog]"),
-      closeButton: query4(root, "[data-preview-action='close']"),
-      previousButton: query4(root, "[data-preview-action='previous']"),
-      nextButton: query4(root, "[data-preview-action='next']"),
-      image: query4(root, "[data-preview-image]"),
-      caption: query4(root, "[data-preview-caption]"),
-      counter: query4(root, "[data-preview-counter]"),
-      status: query4(root, "[data-preview-status]"),
-      strip: query4(root, "[data-preview-strip]")
-    };
-  }
-  function markImageReady(view) {
-    view.image.dataset.state = "ready";
-    view.status.hidden = true;
-  }
-  function markImageError(view) {
-    view.image.dataset.state = "error";
-    view.status.textContent = "Unable to load this image.";
-    view.status.hidden = false;
-  }
-  function resetPreviewImage(view) {
-    view.image.removeAttribute("src");
-    delete view.image.dataset.state;
-    view.image.alt = "";
-    view.status.hidden = true;
-  }
-  function renderThumbnail(item, index) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "preview-thumb";
-    button.dataset.previewIndex = String(index);
-    button.setAttribute("aria-current", "false");
-    button.ariaLabel = mediaTitle(item, index);
-    const image = document.createElement("img");
-    image.src = item.thumbnailUrl || item.url;
-    image.alt = "";
-    image.loading = "lazy";
-    image.decoding = "async";
-    button.append(image);
-    return button;
-  }
-  function mediaTitle(item, index) {
-    return item.name?.trim() || item.alt?.trim() || `Image ${index + 1}`;
-  }
-  function thumbnailHasFocus(root) {
-    return root.activeElement instanceof HTMLButtonElement && root.activeElement.dataset.previewIndex !== undefined;
-  }
-  function query4(root, selector) {
-    return root.querySelector(selector);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/controllers/preview.ts
-  class MediaPreviewController {
-    root;
-    items;
-    activeIndex = 0;
-    restoreFocus = null;
-    view;
-    constructor(root, items) {
-      this.root = root;
-      this.items = items;
-      this.view = mediaPreviewElements(root);
-    }
-    connect() {
-      this.view.openButton.addEventListener("click", this.open);
-      this.view.dialog.addEventListener("click", this.onDialogClick);
-      this.view.dialog.addEventListener("keydown", this.onKeyDown);
-      this.view.dialog.addEventListener("close", this.onClose);
-      this.view.image.addEventListener("load", this.onImageLoad);
-      this.view.image.addEventListener("error", this.onImageError);
-      this.sync();
-    }
-    disconnect() {
-      if (this.view.dialog.open) {
-        this.view.dialog.close();
-      }
-      this.view.openButton.removeEventListener("click", this.open);
-      this.view.dialog.removeEventListener("click", this.onDialogClick);
-      this.view.dialog.removeEventListener("keydown", this.onKeyDown);
-      this.view.dialog.removeEventListener("close", this.onClose);
-      this.view.image.removeEventListener("load", this.onImageLoad);
-      this.view.image.removeEventListener("error", this.onImageError);
-    }
-    sync() {
-      const count = this.items().length;
-      this.view.openButton.hidden = count === 0;
-      if (!this.view.dialog.open) {
-        return;
-      }
-      if (count === 0) {
-        this.view.dialog.close();
-        return;
-      }
-      this.activeIndex = Math.min(this.activeIndex, count - 1);
-      this.render({ rebuildStrip: true, focusThumbnail: thumbnailHasFocus(this.root) });
-    }
-    open = () => {
-      if (this.items().length === 0 || this.view.dialog.open) {
-        return;
-      }
-      this.restoreFocus = this.root.activeElement instanceof HTMLElement ? this.root.activeElement : this.view.openButton;
-      this.activeIndex = 0;
-      this.render({ rebuildStrip: true });
-      this.view.dialog.showModal();
-      this.view.closeButton.focus();
-    };
-    onDialogClick = (event) => {
-      if (event.target === this.view.dialog) {
-        this.view.dialog.close();
-        return;
-      }
-      const target2 = event.target;
-      const indexButton = target2?.closest("[data-preview-index]");
-      if (indexButton) {
-        this.setActive(Number(indexButton.dataset.previewIndex), true);
-        return;
-      }
-      const action = target2?.closest("[data-preview-action]")?.dataset.previewAction;
-      if (action === "close") {
-        this.view.dialog.close();
-      } else if (action === "previous") {
-        this.move(-1);
-      } else if (action === "next") {
-        this.move(1);
-      }
-    };
-    onKeyDown = (event) => {
-      const keepThumbnailFocus = thumbnailHasFocus(this.root);
-      if (event.key === "Escape") {
-        event.preventDefault();
-        this.view.dialog.close();
-      } else if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        this.move(-1, keepThumbnailFocus);
-      } else if (event.key === "ArrowRight") {
-        event.preventDefault();
-        this.move(1, keepThumbnailFocus);
-      } else if (event.key === "Home") {
-        event.preventDefault();
-        this.setActive(0, keepThumbnailFocus);
-      } else if (event.key === "End") {
-        event.preventDefault();
-        this.setActive(this.items().length - 1, keepThumbnailFocus);
-      }
-    };
-    onClose = () => {
-      resetPreviewImage(this.view);
-      this.restoreFocus?.focus();
-      this.restoreFocus = null;
-    };
-    onImageLoad = () => markImageReady(this.view);
-    onImageError = () => markImageError(this.view);
-    move(offset, focusThumbnail = false) {
-      const count = this.items().length;
-      if (count > 1) {
-        this.setActive((this.activeIndex + offset + count) % count, focusThumbnail);
-      }
-    }
-    setActive(index, focusThumbnail = false) {
-      if (!Number.isInteger(index) || index < 0 || index >= this.items().length) {
-        return;
-      }
-      if (index === this.activeIndex) {
-        if (focusThumbnail) {
-          this.view.strip.children[index]?.focus();
-        }
-        return;
-      }
-      this.activeIndex = index;
-      this.render({ focusThumbnail });
-    }
-    render(options = {}) {
-      const items = this.items();
-      const item = items[this.activeIndex];
-      if (!item) {
-        return;
-      }
-      const title = mediaTitle(item, this.activeIndex);
-      if (this.view.image.getAttribute("src") !== item.url) {
-        this.view.image.dataset.state = "loading";
-        this.view.image.src = item.url;
-        this.view.status.textContent = "Loading image…";
-        this.view.status.hidden = false;
-      }
-      this.view.image.alt = item.alt?.trim() || title;
-      this.view.caption.textContent = title;
-      this.view.counter.textContent = `${this.activeIndex + 1} / ${items.length}`;
-      this.view.previousButton.hidden = items.length < 2;
-      this.view.nextButton.hidden = items.length < 2;
-      this.view.strip.hidden = items.length < 2;
-      if (options.rebuildStrip || this.view.strip.children.length !== items.length) {
-        this.view.strip.replaceChildren(...items.map(renderThumbnail));
-      }
-      const previousThumbnail = this.view.strip.querySelector('[aria-current="true"]');
-      const activeThumbnail = this.view.strip.children[this.activeIndex];
-      if (previousThumbnail !== activeThumbnail) {
-        previousThumbnail?.setAttribute("aria-current", "false");
-        activeThumbnail?.setAttribute("aria-current", "true");
-      }
-      activeThumbnail?.scrollIntoView({
-        block: "nearest",
-        inline: "center"
-      });
-      if (options.focusThumbnail) {
-        activeThumbnail?.focus();
-      }
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/legacy/render.ts
-  function renderMediaTile(item, index) {
-    const tile = document.createElement("article");
-    tile.className = "media-tile";
-    tile.draggable = true;
-    tile.tabIndex = 0;
-    tile.dataset.mediaTile = "";
-    tile.dataset.index = String(index);
-    tile.setAttribute("aria-label", "Replace media");
-    const image = document.createElement("img");
-    image.src = item.thumbnailUrl || item.url;
-    image.alt = item.alt ?? "";
-    tile.append(image, removeButton(index));
-    return tile;
-  }
-  function renderAddTile() {
-    const button = mediaButton("upload", undefined, "+");
-    button.className = "add-tile";
-    button.setAttribute("aria-label", "Add media");
-    return button;
-  }
-  function removeButton(index) {
-    return mediaButton("remove", index, "x", true, "Remove media");
-  }
-  function mediaButton(action, index, label2, danger = false, ariaLabel = label2) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "tile-action";
-    button.dataset.mediaAction = action;
-    if (index !== undefined) {
-      button.dataset.index = String(index);
-    }
-    if (danger) {
-      button.setAttribute("data-danger", "");
-    }
-    button.setAttribute("aria-label", ariaLabel);
-    button.title = ariaLabel;
-    button.textContent = label2;
-    return button;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/legacy/WMediaField.ts
-  class DashboardWMediaField extends l2 {
-    currentItems = [];
-    drag = new MediaDragController(() => this.shadowRoot, (from, to2) => this.move(from, to2), (value2) => {
-      this.suppressClick = value2;
-    });
-    localFiles = new LocalMediaFiles;
-    preview;
-    pendingPick = { action: "upload" };
-    suppressClick = false;
-    constructor() {
-      super({ css: styles_default5, template: template_default11 });
-      this.preview = new MediaPreviewController(this.shadowRoot, () => this.currentItems);
-    }
-    static get observedAttributes() {
-      return ["label", "accept", "layout", "multiple"];
-    }
-    connectedCallback() {
-      this.query("[data-file]").addEventListener("change", this.onFileChange);
-      this.shadowRoot.addEventListener("click", this.onClick);
-      this.shadowRoot.addEventListener("dragstart", this.drag.start);
-      this.shadowRoot.addEventListener("dragover", this.drag.over);
-      this.shadowRoot.addEventListener("drop", this.drag.drop);
-      this.shadowRoot.addEventListener("dragend", this.drag.end);
-      this.preview.connect();
-      this.sync();
-    }
-    disconnectedCallback() {
-      this.query("[data-file]").removeEventListener("change", this.onFileChange);
-      this.shadowRoot?.removeEventListener("click", this.onClick);
-      this.shadowRoot?.removeEventListener("dragstart", this.drag.start);
-      this.shadowRoot?.removeEventListener("dragover", this.drag.over);
-      this.shadowRoot?.removeEventListener("drop", this.drag.drop);
-      this.shadowRoot?.removeEventListener("dragend", this.drag.end);
-      this.preview.disconnect();
-    }
-    attributeChangedCallback() {
-      if (this.isConnected) {
-        this.sync();
-      }
-    }
-    get items() {
-      return this.currentItems.map((item) => ({ ...item }));
-    }
-    set items(value2) {
-      this.currentItems = value2.map((item) => ({ ...item }));
-      if (this.isConnected) {
-        this.sync();
-      }
-    }
-    sync() {
-      this.query("[data-label]").textContent = this.getAttribute("label") ?? "";
-      this.renderGrid();
-      this.preview.sync();
-    }
-    renderGrid() {
-      const grid = this.query("[data-grid]");
-      const add = this.hasAttribute("multiple") || this.currentItems.length === 0 ? [renderAddTile()] : [];
-      grid.replaceChildren(...this.currentItems.map(renderMediaTile), ...add);
-    }
-    onClick = (event) => {
-      const button = event.target?.closest("[data-media-action]");
-      if (button?.dataset.mediaAction === "upload") {
-        return this.openPicker({ action: "upload" });
-      }
-      if (button?.dataset.mediaAction === "remove") {
-        const index2 = numberData(button.dataset.index);
-        if (index2 !== null) {
-          this.removeItem(index2);
-        }
-        return;
-      }
-      const tile = tileFromEvent(event);
-      const index = numberData(tile?.dataset.index);
-      if (!this.suppressClick && index !== null) {
-        this.openPicker({ action: "replace", index });
-      }
-    };
-    openPicker(pick) {
-      const input = this.query("[data-file]");
-      this.pendingPick = pick;
-      input.value = "";
-      input.accept = this.getAttribute("accept") ?? "image/*";
-      input.multiple = pick.action === "upload" && this.hasAttribute("multiple");
-      input.click();
-    }
-    onFileChange = (event) => {
-      event.stopPropagation();
-      const files = Array.from(this.query("[data-file]").files ?? []);
-      if (!files.length) {
-        return;
-      }
-      const [file] = files;
-      if (!file) {
-        return;
-      }
-      this.pendingPick.action === "replace" ? this.replace(this.pendingPick.index, file) : this.upload(this.hasAttribute("multiple") ? files : [file]);
-    };
-    upload(files) {
-      const inserted = files.map((file) => this.localFiles.create(file));
-      this.currentItems = [...this.currentItems, ...inserted];
-      this.changed("upload", { files });
-    }
-    replace(index, file) {
-      const previousItem = this.currentItems[index];
-      if (!previousItem) {
-        return;
-      }
-      const item = { ...previousItem, ...this.localFiles.create(file), id: previousItem.id };
-      this.localFiles.revoke(previousItem.url);
-      this.currentItems = this.currentItems.map((entry, entryIndex) => entryIndex === index ? item : entry);
-      this.changed("replace", { index, item, previousItem, file });
-    }
-    removeItem(index) {
-      const item = this.currentItems[index];
-      if (!item) {
-        return;
-      }
-      this.localFiles.revoke(item.url);
-      this.currentItems = this.currentItems.filter((_2, entryIndex) => entryIndex !== index);
-      this.changed("remove", { index, item });
-    }
-    move(from, to2) {
-      if (from === to2 || to2 < 0 || to2 >= this.currentItems.length) {
-        return;
-      }
-      const next = [...this.currentItems];
-      const [item] = next.splice(from, 1);
-      if (!item) {
-        return;
-      }
-      next.splice(to2, 0, item);
-      this.currentItems = next;
-      this.changed("reorder", { from, to: to2, item });
-    }
-    changed(action, detail) {
-      this.renderGrid();
-      this.preview.sync();
-      dispatchMediaChange(this, action, this.items, detail);
-    }
-    query(selector) {
-      return this.shadowRoot.querySelector(selector);
-    }
-  }
-  if (!customElements.get("cms-dashboard-w-media-field")) {
-    customElements.define("cms-dashboard-w-media-field", DashboardWMediaField);
-  }
-
   // src/components/admin/Resources/Dashboards/widgets/w-detail/mediaControl.ts
   function isMediaControl(control) {
     return "items" in control && Array.isArray(control.items);
@@ -30578,672 +29546,7 @@ button {
     control.setAttribute("hint", message);
     control.setAttribute("hint-level", "error");
   }
-  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/controls.ts
-  function createItemControl(item, index, field2) {
-    const input = fieldControl(field2, field2.type === "media" ? valueAt(item, field2.path) : textAt2(item, field2.path));
-    if (input instanceof HTMLInputElement && field2.type === "checkbox") {
-      input.checked = booleanAt(item, field2.path);
-    }
-    input.dataset.itemIndex = String(index);
-    input.dataset.itemField = field2.id;
-    input.dataset.itemPath = field2.path;
-    input.setAttribute("aria-label", field2.label);
-    if (field2.required) {
-      input.setAttribute("required", "");
-    }
-    if (field2.placeholder) {
-      input.setAttribute("placeholder", field2.placeholder);
-    }
-    return input;
-  }
-  function readItemControl(control) {
-    if (control instanceof HTMLInputElement && control.type === "checkbox") {
-      return control.checked;
-    }
-    return "value" in control ? String(control.value ?? "") : "";
-  }
-  function fieldControl(field2, value2) {
-    if (field2.type === "secret-ref" || field2.type === "page-link") {
-      return createReferenceEditor({ ...field2, type: field2.type }, value2);
-    }
-    if (field2.type === "media") {
-      const control2 = document.createElement("cms-dashboard-w-media-field");
-      const resolved = valueAtValue(value2);
-      control2.setAttribute("label", field2.label);
-      control2.setAttribute("layout", "card");
-      control2.setAttribute("accept", "image/*");
-      control2.items = resolved ? [resolved] : [];
-      return control2;
-    }
-    if (field2.type === "select" || field2.type === "combobox") {
-      const control2 = document.createElement(field2.type === "select" ? "p9r-select" : "p9r-combobox");
-      control2.setAttribute("aria-label", field2.label);
-      const text6 = value2 === null || value2 === undefined ? "" : String(value2);
-      control2.setAttribute("value", text6);
-      control2.replaceChildren(...(field2.options ?? []).map((option2) => {
-        const element = document.createElement("option");
-        element.value = option2.value;
-        element.textContent = option2.label;
-        element.selected = option2.value === text6;
-        return element;
-      }));
-      if (field2.type === "combobox") {
-        if (field2.lookupKey) {
-          control2.dataset.lookupTarget = field2.lookupKey;
-        }
-        control2.toggleAttribute("remote-search", field2.remoteSearch === true);
-        control2.toggleAttribute("remote-pagination", field2.remotePagination === true);
-        control2.toggleAttribute("loading", field2.lookupLoading === true);
-        control2.toggleAttribute("has-more", field2.lookupHasMore === true);
-      }
-      control2.value = text6;
-      return control2;
-    }
-    if (field2.type === "checkbox") {
-      const input = document.createElement("input");
-      input.type = "checkbox";
-      return input;
-    }
-    const control = document.createElement("p9r-input");
-    const text5 = value2 === null || value2 === undefined ? "" : String(value2);
-    control.setAttribute("type", "text");
-    control.setAttribute("value", text5);
-    control.value = text5;
-    return control;
-  }
-  function valueAtValue(value2) {
-    if (!value2 || typeof value2 !== "object" || Array.isArray(value2)) {
-      return null;
-    }
-    const item = value2;
-    return typeof item.id === "string" && typeof item.url === "string" ? item : null;
-  }
-  function textAt2(value2, path) {
-    const resolved = valueAt(value2, path);
-    return resolved === null || resolved === undefined ? "" : String(resolved);
-  }
-  function booleanAt(value2, path) {
-    const resolved = valueAt(value2, path);
-    return resolved === true || resolved === "true" || resolved === 1;
-  }
 
-  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/state.ts
-  function emptyData() {
-    return { items: [], itemKey: "id", fields: [] };
-  }
-  function normalizeData(value2) {
-    const clone = structuredClone(value2);
-    return {
-      ...clone,
-      items: Array.isArray(clone.items) ? clone.items.filter(isRecord5) : [],
-      fields: Array.isArray(clone.fields) ? clone.fields : []
-    };
-  }
-  function cloneData(value2) {
-    return structuredClone(value2);
-  }
-  function cloneItems(value2) {
-    return structuredClone(value2.items);
-  }
-  function addItem(value2) {
-    if (value2.maxItems !== undefined && value2.items.length >= value2.maxItems) {
-      return false;
-    }
-    value2.items.push({});
-    return true;
-  }
-  function removeItem(value2, index) {
-    if (!Number.isInteger(index)) {
-      return false;
-    }
-    if (value2.minItems !== undefined && value2.items.length <= value2.minItems) {
-      return false;
-    }
-    value2.items.splice(index, 1);
-    return true;
-  }
-  function moveItem(value2, from, to2) {
-    if (!Number.isInteger(from) || !Number.isInteger(to2) || from === to2 || to2 < 0 || to2 >= value2.items.length) {
-      return false;
-    }
-    const [item] = value2.items.splice(from, 1);
-    if (!item) {
-      return false;
-    }
-    value2.items.splice(to2, 0, item);
-    return true;
-  }
-  function updateItem(value2, index, path, fieldValue) {
-    const item = value2.items[index];
-    if (!item) {
-      return false;
-    }
-    setValueAt(item, path, fieldValue);
-    return true;
-  }
-  function persistPositions(value2) {
-    const positionPath = value2.positionPath ?? "position";
-    value2.items.forEach((item, index) => setValueAt(item, positionPath, index));
-  }
-  function isRecord5(value2) {
-    return value2 !== null && typeof value2 === "object" && !Array.isArray(value2);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/mediaAction.ts
-  function scopeMediaAction(value2, event) {
-    const control = event.composedPath().find((target2) => target2 instanceof HTMLElement && target2.matches("[data-item-index][data-item-path]"));
-    if (!control?.dataset.itemField) {
-      return null;
-    }
-    const itemIndex = Number(control.dataset.itemIndex);
-    const itemPath = control.dataset.itemPath ?? "";
-    if (!updateItem(value2, itemIndex, itemPath, event.detail.value[0] ?? null)) {
-      return null;
-    }
-    const parentItem = structuredClone(value2.items[itemIndex] ?? {});
-    return {
-      ...event.detail,
-      itemIndex,
-      itemKey: String(valueAt(parentItem, value2.itemKey) ?? itemIndex),
-      itemField: control.dataset.itemField,
-      itemPath,
-      parentItem
-    };
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/view.ts
-  function renderList2(root, value2) {
-    query5(root, ".reorderable-list").dataset.layout = value2.layout ?? "rows";
-    query5(root, "[data-rows]").replaceChildren(...value2.items.map((item, index) => renderItem(value2, item, index)));
-    renderHeader2(root, value2);
-    const add = query5(root, "[data-add]");
-    add.textContent = value2.addLabel ?? "Add item";
-    add.disabled = value2.maxItems !== undefined && value2.items.length >= value2.maxItems;
-  }
-  function draggedRow(event) {
-    return event.target?.closest(".row[data-index]") ?? null;
-  }
-  function markDropTarget(root, target2) {
-    renderedRows(root).forEach((row) => row.toggleAttribute("data-drop-target", row === target2));
-  }
-  function clearDragState(root) {
-    renderedRows(root).forEach((row) => {
-      row.removeAttribute("data-dragging");
-      row.removeAttribute("data-drop-target");
-    });
-  }
-  function renderHeader2(root, value2) {
-    const header = query5(root, "[data-header]");
-    header.hidden = value2.layout === "cards";
-    header.style.setProperty("--reorderable-columns", columns(value2));
-    const cells = [document.createElement("span")];
-    for (const field2 of value2.fields) {
-      const cell = document.createElement("span");
-      cell.textContent = field2.label;
-      cells.push(cell);
-    }
-    cells.push(document.createElement("span"));
-    header.replaceChildren(...cells);
-  }
-  function renderItem(value2, item, index) {
-    return value2.layout === "cards" ? renderCard(value2, item, index) : renderRow(value2, item, index);
-  }
-  function renderRow(value2, item, index) {
-    const row = itemRoot(value2, item, index);
-    row.style.setProperty("--reorderable-columns", columns(value2));
-    row.append(dragHandle());
-    for (const field2 of value2.fields) {
-      row.append(fieldRoot(item, index, field2, false));
-    }
-    row.append(removeButton2(value2, index));
-    return row;
-  }
-  function renderCard(value2, item, index) {
-    const card = itemRoot(value2, item, index);
-    const toolbar = document.createElement("header");
-    toolbar.className = "card-toolbar";
-    const identity = document.createElement("code");
-    identity.textContent = String(valueAt(item, value2.itemKey) ?? `Item ${index + 1}`);
-    toolbar.append(dragHandle(), identity, removeButton2(value2, index));
-    card.append(toolbar);
-    for (const field2 of value2.fields.filter((candidate) => !candidate.secondary)) {
-      card.append(fieldRoot(item, index, field2, true));
-    }
-    const secondary = value2.fields.filter((field2) => field2.secondary);
-    if (secondary.length) {
-      const details = document.createElement("details");
-      details.className = "card-details";
-      const summary = document.createElement("summary");
-      summary.textContent = "Choice settings";
-      details.append(summary, ...secondary.map((field2) => fieldRoot(item, index, field2, true)));
-      card.append(details);
-    }
-    return card;
-  }
-  function itemRoot(value2, item, index) {
-    const root = document.createElement("article");
-    root.className = "row";
-    root.dataset.index = String(index);
-    root.dataset.itemKey = String(valueAt(item, value2.itemKey) ?? index);
-    return root;
-  }
-  function fieldRoot(item, index, field2, labelled) {
-    const root = document.createElement("div");
-    root.className = `field field-${field2.type ?? "text"}`;
-    if (labelled && field2.type !== "media") {
-      const label2 = document.createElement("span");
-      label2.className = "field-label";
-      label2.textContent = field2.label;
-      root.append(label2);
-    }
-    root.append(createItemControl(item, index, field2));
-    return root;
-  }
-  function dragHandle() {
-    const handle = document.createElement("span");
-    handle.className = "handle";
-    handle.title = "Drag to reorder";
-    handle.setAttribute("aria-label", "Drag to reorder");
-    handle.draggable = true;
-    handle.textContent = "⠿";
-    return handle;
-  }
-  function removeButton2(value2, index) {
-    const remove = document.createElement("button");
-    remove.className = "remove";
-    remove.type = "button";
-    remove.dataset.remove = String(index);
-    remove.disabled = value2.minItems !== undefined && value2.items.length <= value2.minItems;
-    remove.setAttribute("aria-label", "Remove item");
-    remove.title = "Remove item";
-    remove.textContent = "×";
-    return remove;
-  }
-  function columns(value2) {
-    return ["24px", ...value2.fields.map(() => "minmax(0, 1fr)"), "32px"].join(" ");
-  }
-  function query5(root, selector) {
-    return root.querySelector(selector);
-  }
-  function renderedRows(root) {
-    return Array.from(root.querySelectorAll(".row"));
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/style.css
-  var style_default8 = `:host { display: block; }
-
-.reorderable-list { display: grid; gap: 8px; }
-
-.rows { display: grid; gap: 6px; }
-
-.header {
-    align-items: center;
-    color: var(--text-muted);
-    display: grid;
-    font-size: 11px;
-    font-weight: 750;
-    gap: 8px;
-    grid-template-columns: var(--reorderable-columns, 24px minmax(0, 1fr) minmax(0, 1fr) 32px);
-    padding: 0 8px;
-    text-transform: uppercase;
-}
-
-.header[hidden] { display: none; }
-
-.row {
-    align-items: end;
-    background: #fff;
-    border: 1px solid var(--border-default);
-    border-radius: 8px;
-    display: grid;
-    gap: 8px;
-    grid-template-columns: var(--reorderable-columns, 24px minmax(0, 1fr) minmax(0, 1fr) 32px);
-    padding: 8px;
-}
-
-.row[data-dragging] { opacity: .48; }
-.row[data-drop-target] { border-color: #0f6b53; box-shadow: 0 0 0 2px rgb(15 107 83 / 14%); }
-
-.handle,
-.move,
-.remove,
-.add {
-    align-items: center;
-    background: transparent;
-    border: 0;
-    border-radius: 6px;
-    color: #60706b;
-    cursor: pointer;
-    display: inline-flex;
-    font: inherit;
-    justify-content: center;
-    min-height: 32px;
-}
-
-.handle { cursor: grab; font-size: 19px; letter-spacing: -3px; padding: 0 4px 4px 0; }
-.handle:active { cursor: grabbing; }
-.move:hover, .add:hover { background: #eef6f2; color: #0f6b53; }
-.remove:hover { background: #fff0f0; color: #bd2533; }
-
-.field { display: grid; min-width: 0; }
-.field p9r-input,
-.field p9r-select,
-.field p9r-combobox { min-width: 0; width: 100%; }
-.field input[type="checkbox"] { accent-color: var(--primary-base); height: 18px; margin: 0; width: 18px; }
-.field input[type="checkbox"]:focus-visible { outline: 2px solid var(--primary-muted); outline-offset: 2px; }
-
-.add { border: 1px dashed #aab6b2; justify-self: start; padding: 0 12px; }
-
-.reorderable-list[data-layout="cards"] .rows {
-    grid-template-columns: repeat(auto-fill, minmax(min(17rem, 100%), 1fr));
-    gap: 12px;
-}
-
-.reorderable-list[data-layout="cards"] .row {
-    align-content: start;
-    align-items: stretch;
-    gap: 12px;
-    grid-template-columns: minmax(0, 1fr);
-    padding: 10px;
-}
-
-.reorderable-list[data-layout="cards"] .row[data-drop-target] {
-    transform: translateY(-2px);
-}
-
-.card-toolbar {
-    align-items: center;
-    display: grid;
-    grid-template-columns: 28px minmax(0, 1fr) 32px;
-}
-
-.card-toolbar code {
-    color: var(--text-muted);
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 11px;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.field-label {
-    color: var(--text-muted);
-    font-size: 11px;
-    font-weight: 750;
-    margin-bottom: 5px;
-    text-transform: uppercase;
-}
-
-.field-media { min-height: 0; }
-
-.card-details {
-    border-top: 1px solid var(--border-default);
-    display: grid;
-    gap: 10px;
-    padding-top: 9px;
-}
-
-.card-details summary {
-    color: #42514c;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 700;
-    list-style-position: inside;
-}
-
-.card-details[open] summary { margin-bottom: 2px; }
-
-.reorderable-list[data-layout="cards"] .add {
-    min-height: 42px;
-    width: 100%;
-}
-
-@media (max-width: 720px) {
-    .reorderable-list:not([data-layout="cards"]) .row {
-        align-items: center;
-        grid-template-columns: 24px minmax(0, 1fr) 32px;
-    }
-    .header { display: none; }
-    .reorderable-list:not([data-layout="cards"]) .field { grid-column: 2 / -1; }
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/template.html
-  var template_default12 = `<section class="reorderable-list">
-    <div class="header" data-header></div>
-    <div class="rows" data-rows></div>
-    <button class="add" data-add type="button"></button>
-</section>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/WReorderableList.ts
-  class DashboardWReorderableList extends l2 {
-    value = emptyData();
-    draggingIndex = null;
-    constructor() {
-      super({ css: style_default8, template: template_default12 });
-    }
-    connectedCallback() {
-      this.shadowRoot.addEventListener("click", this.onClick);
-      this.shadowRoot.addEventListener("input", this.onInput);
-      this.shadowRoot.addEventListener("change", this.onInput);
-      this.shadowRoot.addEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction);
-      this.shadowRoot.addEventListener("dragstart", this.onDragStart);
-      this.shadowRoot.addEventListener("dragover", this.onDragOver);
-      this.shadowRoot.addEventListener("drop", this.onDrop);
-      this.shadowRoot.addEventListener("dragend", this.onDragEnd);
-      this.render();
-    }
-    disconnectedCallback() {
-      this.shadowRoot?.removeEventListener("click", this.onClick);
-      this.shadowRoot?.removeEventListener("input", this.onInput);
-      this.shadowRoot?.removeEventListener("change", this.onInput);
-      this.shadowRoot?.removeEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction);
-      this.shadowRoot?.removeEventListener("dragstart", this.onDragStart);
-      this.shadowRoot?.removeEventListener("dragover", this.onDragOver);
-      this.shadowRoot?.removeEventListener("drop", this.onDrop);
-      this.shadowRoot?.removeEventListener("dragend", this.onDragEnd);
-    }
-    get data() {
-      return cloneData(this.value);
-    }
-    set data(value2) {
-      this.value = normalizeData(value2);
-      if (this.isConnected) {
-        this.render();
-      }
-    }
-    get items() {
-      return cloneItems(this.value);
-    }
-    render() {
-      renderList2(this.shadowRoot, this.value);
-    }
-    onClick = (event) => {
-      const target2 = event.target;
-      if (target2?.closest("[data-add]")) {
-        return this.addItem();
-      }
-      const remove = target2?.closest("[data-remove]");
-      if (remove) {
-        return this.removeItem(Number(remove.dataset.remove));
-      }
-    };
-    onInput = (event) => {
-      const input = event.target?.closest("[data-item-index][data-item-path]");
-      if (!input) {
-        return;
-      }
-      if (this.value.fields.some((field2) => field2.id === input.dataset.itemField && field2.type === "media")) {
-        return;
-      }
-      const index = Number(input.dataset.itemIndex);
-      if (updateItem(this.value, index, input.dataset.itemPath ?? "", readItemControl(input))) {
-        this.commit(false);
-      }
-    };
-    onMediaAction = (event) => {
-      const detail = scopeMediaAction(this.value, event);
-      if (!detail) {
-        return;
-      }
-      event.stopPropagation();
-      this.commit(false);
-      this.dispatchEvent(new CustomEvent(W_MEDIA_FIELD_ACTION_EVENT, {
-        bubbles: true,
-        composed: true,
-        detail
-      }));
-    };
-    onDragStart = (event) => {
-      const handle = event.target?.closest(".handle");
-      const row = handle ? draggedRow(event) : null;
-      if (!row) {
-        return;
-      }
-      this.draggingIndex = Number(row.dataset.index);
-      row.dataset.dragging = "";
-      event.dataTransfer?.setData("text/plain", String(this.draggingIndex));
-      if (event.dataTransfer) {
-        event.dataTransfer.effectAllowed = "move";
-      }
-    };
-    onDragOver = (event) => {
-      const row = draggedRow(event);
-      if (!row || this.draggingIndex === null) {
-        return;
-      }
-      event.preventDefault();
-      markDropTarget(this.shadowRoot, row);
-      if (event.dataTransfer) {
-        event.dataTransfer.dropEffect = "move";
-      }
-    };
-    onDrop = (event) => {
-      const row = draggedRow(event);
-      if (!row || this.draggingIndex === null) {
-        return;
-      }
-      event.preventDefault();
-      if (moveItem(this.value, this.draggingIndex, Number(row.dataset.index))) {
-        this.commit();
-      }
-      this.clearDragState();
-    };
-    onDragEnd = () => this.clearDragState();
-    addItem() {
-      if (addItem(this.value)) {
-        this.commit();
-      }
-    }
-    removeItem(index) {
-      if (removeItem(this.value, index)) {
-        this.commit();
-      }
-    }
-    commit(render = true) {
-      persistPositions(this.value);
-      if (render) {
-        this.render();
-      }
-      this.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-    }
-    clearDragState() {
-      this.draggingIndex = null;
-      clearDragState(this.shadowRoot);
-    }
-  }
-  if (!customElements.get("cms-dashboard-w-reorderable-list")) {
-    customElements.define("cms-dashboard-w-reorderable-list", DashboardWReorderableList);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/legacy.ts
-  var tableRowSources = new WeakMap;
-  function tableRow(field2, row) {
-    const element = document.createElement("div");
-    element.className = "detail-table-row";
-    element.dataset.tableRow = "true";
-    tableRowSources.set(element, structuredClone(row));
-    for (const column of field2.columns ?? []) {
-      const cell = document.createElement("span");
-      if (field2.editable && column.editable === true) {
-        cell.append(createTableEditor(column, valueAt(row, column.path)));
-      } else {
-        cell.textContent = tableCellDisplayValue(valueAt(row, column.path), row, column);
-      }
-      element.append(cell);
-    }
-    if (field2.editable) {
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.className = "detail-table-remove";
-      remove.dataset.tableRemove = "true";
-      remove.textContent = "Remove";
-      element.append(remove);
-    }
-    return element;
-  }
-  function readTableValue(field2, control) {
-    if (control.localName === "cms-dashboard-table-field") {
-      const rows = readBoundTableRows(field2, control);
-      return field2.editable ? serializedTableRows(rows) : rows;
-    }
-    if (!field2.editable) {
-      return structuredClone(tableRows2(field2.value));
-    }
-    return Array.from(control.querySelectorAll("[data-table-row]")).map((row) => readTableRow(field2, row)).filter(hasTableValue);
-  }
-  function isReorderableListControl(control) {
-    return control instanceof DashboardWReorderableList;
-  }
-  function readTableRow(field2, row) {
-    const value2 = structuredClone(tableRowSources.get(row) ?? {});
-    for (const column of field2.columns ?? []) {
-      const input = row.querySelector(`[data-table-column="${cssEscape(column.key)}"]`);
-      if (!input) {
-        continue;
-      }
-      setValueAt(value2, column.path, readTableEditor(column, input));
-    }
-    return value2;
-  }
-  function tableRows2(value2) {
-    if (!Array.isArray(value2)) {
-      return [];
-    }
-    return value2.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item));
-  }
-  function hasTableValue(value2) {
-    if (Array.isArray(value2)) {
-      return value2.some(hasTableValue);
-    }
-    if (isRecord6(value2)) {
-      return Object.values(value2).some(hasTableValue);
-    }
-    return String(value2 ?? "").trim().length > 0;
-  }
-  function isRecord6(value2) {
-    return value2 !== null && typeof value2 === "object" && !Array.isArray(value2);
-  }
-  function tableCellDisplayValue(value2, row, column) {
-    if (column.format === "date" || column.format === "money") {
-      return formatDashboardValue(value2, column.format, {
-        currency: column.format === "money" ? tableCurrency(row, column.path) : undefined
-      });
-    }
-    return formatDashboardValue(value2, column.format);
-  }
-  function tableCurrency(row, valuePath) {
-    const separator = valuePath.lastIndexOf(".");
-    const siblingPath = separator === -1 ? "currency" : `${valuePath.slice(0, separator)}.currency`;
-    const value2 = valueAt(row, siblingPath) ?? (siblingPath === "currency" ? undefined : valueAt(row, "currency"));
-    const currency2 = value2 === null || value2 === undefined ? "" : String(value2).trim();
-    return currency2 || undefined;
-  }
-  function cssEscape(value2) {
-    return typeof CSS !== "undefined" && CSS.escape ? CSS.escape(value2) : value2.replace(/"/g, "\\\"");
-  }
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/index.ts
   function readFieldControlValue(field2, control) {
     if (field2.input === "reorderable-list" && control.localName === "cms-dashboard-reorderable-field") {
@@ -31253,10 +29556,8 @@ button {
       return control.items;
     }
     if (field2.input === "table") {
-      return readTableValue(field2, control);
-    }
-    if (field2.input === "reorderable-list" && isReorderableListControl(control)) {
-      return control.items;
+      const rows = readBoundTableRows(field2, control);
+      return field2.editable ? serializedTableRows(rows) : rows;
     }
     if (field2.input === "schema") {
       return readSchemaControlValue(field2, control);
@@ -31282,7 +29583,7 @@ button {
       return [];
     }
     const axes = Array.isArray(sourceValue) ? sourceValue.filter((row) => row !== null && typeof row === "object" && !Array.isArray(row)).map((row, index) => ({
-      label: textValue3(valueAt(row, field2.derive.labelPath)),
+      label: textValue2(valueAt(row, field2.derive.labelPath)),
       values: listValue(valueAt(row, field2.derive.valuesPath)),
       position: index
     })).filter((axis) => axis.label && axis.values.length) : [];
@@ -31306,7 +29607,7 @@ button {
     }
     return [];
   }
-  function textValue3(value2) {
+  function textValue2(value2) {
     return value2 === null || value2 === undefined ? "" : String(value2).trim();
   }
   function slug(value2) {
@@ -31327,15 +29628,9 @@ button {
     if (!control || !field2 || field2.input !== "table") {
       return;
     }
-    if (control.localName === "cms-dashboard-table-field") {
-      const rows = [...readBoundTableRows(field2, control), {}];
-      emitFieldChange(control, rows);
-      updateDerivedTables(field2.id, fields, rows);
-      return;
-    }
-    control.insertBefore(tableRow(field2, {}), button);
-    emitFieldChange(control);
-    updateDerivedTables(field2.id, fields);
+    const rows = [...readBoundTableRows(field2, control), {}];
+    emitFieldChange(control, rows);
+    updateDerivedTables(field2.id, fields, rows);
   }
   function removeTableRow(button, fields, emitFieldChange) {
     const control = button.closest("[data-field-control]");
@@ -31343,20 +29638,14 @@ button {
     if (!control || !row) {
       return;
     }
-    if (control.localName === "cms-dashboard-table-field") {
-      const field2 = fields.find(control.dataset.fieldControl ?? "");
-      if (!field2) {
-        return;
-      }
-      const rows = readBoundTableRows(field2, control);
-      rows.splice(Number(row.dataset.tableIndex), 1);
-      emitFieldChange(control, rows);
-      updateDerivedTables(field2.id, fields, rows);
+    const field2 = fields.find(control.dataset.fieldControl ?? "");
+    if (!field2) {
       return;
     }
-    row.remove();
-    emitFieldChange(control);
-    updateDerivedTables(control.dataset.fieldControl ?? "", fields);
+    const rows = readBoundTableRows(field2, control);
+    rows.splice(Number(row.dataset.tableIndex), 1);
+    emitFieldChange(control, rows);
+    updateDerivedTables(field2.id, fields, rows);
   }
   function updateDerivedTables(sourceFieldId, fields, sourceDraft) {
     const sourceControl = fields.control(sourceFieldId);
@@ -31375,18 +29664,7 @@ button {
       }
       const rows = deriveTableRows(field2, sourceValue);
       field2.value = rows;
-      if (control.localName === "cms-dashboard-table-field") {
-        fields.record(field2.id, rows);
-      } else {
-        replaceTableRows(control, field2, rows);
-      }
-    }
-  }
-  function replaceTableRows(control, field2, rows) {
-    control.querySelectorAll("[data-table-row]").forEach((row) => row.remove());
-    const anchor = control.querySelector("[data-table-add]");
-    for (const row of rows) {
-      control.insertBefore(tableRow(field2, row), anchor);
+      fields.record(field2.id, rows);
     }
   }
 
@@ -31925,7 +30203,7 @@ p9r-token-input {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/template.html
-  var template_default13 = `<slot name="source-status"></slot>
+  var template_default11 = `<slot name="source-status"></slot>
 <cms-shell-detail>
     <button type="button" slot="back" data-back aria-label="Back to table">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -31949,7 +30227,7 @@ p9r-token-input {
     fields;
     events;
     constructor() {
-      super({ css: base_default, template: template_default13 });
+      super({ css: base_default, template: template_default11 });
       this.fields = new DetailFieldState(this.shadowRoot, () => this.readBinding(), () => this.operationData());
       this.events = new DetailEvents(this, this.fields, () => this.operationData(), () => mi(this));
     }
@@ -32232,7 +30510,7 @@ p9r-token-input {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/style.css
-  var style_default9 = `:host {
+  var style_default8 = `:host {
     display: block;
     min-width: 0;
     --dashboard-table-columns: 46px 1fr;
@@ -32349,7 +30627,7 @@ slot {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/template.html
-  var template_default14 = `<section class="w-table-shell">
+  var template_default12 = `<section class="w-table-shell">
     <header class="w-table-header" data-header>
         <div>
             <h3 data-title></h3>
@@ -32381,7 +30659,7 @@ slot {
   class DashboardWTable extends l2 {
     rowsObserver = new MutationObserver(() => this.syncPresentation());
     constructor() {
-      super({ css: style_default9, template: template_default14 });
+      super({ css: style_default8, template: template_default12 });
     }
     set selected(value2) {
       this.setAttribute("data-selected", value2);
@@ -32622,7 +30900,7 @@ slot {
   customElements.define("cms-dashboard-schema-source", DashboardSchemaSource);
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/field.css
-  var field_default2 = `:host { display: block; min-width: 0; }
+  var field_default = `:host { display: block; min-width: 0; }
 :host(cms-dashboard-schema-row) { display: grid; }
 slot { display: contents; }
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
@@ -32651,13 +30929,13 @@ slot { display: contents; }
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/Field.ts
   class SchemaField extends l2 {
     constructor() {
-      super({ css: field_default2, template: '<div class="grid"><slot></slot></div>' });
+      super({ css: field_default, template: '<div class="grid"><slot></slot></div>' });
     }
   }
 
   class SchemaRow extends l2 {
     constructor() {
-      super({ css: field_default2, template: '<div class="row"><slot></slot></div>' });
+      super({ css: field_default, template: '<div class="row"><slot></slot></div>' });
     }
   }
   customElements.define("cms-dashboard-schema-field", SchemaField);
@@ -32876,10 +31154,10 @@ slot { display: contents; }
         return;
       }
       event.stopPropagation();
-      const query6 = event.detail?.query;
+      const query4 = event.detail?.query;
       clearTimeout(this.timer);
       this.timer = setTimeout(() => {
-        this.query = typeof query6 === "string" ? query6.slice(0, 200) : "";
+        this.query = typeof query4 === "string" ? query4.slice(0, 200) : "";
         this.offset = 0;
         this.updateUrl(true);
       }, 250);
@@ -32965,7 +31243,7 @@ slot { display: contents; }
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/field.css
-  var field_default3 = `:host { display: block; min-width: 0; }
+  var field_default2 = `:host { display: block; min-width: 0; }
 .table { display: grid; gap: 6px; max-width: 100%; min-width: 0; overflow-x: auto; padding-bottom: 2px; }
 .row { display: grid; grid-template-columns: var(--detail-table-columns); gap: 8px; align-items: start; width: 100%; min-width: 0; min-height: 34px; }
 :host([data-table-head]) { color: #66736f; font-size: 11px; font-weight: 750; text-transform: uppercase; }
@@ -32982,7 +31260,7 @@ slot { display: contents; }
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/Field.ts
   class TableField extends l2 {
     constructor() {
-      super({ css: field_default3, template: '<div class="table"><slot></slot></div>' });
+      super({ css: field_default2, template: '<div class="table"><slot></slot></div>' });
       for (const type of ["combobox-search", "combobox-load-more"]) {
         this.addEventListener(type, (event) => {
           const control = event.composedPath().find((node) => node instanceof HTMLElement && node.hasAttribute("data-table-column"));
@@ -33001,7 +31279,7 @@ slot { display: contents; }
 
   class TableRow extends l2 {
     constructor() {
-      super({ css: field_default3, template: '<div class="row"><slot></slot></div>' });
+      super({ css: field_default2, template: '<div class="row"><slot></slot></div>' });
     }
   }
   customElements.define("cms-dashboard-table-field", TableField);
@@ -33108,6 +31386,449 @@ slot { display: contents; }
 </template>
 `;
 
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/field.css
+  var field_default3 = `:host {
+    --media-grid-item-max: 120px;
+    --media-grid-item-max-mobile: 112px;
+    --media-grid-featured-item-max: calc((var(--media-grid-item-max) * 2) + 8px);
+
+    display: block;
+}
+
+.media-field { display: grid; gap: 10px; }
+
+.label-row {
+    align-items: center;
+    color: var(--text-muted);
+    display: flex;
+    font-size: 11px;
+    font-weight: 750;
+    justify-content: space-between;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+:host([required]) .label-row::after {
+    color: var(--text-muted, #94a3b8);
+    content: "* Required";
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0;
+    margin-inline-start: auto;
+    text-transform: none;
+}
+
+:host([required][invalid]) .label-row::after {
+    color: var(--danger-base, #dc2626);
+}
+
+.preview-trigger {
+    background: var(--bg-surface, #fff);
+    color: var(--text-main, #17211e);
+    gap: 6px;
+    min-height: 30px;
+    padding: 5px 10px;
+    text-transform: none;
+}
+
+.preview-trigger[hidden] {
+    display: none;
+}
+
+.preview-trigger:hover {
+    background: var(--bg-hover, #f3f6f5);
+    border-color: var(--border-strong, #aab6b2);
+}
+
+.preview-trigger:focus-visible {
+    border-color: var(--primary-base, #165f4b);
+    outline: 2px solid var(--primary-muted, #e3f2ed);
+    outline-offset: 2px;
+}
+
+.preview-trigger svg {
+    fill: none;
+    height: 15px;
+    stroke: currentcolor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+    width: 15px;
+}
+
+.media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+    gap: 8px;
+    justify-items: center;
+    max-width: 100%;
+}
+
+.media-grid > * {
+    max-width: var(--media-grid-item-max);
+    width: 100%;
+}
+
+.media-tile,
+.add-tile {
+    align-items: center;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    display: grid;
+    justify-items: center;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+}
+
+.media-tile {
+    background: #f4f1ec;
+    border: 1px solid var(--border-default);
+    cursor: pointer;
+    min-height: 92px;
+    transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+
+.media-tile:first-child {
+    grid-column: span 2;
+    grid-row: span 2;
+    max-width: var(--media-grid-featured-item-max);
+}
+
+.media-tile:hover,
+.media-tile:focus-visible {
+    border-color: #0f6b53;
+    box-shadow: 0 0 0 2px rgb(15 107 83 / 12%);
+}
+
+.media-tile:active { cursor: grabbing; }
+
+.media-tile[data-dragging] { opacity: 0.48; transform: scale(0.985); }
+
+.media-tile[data-drop-target] {
+    border-color: #0f6b53;
+    box-shadow: inset 0 0 0 2px rgb(15 107 83 / 24%);
+}
+
+.media-tile img {
+    height: 100%;
+    object-fit: cover;
+    width: 100%;
+}
+
+button {
+    align-items: center;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    justify-content: center;
+}
+
+.tile-action {
+    background: rgb(255 255 255 / 94%);
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 760;
+    height: 24px;
+    opacity: 0;
+    padding: 0;
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    transition: opacity 120ms ease, background 120ms ease;
+    width: 24px;
+}
+
+.media-tile:hover .tile-action,
+.media-tile:focus-within .tile-action {
+    opacity: 1;
+}
+
+.tile-action[data-danger] { color: #c52635; }
+
+.tile-action:hover { background: #f6f8f7; }
+
+.add-tile {
+    background: transparent;
+    border: 1px dashed #aab6b2;
+    color: #394944;
+    font-size: 24px;
+    min-height: 92px;
+}
+
+.add-tile:hover {
+    background: #f6f8f7;
+    border-color: #7d8d88;
+}
+
+:host([layout="card"]) {
+    --media-grid-featured-item-max: none;
+    --media-grid-item-max: none;
+}
+
+:host([layout="card"]) .media-grid {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+:host([layout="card"]) .media-tile:first-child {
+    grid-column: auto;
+    grid-row: auto;
+    max-width: none;
+}
+
+:host([layout="card"]) .media-tile,
+:host([layout="card"]) .add-tile {
+    aspect-ratio: 4 / 3;
+    max-width: none;
+}
+
+@media (max-width: 720px) {
+    .media-grid {
+        grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    }
+
+    .media-grid > * {
+        max-width: var(--media-grid-item-max-mobile);
+    }
+
+    .media-tile:first-child {
+        grid-column: span 1;
+        grid-row: span 1;
+        max-width: var(--media-grid-item-max-mobile);
+    }
+}
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/preview-layout.css
+  var preview_layout_default = `.media-preview {
+    background: #111916;
+    border: 1px solid rgb(255 255 255 / 14%);
+    border-radius: 12px;
+    box-sizing: border-box;
+    box-shadow: 0 24px 72px rgb(0 0 0 / 48%);
+    color: #fff;
+    height: min(780px, calc(100dvh - 32px));
+    margin: auto;
+    max-height: none;
+    max-width: none;
+    overflow: hidden;
+    padding: 0;
+    width: min(1120px, calc(100vw - 32px));
+}
+
+.media-preview::backdrop {
+    backdrop-filter: blur(3px);
+    background: rgb(4 8 7 / 78%);
+}
+
+.preview-shell {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    height: 100%;
+    min-height: 0;
+}
+
+.preview-header {
+    align-items: center;
+    border-bottom: 1px solid rgb(255 255 255 / 12%);
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 16px;
+}
+
+.preview-title,
+.preview-counter {
+    margin: 0;
+}
+
+.preview-title {
+    font-size: 15px;
+    font-weight: 760;
+}
+
+.preview-counter {
+    color: rgb(255 255 255 / 68%);
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+.preview-close {
+    background: rgb(255 255 255 / 10%);
+    border-color: rgb(255 255 255 / 22%);
+    color: #fff;
+    gap: 8px;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 6px 10px;
+}
+
+.preview-close span:last-child {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.preview-close:hover,
+.preview-nav:hover {
+    background: rgb(255 255 255 / 18%);
+}
+
+.preview-close:focus-visible,
+.preview-nav:focus-visible,
+.preview-thumb:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+.preview-stage {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    min-height: 0;
+    padding: 12px 16px;
+}
+
+.preview-figure {
+    grid-column: 2;
+}
+
+.preview-nav {
+    align-self: center;
+    background: rgb(255 255 255 / 10%);
+    border-color: rgb(255 255 255 / 22%);
+    border-radius: 999px;
+    color: #fff;
+    font-size: 30px;
+    height: 44px;
+    padding: 0 0 3px;
+    width: 44px;
+}
+
+.media-preview [hidden] {
+    display: none !important;
+}
+
+@media (max-width: 720px) {
+    .media-preview {
+        border-radius: 0;
+        height: 100dvh;
+        width: 100vw;
+    }
+
+    .preview-stage {
+        gap: 4px;
+        grid-template-columns: 44px minmax(0, 1fr) 44px;
+        padding-inline: 8px;
+    }
+
+    .preview-nav {
+        font-size: 28px;
+        height: 44px;
+        width: 44px;
+    }
+
+    .preview-trigger {
+        min-height: 44px;
+    }
+
+    .preview-close span:first-child {
+        display: none;
+    }
+}
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/preview-media.css
+  var preview_media_default = `.preview-figure {
+    display: grid;
+    gap: 10px;
+    grid-template-rows: minmax(0, 1fr) auto;
+    margin: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.preview-media {
+    display: grid;
+    min-height: 0;
+    overflow: hidden;
+    place-items: center;
+}
+
+.preview-image {
+    grid-area: 1 / 1;
+    height: 100%;
+    min-height: 0;
+    object-fit: contain;
+    transition: opacity 120ms ease;
+    width: 100%;
+}
+
+.preview-image[data-state="loading"],
+.preview-image[data-state="error"] {
+    opacity: 0.12;
+}
+
+.preview-status {
+    color: rgb(255 255 255 / 82%);
+    font-size: 13px;
+    grid-area: 1 / 1;
+    margin: 0;
+    text-align: center;
+}
+
+.preview-figure figcaption {
+    color: rgb(255 255 255 / 82%);
+    font-size: 13px;
+    line-height: 1.4;
+    overflow: hidden;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.preview-strip {
+    border-top: 1px solid rgb(255 255 255 / 12%);
+    box-sizing: border-box;
+    display: flex;
+    gap: 8px;
+    min-height: 82px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 10px 16px;
+    scrollbar-width: thin;
+}
+
+.preview-thumb {
+    background: #202925;
+    border-color: transparent;
+    border-radius: 7px;
+    flex: 0 0 72px;
+    height: 60px;
+    opacity: 0.64;
+    overflow: hidden;
+    padding: 0;
+    width: 72px;
+}
+
+.preview-thumb[aria-current="true"] {
+    border-color: #fff;
+    box-shadow: 0 0 0 1px #fff;
+    opacity: 1;
+}
+
+.preview-thumb img {
+    height: 100%;
+    object-fit: contain;
+    width: 100%;
+}
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/index.ts
+  var styles_default5 = [field_default3, preview_layout_default, preview_media_default].join(`
+`);
+
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/field.css
   var field_default4 = `slot { display: contents; }
 .media-grid ::slotted(*) { max-width: var(--media-grid-item-max); width: 100%; }
@@ -33190,6 +31911,71 @@ slot { display: contents; }
 </section>
 `;
 
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/controllers/drag.ts
+  class MediaDragController {
+    root;
+    move;
+    setSuppressClick;
+    dragFrom = null;
+    constructor(root, move, setSuppressClick) {
+      this.root = root;
+      this.move = move;
+      this.setSuppressClick = setSuppressClick;
+    }
+    start = (event) => {
+      const tile = tileFromEvent(event);
+      const index = numberData(tile?.dataset.index);
+      if (!tile || index === null) {
+        return;
+      }
+      const dragEvent = event;
+      this.dragFrom = index;
+      this.setSuppressClick(true);
+      tile.toggleAttribute("data-dragging", true);
+      dragEvent.dataTransfer?.setData("text/plain", String(index));
+      if (dragEvent.dataTransfer) {
+        dragEvent.dataTransfer.effectAllowed = "move";
+      }
+    };
+    over = (event) => {
+      if (this.dragFrom === null) {
+        return;
+      }
+      event.preventDefault();
+      const dragEvent = event;
+      if (dragEvent.dataTransfer) {
+        dragEvent.dataTransfer.dropEffect = "move";
+      }
+      this.markDropTarget(tileFromEvent(event));
+    };
+    drop = (event) => {
+      if (this.dragFrom === null) {
+        return;
+      }
+      event.preventDefault();
+      const to2 = numberData(tileFromEvent(event)?.dataset.index);
+      if (to2 !== null) {
+        this.move(this.dragFrom, to2);
+      }
+      this.clear();
+    };
+    end = () => this.clear();
+    markDropTarget(target2) {
+      this.root().querySelectorAll("[data-drop-target]").forEach((tile) => tile.removeAttribute("data-drop-target"));
+      if (target2 && numberData(target2.dataset.index) !== this.dragFrom) {
+        target2.toggleAttribute("data-drop-target", true);
+      }
+    }
+    clear() {
+      this.dragFrom = null;
+      this.root().querySelectorAll("[data-dragging], [data-drop-target]").forEach((tile) => {
+        tile.removeAttribute("data-dragging");
+        tile.removeAttribute("data-drop-target");
+      });
+      window.setTimeout(() => this.setSuppressClick(false), 0);
+    }
+  }
+
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/ImageState.ts
   class PreviewImageState {
     host;
@@ -33217,31 +32003,31 @@ slot { display: contents; }
       this.host.removeEventListener("error", this.onError, true);
     }
     refresh() {
-      const image2 = this.host.querySelector("[data-preview-image]");
-      const url = image2?.getAttribute("src") ?? "";
-      if (image2 === this.image && url === this.url) {
+      const image = this.host.querySelector("[data-preview-image]");
+      const url = image?.getAttribute("src") ?? "";
+      if (image === this.image && url === this.url) {
         return;
       }
-      this.image = image2;
+      this.image = image;
       this.url = url;
-      if (!image2 || !url) {
+      if (!image || !url) {
         return;
       }
-      const ready = image2.complete && image2.naturalWidth > 0;
-      image2.dataset.state = ready ? "ready" : "loading";
+      const ready = image.complete && image.naturalWidth > 0;
+      image.dataset.state = ready ? "ready" : "loading";
       this.status.textContent = "Loading image…";
       this.status.hidden = ready;
     }
     onLoad = (event) => this.settled(event, false);
     onError = (event) => this.settled(event, true);
     settled(event, failed) {
-      const image2 = event.target;
-      if (!(image2 instanceof HTMLImageElement) || !image2.hasAttribute("data-preview-image")) {
+      const image = event.target;
+      if (!(image instanceof HTMLImageElement) || !image.hasAttribute("data-preview-image")) {
         return;
       }
-      this.image = image2;
-      this.url = image2.getAttribute("src") ?? "";
-      image2.dataset.state = failed ? "error" : "ready";
+      this.image = image;
+      this.url = image.getAttribute("src") ?? "";
+      image.dataset.state = failed ? "error" : "ready";
       this.status.hidden = !failed;
       if (failed) {
         this.status.textContent = "Unable to load this image.";
@@ -33645,10 +32431,10 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
     tile.setAttribute("cms-repeat", `${path}.items as media`);
     const add = part("add");
     add.setAttribute("cms-condition", `${path}.showAdd`);
-    const image2 = part("image");
-    image2.setAttribute("cms-condition", `${path}.open`);
-    image2.setAttribute("data-cms-src", `{{ ${path}.preview.url }}`);
-    image2.setAttribute("alt", `{{ ${path}.preview.previewAlt }}`);
+    const image = part("image");
+    image.setAttribute("cms-condition", `${path}.open`);
+    image.setAttribute("data-cms-src", `{{ ${path}.preview.url }}`);
+    image.setAttribute("alt", `{{ ${path}.preview.previewAlt }}`);
     const caption = part("caption");
     caption.textContent = `{{ ${path}.preview.title }}`;
     const counter = part("counter");
@@ -33658,7 +32444,7 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
     thumbnail.setAttribute("selected-index", `{{ ${path}.index }}`);
     control.setAttribute("count", `{{ ${path}.items.length }}`);
     control.toggleAttribute("multiple", field2.multiple === true);
-    control.append(tile, add, image2, caption, counter, thumbnail);
+    control.append(tile, add, image, caption, counter, thumbnail);
   }
 
   // src/static/admin/_content/sources/_runtime/detail/controls.html
@@ -34077,10 +32863,10 @@ slot { display: contents; }
   function composeReadonly(control, field2, root) {
     const path = field2.path === "." ? root : `${root}.${field2.path}`;
     if (field2.format === "image") {
-      const image2 = control.querySelector("img");
-      image2.alt = field2.label;
-      image2.setAttribute("cms-condition", `${path} | dashboardTrimmedText`);
-      image2.setAttribute("data-cms-src", fieldBinding(root, field2.path, "dashboardTrimmedText"));
+      const image = control.querySelector("img");
+      image.alt = field2.label;
+      image.setAttribute("cms-condition", `${path} | dashboardTrimmedText`);
+      image.setAttribute("data-cms-src", fieldBinding(root, field2.path, "dashboardTrimmedText"));
       control.querySelector("span").setAttribute("cms-condition", `!${path} | dashboardTrimmedText`);
     } else if (field2.format === "money") {
       const sibling = field2.path.includes(".") ? `${path.slice(0, path.lastIndexOf("."))}.currency` : `${root}.currency`;
@@ -35121,7 +33907,7 @@ slot { display: contents; }
   function settleNestedMedia(context, key, media2, widget, item, failed = false) {
     const bound = widget ? widget : undefined;
     const draft = { ...context.drafts.get(key) ?? {} };
-    const items = cloneItems2(bound?.currentFieldValues()[media2.field] ?? draft[media2.field]);
+    const items = cloneItems(bound?.currentFieldValues()[media2.field] ?? draft[media2.field]);
     const parent = nestedMediaParent(items, media2);
     const current = parent && media2.itemPath ? valueAt(parent, media2.itemPath) : undefined;
     const expected = media2.value[0] ?? null;
@@ -35141,7 +33927,7 @@ slot { display: contents; }
       return;
     }
   }
-  function cloneItems2(value2) {
+  function cloneItems(value2) {
     return Array.isArray(value2) ? structuredClone(value2.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item))) : [];
   }
   function nestedMediaParent(items, media2) {
@@ -35444,9 +34230,9 @@ slot { display: contents; }
       const subtitle = this.getAttribute("subtitle") ?? "";
       setText2(root, "[data-subtitle]", subtitle);
       root.querySelector("[data-subtitle]").hidden = !subtitle;
-      const badge3 = this.getAttribute("badge") ?? "";
-      setText2(root, "[data-badge]", badge3);
-      root.querySelector("[data-badge]").hidden = !badge3;
+      const badge2 = this.getAttribute("badge") ?? "";
+      setText2(root, "[data-badge]", badge2);
+      root.querySelector("[data-badge]").hidden = !badge2;
       const icon = this.getAttribute("icon");
       const iconRoot = root.querySelector("[data-icon]");
       iconRoot.hidden = !icon;
@@ -35497,7 +34283,7 @@ slot { display: contents; }
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/style.css
-  var style_default10 = `:host {
+  var style_default9 = `:host {
     display: block;
     max-inline-size: 960px;
 }
@@ -35541,7 +34327,7 @@ slot { display: contents; }
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/template.html
-  var template_default15 = `<section class="navigation-list-shell">
+  var template_default13 = `<section class="navigation-list-shell">
     <header class="navigation-list-header" data-header>
         <h3 data-title></h3>
         <div class="navigation-list-actions" data-actions><slot name="actions"></slot></div>
@@ -35558,7 +34344,7 @@ slot { display: contents; }
     rowsObserver = new MutationObserver(() => this.syncItems());
     dragging = null;
     constructor() {
-      super({ css: style_default10, template: template_default15 });
+      super({ css: style_default9, template: template_default13 });
     }
     static observedAttributes = ["heading"];
     attributeChangedCallback() {
@@ -35935,34 +34721,34 @@ slot { display: contents; }
 
   // src/components/admin/Resources/Dashboards/view/rendering.ts
   function renderDashboardShell(root, group, dashboard, detail, tabState, drafts, detailResource = null, groups = group ? [group] : [], filters = new Map) {
-    query6(root, "[data-empty]").hidden = Boolean(group);
-    query6(root, "[data-source-empty]").hidden = !group || Boolean(dashboard);
-    query6(root, "[data-dashboard-head]").hidden = !dashboard;
-    query6(root, "[data-detail-toolbar]").hidden = true;
-    query6(root, "[data-widget-panel]").hidden = !dashboard;
+    query4(root, "[data-empty]").hidden = Boolean(group);
+    query4(root, "[data-source-empty]").hidden = !group || Boolean(dashboard);
+    query4(root, "[data-dashboard-head]").hidden = !dashboard;
+    query4(root, "[data-detail-toolbar]").hidden = true;
+    query4(root, "[data-widget-panel]").hidden = !dashboard;
     if (!group || !dashboard) {
       return;
     }
-    query6(root, "[data-dashboard-name]").textContent = dashboard.meta?.name ?? dashboard.id;
-    renderIcon(query6(root, "[data-dashboard-icon]"), dashboard.meta?.svg, dashboard.meta?.icon, "layout");
+    query4(root, "[data-dashboard-name]").textContent = dashboard.meta?.name ?? dashboard.id;
+    renderIcon(query4(root, "[data-dashboard-icon]"), dashboard.meta?.svg, dashboard.meta?.icon, "layout");
     const selectedRows = new Map;
     if (detail) {
       selectedRows.set(detail.collection, detail.row);
     }
     const widgets = widgetsForSelection(dashboard, detail, group.dashboardRelationProjections ?? []);
-    mountDashboardWidgets(query6(root, "[data-widgets]"), widgets, { group, groups, dashboard, selectedRows, drafts, filters, detailResource }, "root", tabState, detail);
+    mountDashboardWidgets(query4(root, "[data-widgets]"), widgets, { group, groups, dashboard, selectedRows, drafts, filters, detailResource }, "root", tabState, detail);
   }
   function renderExampleShell(root, selectedRow) {
-    query6(root, "[data-empty]").hidden = true;
-    query6(root, "[data-source-empty]").hidden = true;
-    query6(root, "[data-detail-toolbar]").hidden = true;
-    query6(root, "[data-dashboard-head]").hidden = false;
-    query6(root, "[data-widget-panel]").hidden = false;
-    query6(root, "[data-dashboard-name]").textContent = "Dashboard widgets example";
-    renderIcon(query6(root, "[data-dashboard-icon]"), undefined, "layout", "layout");
-    mountDashboardWidgetExample(query6(root, "[data-widgets]"), selectedRow);
+    query4(root, "[data-empty]").hidden = true;
+    query4(root, "[data-source-empty]").hidden = true;
+    query4(root, "[data-detail-toolbar]").hidden = true;
+    query4(root, "[data-dashboard-head]").hidden = false;
+    query4(root, "[data-widget-panel]").hidden = false;
+    query4(root, "[data-dashboard-name]").textContent = "Dashboard widgets example";
+    renderIcon(query4(root, "[data-dashboard-icon]"), undefined, "layout", "layout");
+    mountDashboardWidgetExample(query4(root, "[data-widgets]"), selectedRow);
   }
-  function query6(root, selector) {
+  function query4(root, selector) {
     return selector === "[data-widgets]" ? root.host.querySelector(selector) : root.querySelector(selector);
   }
 
@@ -36248,10 +35034,10 @@ slot { display: contents; }
     const id2 = String(createdId2);
     return {
       value: replaceCreatedValue(nextValue, createdValue, id2),
-      option: { value: id2, label: textValue4(valueAt(created, create.labelPath)) || createdValue }
+      option: { value: id2, label: textValue3(valueAt(created, create.labelPath)) || createdValue }
     };
   }
-  function textValue4(value2) {
+  function textValue3(value2) {
     if (typeof value2 === "number" && Number.isFinite(value2)) {
       return String(value2);
     }
@@ -36535,7 +35321,7 @@ p {
 `;
 
   // src/components/admin/Resources/Dashboards/view/template.html
-  var template_default16 = `<main class="content">
+  var template_default14 = `<main class="content">
     <slot name="source-status"></slot>
 
     <section class="panel empty" data-empty>
@@ -36568,7 +35354,7 @@ p {
 
   class DashboardView extends DashboardViewController {
     constructor() {
-      super(styles, template_default16);
+      super(styles, template_default14);
     }
     connectedCallback() {
       super.connectedCallback();
@@ -36696,19 +35482,19 @@ p {
   function renderDashboardSwitcher(root, dashboards, selectedId) {
     const container = switcherContainer(root);
     const current = dashboards.find((dashboard) => dashboard.id === selectedId) ?? dashboards[0];
-    const select2 = document.createElement("p9r-select");
-    select2.dataset.dashboardSwitcher = "true";
-    select2.setAttribute("aria-label", "Select dashboard");
+    const select = document.createElement("p9r-select");
+    select.dataset.dashboardSwitcher = "true";
+    select.setAttribute("aria-label", "Select dashboard");
     for (const dashboard of dashboards) {
       const option3 = document.createElement("option");
       option3.value = dashboard.id;
       option3.textContent = dashboard.meta.name;
-      select2.append(option3);
+      select.append(option3);
     }
-    select2.setAttribute("value", current?.id ?? "");
-    select2.value = current?.id ?? "";
-    select2.toggleAttribute("disabled", dashboards.length < 2);
-    container.replaceChildren(select2);
+    select.setAttribute("value", current?.id ?? "");
+    select.value = current?.id ?? "";
+    select.toggleAttribute("disabled", dashboards.length < 2);
+    container.replaceChildren(select);
   }
   function renderOperatorLevel(root, dashboard, path, level) {
     const menu = operatorMenu(root, level === 1 ? "primary" : "secondary");
@@ -36787,8 +35573,8 @@ p {
     if (path) {
       params.set("view", path);
     }
-    const query7 = params.toString();
-    return `${basePath3}${route3}${query7 ? `?${query7}` : ""}`;
+    const query5 = params.toString();
+    return `${basePath3}${route3}${query5 ? `?${query5}` : ""}`;
   }
   function isProfilePage() {
     const basePath3 = document.querySelector('meta[name="basePath"]')?.getAttribute("content")?.replace(/\/+$/, "") ?? "";
@@ -36796,7 +35582,7 @@ p {
   }
 
   // src/components/admin/DashboardWorkspace/nav/style.css
-  var style_default11 = `:host {
+  var style_default10 = `:host {
     display: block;
     height: 100%;
     min-width: 0;
@@ -36873,7 +35659,7 @@ w13c-lateral-menu {
 `;
 
   // src/components/admin/DashboardWorkspace/nav/template.html
-  var template_default17 = `<div class="dashboard-switcher" data-dashboard-switcher-container hidden></div>
+  var template_default15 = `<div class="dashboard-switcher" data-dashboard-switcher-container hidden></div>
 <div class="dashboard-profile" data-dashboard-profile-container hidden></div>
 <w13c-lateral-menu aria-label="Dashboard navigation" data-operator-navigation hidden>
     <span slot="header" data-level-heading hidden></span>
@@ -36884,7 +35670,7 @@ w13c-lateral-menu {
   class CmsDashboardNav extends l2 {
     selectedId = "";
     constructor() {
-      super({ css: style_default11, template: template_default17 });
+      super({ css: style_default10, template: template_default15 });
     }
     connectedCallback() {
       super.connectedCallback();
@@ -37276,7 +36062,7 @@ slot[name="profile"]::slotted(*) {
 `;
 
   // src/components/admin/DashboardWorkspace/workspace/template.html
-  var template_default18 = `<section class="workspace">
+  var template_default16 = `<section class="workspace">
     <div class="message" data-message>Loading dashboard…</div>
     <div data-content hidden>
         <span class="dashboard-icon" data-dashboard-icon hidden></span>
@@ -37357,7 +36143,7 @@ slot[name="profile"]::slotted(*) {
     runtime2.hidden = false;
     runtime2.setExternalContext(runtimeGroups, { source: view.source, dashboard: runtimeId });
   }
-  function renderHeader3(root, dashboard) {
+  function renderHeader2(root, dashboard) {
     root.querySelector("[data-name]").textContent = dashboard.meta.name;
     renderIcon(root.querySelector("[data-dashboard-icon]"), dashboard.meta.svg, dashboard.meta.icon, "layout");
     root.querySelector("[data-owner]").textContent = dashboard.origin.kind === "site" ? "Site dashboard" : dashboard.origin.integrationId;
@@ -37394,7 +36180,7 @@ slot[name="profile"]::slotted(*) {
     session = null;
     generation = 0;
     constructor() {
-      super({ css: `${base_default3}${navigation_default2}`, template: template_default18 });
+      super({ css: `${base_default3}${navigation_default2}`, template: template_default16 });
     }
     disconnectWorkspace() {
       this.generation += 1;
@@ -37489,7 +36275,7 @@ slot[name="profile"]::slotted(*) {
         return;
       }
       this.message("");
-      renderHeader3(this.shadowRoot, this.dashboard);
+      renderHeader2(this.shadowRoot, this.dashboard);
       if (!this.runtime) {
         this.shadowRoot.querySelector("[data-view-navigation]").replaceChildren();
         this.shadowRoot.querySelector("[data-runtime]").hidden = true;
@@ -40109,21 +38895,21 @@ cms-dashboard-icon svg {
   }
 
   // src/components/admin/DashboardWorkspace/workspace/navigation/view.ts
-  function appendIconOptions(select2, selected2 = "") {
+  function appendIconOptions(select, selected2 = "") {
     const placeholder = document.createElement("option");
     placeholder.value = "";
     placeholder.textContent = "Select an icon";
     placeholder.disabled = true;
     placeholder.selected = !selected2;
-    select2.replaceChildren(placeholder, ...Object.keys(DASHBOARD_ICONS).map((icon) => {
+    select.replaceChildren(placeholder, ...Object.keys(DASHBOARD_ICONS).map((icon) => {
       const option3 = document.createElement("option");
       option3.value = icon;
       option3.textContent = icon.replaceAll("-", " ");
       option3.selected = icon === selected2;
       return option3;
     }));
-    select2.setAttribute("value", selected2);
-    select2.value = selected2;
+    select.setAttribute("value", selected2);
+    select.value = selected2;
   }
   function navigationEditor(dashboard, views) {
     const section2 = document.createElement("cms-detail-section");
@@ -40311,30 +39097,30 @@ cms-dashboard-icon svg {
   }
   function syncNavigationItemType(form, type, views) {
     const field2 = form.querySelector("[data-navigation-view-field]");
-    const select2 = form.querySelector("[data-navigation-view]");
+    const select = form.querySelector("[data-navigation-view]");
     const isView = type === "view";
     field2.hidden = !isView;
-    select2.toggleAttribute("disabled", !isView);
-    select2.toggleAttribute("required", isView);
-    if (isView && !select2.value && views[0]) {
-      setValue3(select2, views[0].id);
+    select.toggleAttribute("disabled", !isView);
+    select.toggleAttribute("required", isView);
+    if (isView && !select.value && views[0]) {
+      setValue3(select, views[0].id);
     }
   }
-  function appendViewOptions(select2, views, selected2 = "") {
+  function appendViewOptions(select, views, selected2 = "") {
     const value2 = views.some((view) => view.id === selected2) ? selected2 : views[0]?.id ?? "";
     const placeholder = document.createElement("option");
     placeholder.value = "";
     placeholder.textContent = "Select a view";
     placeholder.disabled = true;
     placeholder.selected = !value2;
-    select2.replaceChildren(placeholder, ...views.map((view) => {
+    select.replaceChildren(placeholder, ...views.map((view) => {
       const option3 = document.createElement("option");
       option3.value = view.id;
       option3.textContent = `${view.meta.name} · ${view.source}`;
       option3.selected = view.id === value2;
       return option3;
     }));
-    setValue3(select2, value2);
+    setValue3(select, value2);
   }
   function appendTypeOptions(control, selected2, allowGroup) {
     const view = document.createElement("option");
@@ -40540,8 +39326,8 @@ cms-dashboard-icon svg {
         return true;
       }
     }
-    const select2 = form.querySelector("[data-navigation-view]");
-    const view = views.find((candidate) => candidate.id === select2.value);
+    const select = form.querySelector("[data-navigation-view]");
+    const view = views.find((candidate) => candidate.id === select.value);
     const label2 = form?.querySelector("[data-navigation-label]");
     const icon = form?.querySelector("[data-navigation-icon]");
     if (!view || !label2 || !icon) {
@@ -40559,7 +39345,7 @@ cms-dashboard-icon svg {
     return true;
   }
   // src/components/admin/DashboardWorkspace/configuration/style.css
-  var style_default12 = `:host {
+  var style_default11 = `:host {
     display: block;
     min-width: 0;
 }
@@ -40585,7 +39371,7 @@ p9r-modal {
 `;
 
   // src/components/admin/DashboardWorkspace/configuration/template.html
-  var template_default19 = `<div data-navigation-editor></div>
+  var template_default17 = `<div data-navigation-editor></div>
 
 <p9r-modal data-navigation-item-dialog aria-label="Navigation item settings">
     <span slot="title">Navigation item settings</span>
@@ -40620,7 +39406,7 @@ p9r-modal {
     views = [];
     internals = this.attachInternals();
     constructor() {
-      super({ css: `${style_default12}${navigation_default2}`, template: template_default19 });
+      super({ css: `${style_default11}${navigation_default2}`, template: template_default17 });
     }
     attributeChangedCallback() {
       if (this.isConnected) {
@@ -40940,7 +39726,7 @@ p9r-modal {
       return;
     }
     if (path.startsWith("body.")) {
-      if (!isRecord7(draft.body)) {
+      if (!isRecord5(draft.body)) {
         draft.body = {};
       }
       setPathValue(draft.body, path.slice("body.".length), value2);
@@ -40951,7 +39737,7 @@ p9r-modal {
     }
   }
   function setPathValue(target2, path, value2) {
-    if (!isRecord7(target2)) {
+    if (!isRecord5(target2)) {
       return;
     }
     const parts = path.split(".").filter(Boolean);
@@ -40961,7 +39747,7 @@ p9r-modal {
         current[part] = value2;
         return;
       }
-      if (!isRecord7(current[part])) {
+      if (!isRecord5(current[part])) {
         current[part] = {};
       }
       current = current[part];
@@ -40978,7 +39764,7 @@ p9r-modal {
       if (Array.isArray(current) && /^\d+$/.test(part)) {
         return current[Number(part)];
       }
-      if (!isRecord7(current)) {
+      if (!isRecord5(current)) {
         return;
       }
       return current[part];
@@ -40993,7 +39779,7 @@ p9r-modal {
   }
   function parseObject(value2, label2) {
     const parsed = parseJson2(value2 || "{}", label2);
-    if (!isRecord7(parsed)) {
+    if (!isRecord5(parsed)) {
       throw new Error(`${label2} must be a JSON object.`);
     }
     return parsed;
@@ -41012,7 +39798,7 @@ p9r-modal {
     const last = path.split(".").filter(Boolean).at(-1) ?? path;
     return last.replace(/([A-Z])/g, " $1").replace(/^./, (char) => char.toUpperCase());
   }
-  function cssEscape2(value2) {
+  function cssEscape(value2) {
     return globalThis.CSS?.escape?.(value2) ?? value2.replace(/["\\]/g, "\\$&");
   }
   function resolveUiValue(value2, draft) {
@@ -41021,7 +39807,7 @@ p9r-modal {
     }
     return value2;
   }
-  function isRecord7(value2) {
+  function isRecord5(value2) {
     return typeof value2 === "object" && value2 !== null && !Array.isArray(value2);
   }
 
@@ -41089,7 +39875,7 @@ p9r-modal {
   function helper(text5) {
     return div("helper", text5);
   }
-  function textarea2(role, value2) {
+  function textarea(role, value2) {
     const el2 = document.createElement("textarea");
     el2.dataset.role = role;
     el2.spellcheck = false;
@@ -41143,7 +39929,7 @@ p9r-modal {
       if (field2.control !== "json-object" || field2.seed?.dependsOn !== path) {
         continue;
       }
-      const input = root.querySelector(`textarea[data-path="${cssEscape2(field2.path)}"]`);
+      const input = root.querySelector(`textarea[data-path="${cssEscape(field2.path)}"]`);
       if (!input || !field2.seed) {
         continue;
       }
@@ -41165,18 +39951,18 @@ p9r-modal {
     return textField(field2, draft, onChange);
   }
   function sourceSelectField(field2, draft, onChange) {
-    const select2 = document.createElement("select");
-    select2.dataset.path = field2.path;
-    select2.append(option3("", "Loading..."));
-    select2.value = String(valueAtDraft(draft, field2.path) ?? "");
-    select2.addEventListener("change", () => {
-      setDraftValue(draft, field2.path, select2.value);
+    const select = document.createElement("select");
+    select.dataset.path = field2.path;
+    select.append(option3("", "Loading..."));
+    select.value = String(valueAtDraft(draft, field2.path) ?? "");
+    select.addEventListener("change", () => {
+      setDraftValue(draft, field2.path, select.value);
       onChange(field2.path);
     });
-    return fieldWrap(field2.label ?? labelFromPath(field2.path), select2, helper("Choose a configured source value."));
+    return fieldWrap(field2.label ?? labelFromPath(field2.path), select, helper("Choose a configured source value."));
   }
   function jsonObjectField(field2, draft, onChange) {
-    const input = textarea2("json-field", stringify(valueAtDraft(draft, field2.path) ?? {}));
+    const input = textarea("json-field", stringify(valueAtDraft(draft, field2.path) ?? {}));
     input.dataset.path = field2.path;
     input.addEventListener("input", () => onChange());
     const hint = field2.seed ? "Seeded from the selected value when available." : "Edit a JSON object.";
@@ -41194,25 +39980,25 @@ p9r-modal {
     return fieldWrap(field2.label ?? labelFromPath(field2.path), input);
   }
   async function hydrateSourceSelect(root, field2, draft) {
-    const select2 = root.querySelector(`select[data-path="${cssEscape2(field2.path)}"]`);
-    if (!select2) {
+    const select = root.querySelector(`select[data-path="${cssEscape(field2.path)}"]`);
+    if (!select) {
       return;
     }
     try {
       const response = await fetchSourceEndpoint(field2.source, field2.endpoint, resolvedParams(field2.params, draft));
       const items = arrayAt2(response, field2.itemsPath ?? "items");
-      select2.replaceChildren(option3("", "Select..."));
+      select.replaceChildren(option3("", "Select..."));
       for (const item of items) {
         const value2 = stringValue2(valueAt2(item, field2.valuePath ?? "id"));
         if (!value2) {
           continue;
         }
         const label3 = stringValue2(valueAt2(item, field2.labelPath ?? field2.valuePath ?? "id")) || value2;
-        select2.append(option3(value2, label3));
+        select.append(option3(value2, label3));
       }
-      select2.value = String(valueAtDraft(draft, field2.path) ?? "");
+      select.value = String(valueAtDraft(draft, field2.path) ?? "");
     } catch (error) {
-      select2.replaceChildren(option3("", error instanceof Error ? error.message : "Failed to load options"));
+      select.replaceChildren(option3("", error instanceof Error ? error.message : "Failed to load options"));
     }
   }
   async function seedObject(seed, draft) {
@@ -41229,9 +40015,9 @@ p9r-modal {
     return out;
   }
   function fallbackJsonFields(detail) {
-    const fields = [fieldWrap("Params JSON", textarea2("params", stringify(detail.paramsSample)))];
+    const fields = [fieldWrap("Params JSON", textarea("params", stringify(detail.paramsSample)))];
     if (detail.body) {
-      fields.push(fieldWrap("Body JSON", textarea2("body", stringify(detail.bodySample ?? {}))));
+      fields.push(fieldWrap("Body JSON", textarea("body", stringify(detail.bodySample ?? {}))));
     }
     return div("fields-stack", ...fields);
   }
@@ -41261,7 +40047,7 @@ p9r-modal {
   }
 
   // src/components/admin/Resources/Functions/detail/style.css
-  var style_default13 = `:host {
+  var style_default12 = `:host {
     display: block;
 }
 * {
@@ -41486,7 +40272,7 @@ pre {
       }
     }
     renderState(message) {
-      this.replaceChildren(styleNode(style_default13), state(message));
+      this.replaceChildren(styleNode(style_default12), state(message));
     }
     renderDetail() {
       if (!this.detail) {
@@ -41495,7 +40281,7 @@ pre {
       const shell = document.createElement("cms-shell-detail");
       shell.className = "functions-shell";
       shell.append(backLink(), title(this.detail), headerActions(), inputsSection(this.detail, this.draft, (path) => void this.onInputChange(path)), resultSection(), functionSummarySection(this.detail), contractSection(this.detail));
-      this.replaceChildren(styleNode(style_default13), shell);
+      this.replaceChildren(styleNode(style_default12), shell);
       this.bindRefs();
       hydrateExecuteFields(this, this.detail, this.draft);
     }
@@ -41679,22 +40465,22 @@ pre {
   function valuePicker(draft, references, label3 = "Choose a value") {
     const wrap = document.createElement("div");
     wrap.className = "value-picker";
-    const select2 = document.createElement("select");
-    select2.setAttribute("aria-label", label3);
-    select2.append(option4("", label3));
+    const select = document.createElement("select");
+    select.setAttribute("aria-label", label3);
+    select.append(option4("", label3));
     for (const reference of references) {
-      select2.append(option4(reference.value, reference.label));
+      select.append(option4(reference.value, reference.label));
     }
-    select2.append(option4("__literal__", "Fixed value…"));
-    select2.value = draft.mode === "literal" ? "__literal__" : draft.value;
+    select.append(option4("__literal__", "Fixed value…"));
+    select.value = draft.mode === "literal" ? "__literal__" : draft.value;
     const literal = document.createElement("input");
     literal.type = "text";
     literal.setAttribute("aria-label", `${label3}: fixed value`);
     literal.placeholder = "Text, number, boolean, or JSON";
     literal.value = draft.mode === "literal" ? draft.value : "";
     literal.hidden = draft.mode !== "literal";
-    select2.addEventListener("change", () => {
-      if (select2.value === "__literal__") {
+    select.addEventListener("change", () => {
+      if (select.value === "__literal__") {
         draft.mode = "literal";
         draft.value = literal.value;
         literal.hidden = false;
@@ -41702,11 +40488,11 @@ pre {
         return;
       }
       draft.mode = "reference";
-      draft.value = select2.value;
+      draft.value = select.value;
       literal.hidden = true;
     });
     literal.addEventListener("input", () => draft.value = literal.value);
-    wrap.append(select2, literal);
+    wrap.append(select, literal);
     return wrap;
   }
   function mappingRow(target2, references, draft) {
@@ -41861,7 +40647,7 @@ pre {
     element.addEventListener("input", () => onChange(element.value));
     return element;
   }
-  function select2(options2, current, onChange) {
+  function select(options2, current, onChange) {
     const element = document.createElement("select");
     for (const [optionValue, label3] of options2) {
       const option5 = document.createElement("option");
@@ -42731,7 +41517,7 @@ details[open] > summary > .chevron {
   // src/components/admin/Resources/Functions/create/editor/callFields.ts
   function renderCallFields(root, step, context) {
     const id2 = input(step.id, (value3) => step.id = value3);
-    const source2 = select2(context.catalog.map((item) => [item.id, item.label]), step.source, (value3) => {
+    const source2 = select(context.catalog.map((item) => [item.id, item.label]), step.source, (value3) => {
       step.source = value3;
       step.endpoint = context.catalog.find((item) => item.id === value3)?.endpoints[0]?.endpointId ?? "";
       step.params = {};
@@ -42739,7 +41525,7 @@ details[open] > summary > .chevron {
       context.renderSteps();
     });
     const endpoints = context.catalog.find((item) => item.id === step.source)?.endpoints ?? [];
-    const endpoint = select2(endpoints.map((item) => [item.endpointId, `${item.method} ${item.meta?.name ?? item.endpointId}`]), step.endpoint, (value3) => {
+    const endpoint = select(endpoints.map((item) => [item.endpointId, `${item.method} ${item.meta?.name ?? item.endpointId}`]), step.endpoint, (value3) => {
       step.endpoint = value3;
       step.params = {};
       step.body = {};
@@ -42793,7 +41579,7 @@ details[open] > summary > .chevron {
     return card;
   }
   function renderAssertFields(root, step, context) {
-    const operator = select2([
+    const operator = select([
       ["equals", "Equals"],
       ["notEquals", "Not equals"],
       ["exists", "Exists"],
@@ -42977,7 +41763,7 @@ details[open] > summary > .chevron {
   }
 
   // src/components/admin/Resources/Integrations/template.html
-  var template_default20 = `<div class="integrations-root">
+  var template_default18 = `<div class="integrations-root">
     <div class="binding-feeds" aria-hidden="true">
         <div data-installations-source cms-reload-on="integration:updated">
             <template>
@@ -43294,7 +42080,7 @@ details[open] > summary > .chevron {
   }
 
   // src/components/admin/Resources/Integrations/management/presentation/style.css
-  var style_default14 = `cms-integration-management { display: block; border: 1px solid var(--border-default); border-radius: 8px; padding: 1rem; }
+  var style_default13 = `cms-integration-management { display: block; border: 1px solid var(--border-default); border-radius: 8px; padding: 1rem; }
 .management-tabs { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; }
 .management-tabs button { padding: .5rem .8rem; border: 1px solid var(--border-default); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
 .management-tabs button[aria-pressed="true"] { font-weight: 700; border-color: currentColor; }
@@ -43303,9 +42089,9 @@ details[open] > summary > .chevron {
 `;
 
   // src/components/admin/Resources/Integrations/management/presentation/shell.ts
-  function renderManagementShell(host, deploymentStatus, configurationLabel, panel, select3) {
+  function renderManagementShell(host, deploymentStatus, configurationLabel, panel, select2) {
     const style = document.createElement("style");
-    style.textContent = style_default14;
+    style.textContent = style_default13;
     const nav = document.createElement("nav");
     nav.className = "management-tabs";
     nav.setAttribute("aria-label", "Source settings");
@@ -43318,7 +42104,7 @@ details[open] > summary > .chevron {
       button2.textContent = label4;
       button2.dataset.panel = id2;
       button2.setAttribute("aria-pressed", String(id2 === panel));
-      button2.addEventListener("click", () => select3(id2));
+      button2.addEventListener("click", () => select2(id2));
       nav.append(button2);
     }
     const deployment = document.createElement("p");
@@ -43681,12 +42467,12 @@ details[open] > summary > .chevron {
   async function confirmIntegrationUpgrade(button2) {
     const panel = upgradePanel(button2);
     const id2 = panel?.dataset.integrationId;
-    const select3 = panel?.querySelector("[data-upgrade-target]");
+    const select2 = panel?.querySelector("[data-upgrade-target]");
     const confirmation = panel?.querySelector("[data-upgrade-confirmation]");
-    if (!panel || !id2 || !select3 || !confirmation) {
+    if (!panel || !id2 || !select2 || !confirmation) {
       return;
     }
-    const target2 = select3.value;
+    const target2 = select2.value;
     if (!target2 || confirmation.value.trim() !== target2) {
       setStatus(statusElement(panel), `Type ${target2 || "the target version"} exactly to confirm.`, true);
       return;
@@ -43704,11 +42490,11 @@ details[open] > summary > .chevron {
   }
   function renderUpgradeChoices(panel, choices) {
     const form = panel.querySelector("[data-upgrade-form]");
-    const select3 = panel.querySelector("[data-upgrade-target]");
+    const select2 = panel.querySelector("[data-upgrade-target]");
     const confirmation = panel.querySelector("[data-upgrade-confirmation]");
-    select3.replaceChildren(...choices.versions.map((version) => versionOption(version, choices)));
+    select2.replaceChildren(...choices.versions.map((version) => versionOption(version, choices)));
     const preferred = choices.stable ?? choices.latest ?? choices.versions[0] ?? "";
-    select3.value = preferred;
+    select2.value = preferred;
     confirmation.value = "";
     confirmation.placeholder = preferred;
     form.hidden = choices.versions.length === 0;
@@ -44803,7 +43589,7 @@ button[slot="back"]:disabled {
       const style = document.createElement("style");
       style.textContent = styles_default7;
       const body = document.createElement("template");
-      body.innerHTML = template_default20;
+      body.innerHTML = template_default18;
       this.replaceChildren(style, body.content.cloneNode(true));
     }
   }
@@ -44967,7 +43753,7 @@ button[slot="back"]:disabled {
   customElements.define("cms-bloc-choice", BlocChoice);
 
   // src/components/admin/Resources/Blocs/artwork/style.css
-  var style_default15 = `:host { display: block; width: 100%; }
+  var style_default14 = `:host { display: block; width: 100%; }
 .artwork {
     position: relative;
     aspect-ratio: 16 / 9;
@@ -45000,7 +43786,7 @@ button[slot="back"]:disabled {
 `;
 
   // src/components/admin/Resources/Blocs/artwork/template.html
-  var template_default21 = `<div class="artwork">
+  var template_default19 = `<div class="artwork">
     <div class="illustration" aria-hidden="true">
         <div class="window window-back"><i></i><i></i><i></i></div>
         <div class="window window-front"><div class="window-bar"><i></i><i></i><i></i></div><div class="window-content"><span class="monogram"></span><div class="lines"><i></i><i></i><i></i></div></div></div>
@@ -45013,7 +43799,7 @@ button[slot="back"]:disabled {
   // src/components/admin/Resources/Blocs/artwork/LibraryArtwork.ts
   class LibraryArtwork extends l2 {
     constructor() {
-      super({ css: style_default15, template: template_default21 });
+      super({ css: style_default14, template: template_default19 });
     }
     static get observedAttributes() {
       return ["label"];
@@ -45046,7 +43832,7 @@ button[slot="back"]:disabled {
   customElements.define("cms-library-artwork", LibraryArtwork);
 
   // src/components/admin/Resources/Blocs/icons/style.css
-  var style_default16 = `:host { display: inline-flex; width: 16px; height: 16px; flex: none; }
+  var style_default15 = `:host { display: inline-flex; width: 16px; height: 16px; flex: none; }
 svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 `;
 
@@ -45063,7 +43849,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
 
   class LibraryIcon extends l2 {
     constructor() {
-      super({ css: style_default16, template: '<svg viewBox="0 0 24 24" aria-hidden="true"><path/></svg>' });
+      super({ css: style_default15, template: '<svg viewBox="0 0 24 24" aria-hidden="true"><path/></svg>' });
     }
     static get observedAttributes() {
       return ["name"];
@@ -45078,7 +43864,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
   customElements.define("cms-library-icon", LibraryIcon);
 
   // src/components/admin/Resources/Blocs/preview/style.css
-  var style_default17 = `:host {
+  var style_default16 = `:host {
     display: block;
     min-width: 0;
 }
@@ -45094,13 +43880,13 @@ iframe {
 `;
 
   // src/components/admin/Resources/Blocs/preview/template.html
-  var template_default22 = `<iframe loading="lazy" title="Read-only bloc preview" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>
+  var template_default20 = `<iframe loading="lazy" title="Read-only bloc preview" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>
 `;
 
   // src/components/admin/Resources/Blocs/preview/BlocPreview.ts
   class BlocPreview extends l2 {
     constructor() {
-      super({ css: style_default17, template: template_default22 });
+      super({ css: style_default16, template: template_default20 });
     }
     static get observedAttributes() {
       return ["src"];
@@ -45183,7 +43969,7 @@ iframe {
   customElements.define("cms-bloc-library", BlocLibrary);
 
   // src/components/admin/Resources/Triggers/template.html
-  var template_default23 = `<section class="triggers-surface">
+  var template_default21 = `<section class="triggers-surface">
     <div data-state="loading" class="state">Loading triggers...</div>
     <div data-state="error" class="state" hidden>Failed to load triggers.</div>
     <div data-state="empty" class="state" hidden>No triggers installed.</div>
@@ -45207,7 +43993,7 @@ iframe {
 `;
 
   // src/components/admin/Resources/Triggers/style.css
-  var style_default18 = `.triggers-surface {
+  var style_default17 = `.triggers-surface {
     max-width: 1120px;
 }
 
@@ -45390,13 +44176,13 @@ button.run:disabled {
     return wrap;
   }
   function lastRun(trigger) {
-    const badge3 = document.createElement("span");
-    badge3.className = `status ${trigger.lastRun?.status ?? ""}`.trim();
-    badge3.textContent = trigger.lastRun ? `${trigger.lastRun.status} · ${formatDate3(trigger.lastRun.at)}${trigger.lastRun.durationMs === undefined ? "" : ` · ${formatDuration(trigger.lastRun.durationMs)}`}` : "Never";
+    const badge2 = document.createElement("span");
+    badge2.className = `status ${trigger.lastRun?.status ?? ""}`.trim();
+    badge2.textContent = trigger.lastRun ? `${trigger.lastRun.status} · ${formatDate3(trigger.lastRun.at)}${trigger.lastRun.durationMs === undefined ? "" : ` · ${formatDuration(trigger.lastRun.durationMs)}`}` : "Never";
     if (trigger.lastRun?.error) {
-      badge3.title = trigger.lastRun.error;
+      badge2.title = trigger.lastRun.error;
     }
-    return badge3;
+    return badge2;
   }
   function runtimeState(trigger) {
     if (trigger.event.kind !== "schedule") {
@@ -45440,9 +44226,9 @@ button.run:disabled {
     }
     mount() {
       const style = document.createElement("style");
-      style.textContent = style_default18;
+      style.textContent = style_default17;
       const body = document.createElement("template");
-      body.innerHTML = template_default23;
+      body.innerHTML = template_default21;
       this.replaceChildren(style, body.content.cloneNode(true));
       this.rows = this.querySelector("[data-role='rows']");
     }
@@ -45513,10 +44299,10 @@ button.run:disabled {
   function input2(root, name) {
     return root.querySelector(`[data-field="${name}"]`);
   }
-  function textarea3(root, name) {
+  function textarea2(root, name) {
     return root.querySelector(`[data-field="${name}"]`);
   }
-  function select3(root, name) {
+  function select2(root, name) {
     return root.querySelector(`[data-field="${name}"]`);
   }
   function checkbox(root, name) {
@@ -45586,32 +44372,32 @@ button.run:disabled {
   function buildTriggerDefinition(root, conditionLeft, conditionRight, functionParams, functionBody) {
     const id2 = input2(root, "id").value.trim();
     const label4 = input2(root, "label").value.trim();
-    const advancedParams = parseOptionalObject(textarea3(root, "params").value, "Params mapping");
-    const advancedBody = parseOptionalValue(textarea3(root, "body").value);
+    const advancedParams = parseOptionalObject(textarea2(root, "params").value, "Params mapping");
+    const advancedBody = parseOptionalValue(textarea2(root, "body").value);
     const params = advancedParams ?? mappedObject(functionParams);
     const body = advancedBody ?? mappedDraft2(functionBody);
-    const mode = select3(root, "mode").value;
+    const mode = select2(root, "mode").value;
     return {
       id: id2,
       ...label4 ? { label: label4 } : {},
       event: {
         kind: "endpoint",
-        source: select3(root, "source").value,
-        endpoint: select3(root, "endpoint").value,
-        phase: select3(root, "phase").value
+        source: select2(root, "source").value,
+        endpoint: select2(root, "endpoint").value,
+        phase: select2(root, "phase").value
       },
       mode,
-      failureMode: select3(root, "failure").value,
+      failureMode: select2(root, "failure").value,
       ...checkbox(root, "condition-enabled").checked ? { condition: buildCondition(root, conditionLeft, conditionRight) } : {},
       function: {
-        id: select3(root, "function").value,
+        id: select2(root, "function").value,
         ...Object.keys(params).length ? { params } : {},
         ...body !== undefined ? { body } : {}
       }
     };
   }
   function buildCondition(root, leftDraft, rightDraft) {
-    const operator = select3(root, "operator").value;
+    const operator = select2(root, "operator").value;
     const left = resolvedDraftValue(leftDraft);
     if (operator === "exists") {
       return { exists: left };
@@ -45645,7 +44431,7 @@ button.run:disabled {
       });
     }
     references.push(...referencesFromShape(endpoint?.body, "$request.body", "Request body"));
-    if (select3(root, "phase").value === "response") {
+    if (select2(root, "phase").value === "response") {
       references.push({ value: "$response.status", label: "Response / status", shape: { type: "number" } });
       const output = endpoint?.output?.find((entry) => /^2\d\d$/.test(entry.status)) ?? endpoint?.output?.find((entry) => entry.status === "default");
       references.push(...referencesFromShape(output?.body, "$response.body", "Response body"));
@@ -45654,7 +44440,7 @@ button.run:disabled {
     return uniqueReferences(references);
   }
   function selectedEndpoint(root, sources) {
-    return sources.find((item) => item.id === select3(root, "source").value)?.endpoints.find((endpoint) => endpoint.endpointId === select3(root, "endpoint").value);
+    return sources.find((item) => item.id === select2(root, "source").value)?.endpoints.find((endpoint) => endpoint.endpointId === select2(root, "endpoint").value);
   }
 
   // src/components/admin/Resources/Triggers/create/mappings.ts
@@ -45664,7 +44450,7 @@ button.run:disabled {
     root.querySelector("[data-role='condition-right']")?.replaceChildren(valuePicker(right, references, "Choose a value"));
   }
   function renderFunctionMappings(root, sources, functions, functionParams, functionBody) {
-    const fn = functions.find((item) => item.id === select3(root, "function").value);
+    const fn = functions.find((item) => item.id === select2(root, "function").value);
     const references = eventReferences(root, sources);
     const params = Object.entries(fn?.params ?? {}).map(([name, shape]) => ({
       path: name,
@@ -46261,25 +45047,25 @@ details[open] > summary > .chevron {
     host.replaceChildren(style, shell);
   }
   function populateSources(host, sources) {
-    const sourceSelect = select3(host, "source");
+    const sourceSelect = select2(host, "source");
     for (const source2 of sources) {
       sourceSelect.append(option5(source2.id, source2.label));
     }
   }
   function syncEndpointOptions(host, sources) {
-    const endpointSelect = select3(host, "endpoint");
-    const source2 = sources.find((item) => item.id === select3(host, "source").value);
+    const endpointSelect = select2(host, "endpoint");
+    const source2 = sources.find((item) => item.id === select2(host, "source").value);
     endpointSelect.replaceChildren(...(source2?.endpoints ?? []).map((endpoint) => option5(endpoint.endpointId, `${endpoint.method} ${endpoint.meta?.name ?? endpoint.endpointId}`)));
   }
   function populateFunctions(host, functions) {
-    const functionSelect = select3(host, "function");
+    const functionSelect = select2(host, "function");
     for (const fn of functions) {
       functionSelect.append(option5(fn.id, `${fn.label} (${fn.method})`));
     }
   }
   function syncFunctionContract(host, functions) {
     const root = host.querySelector("[data-role='function-contract']");
-    const fn = functions.find((item) => item.id === select3(host, "function").value);
+    const fn = functions.find((item) => item.id === select2(host, "function").value);
     if (!root) {
       return;
     }
@@ -46293,12 +45079,12 @@ details[open] > summary > .chevron {
   function syncPhaseHelp(host) {
     const help = host.querySelector("[data-role='phase-help']");
     if (help) {
-      help.textContent = select3(host, "phase").value === "request" ? "Request triggers run before the endpoint and cannot inspect $response values." : "Response triggers can inspect both the request and response.";
+      help.textContent = select2(host, "phase").value === "request" ? "Request triggers run before the endpoint and cannot inspect $response values." : "Response triggers can inspect both the request and response.";
     }
   }
   function syncExecutionOptions(host) {
-    const failure = select3(host, "failure");
-    const asyncMode = select3(host, "mode").value === "async";
+    const failure = select2(host, "failure");
+    const asyncMode = select2(host, "mode").value === "async";
     const block = failure.querySelector('option[value="block"]');
     if (block) {
       block.disabled = asyncMode;
@@ -46315,7 +45101,7 @@ details[open] > summary > .chevron {
       root.hidden = !enabled;
     }
     if (right) {
-      right.hidden = select3(host, "operator").value === "exists";
+      right.hidden = select2(host, "operator").value === "exists";
     }
   }
 
@@ -46363,23 +45149,23 @@ details[open] > summary > .chevron {
       this.renderMappings();
     }
     bind() {
-      select3(this, "source").addEventListener("change", () => {
+      select2(this, "source").addEventListener("change", () => {
         syncEndpointOptions(this, this.sources);
         this.resetEventMappings();
       });
-      select3(this, "endpoint").addEventListener("change", () => this.resetEventMappings());
-      select3(this, "function").addEventListener("change", () => {
+      select2(this, "endpoint").addEventListener("change", () => this.resetEventMappings());
+      select2(this, "function").addEventListener("change", () => {
         this.functionParams = {};
         this.functionBody = {};
         syncFunctionContract(this, this.functions);
         this.renderMappings();
       });
-      select3(this, "mode").addEventListener("change", () => syncExecutionOptions(this));
-      select3(this, "phase").addEventListener("change", () => {
+      select2(this, "mode").addEventListener("change", () => syncExecutionOptions(this));
+      select2(this, "phase").addEventListener("change", () => {
         syncPhaseHelp(this);
         this.resetEventMappings();
       });
-      select3(this, "operator").addEventListener("change", () => this.renderCondition());
+      select2(this, "operator").addEventListener("change", () => this.renderCondition());
       checkbox(this, "condition-enabled").addEventListener("change", () => this.renderCondition());
       this.querySelector("[data-role='collapse']")?.addEventListener("click", (event) => {
         this.togglePanels(event.currentTarget);
@@ -46449,7 +45235,7 @@ details[open] > summary > .chevron {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/template.html
-  var template_default24 = `<header class="topbar">
+  var template_default22 = `<header class="topbar">
     <div class="start">
         <a class="back" href="#">
             <span class="chevron">‹</span>
@@ -46821,7 +45607,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/TopBar/TopBar.ts
   var template6 = document.createElement("template");
-  template6.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default24)}`;
+  template6.innerHTML = `<style>${String(styles_default9)}</style>${String(template_default22)}`;
 
   class TopBar extends HTMLElement {
     _viewport = "bleed";
@@ -46950,7 +45736,7 @@ button:hover {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/template.html
-  var template_default25 = `<aside class="panel">
+  var template_default23 = `<aside class="panel">
     <div class="panel-head">
         <div class="title">
             <slot name="title"></slot>
@@ -46966,7 +45752,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/style.css
-  var style_default19 = `:host {
+  var style_default18 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -47066,7 +45852,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default19)}</style>${String(template_default25)}`;
+  template7.innerHTML = `<style>${String(style_default18)}</style>${String(template_default23)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -47106,12 +45892,12 @@ button:hover {
     if (binding2.params) {
       return binding2.params;
     }
-    const query7 = bindingQuery(source2.url, binding2.url);
-    if (!query7) {
+    const query5 = bindingQuery(source2.url, binding2.url);
+    if (!query5) {
       return {};
     }
     const params = {};
-    for (const [name, value3] of new URLSearchParams(query7).entries()) {
+    for (const [name, value3] of new URLSearchParams(query5).entries()) {
       params[name] = paramValue(value3);
     }
     return params;
@@ -47205,12 +45991,12 @@ button:hover {
       input3.reportValidity?.();
     }
   }
-  function selectedMode(select4) {
-    const value3 = select4.options[select4.selectedIndex]?.value;
+  function selectedMode(select3) {
+    const value3 = select3.options[select3.selectedIndex]?.value;
     return value3 === "raw" || value3 === "state" ? value3 : "queryParam";
   }
-  function selectedTrigger(select4) {
-    const value3 = select4?.options[select4.selectedIndex]?.value;
+  function selectedTrigger(select3) {
+    const value3 = select3?.options[select3.selectedIndex]?.value;
     return value3 === "submit" || value3 === "change" ? value3 : "auto";
   }
 
@@ -47373,16 +46159,16 @@ button:hover {
     element.textContent = value3;
     return element;
   }
-  function selectOption(select4, value3) {
-    const index = Array.from(select4.options).findIndex((option7) => option7.value === value3);
+  function selectOption(select3, value3) {
+    const index = Array.from(select3.options).findIndex((option7) => option7.value === value3);
     if (index >= 0) {
-      select4.selectedIndex = index;
+      select3.selectedIndex = index;
     }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourceGroups.ts
-  function filteredSources(sources, query7) {
-    const normalized = query7.trim().toLowerCase();
+  function filteredSources(sources, query5) {
+    const normalized = query5.trim().toLowerCase();
     if (!normalized) {
       return sources;
     }
@@ -47418,11 +46204,11 @@ button:hover {
       children: field3.children ? cloneBodyFields(field3.children) : undefined
     }));
   }
-  function firstProviderKey(sources, query7) {
-    return providerGroups(filteredSources(sources, query7))[0]?.key ?? "";
+  function firstProviderKey(sources, query5) {
+    return providerGroups(filteredSources(sources, query5))[0]?.key ?? "";
   }
-  function visibleSources(sources, query7, activeProvider) {
-    return filteredSources(sources, query7).filter((source2) => (source2.provider ?? "default") === activeProvider);
+  function visibleSources(sources, query5, activeProvider) {
+    return filteredSources(sources, query5).filter((source2) => (source2.provider ?? "default") === activeProvider);
   }
   function initialAlias(binding2) {
     return binding2?.alias ?? "data";
@@ -47500,10 +46286,10 @@ button:hover {
     element.textContent = label4;
     return element;
   }
-  function selectOption2(select4, value3) {
-    const index = Array.from(select4.options).findIndex((option8) => option8.value === value3);
+  function selectOption2(select3, value3) {
+    const index = Array.from(select3.options).findIndex((option8) => option8.value === value3);
     if (index >= 0) {
-      select4.selectedIndex = index;
+      select3.selectedIndex = index;
     }
   }
 
@@ -47589,7 +46375,7 @@ button:hover {
     const footer = document.createElement("footer");
     footer.className = "binding-footer";
     if (options2.canRemove) {
-      footer.append(removeButton3(options2.onRemove));
+      footer.append(removeButton(options2.onRemove));
     }
     footer.append(insertButton(options2.onSelect));
     container.append(scroll, footer);
@@ -47608,7 +46394,7 @@ button:hover {
     insert.addEventListener("click", onSelect);
     return insert;
   }
-  function removeButton3(onRemove) {
+  function removeButton(onRemove) {
     const remove = document.createElement("button");
     remove.className = "remove-source";
     remove.type = "button";
@@ -47645,11 +46431,11 @@ button:hover {
   function methodSources(sources, activeMethod) {
     return sources.filter((source2) => activeMethod === "all" || dataSourceMethod(source2) === activeMethod);
   }
-  function pickerProviderGroups(sources, activeMethod, query7) {
-    return providerGroups(filteredSources(methodSources(sources, activeMethod), query7));
+  function pickerProviderGroups(sources, activeMethod, query5) {
+    return providerGroups(filteredSources(methodSources(sources, activeMethod), query5));
   }
-  function pickerVisibleSources(sources, activeMethod, query7, activeProvider) {
-    return visibleSources(methodSources(sources, activeMethod), query7, activeProvider);
+  function pickerVisibleSources(sources, activeMethod, query5, activeProvider) {
+    return visibleSources(methodSources(sources, activeMethod), query5, activeProvider);
   }
   function selectMethodFilter(filter, value3) {
     const options2 = Array.from(filter.options);
@@ -47677,22 +46463,22 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/State/dataSourcePickerElements.ts
   function queryDataSourcePickerElements(root) {
-    const query7 = (selector) => root.querySelector(selector);
+    const query5 = (selector) => root.querySelector(selector);
     return {
-      backdrop: query7(".backdrop"),
-      binding: query7(".binding"),
-      closeButton: query7(".close"),
-      details: query7(".details"),
-      methodFilter: query7(".method-filter"),
-      providers: query7(".providers"),
-      search: query7(".search"),
-      sourcesList: query7(".sources"),
-      subtitle: query7(".subtitle")
+      backdrop: query5(".backdrop"),
+      binding: query5(".binding"),
+      closeButton: query5(".close"),
+      details: query5(".details"),
+      methodFilter: query5(".method-filter"),
+      providers: query5(".providers"),
+      search: query5(".search"),
+      sourcesList: query5(".sources"),
+      subtitle: query5(".subtitle")
     };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/template.html
-  var template_default26 = `<div class="backdrop" hidden>
+  var template_default24 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="data-source-picker-title">
         <header class="header">
             <div>
@@ -48235,7 +47021,7 @@ h2 {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/DataSourcePicker/DataSourcePicker.ts
   var template8 = document.createElement("template");
-  template8.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default26)}`;
+  template8.innerHTML = `<style>${String(styles_default10)}</style>${String(template_default24)}`;
 
   class DataSourcePicker extends HTMLElement {
     _sources = [];
@@ -48359,7 +47145,7 @@ h2 {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/template.html
-  var template_default27 = `<div class="backdrop" hidden>
+  var template_default25 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="condition-picker-title">
         <header class="header">
             <div>
@@ -48378,7 +47164,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/style.css
-  var style_default20 = `:host { display: contents; }
+  var style_default19 = `:host { display: contents; }
 * { box-sizing: border-box; }
 
 .backdrop {
@@ -48529,12 +47315,12 @@ textarea { min-height: 92px; resize: vertical; }
     label4.className = "control";
     const text5 = document.createElement("span");
     text5.textContent = "Expression";
-    const textarea4 = document.createElement("textarea");
-    textarea4.className = "advanced-expression";
-    textarea4.value = expression;
-    textarea4.placeholder = 'plan.status == "active" && $source.loaded';
-    textarea4.addEventListener("input", () => onInput(textarea4.value));
-    label4.append(text5, textarea4);
+    const textarea3 = document.createElement("textarea");
+    textarea3.className = "advanced-expression";
+    textarea3.value = expression;
+    textarea3.placeholder = 'plan.status == "active" && $source.loaded';
+    textarea3.addEventListener("input", () => onInput(textarea3.value));
+    label4.append(text5, textarea3);
     root.append(label4);
     return root;
   }
@@ -48586,36 +47372,36 @@ textarea { min-height: 92px; resize: vertical; }
     return { path: fields[0]?.path ?? "", operator: "truthy", value: "" };
   }
   function fieldSelect(fields, draft, onChange) {
-    const select4 = document.createElement("select");
-    select4.className = "field-path";
+    const select3 = document.createElement("select");
+    select3.className = "field-path";
     for (const field3 of fields) {
       const option8 = document.createElement("option");
       option8.value = field3.path;
       option8.textContent = `${field3.scopeLabel}: ${field3.path}`;
-      select4.append(option8);
+      select3.append(option8);
     }
-    select4.selectedIndex = Math.max(0, fields.findIndex((field3) => field3.path === draft.path));
-    select4.addEventListener("change", () => {
-      draft.path = select4.options.item(select4.selectedIndex)?.value ?? "";
+    select3.selectedIndex = Math.max(0, fields.findIndex((field3) => field3.path === draft.path));
+    select3.addEventListener("change", () => {
+      draft.path = select3.options.item(select3.selectedIndex)?.value ?? "";
       onChange(false);
     });
-    return control("Field", select4);
+    return control("Field", select3);
   }
   function operatorSelect(draft, onChange) {
-    const select4 = document.createElement("select");
-    select4.className = "field-operator";
+    const select3 = document.createElement("select");
+    select3.className = "field-operator";
     for (const operator of OPERATORS) {
       const option8 = document.createElement("option");
       option8.value = operator.value;
       option8.textContent = operator.label;
-      select4.append(option8);
+      select3.append(option8);
     }
-    select4.selectedIndex = Math.max(0, OPERATORS.findIndex((operator) => operator.value === draft.operator));
-    select4.addEventListener("change", () => {
-      draft.operator = select4.options.item(select4.selectedIndex)?.value ?? "truthy";
+    select3.selectedIndex = Math.max(0, OPERATORS.findIndex((operator) => operator.value === draft.operator));
+    select3.addEventListener("change", () => {
+      draft.operator = select3.options.item(select3.selectedIndex)?.value ?? "truthy";
       onChange(true);
     });
-    return control("Operator", select4);
+    return control("Operator", select3);
   }
   function valueInput(draft, onChange) {
     const input3 = document.createElement("input");
@@ -48732,14 +47518,14 @@ textarea { min-height: 92px; resize: vertical; }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/Modes/conditionPickerView.ts
   function queryConditionPickerElements(root) {
-    const query7 = (selector) => root.querySelector(selector);
+    const query5 = (selector) => root.querySelector(selector);
     return {
-      applyButton: query7(".apply"),
-      backdrop: query7(".backdrop"),
-      body: query7(".body"),
-      closeButton: query7(".close"),
-      removeButton: query7(".remove"),
-      subtitle: query7(".subtitle")
+      applyButton: query5(".apply"),
+      backdrop: query5(".backdrop"),
+      body: query5(".body"),
+      closeButton: query5(".close"),
+      removeButton: query5(".remove"),
+      subtitle: query5(".subtitle")
     };
   }
   function conditionExpression(input3) {
@@ -48782,7 +47568,7 @@ textarea { min-height: 92px; resize: vertical; }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/ConditionPicker.ts
   var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${String(style_default20)}</style>${String(template_default27)}`;
+  template9.innerHTML = `<style>${String(style_default19)}</style>${String(template_default25)}`;
 
   class ConditionPicker extends HTMLElement {
     _mode = "source";
@@ -48975,7 +47761,7 @@ textarea { min-height: 92px; resize: vertical; }
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/template.html
-  var template_default28 = `<div class="backdrop" hidden>
+  var template_default26 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="block-picker-title">
         <header class="header">
             <div>
@@ -49477,8 +48263,8 @@ dd {
     const subCategory = blockPickerItemSubCategory(item);
     return subCategory ? `${category} / ${subCategory}` : category;
   }
-  function blockPickerOptionMatches(option8, query7) {
-    if (!query7) {
+  function blockPickerOptionMatches(option8, query5) {
+    if (!query5) {
       return true;
     }
     const item = blockPickerOptionItem(option8);
@@ -49489,11 +48275,11 @@ dd {
       blockPickerItemSubCategory(item),
       blockPickerItemHandle(item),
       option8.slotLabel
-    ].some((value3) => value3?.toLowerCase().includes(query7));
+    ].some((value3) => value3?.toLowerCase().includes(query5));
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/blockPickerState.ts
-  function blockPickerVisibleOptions(group, source2, category, query7) {
+  function blockPickerVisibleOptions(group, source2, category, query5) {
     return group?.options.filter((option8) => {
       const item = blockPickerOptionItem(option8);
       if (item.kind !== source2) {
@@ -49502,7 +48288,7 @@ dd {
       if (category && blockPickerCategoryLabel(option8) !== category) {
         return false;
       }
-      return blockPickerOptionMatches(option8, query7);
+      return blockPickerOptionMatches(option8, query5);
     }) ?? [];
   }
   function blockPickerOptionsForSource(group, source2) {
@@ -49675,32 +48461,32 @@ dd {
     });
     const text5 = document.createElement("span");
     text5.textContent = label4;
-    const badge3 = document.createElement("span");
-    badge3.className = "count";
-    badge3.textContent = String(count);
-    button2.append(text5, badge3);
+    const badge2 = document.createElement("span");
+    badge2.className = "count";
+    badge2.textContent = String(count);
+    button2.append(text5, badge2);
     return button2;
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/Rendering/blockPickerElements.ts
   function queryBlockPickerElements(root) {
-    const query7 = (selector) => root.querySelector(selector);
+    const query5 = (selector) => root.querySelector(selector);
     return {
-      backdrop: query7(".backdrop"),
-      categories: query7(".categories"),
-      closeButton: query7(".close"),
-      details: query7(".details"),
-      results: query7(".results"),
-      search: query7(".search"),
-      sources: query7(".sources"),
-      subtitle: query7(".subtitle"),
-      tabs: query7(".slot-tabs")
+      backdrop: query5(".backdrop"),
+      categories: query5(".categories"),
+      closeButton: query5(".close"),
+      details: query5(".details"),
+      results: query5(".results"),
+      search: query5(".search"),
+      sources: query5(".sources"),
+      subtitle: query5(".subtitle"),
+      tabs: query5(".slot-tabs")
     };
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/BlockPickerModal/BlockPickerModal.ts
   var template10 = document.createElement("template");
-  template10.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default28)}`;
+  template10.innerHTML = `<style>${String(styles_default11)}</style>${String(template_default26)}`;
 
   class BlockPickerModal extends HTMLElement {
     _groups = [];
@@ -50132,19 +48918,19 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/Renderers/structureTreePresentation.ts
   function renderStructureBadge(value3) {
-    const badge3 = document.createElement("span");
-    badge3.className = structureBadgeClass(value3);
+    const badge2 = document.createElement("span");
+    badge2.className = structureBadgeClass(value3);
     const icon = structureBadgeIcon(value3);
     if (icon) {
       const iconEl = document.createElement("span");
       iconEl.className = "badge-icon";
       iconEl.textContent = icon;
-      badge3.append(iconEl);
+      badge2.append(iconEl);
     }
     const label4 = document.createElement("span");
     label4.textContent = value3;
-    badge3.append(label4);
-    return badge3;
+    badge2.append(label4);
+    return badge2;
   }
   function structureBadgeClass(value3) {
     if (CMS_SOURCE_STATES.includes(value3)) {
@@ -51529,13 +50315,13 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/template.html
-  var template_default29 = `<nav class="structure-tree" aria-label="Page structure">
+  var template_default27 = `<nav class="structure-tree" aria-label="Page structure">
     <div class="empty">No editable elements</div>
 </nav>
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/style.css
-  var style_default21 = `:host {
+  var style_default20 = `:host {
     display: block;
     position: relative;
     min-height: 100%;
@@ -51706,8 +50492,8 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template11 = document.createElement("template");
-  template11.innerHTML = `<style>${[style_default21, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
-`)}</style>${String(template_default29)}`;
+  template11.innerHTML = `<style>${[style_default20, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
+`)}</style>${String(template_default27)}`;
 
   class StructureTree extends HTMLElement {
     controller;
@@ -51746,7 +50532,7 @@ dd {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/template.html
-  var template_default30 = `<main class="canvas">
+  var template_default28 = `<main class="canvas">
     <div class="viewport">
         <div class="page">
             <iframe class="editor-frame" data-frame-kind="editor" title="Page editor canvas" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
@@ -51757,7 +50543,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/style.css
-  var style_default22 = `:host {
+  var style_default21 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -51866,7 +50652,7 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
   var template12 = document.createElement("template");
-  template12.innerHTML = `<style>${String(style_default22)}</style>${String(template_default30)}`;
+  template12.innerHTML = `<style>${String(style_default21)}</style>${String(template_default28)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -52007,7 +50793,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/template.html
-  var template_default31 = `<section class="section">
+  var template_default29 = `<section class="section">
     <button class="head" type="button" aria-expanded="true">
         <span class="label"></span>
         <span class="chevron">⌄</span>
@@ -52019,7 +50805,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/style.css
-  var style_default23 = `:host {
+  var style_default22 = `:host {
     display: block;
 }
 
@@ -52108,7 +50894,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template13 = createFieldTemplate(template_default31, style_default23);
+  var template13 = createFieldTemplate(template_default29, style_default22);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -52132,7 +50918,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/template.html
-  var template_default32 = `<div class="field">
+  var template_default30 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <input>
@@ -52153,7 +50939,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/style.css
-  var style_default24 = `:host {
+  var style_default23 = `:host {
     display: block;
 }
 
@@ -52386,8 +51172,8 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/DynamicData/dynamicDataPicker.ts
-  function matchingDynamicDataOptions(options2, query7) {
-    const normalized = query7.trim().toLowerCase();
+  function matchingDynamicDataOptions(options2, query5) {
+    const normalized = query5.trim().toLowerCase();
     return normalized ? options2.filter((option8) => `${option8.label} ${option8.path}`.toLowerCase().includes(normalized)) : options2;
   }
   function renderDynamicDataOptions(list, options2, totalOptions, onSelect) {
@@ -52590,7 +51376,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template14 = createFieldTemplate(template_default32, `${String(style_default24)}${String(dynamicDataPicker_default)}`);
+  var template14 = createFieldTemplate(template_default30, `${String(style_default23)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -52650,7 +51436,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/template.html
-  var template_default33 = `<div class="field">
+  var template_default31 = `<div class="field">
     <span class="label"></span>
     <div class="control-shell">
         <textarea rows="3"></textarea>
@@ -52671,7 +51457,7 @@ input:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/style.css
-  var style_default25 = `:host {
+  var style_default24 = `:host {
     display: block;
 }
 
@@ -52743,7 +51529,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template15 = createFieldTemplate(template_default33, `${String(style_default25)}${String(dynamicDataPicker_default)}`);
+  var template15 = createFieldTemplate(template_default31, `${String(style_default24)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -53178,7 +51964,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/template.html
-  var template_default34 = `<div class="field">
+  var template_default32 = `<div class="field">
     <span class="label"></span>
     <span class="toolbar" aria-label="Rich text tools"></span>
     <div class="data-picker" hidden role="dialog" aria-label="Insert data">
@@ -53434,7 +52220,7 @@ textarea:disabled {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/RichText/RichTextEditor/RichTextEditor.ts
   var template16 = document.createElement("template");
-  template16.innerHTML = `<style>${String(styles_default12)}</style>${String(template_default34)}`;
+  template16.innerHTML = `<style>${String(styles_default12)}</style>${String(template_default32)}`;
 
   class RichTextEditor extends HTMLElement {
     _range = new RichTextRangeCommands(() => this.editor, () => this.getSelection());
@@ -53567,7 +52353,7 @@ textarea:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/template.html
-  var template_default35 = `<label class="field">
+  var template_default33 = `<label class="field">
     <span class="label"></span>
     <select></select>
     <span class="hint"></span>
@@ -53575,7 +52361,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/style.css
-  var style_default26 = `:host {
+  var style_default25 = `:host {
     display: block;
 }
 
@@ -53679,7 +52465,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template17 = createFieldTemplate(template_default35, style_default26);
+  var template17 = createFieldTemplate(template_default33, style_default25);
 
   class Select extends HTMLElement {
     constructor() {
@@ -53716,7 +52502,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/template.html
-  var template_default36 = `<button class="toggle" type="button" aria-pressed="false">
+  var template_default34 = `<button class="toggle" type="button" aria-pressed="false">
     <span class="copy">
         <span class="label"></span>
         <span class="hint"></span>
@@ -53726,7 +52512,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/style.css
-  var style_default27 = `:host {
+  var style_default26 = `:host {
     display: block;
 }
 
@@ -53839,7 +52625,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template18 = createFieldTemplate(template_default36, style_default27);
+  var template18 = createFieldTemplate(template_default34, style_default26);
 
   class Toggle extends HTMLElement {
     constructor() {
@@ -53856,13 +52642,13 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/template.html
-  var template_default37 = `<div class="segmented">
+  var template_default35 = `<div class="segmented">
     <slot></slot>
 </div>
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/style.css
-  var style_default28 = `:host {
+  var style_default27 = `:host {
     display: block;
 }
 
@@ -53908,7 +52694,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template19 = createFieldTemplate(template_default37, style_default28);
+  var template19 = createFieldTemplate(template_default35, style_default27);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
@@ -54031,10 +52817,10 @@ select:disabled {
       button2.replaceChildren();
       const method = selected2?.method ?? setting.defaultMethod;
       if (method) {
-        const badge3 = document.createElement("span");
-        badge3.className = "endpoint-method";
-        badge3.textContent = method;
-        button2.append(badge3);
+        const badge2 = document.createElement("span");
+        badge2.className = "endpoint-method";
+        badge2.textContent = method;
+        button2.append(badge2);
       }
       const value3 = document.createElement("span");
       value3.className = selected2 ? "endpoint-value" : "endpoint-placeholder";
@@ -54118,14 +52904,14 @@ select:disabled {
     return wrapper;
   }
   function createTokenSelect(setting, tokens, picker, input3, emitColorChange) {
-    const select4 = document.createElement("select");
-    select4.className = "color-token-select";
-    select4.ariaLabel = `${setting.label} theme token`;
-    select4.disabled = setting.disabled === true;
+    const select3 = document.createElement("select");
+    select3.className = "color-token-select";
+    select3.ariaLabel = `${setting.label} theme token`;
+    select3.disabled = setting.disabled === true;
     const custom = document.createElement("option");
     custom.value = "";
     custom.textContent = "Custom color";
-    select4.append(custom);
+    select3.append(custom);
     const groups = new Map;
     for (const token of tokens) {
       const option8 = document.createElement("option");
@@ -54133,7 +52919,7 @@ select:disabled {
       option8.textContent = token.label;
       const category = token.category?.trim();
       if (!category) {
-        select4.append(option8);
+        select3.append(option8);
         continue;
       }
       let group = groups.get(category);
@@ -54141,23 +52927,23 @@ select:disabled {
         group = document.createElement("optgroup");
         group.label = category;
         groups.set(category, group);
-        select4.append(group);
+        select3.append(group);
       }
       group.append(option8);
     }
-    const selected2 = Array.from(select4.querySelectorAll("option")).find((option8) => option8.value === (setting.defaultValue ?? ""));
+    const selected2 = Array.from(select3.querySelectorAll("option")).find((option8) => option8.value === (setting.defaultValue ?? ""));
     if (selected2) {
       selected2.selected = true;
     }
-    select4.addEventListener("change", () => {
-      if (setting.disabled || !select4.value) {
+    select3.addEventListener("change", () => {
+      if (setting.disabled || !select3.value) {
         return;
       }
-      input3.value = select4.value;
-      picker.value = colorPickerValue(select4.value);
-      emitColorChange(select4.value);
+      input3.value = select3.value;
+      picker.value = colorPickerValue(select3.value);
+      emitColorChange(select3.value);
     });
-    return select4;
+    return select3;
   }
   function createColorPicker(setting) {
     const picker = document.createElement("input");
@@ -54618,7 +53404,7 @@ select:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/template.html
-  var template_default38 = `<div class="settings-view">
+  var template_default36 = `<div class="settings-view">
     <div class="empty">Select an editable element</div>
 </div>
 `;
@@ -54900,7 +53686,7 @@ cms-editor-v2-segmented-control button svg:only-child {
 
   // ../../features/cms-editor-system-v2/src/components/Settings/SettingsView/SettingsView.ts
   var template20 = document.createElement("template");
-  template20.innerHTML = `<style>${String(styles_default13)}</style>${String(template_default38)}`;
+  template20.innerHTML = `<style>${String(styles_default13)}</style>${String(template_default36)}`;
   var SETTINGS_VIEW_SETTING_CHANGE_EVENT = "editor-v2:setting-change";
   var SETTINGS_VIEW_CONTENT_CHANGE_EVENT = "editor-v2:content-change";
   var SETTINGS_VIEW_STATE_TOGGLE_EVENT = "editor-v2:state-toggle";
@@ -54920,7 +53706,7 @@ cms-editor-v2-segmented-control button svg:only-child {
     setThemeTokens(tokens) {
       this._themeTokens = tokens.filter((token) => token.label && /^[a-z][a-z0-9-]*$/.test(token.variable));
     }
-    setSettings(sections2, textCapability = null, textValue5 = "", mode = "settings", states2 = [], dataScopes2 = [], dataSources = []) {
+    setSettings(sections2, textCapability = null, textValue4 = "", mode = "settings", states2 = [], dataScopes2 = [], dataSources = []) {
       this._endpointSettings.setDataSources(dataSources);
       this._dataScopes = dataScopes2;
       const view = this.shadowRoot.querySelector(".settings-view");
@@ -54936,7 +53722,7 @@ cms-editor-v2-segmented-control button svg:only-child {
         return;
       }
       if (shouldRenderText) {
-        view.append(renderTextCapability(textCapability, textValue5, dataScopes2, (value3, format) => this._emitContentChange(value3, format)));
+        view.append(renderTextCapability(textCapability, textValue4, dataScopes2, (value3, format) => this._emitContentChange(value3, format)));
       }
       if (shouldRenderStates) {
         view.append(renderSettingsStates(states2, (state2) => this._emitStateToggle(state2)));
@@ -54973,7 +53759,7 @@ cms-editor-v2-segmented-control button svg:only-child {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/template.html
-  var template_default39 = `<div class="backdrop" hidden>
+  var template_default37 = `<div class="backdrop" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="repeat-picker-title">
         <header class="header">
             <div>
@@ -55395,8 +54181,8 @@ label {
       ];
     });
   }
-  function visibleRepeatOptions(options2, query7) {
-    const normalizedQuery = query7.trim().toLowerCase();
+  function visibleRepeatOptions(options2, query5) {
+    const normalizedQuery = query5.trim().toLowerCase();
     if (!normalizedQuery) {
       return options2;
     }
@@ -55548,8 +54334,8 @@ label {
     heading.textContent = "Binding";
     const config = document.createElement("section");
     config.className = "binding-config";
-    const count = numberInput2("Count", 5);
-    const alias = textInput2("Alias", "index");
+    const count = numberInput("Count", 5);
+    const alias = textInput("Alias", "index");
     config.append(count.label, alias.label);
     scroll.append(heading, config);
     const insert = document.createElement("button");
@@ -55575,7 +54361,7 @@ label {
     footer.append(insert);
     container.append(scroll, footer);
   }
-  function numberInput2(text5, value3) {
+  function numberInput(text5, value3) {
     const label4 = document.createElement("label");
     label4.textContent = text5;
     const input3 = document.createElement("input");
@@ -55589,7 +54375,7 @@ label {
     label4.append(input3);
     return { label: label4, input: input3 };
   }
-  function textInput2(text5, value3) {
+  function textInput(text5, value3) {
     const label4 = document.createElement("label");
     label4.textContent = text5;
     const input3 = document.createElement("input");
@@ -55603,7 +54389,7 @@ label {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/RepeatPicker/RepeatPicker.ts
   var template21 = document.createElement("template");
-  template21.innerHTML = `<style>${String(styles_default14)}</style>${String(template_default39)}`;
+  template21.innerHTML = `<style>${String(styles_default14)}</style>${String(template_default37)}`;
   var REPEAT_PICKER_SELECT_EVENT = "editor-v2:repeat-select";
 
   class RepeatPicker extends HTMLElement {
@@ -56418,13 +55204,13 @@ label {
       }
       this.stop();
       this.activeEditor = editor;
-      const textEditor2 = textTargetEditor(editor);
-      textEditor2.target.setAttribute(INLINE_TEXT_ACTIVE_ATTRIBUTE, "");
-      textEditor2.target.setAttribute("contenteditable", format === "richtext" ? "true" : "plaintext-only");
-      this.protectContentSlots(textEditor2);
+      const textEditor = textTargetEditor(editor);
+      textEditor.target.setAttribute(INLINE_TEXT_ACTIVE_ATTRIBUTE, "");
+      textEditor.target.setAttribute("contenteditable", format === "richtext" ? "true" : "plaintext-only");
+      this.protectContentSlots(textEditor);
       this.richTextToolbar?.activate(editor);
       if (focus) {
-        textEditor2.target.focus({ preventScroll: true });
+        textEditor.target.focus({ preventScroll: true });
       }
       return true;
     }
@@ -57190,20 +55976,20 @@ label {
       if (!detail.label.trim()) {
         return null;
       }
-      const image2 = document2.createElement("img");
-      image2.setAttribute("src", detail.src);
-      image2.setAttribute("alt", detail.label);
-      image2.setAttribute("loading", "lazy");
-      image2.setAttribute("fetchpriority", "auto");
-      image2.addEventListener("load", () => {
-        if (image2.naturalWidth > 0) {
-          image2.setAttribute("width", String(image2.naturalWidth));
+      const image = document2.createElement("img");
+      image.setAttribute("src", detail.src);
+      image.setAttribute("alt", detail.label);
+      image.setAttribute("loading", "lazy");
+      image.setAttribute("fetchpriority", "auto");
+      image.addEventListener("load", () => {
+        if (image.naturalWidth > 0) {
+          image.setAttribute("width", String(image.naturalWidth));
         }
-        if (image2.naturalHeight > 0) {
-          image2.setAttribute("height", String(image2.naturalHeight));
+        if (image.naturalHeight > 0) {
+          image.setAttribute("height", String(image.naturalHeight));
         }
       }, { once: true });
-      return image2;
+      return image;
     }
     if (mimeType.startsWith("video/")) {
       const video = document2.createElement("video");
@@ -58112,8 +56898,8 @@ label {
         return;
       }
       this.editor = editor;
-      const textEditor2 = textTargetEditor(editor);
-      this.commands = new RichTextRangeCommands(() => textEditor2.target, () => textEditor2.target.ownerDocument.getSelection?.() ?? null);
+      const textEditor = textTargetEditor(editor);
+      this.commands = new RichTextRangeCommands(() => textEditor.target, () => textEditor.target.ownerDocument.getSelection?.() ?? null);
       renderRichTextToolbar(this.refs.toolbar, capability, {
         action: (action) => this.runAction(action),
         textSize: (direction) => this.runTextSize(direction)
@@ -58487,19 +57273,19 @@ label {
     if (target2.localName !== "img" || attribute.toLowerCase() !== "src") {
       return;
     }
-    const image2 = target2;
-    image2.removeAttribute("width");
-    image2.removeAttribute("height");
+    const image = target2;
+    image.removeAttribute("width");
+    image.removeAttribute("height");
     const applyDimensions = () => {
-      if (image2.naturalWidth > 0) {
-        image2.setAttribute("width", String(image2.naturalWidth));
+      if (image.naturalWidth > 0) {
+        image.setAttribute("width", String(image.naturalWidth));
       }
-      if (image2.naturalHeight > 0) {
-        image2.setAttribute("height", String(image2.naturalHeight));
+      if (image.naturalHeight > 0) {
+        image.setAttribute("height", String(image.naturalHeight));
       }
     };
-    image2.addEventListener("load", applyDimensions, { once: true });
-    if (image2.complete) {
+    image.addEventListener("load", applyDimensions, { once: true });
+    if (image.complete) {
       applyDimensions();
     }
   }
@@ -60528,7 +59314,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/template.html
-  var template_default40 = `<div class="shell">
+  var template_default38 = `<div class="shell">
     <cms-editor-v2-topbar></cms-editor-v2-topbar>
     <div class="workspace">
         <cms-editor-v2-panel class="structure-panel" side="left">
@@ -60601,7 +59387,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/style.css
-  var style_default29 = `:host {
+  var style_default28 = `:host {
     --editor-v2-bg: #f6f7f7;
     --editor-v2-surface: #ffffff;
     --editor-v2-surface-muted: #f9faf9;
@@ -60729,8 +59515,8 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellTemplate.ts
   function createShellTemplate() {
     const template22 = document.createElement("template");
-    template22.innerHTML = `<style>${[style_default29, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
-`)}</style>${String(template_default40)}`;
+    template22.innerHTML = `<style>${[style_default28, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
+`)}</style>${String(template_default38)}`;
     return template22;
   }
 
@@ -61553,8 +60339,8 @@ label {
     });
   }
   function siteBlocFrameUrl(tag, mode, revision, nonce) {
-    const query7 = new URLSearchParams({ id: tag, mode, revision: String(revision), nonce: String(nonce) });
-    return `${getMetaBasePath()}/api/site-bloc/frame?${query7}`;
+    const query5 = new URLSearchParams({ id: tag, mode, revision: String(revision), nonce: String(nonce) });
+    return `${getMetaBasePath()}/api/site-bloc/frame?${query5}`;
   }
   function siteBlocUrl(path, tag) {
     return `${getMetaBasePath()}/api/${path}?id=${encodeURIComponent(tag)}`;
@@ -61825,7 +60611,7 @@ label {
     if (referenced) {
       return referenced;
     }
-    const imageAlt = Array.from(element.querySelectorAll("img[alt]")).map((image2) => image2.getAttribute("alt")?.trim() ?? "").filter(Boolean).join(" ");
+    const imageAlt = Array.from(element.querySelectorAll("img[alt]")).map((image) => image.getAttribute("alt")?.trim() ?? "").filter(Boolean).join(" ");
     return element.textContent?.trim() || imageAlt;
   }
   function hasControlLabel(root, element) {
@@ -62066,7 +60852,7 @@ label {
   }
 
   // src/components/editorSystemV2/siteBloc/template.html
-  var template_default41 = `<div class="builder" aria-busy="true">
+  var template_default39 = `<div class="builder" aria-busy="true">
     <div class="feedback">
         <p class="status" data-status role="status" aria-live="polite">Loading bloc…</p>
         <p class="error" data-error role="alert" hidden></p>
@@ -62091,7 +60877,7 @@ label {
 `;
 
   // src/components/editorSystemV2/siteBloc/style.css
-  var style_default30 = `:host {
+  var style_default29 = `:host {
     --builder-accent: #165f4b;
     --builder-border: #dfe5e2;
     --builder-muted: #697873;
@@ -62139,7 +60925,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 
   // src/components/editorSystemV2/siteBloc/SiteBlocBuilder.ts
   var template22 = document.createElement("template");
-  template22.innerHTML = `<style>${String(style_default30)}</style>${String(template_default41)}`;
+  template22.innerHTML = `<style>${String(style_default29)}</style>${String(template_default39)}`;
 
   class SiteBlocBuilder extends HTMLElement {
     controller;
@@ -62278,7 +61064,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/CardMedia/template.html
-  var template_default42 = `<div class="card">
+  var template_default40 = `<div class="card">
     <div class="preview">
         <slot name="image">
             <span class="placeholder">
@@ -62300,7 +61086,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/CardMedia/style.css
-  var style_default31 = `:host {
+  var style_default30 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -62425,8 +61211,8 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   class CardMedia extends l2 {
     constructor() {
       super({
-        css: style_default31,
-        template: template_default42
+        css: style_default30,
+        template: template_default40
       });
     }
   }
@@ -62435,7 +61221,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/CropSystem/template.html
-  var template_default43 = `<div class="backdrop" id="backdrop">
+  var template_default41 = `<div class="backdrop" id="backdrop">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="crop-title">
         <div class="header">
             <h3 id="crop-title">Crop image</h3>
@@ -62680,7 +61466,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       super({
         css: [layout_default4, controls_default4].join(`
 `),
-        template: template_default43
+        template: template_default41
       });
     }
     connectedCallback() {
@@ -62718,7 +61504,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   customElements.define("p9r-crop-system", CropSystem);
 
   // src/components/media/DetailMedia/template.html
-  var template_default44 = `<div class="backdrop" id="backdrop">
+  var template_default42 = `<div class="backdrop" id="backdrop">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="title">
         <div class="header">
             <h3 id="title">File details</h3>
@@ -62977,7 +61763,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       super({
         css: [layout_default5, tools_default].join(`
 `),
-        template: template_default44
+        template: template_default42
       });
     }
     connectedCallback() {
@@ -63011,7 +61797,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/GridMedia/view/template.html
-  var template_default45 = `<div class="toolbar">
+  var template_default43 = `<div class="toolbar">
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-current">Root</span>
     </div>
@@ -64127,7 +62913,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
       super({
         css: [navigation_default3, interactions_default, detail_default3].join(`
 `),
-        template: template_default45
+        template: template_default43
       });
     }
     get detail() {
@@ -64279,7 +63065,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   }
 
   // src/components/media/MediaCenter/template.html
-  var template_default46 = `<dialog>
+  var template_default44 = `<dialog>
     <div class="modal-container">
         <header class="modal-header">
             <h2>Media Center</h2>
@@ -64865,7 +63651,7 @@ dialog::backdrop {
       super({
         css: [chrome_default, content_default2, folder_default].join(`
 `),
-        template: template_default46
+        template: template_default44
       });
     }
     connectedCallback() {

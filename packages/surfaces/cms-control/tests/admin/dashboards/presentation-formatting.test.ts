@@ -9,7 +9,7 @@ import {
     tableRowsTemplate,
     urlSourceWrapper,
 } from "cms-control/components/admin/Resources/Dashboards/runtime/mounting/mountSource";
-import { createTableControl } from "cms-control/components/admin/Resources/Dashboards/widgets/w-detail/controls/table";
+import { configureDetail, mountDetail, setSourceData } from "./detail/boundDetail";
 
 const realFetch = globalThis.fetch;
 
@@ -128,7 +128,7 @@ describe("dashboard presentation formats", () => {
         );
     });
 
-    test("formats readonly and nested-table values in detail widgets", () => {
+    test("formats readonly and nested-table values in detail widgets", async () => {
         const widget = detailWidget();
         const resource = {
             id: "proposal-1",
@@ -156,8 +156,11 @@ describe("dashboard presentation formats", () => {
         expect(published.value).toBe(formatDashboardValue(resource.currentVersion.publishedAt, "date"));
         expect(lines.columns?.map((column) => column.format)).toEqual(["text", "money", "date"]);
 
-        const control = createTableControl(lines);
-        const row = control.querySelector(".detail-table-row:not(.detail-table-head)")!;
+        const detail = document.createElement("cms-dashboard-w-detail");
+        configureDetail(detail, widget);
+        setSourceData(detail, resource);
+        await mountDetail(detail);
+        const row = detail.querySelector("[data-field-control=lines] [data-table-row]")!;
         const values = Array.from(row.querySelectorAll("span")).map((cell) => cell.textContent);
         expect(values).toEqual([
             "Restaurant booking",
