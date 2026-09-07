@@ -1,6 +1,6 @@
 import type { DashboardSection } from "@bernouy/cms-dashboards";
 import type { DetailWidget } from "../runtime/fieldState";
-import { renderDetailActions } from "../runtime/actions";
+import { composeActions } from "./actions";
 import { fieldElement } from "./fields";
 import "./Field";
 
@@ -20,12 +20,10 @@ const supported = new Set([
 
 /** Temporary migration boundary; extend it as the remaining control families migrate. */
 export function supportsBoundDetail(widget: DetailWidget): boolean {
-    return (
-        [...widget.main, ...(widget.aside ?? [])].every(
-            (section) =>
-                !("widget" in section) &&
-                section.fields.every((field) => supported.has(field.type) && !("lookup" in field && field.lookup)),
-        ) && !(widget.actions ?? []).some((action) => action.visibleWhen)
+    return [...widget.main, ...(widget.aside ?? [])].every(
+        (section) =>
+            !("widget" in section) &&
+            section.fields.every((field) => supported.has(field.type) && !("lookup" in field && field.lookup)),
     );
 }
 
@@ -49,14 +47,7 @@ export function composeDetail(widget: DetailWidget): DocumentFragment {
         title.textContent = widget.title?.fallback ?? widget.id;
     }
     fragment.append(title);
-    for (const action of renderDetailActions(
-        (widget.actions ?? []).map((action) => ({ ...action, action: action.id, icon: undefined })),
-    )) {
-        action.slot = "bound-actions";
-        action.dataset.widget = widget.id;
-        action.setAttribute("cms-condition", "detailReady");
-        fragment.append(action);
-    }
+    fragment.append(composeActions());
     for (const [slot, sections] of [
         ["bound-main", widget.main],
         ["bound-aside", widget.aside ?? []],

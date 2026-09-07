@@ -2,6 +2,7 @@ import { readSourceData, setSourceContext } from "@bernouy/components";
 import { fieldValues } from "../../../runtime/mapping";
 import { matchesDashboardVisibility, setValueAt, valueAt } from "../../../runtime/expressions";
 import { currencyFractionDigits, formatMinorUnits } from "../../../runtime/mapping/money";
+import { actionLayout } from "./actions";
 import type { DetailWidget } from "../runtime/fieldState";
 
 /** Project response values and local edits into binding scope; never constructs DOM. */
@@ -14,6 +15,7 @@ export function bindDetailContext(
     const fields = [...widget.main, ...(widget.aside ?? [])].flatMap((section) =>
         "widget" in section ? [] : section.fields,
     );
+    const actions = actionLayout(widget.actions ?? []);
     const rules = Object.fromEntries(fields.map((field) => [field.id, field.visibleWhen]));
     setSourceContext(host, () => {
         const source = readSourceData(host);
@@ -60,6 +62,7 @@ export function bindDetailContext(
         return {
             detailReady: resource !== null && resource !== undefined,
             detailValues: effective,
+            detailActions: actions(values, resource),
             detailAmounts: amounts,
             detailVisibility: { fields: values, resource },
             detailRules: rules,

@@ -42,7 +42,8 @@ cms-shell-detail {
     gap: 8px;
 }
 
-.w-detail-actions p9r-action-menu {
+.w-detail-actions p9r-action-menu,
+::slotted(p9r-action-menu[slot="bound-actions"]) {
     --action-menu-panel-min-width: 220px;
 }
 

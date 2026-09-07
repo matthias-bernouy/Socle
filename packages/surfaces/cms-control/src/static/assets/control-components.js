@@ -13825,6 +13825,7 @@ p {
     template;
     rootCondition;
     regions = [];
+    entries = [];
     constructor(t, e, i, r, o) {
       this.start = t;
       this.end = e;
@@ -13833,18 +13834,25 @@ p {
       this.rootCondition = o;
     }
     update(t) {
-      this.unmount();
       let e = this.values(t);
-      if (!e)
+      if (e && !this.rootCondition && e.length === this.regions.length && e.every((r, o) => Object.is(r, this.entries[o]))) {
+        e.forEach((r, o) => this.regions[o].update(this.childScope(r, t)));
+        return;
+      }
+      if (this.unmount(), !e)
         return;
       let i = this.end.parentNode;
       if (!i)
         return;
       for (let r of e) {
-        let o = this.spec.name ? { vars: { [this.spec.name]: r }, parent: t } : { value: r, parent: t };
+        let o = this.childScope(r, t);
         if (!this.rootCondition || this.rootCondition.evaluate(o))
           this.regions.push(this.template.mount(i, o, this.end));
       }
+      this.entries = [...e];
+    }
+    childScope(t, e) {
+      return this.spec.name ? { vars: { [this.spec.name]: t }, parent: e } : { value: t, parent: e };
     }
     values(t) {
       if (this.spec.rangeError)
@@ -13862,7 +13870,7 @@ p {
     unmount() {
       for (let t of this.regions)
         t.unmount();
-      this.regions = [], mt(this.start, this.end);
+      this.regions = [], this.entries = [], mt(this.start, this.end);
     }
   }
 
@@ -27055,9 +27063,63 @@ w13c-lateral-menu-item {
   function record(value2) {
     return value2 && typeof value2 === "object" && !Array.isArray(value2) ? value2 : {};
   }
+  // src/static/admin/_content/sources/_runtime/detail/actions.html
+  var actions_default = `<p9r-button slot="bound-actions" cms-repeat="detailActions.primary as action" type="button" color="{{ action.color }}" variant="{{ action.variant }}" data-action="{{ action.id }}" data-confirm="{{ action.confirm }}" aria-label="{{ action.label }}">{{ action.label }}</p9r-button>
+<p9r-action-menu slot="bound-actions" cms-condition="detailActions.groups.length" label="More actions">
+    <p9r-action-menu-section cms-repeat="detailActions.groups as group" label="{{ group.label }}">
+        <p9r-action-menu-item cms-repeat="group.actions as action" color="{{ action.menuColor }}" data-action="{{ action.id }}" data-confirm="{{ action.confirm }}">
+            <svg cms-condition="action.icon == 'archive'" slot="icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M3 7h18"></path><path d="M5 7l1 14h12l1-14"></path><path d="M9 11h6"></path></svg>
+            <svg cms-condition="action.icon == 'download'" slot="icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M12 3v12"></path><path d="m7 10 5 5 5-5"></path><path d="M5 21h14"></path></svg>
+            <svg cms-condition="action.icon == 'link'" slot="icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 0 0-7.07-7.07l-.91.91"></path><path d="M14 11a5 5 0 0 0-7.07 0l-1.41 1.41a5 5 0 0 0 7.07 7.07l.91-.91"></path></svg>
+            <svg cms-condition="action.icon == 'trash'" slot="icon" aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path></svg>
+            {{ action.label }}
+        </p9r-action-menu-item>
+    </p9r-action-menu-section>
+</p9r-action-menu>
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/actions.ts
+  function composeActions() {
+    const template = document.createElement("template");
+    template.innerHTML = actions_default;
+    return template.content;
+  }
+  function actionLayout(actions) {
+    const entries = actions.map((action) => ({
+      ...action,
+      color: action.tone === "primary" ? "primary" : action.tone === "danger" ? "danger" : "",
+      variant: action.tone === "primary" ? "filled" : action.tone === "danger" ? "ghost" : "outlined",
+      menuColor: action.tone === "danger" ? "danger" : ""
+    }));
+    let previous = [];
+    let layout = { primary: [], groups: [] };
+    return (fields, resource) => {
+      const visible = resource == null ? [] : entries.filter((action) => matchesDashboardVisibility(action.visibleWhen, { fields, resource }));
+      if (visible.length === previous.length && visible.every((entry, index) => entry === previous[index])) {
+        return layout;
+      }
+      previous = visible;
+      const buttons = visible.filter((action) => action.placement !== "more");
+      const overflow = [...buttons.slice(3), ...visible.filter((action) => action.placement === "more")];
+      const groups = new Map;
+      for (const action of overflow) {
+        const label2 = action.section ?? "Other actions";
+        const group = groups.get(label2) ?? [];
+        group.push(action);
+        groups.set(label2, group);
+      }
+      layout = {
+        primary: buttons.slice(0, 3),
+        groups: Array.from(groups, ([label2, actions2]) => ({ label: label2, actions: actions2 }))
+      };
+      return layout;
+    };
+  }
+
   // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/context.ts
   function bindDetailContext(host, widget, draft, displayDraft) {
     const fields = [...widget.main, ...widget.aside ?? []].flatMap((section2) => ("widget" in section2) ? [] : section2.fields);
+    const actions = actionLayout(widget.actions ?? []);
     const rules = Object.fromEntries(fields.map((field2) => [field2.id, field2.visibleWhen]));
     vd(host, () => {
       const source2 = Cd(host);
@@ -27089,141 +27151,12 @@ w13c-lateral-menu-item {
       return {
         detailReady: resource !== null && resource !== undefined,
         detailValues: effective,
+        detailActions: actions(values, resource),
         detailAmounts: amounts,
         detailVisibility: { fields: values, resource },
         detailRules: rules
       };
     });
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/shared.ts
-  var WIDGET_ROW_SELECT_EVENT = "cms-dashboard-widget:row-select";
-  var WIDGET_BACK_EVENT = "cms-dashboard-widget:back";
-  var WIDGET_ACTION_EVENT = "cms-dashboard-widget:action";
-  var WIDGET_FILTER_CHANGE_EVENT = "cms-dashboard-widget:filter-change";
-  var WIDGET_FIELD_CHANGE_EVENT = "cms-dashboard-widget:field-change";
-  var WIDGET_MEDIA_ACTION_EVENT = "cms-dashboard-widget:media-action";
-  function emitWidgetEvent(host, type, detail) {
-    host.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
-  }
-  function setText(root, selector, value2) {
-    const element = root.querySelector(selector);
-    if (element) {
-      element.textContent = value2;
-    }
-  }
-  function setP9rButtonLabel(button, label2) {
-    button.textContent = label2;
-    button.setAttribute("aria-label", label2);
-    const syncNativeButton = () => {
-      button.shadowRoot?.querySelector("button")?.setAttribute("aria-label", label2);
-    };
-    syncNativeButton();
-    if (!button.shadowRoot) {
-      customElements.whenDefined(button.localName).then(syncNativeButton);
-    }
-  }
-  function setP9rButtonTone(button, tone) {
-    button.removeAttribute("color");
-    button.removeAttribute("variant");
-    if (tone === "primary") {
-      button.setAttribute("color", "primary");
-      button.setAttribute("variant", "filled");
-      return;
-    }
-    if (tone === "danger") {
-      button.setAttribute("color", "danger");
-      button.setAttribute("variant", "ghost");
-      return;
-    }
-    button.setAttribute("variant", "outlined");
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/icons.ts
-  var SVG_NS3 = "http://www.w3.org/2000/svg";
-  var PATHS = {
-    archive: ["M3 7h18", "M5 7l1 14h12l1-14", "M9 11h6"],
-    download: ["M12 3v12", "m7 10 5 5 5-5", "M5 21h14"],
-    link: [
-      "M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 0 0-7.07-7.07l-.91.91",
-      "M14 11a5 5 0 0 0-7.07 0l-1.41 1.41a5 5 0 0 0 7.07 7.07l.91-.91"
-    ],
-    trash: ["M3 6h18", "M8 6V4h8v2", "M19 6l-1 14H6L5 6", "M10 11v6", "M14 11v6"]
-  };
-  function actionIcon(icon) {
-    if (!icon) {
-      return null;
-    }
-    const svg2 = document.createElementNS(SVG_NS3, "svg");
-    svg2.setAttribute("slot", "icon");
-    svg2.setAttribute("aria-hidden", "true");
-    svg2.setAttribute("viewBox", "0 0 24 24");
-    svg2.setAttribute("focusable", "false");
-    for (const data of PATHS[icon]) {
-      const path = document.createElementNS(SVG_NS3, "path");
-      path.setAttribute("d", data);
-      svg2.append(path);
-    }
-    return svg2;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/actions.ts
-  function renderDetailActions(actions) {
-    const visible = actions.filter((action) => action.placement !== "more");
-    const overflow = [...visible.slice(3), ...actions.filter((action) => action.placement === "more")];
-    const result = visible.slice(0, 3).map(renderButton);
-    if (overflow.length) {
-      result.push(renderOverflowMenu(overflow));
-    }
-    return result;
-  }
-  function renderButton(action) {
-    const button = document.createElement("p9r-button");
-    button.setAttribute("type", "button");
-    setP9rButtonTone(button, action.tone);
-    button.dataset.action = action.action ?? action.label;
-    if (action.confirm) {
-      button.dataset.confirm = action.confirm;
-    }
-    setP9rButtonLabel(button, action.label);
-    return button;
-  }
-  function renderOverflowMenu(actions) {
-    const menu = document.createElement("p9r-action-menu");
-    menu.setAttribute("label", "More actions");
-    for (const [label2, sectionActions] of groupedSections(actions)) {
-      const section2 = document.createElement("p9r-action-menu-section");
-      section2.setAttribute("label", label2);
-      for (const action of sectionActions) {
-        section2.append(renderMenuItem(action));
-      }
-      menu.append(section2);
-    }
-    return menu;
-  }
-  function renderMenuItem(action) {
-    const item = document.createElement("p9r-action-menu-item");
-    if (action.tone === "danger") {
-      item.setAttribute("color", "danger");
-    }
-    item.dataset.action = action.action ?? action.label;
-    if (action.confirm) {
-      item.dataset.confirm = action.confirm;
-    }
-    const icon = actionIcon(action.icon);
-    if (icon) {
-      item.append(icon);
-    }
-    item.append(document.createTextNode(action.label));
-    return item;
-  }
-  function groupedSections(actions) {
-    const sections2 = new Map;
-    for (const action of actions) {
-      const label2 = action.section ?? "Other actions";
-      sections2.set(label2, [...sections2.get(label2) ?? [], action]);
-    }
-    return Array.from(sections2);
   }
 
   // src/static/admin/_content/sources/_runtime/detail/controls.html
@@ -27409,7 +27342,7 @@ dd { margin: 0; min-width: 0; }
     "money"
   ]);
   function supportsBoundDetail(widget) {
-    return [...widget.main, ...widget.aside ?? []].every((section2) => !("widget" in section2) && section2.fields.every((field2) => supported.has(field2.type) && !(("lookup" in field2) && field2.lookup))) && !(widget.actions ?? []).some((action) => action.visibleWhen);
+    return [...widget.main, ...widget.aside ?? []].every((section2) => !("widget" in section2) && section2.fields.every((field2) => supported.has(field2.type) && !(("lookup" in field2) && field2.lookup)));
   }
   function composeDetail(widget) {
     const fragment = document.createDocumentFragment();
@@ -27430,12 +27363,7 @@ dd { margin: 0; min-width: 0; }
       title.textContent = widget.title?.fallback ?? widget.id;
     }
     fragment.append(title);
-    for (const action of renderDetailActions((widget.actions ?? []).map((action2) => ({ ...action2, action: action2.id, icon: undefined })))) {
-      action.slot = "bound-actions";
-      action.dataset.widget = widget.id;
-      action.setAttribute("cms-condition", "detailReady");
-      fragment.append(action);
-    }
+    fragment.append(composeActions());
     for (const [slot, sections2] of [
       ["bound-main", widget.main],
       ["bound-aside", widget.aside ?? []]
@@ -27476,6 +27404,136 @@ dd { margin: 0; min-width: 0; }
   }
   if (!customElements.get("cms-dashboard-w-section")) {
     customElements.define("cms-dashboard-w-section", DashboardWSection);
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/shared.ts
+  var WIDGET_ROW_SELECT_EVENT = "cms-dashboard-widget:row-select";
+  var WIDGET_BACK_EVENT = "cms-dashboard-widget:back";
+  var WIDGET_ACTION_EVENT = "cms-dashboard-widget:action";
+  var WIDGET_FILTER_CHANGE_EVENT = "cms-dashboard-widget:filter-change";
+  var WIDGET_FIELD_CHANGE_EVENT = "cms-dashboard-widget:field-change";
+  var WIDGET_MEDIA_ACTION_EVENT = "cms-dashboard-widget:media-action";
+  function emitWidgetEvent(host, type, detail) {
+    host.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
+  }
+  function setText(root, selector, value2) {
+    const element = root.querySelector(selector);
+    if (element) {
+      element.textContent = value2;
+    }
+  }
+  function setP9rButtonLabel(button, label2) {
+    button.textContent = label2;
+    button.setAttribute("aria-label", label2);
+    const syncNativeButton = () => {
+      button.shadowRoot?.querySelector("button")?.setAttribute("aria-label", label2);
+    };
+    syncNativeButton();
+    if (!button.shadowRoot) {
+      customElements.whenDefined(button.localName).then(syncNativeButton);
+    }
+  }
+  function setP9rButtonTone(button, tone) {
+    button.removeAttribute("color");
+    button.removeAttribute("variant");
+    if (tone === "primary") {
+      button.setAttribute("color", "primary");
+      button.setAttribute("variant", "filled");
+      return;
+    }
+    if (tone === "danger") {
+      button.setAttribute("color", "danger");
+      button.setAttribute("variant", "ghost");
+      return;
+    }
+    button.setAttribute("variant", "outlined");
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/icons.ts
+  var SVG_NS3 = "http://www.w3.org/2000/svg";
+  var PATHS = {
+    archive: ["M3 7h18", "M5 7l1 14h12l1-14", "M9 11h6"],
+    download: ["M12 3v12", "m7 10 5 5 5-5", "M5 21h14"],
+    link: [
+      "M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 0 0-7.07-7.07l-.91.91",
+      "M14 11a5 5 0 0 0-7.07 0l-1.41 1.41a5 5 0 0 0 7.07 7.07l.91-.91"
+    ],
+    trash: ["M3 6h18", "M8 6V4h8v2", "M19 6l-1 14H6L5 6", "M10 11v6", "M14 11v6"]
+  };
+  function actionIcon(icon) {
+    if (!icon) {
+      return null;
+    }
+    const svg2 = document.createElementNS(SVG_NS3, "svg");
+    svg2.setAttribute("slot", "icon");
+    svg2.setAttribute("aria-hidden", "true");
+    svg2.setAttribute("viewBox", "0 0 24 24");
+    svg2.setAttribute("focusable", "false");
+    for (const data of PATHS[icon]) {
+      const path = document.createElementNS(SVG_NS3, "path");
+      path.setAttribute("d", data);
+      svg2.append(path);
+    }
+    return svg2;
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/actions.ts
+  function renderDetailActions(actions) {
+    const visible = actions.filter((action) => action.placement !== "more");
+    const overflow = [...visible.slice(3), ...actions.filter((action) => action.placement === "more")];
+    const result = visible.slice(0, 3).map(renderButton);
+    if (overflow.length) {
+      result.push(renderOverflowMenu(overflow));
+    }
+    return result;
+  }
+  function renderButton(action) {
+    const button = document.createElement("p9r-button");
+    button.setAttribute("type", "button");
+    setP9rButtonTone(button, action.tone);
+    button.dataset.action = action.action ?? action.label;
+    if (action.confirm) {
+      button.dataset.confirm = action.confirm;
+    }
+    setP9rButtonLabel(button, action.label);
+    return button;
+  }
+  function renderOverflowMenu(actions) {
+    const menu = document.createElement("p9r-action-menu");
+    menu.setAttribute("label", "More actions");
+    for (const [label2, sectionActions] of groupedSections(actions)) {
+      const section2 = document.createElement("p9r-action-menu-section");
+      section2.setAttribute("label", label2);
+      for (const action of sectionActions) {
+        section2.append(renderMenuItem(action));
+      }
+      menu.append(section2);
+    }
+    return menu;
+  }
+  function renderMenuItem(action) {
+    const item = document.createElement("p9r-action-menu-item");
+    if (action.tone === "danger") {
+      item.setAttribute("color", "danger");
+    }
+    item.dataset.action = action.action ?? action.label;
+    if (action.confirm) {
+      item.dataset.confirm = action.confirm;
+    }
+    const icon = actionIcon(action.icon);
+    if (icon) {
+      item.append(icon);
+    }
+    item.append(document.createTextNode(action.label));
+    return item;
+  }
+  function groupedSections(actions) {
+    const sections2 = new Map;
+    for (const action of actions) {
+      const label2 = action.section ?? "Other actions";
+      sections2.set(label2, [...sections2.get(label2) ?? [], action]);
+    }
+    return Array.from(sections2);
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/field.css
@@ -31773,7 +31831,8 @@ cms-shell-detail {
     gap: 8px;
 }
 
-.w-detail-actions p9r-action-menu {
+.w-detail-actions p9r-action-menu,
+::slotted(p9r-action-menu[slot="bound-actions"]) {
     --action-menu-panel-min-width: 220px;
 }
 
@@ -38806,6 +38865,7 @@ cms-dashboard-icon svg {
     template;
     rootCondition;
     regions = [];
+    entries = [];
     constructor(t, r, i, e, o) {
       this.start = t;
       this.end = r;
@@ -38814,18 +38874,25 @@ cms-dashboard-icon svg {
       this.rootCondition = o;
     }
     update(t) {
-      this.unmount();
       let r = this.values(t);
-      if (!r)
+      if (r && !this.rootCondition && r.length === this.regions.length && r.every((e, o) => Object.is(e, this.entries[o]))) {
+        r.forEach((e, o) => this.regions[o].update(this.childScope(e, t)));
+        return;
+      }
+      if (this.unmount(), !r)
         return;
       let i = this.end.parentNode;
       if (!i)
         return;
       for (let e of r) {
-        let o = this.spec.name ? { vars: { [this.spec.name]: e }, parent: t } : { value: e, parent: t };
+        let o = this.childScope(e, t);
         if (!this.rootCondition || this.rootCondition.evaluate(o))
           this.regions.push(this.template.mount(i, o, this.end));
       }
+      this.entries = [...r];
+    }
+    childScope(t, r) {
+      return this.spec.name ? { vars: { [this.spec.name]: t }, parent: r } : { value: t, parent: r };
     }
     values(t) {
       if (this.spec.rangeError)
@@ -38843,7 +38910,7 @@ cms-dashboard-icon svg {
     unmount() {
       for (let t of this.regions)
         t.unmount();
-      this.regions = [], X2(this.start, this.end);
+      this.regions = [], this.entries = [], X2(this.start, this.end);
     }
   }
 

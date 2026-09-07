@@ -1,5 +1,5 @@
 import type { Page } from "playwright";
-import type { DashboardField } from "@bernouy/cms-dashboards";
+import type { DashboardAction, DashboardField } from "@bernouy/cms-dashboards";
 const resource = {
     title: "Product summary",
     text: "A description",
@@ -48,6 +48,7 @@ export async function installReadonlyRoutes(
     styles: string,
     choices?: {
         fields: DashboardField[];
+        actions?: DashboardAction[];
         resource: Record<string, unknown>;
         normalize?: (resource: Record<string, unknown>) => Record<string, unknown>;
     },
@@ -77,6 +78,7 @@ export async function installReadonlyRoutes(
                               },
                               after: { resource: "$result" },
                           },
+                          ...(choices.actions ?? []),
                       ],
                       main: [{ id: "general", title: "General", fields: choices.fields }],
                   })),

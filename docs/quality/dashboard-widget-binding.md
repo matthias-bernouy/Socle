@@ -290,3 +290,57 @@ The source/event lifecycle files remain cohesive above the size-review threshold
 `WDetail` and `fieldState` still contain legacy responsibilities pending removal;
 their larger interim size is tracked rather than hidden by mechanical splits.
 The full scope, real local write flows and final runtime activation remain open.
+
+## Conditional detail actions checkpoint
+
+Detail buttons and overflow menus now use the static `detail/actions.html`
+fragment. Binding repeats apply the primary actions, section groups and menu
+items, including their labels, tones, confirmations and four supported icons.
+A data-only scope projection evaluates existing visibility rules and keeps the
+original layout policy: the first three visible non-menu actions are buttons;
+remaining actions precede explicit menu actions, grouped in first-seen order.
+Conditional actions no longer force a detail onto its legacy renderer. The
+legacy action helper still serves unmigrated detail families and must eventually
+be removed with those families.
+
+Unchanged repeated entries in the same order now update their existing regions
+with the current item/parent scope. There is no key attribute, item matching or
+reconciliation of changed lists. Repeats with a root condition still follow the
+existing rebuild path. A focused engine test first failed on the previous
+implementation, then passed with input draft, selection and focus preserved
+while item and parent text changed. Stable action groups use this behavior to
+keep focused menu items during unrelated source refreshes.
+
+The controlled browser flow covers button promotion, two overflow groups, four
+icons, Escape, cancel/accept confirmations, exact action payloads, normalized
+save results and fixture persistence after full reload. During a held read it
+checks the open menu, focused item, menu/detail/secondary-navigation geometry
+across five animation frames and again after completion. All thirteen dashboard
+browser files pass individually. These writes use route fixtures, not the local
+database.
+
+Desktop/mobile basic/open-menu captures are pixel-identical to the original goal
+bundle. Image inspection found a 20px menu-width regression before correction:
+the detail's shadow CSS now also targets its slotted menu. Panel geometry is
+included in the comparison. Evidence: `actions-captures/`,
+`actions-visual-*.log`, `actions-timings.json`. Five sequential controlled runs
+recorded median initial loads of 200.6ms before and 185.6ms after (ranges
+194.6–204.3ms and 183.9–201.4ms), with one detail read and no read when toggling
+visibility. These numbers are not real-service performance measurements.
+
+The advanced mobile reference already shifts its content horizontally when the
+wide action row is brought into view. The migrated rendering matches this
+behavior; a document scroll-width assertion does not detect that internal
+clipping. This remains an explicit UI-stability issue for the full audit, not a
+claim that all overflow is resolved.
+
+Validation: 251 binding tests, 134 dashboard/widget tests, 45 additional detail
+tests and all thirteen browser files pass. Build and all eight check:all gates
+pass; UI contracts remain at 0 errors, 77 warnings and 11 informational findings.
+The resumed initial check caught unformatted in-progress repeat changes and
+bundle drift, both resolved by formatting/building. The earlier action-start
+baseline passed all eight gates. The binding site file (192 lines) and repeat
+suite (181 lines) remain cohesive despite crossing the size review threshold;
+the detail binding directory has eight entries (informational, not blocking).
+Complex widgets, nested composition, real local writes and final runtime
+activation remain incomplete, as does the full matrix above.

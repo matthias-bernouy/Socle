@@ -63,6 +63,7 @@ export class ConditionSite implements LiveBindingSite {
 
 export class RepeatSite implements LiveBindingSite {
     private regions: MountedRegion[] = [];
+    private entries: unknown[] = [];
     constructor(
         private readonly start: Comment,
         private readonly end: Comment,
@@ -71,8 +72,17 @@ export class RepeatSite implements LiveBindingSite {
         private readonly rootCondition: CompiledCondition | null,
     ) {}
     update(scope: Scope): void {
-        this.unmount();
         const values = this.values(scope);
+        if (
+            values &&
+            !this.rootCondition &&
+            values.length === this.regions.length &&
+            values.every((value, index) => Object.is(value, this.entries[index]))
+        ) {
+            values.forEach((item, index) => this.regions[index]!.update(this.childScope(item, scope)));
+            return;
+        }
+        this.unmount();
         if (!values) {
             return;
         }
@@ -81,13 +91,15 @@ export class RepeatSite implements LiveBindingSite {
             return;
         }
         for (const item of values) {
-            const childScope: Scope = this.spec.name
-                ? { vars: { [this.spec.name]: item }, parent: scope }
-                : { value: item, parent: scope };
+            const childScope = this.childScope(item, scope);
             if (!this.rootCondition || this.rootCondition.evaluate(childScope)) {
                 this.regions.push(this.template.mount(parent, childScope, this.end));
             }
         }
+        this.entries = [...values];
+    }
+    private childScope(item: unknown, parent: Scope): Scope {
+        return this.spec.name ? { vars: { [this.spec.name]: item }, parent } : { value: item, parent };
     }
     private values(scope: Scope): unknown[] | null {
         if (this.spec.rangeError) {
@@ -111,6 +123,7 @@ export class RepeatSite implements LiveBindingSite {
             region.unmount();
         }
         this.regions = [];
+        this.entries = [];
         clearBetween(this.start, this.end);
     }
 }

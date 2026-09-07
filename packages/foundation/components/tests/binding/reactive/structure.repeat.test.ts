@@ -160,3 +160,22 @@ describe("CompiledTemplate — cms-repeat", () => {
         expect(Array.from(host.querySelectorAll("[cms-source] p")).map(text)).toEqual(["{{ label }}", "{{ label }}"]);
     });
 });
+
+test("unchanged repeated entries retain focus while parent bindings still update", () => {
+    const item = { label: "Entry" };
+    const { host, region } = mount(
+        '<section cms-repeat="items as item"><input><span>{{ item.label }} / {{ title }}</span></section>',
+        { items: [item], title: "Before" },
+    );
+    const input = host.querySelector("input")!;
+    input.value = "Draft";
+    input.focus();
+    input.setSelectionRange(1, 3);
+    item.label = "Changed";
+    region.update({ value: { items: [item], title: "After" } });
+    expect(host.querySelector("input")).toBe(input);
+    expect(document.activeElement).toBe(input);
+    expect(input.value).toBe("Draft");
+    expect([input.selectionStart, input.selectionEnd]).toEqual([1, 3]);
+    expect(host.querySelector("span")!.textContent).toBe("Changed / After");
+});
