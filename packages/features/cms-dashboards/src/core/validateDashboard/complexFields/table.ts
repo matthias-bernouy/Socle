@@ -1,7 +1,7 @@
 import type { Source } from "@bernouy/cms-sources";
 import type { DashboardDto, DashboardField } from "cms-dashboards/interfaces/Dashboard";
 import { DASHBOARD_MAX_NESTED_FIELDS } from "cms-dashboards/interfaces/Dashboard";
-import { validateRequiredId, validateRequiredPath } from "../shared";
+import { validatePath, validateRequiredId, validateRequiredPath } from "../shared";
 import { validateNestedEditor } from "./nestedEditor";
 
 type TableField = Extract<DashboardField, { type: "table" }>;
@@ -27,6 +27,23 @@ export function validateTableField(
         }
         if (field.editable !== true) {
             errors.push(`${path}.addLabel requires an editable table`);
+        }
+    }
+    if (field.rowKey !== undefined) {
+        validatePath("rowKey", field.rowKey, path, errors);
+        if (field.editable !== true) {
+            errors.push(`${path}.rowKey requires an editable table`);
+        }
+        if (
+            field.columns.some(
+                (column) =>
+                    column.editable &&
+                    (column.path === field.rowKey ||
+                        column.path.startsWith(`${field.rowKey}.`) ||
+                        field.rowKey!.startsWith(`${column.path}.`)),
+            )
+        ) {
+            errors.push(`${path}.rowKey must not overlap an editable column`);
         }
     }
     const columnIds = new Set<string>();

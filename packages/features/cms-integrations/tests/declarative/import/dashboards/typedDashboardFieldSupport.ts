@@ -95,7 +95,7 @@ export function incoherentNestedEditorCases(): Array<[unknown, RegExp]> {
                     },
                 },
             },
-            /id.*duplicated/,
+            /reference a detail view/,
         ],
     ];
 }

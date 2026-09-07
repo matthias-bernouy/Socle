@@ -1,3 +1,4 @@
+import { formNameSegments } from "./shared/forms/paths";
 import type { Source } from "@bernouy/cms-sources";
 import type { DashboardDto, DashboardField, DashboardSection } from "../../interfaces/Dashboard";
 import { isSafeDashboardExpression } from "../dashboardPaths";
@@ -55,6 +56,15 @@ export function validateField(
         errors.push(`${path}.label is required`);
     }
     validateRequiredPath("path", field.path, path, errors);
+    if (field.name !== undefined && !formNameSegments(field.name)) {
+        errors.push(`${path}.name must be a safe form name`);
+    }
+    if (field.empty !== undefined && !["null", "omit"].includes(field.empty)) {
+        errors.push(`${path}.empty must be null or omit`);
+    }
+    if (field.valueType !== undefined && !["string", "number", "boolean"].includes(field.valueType)) {
+        errors.push(`${path}.valueType must be string, number, or boolean`);
+    }
     validateVisibility(field.visibleWhen, `${path}.visibleWhen`, errors, visibilityFieldIds);
 
     switch (field.type) {
@@ -87,7 +97,7 @@ export function validateField(
             break;
         case "combobox":
         case "tokens":
-            validateSelectableField(field, path, dashboard, source, errors, validateField);
+            validateSelectableField(field, path, dashboard, source, errors);
             break;
         case "table":
             validateTableField(field, path, dashboard, source, errors);

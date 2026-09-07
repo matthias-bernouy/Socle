@@ -58,3 +58,16 @@ export type {
     ResolvedDashboard,
     ResolvedDashboardView,
 } from "./dashboard/composition";
+
+export type {
+    DashboardFormHiddenField,
+    DashboardFormOperation,
+    DashboardSaveOperation,
+    DashboardActionForm,
+    DashboardDeleteOperation,
+    DashboardCreateOperation,
+    DashboardDetailOpenRef,
+    DashboardDetailCreation,
+} from "./dashboard/forms";
+
+export { DASHBOARD_MODAL_FIELD_TYPES } from "./dashboard/forms";

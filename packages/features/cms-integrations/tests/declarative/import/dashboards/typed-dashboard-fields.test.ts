@@ -118,7 +118,7 @@ describe("typed dashboard field parsing", () => {
                         },
                     },
                 },
-                /at most 64 fields/,
+                /reference a detail view/,
             ],
         ];
         for (const [field, error] of cases) {

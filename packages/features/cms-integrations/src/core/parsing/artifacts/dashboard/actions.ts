@@ -1,3 +1,4 @@
+import { parseActionForm } from "./forms";
 import { isSafeDashboardExpression, type DashboardAction } from "@bernouy/cms-dashboards";
 import { IntegrationInputError } from "../../../errors";
 import { isRecord, text } from "../../definition/values";
@@ -34,6 +35,7 @@ function parseAction(value: unknown, name: string): DashboardAction {
         ...(value.management !== undefined
             ? { management: parseManagementAction(value.management, `${name}.management`) }
             : {}),
+        ...(value.form !== undefined ? { form: parseActionForm(value.form, `${name}.form`) } : {}),
         ...(value.endpoint !== undefined ? { endpoint: parseEndpointRef(value.endpoint, `${name}.endpoint`) } : {}),
         ...(value.download !== undefined ? { download: parseActionDownload(value.download, `${name}.download`) } : {}),
         ...(isRecord(value.selection) ? { selection: parseSelection(value.selection) } : {}),

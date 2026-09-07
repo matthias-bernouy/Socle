@@ -1,3 +1,4 @@
+import { parseCreateOperation, parseDetailCreation, parseDeleteOperation, parseSaveOperation } from "./forms";
 import type { DashboardDetailMainItem, DashboardWidget } from "@bernouy/cms-dashboards";
 import { IntegrationInputError } from "../../../errors";
 import { isRecord, text } from "../../definition/values";
@@ -41,6 +42,7 @@ export function parseWidget(value: unknown, name: string): DashboardWidget {
             ...(text(value.title) ? { title: text(value.title)! } : {}),
             source: parseDataRef(value.source, `${name}.source`),
             rowKey: requiredText(value.rowKey, `${name}.rowKey`),
+            ...(value.create !== undefined ? { create: parseCreateOperation(value.create, `${name}.create`) } : {}),
             columns: parseColumns(value.columns, `${name}.columns`),
             ...(value.filters !== undefined ? { filters: parseFilters(value.filters, `${name}.filters`) } : {}),
             ...(typeof value.pageSize === "number" ? { pageSize: value.pageSize } : {}),
@@ -59,6 +61,9 @@ export function parseWidget(value: unknown, name: string): DashboardWidget {
             ...(isRecord(value.title) ? { title: parseBinding(value.title, `${name}.title`) } : {}),
             ...(isRecord(value.status) ? { status: parseBinding(value.status, `${name}.status`) } : {}),
             ...(value.actions !== undefined ? { actions: parseActions(value.actions, `${name}.actions`) } : {}),
+            ...(value.create !== undefined ? { create: parseDetailCreation(value.create, `${name}.create`) } : {}),
+            ...(value.save !== undefined ? { save: parseSaveOperation(value.save, `${name}.save`) } : {}),
+            ...(value.delete !== undefined ? { delete: parseDeleteOperation(value.delete, `${name}.delete`) } : {}),
             main: parseDetailMain(value.main, `${name}.main`),
             ...(value.aside !== undefined ? { aside: parseSections(value.aside, `${name}.aside`) } : {}),
         };
@@ -76,6 +81,7 @@ export function parseWidget(value: unknown, name: string): DashboardWidget {
             ...(text(value.title) ? { title: text(value.title)! } : {}),
             source: parseDataRef(value.source, `${name}.source`),
             rowKey: requiredText(value.rowKey, `${name}.rowKey`),
+            ...(value.create !== undefined ? { create: parseCreateOperation(value.create, `${name}.create`) } : {}),
             item: parseNavigationItem(value.item, `${name}.item`),
             ...(isRecord(value.selection) ? { selection: parseSelection(value.selection) } : {}),
             ...(isRecord(value.reorderable)

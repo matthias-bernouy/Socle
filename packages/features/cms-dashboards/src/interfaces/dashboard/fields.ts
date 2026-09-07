@@ -1,3 +1,4 @@
+import type { DashboardDetailOpenRef } from "./forms";
 import type {
     DashboardEndpointRef,
     DashboardDataRef,
@@ -10,30 +11,26 @@ import type {
     DashboardVisibilityRule,
 } from "./refs";
 
-export type DashboardLookupCreate =
-    | (DashboardEndpointRef & {
-          mode: "inline";
-          valuePath: string;
-          labelPath: string;
-      })
-    | (DashboardEndpointRef & {
-          mode: "modal";
-          title?: string;
-          valuePath: string;
-          labelPath: string;
-          fields: DashboardField[];
-      });
+export type DashboardLookupCreate = DashboardDetailOpenRef & {
+    presentation: "modal";
+    valuePath: string;
+    labelPath: string;
+};
 
 export type DashboardLookupRef = DashboardDataRef &
     DashboardLookupPresentation & {
         descriptionPaths?: string[];
         create?: DashboardLookupCreate;
+        edit?: DashboardLookupCreate;
     };
 
 export type DashboardFieldBase = {
     id: string;
     label: string;
     path: string;
+    name?: string;
+    empty?: "null" | "omit";
+    valueType?: "string" | "number" | "boolean";
     required?: boolean;
     visibleWhen?: DashboardVisibilityRule;
 };
@@ -74,6 +71,7 @@ export type DashboardReorderableListItemField = DashboardReorderableListItemFiel
               item: {
                   idPath?: string;
                   urlPath: string;
+                  endpoint?: string;
                   altPath?: string;
               };
               actions?: Partial<Record<"upload" | "replace" | "remove", DashboardEndpointRef>>;
@@ -110,6 +108,7 @@ export type DashboardField =
     | (DashboardFieldBase & { type: "tokens" } & DashboardSelectableField)
     | (DashboardFieldBase & {
           type: "table";
+          rowKey?: string;
           columns: DashboardTableColumn[];
           editable?: boolean;
           derive?: DashboardTableDerive;
@@ -133,9 +132,12 @@ export type DashboardField =
     | (DashboardFieldBase & {
           type: "media";
           multiple?: boolean;
+          persist?: "save";
+          staging?: { sessionField: string };
           item: {
               idPath?: string;
               urlPath: string;
+              endpoint?: string;
               altPath?: string;
           };
           actions?: Partial<Record<"upload" | "replace" | "remove" | "reorder", DashboardEndpointRef>>;

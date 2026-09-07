@@ -1,4 +1,11 @@
 import type {
+    DashboardActionForm,
+    DashboardCreateOperation,
+    DashboardDetailCreation,
+    DashboardDeleteOperation,
+    DashboardSaveOperation,
+} from "./forms";
+import type {
     DashboardBinding,
     DashboardColumn,
     DashboardDataRef,
@@ -18,6 +25,7 @@ export type DashboardAction = {
     placement?: "primary" | "secondary" | "more";
     section?: string;
     endpoint?: DashboardEndpointRef;
+    form?: DashboardActionForm;
     management?: { installationId: string; body?: Record<string, DashboardExpr> } & (
         | { action: "save-settings"; actionId?: never }
         | { action: "action"; actionId: string }
@@ -50,6 +58,7 @@ export type DashboardNavigationListWidget = {
     selection?: { opens?: string };
     reorderable?: { action: string };
     actions?: DashboardAction[];
+    create?: DashboardCreateOperation;
 };
 
 export type DashboardDetailMainItem = DashboardSection | DashboardNavigationListWidget;
@@ -64,6 +73,7 @@ export type DashboardWidget =
           columns: DashboardColumn[];
           filters?: DashboardFilter[];
           pageSize?: number;
+          create?: DashboardCreateOperation;
           selection?: { opens?: string };
           actions?: DashboardAction[];
       }
@@ -73,6 +83,9 @@ export type DashboardWidget =
           source: DashboardDataRef;
           title?: DashboardBinding;
           status?: DashboardBinding;
+          create?: DashboardDetailCreation;
+          save?: DashboardSaveOperation;
+          delete?: DashboardDeleteOperation;
           actions?: DashboardAction[];
           main: DashboardDetailMainItem[];
           aside?: DashboardSection[];

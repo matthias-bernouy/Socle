@@ -1,3 +1,5 @@
+import { validateDetailForms } from "./shared/forms/detail";
+import { validateCreateOperation } from "./shared/forms/creation";
 import type { Source } from "@bernouy/cms-sources";
 import type {
     DashboardColumn,
@@ -29,6 +31,9 @@ export function validateTableWidget(
 ): void {
     validateDataRef(dashboard, widget.source, `${path}.source`, source, errors);
     validateRequiredPath("rowKey", widget.rowKey, path, errors);
+    if (widget.create !== undefined) {
+        validateCreateOperation(widget.create, `${path}.create`, dashboard, source, widgetIds, errors);
+    }
     if (!Array.isArray(widget.columns) || widget.columns.length === 0) {
         errors.push(`${path}.columns must contain at least one column`);
     } else {
@@ -58,6 +63,7 @@ export function validateDetailWidget(
     validateBinding(widget.title, `${path}.title`, errors);
     validateBinding(widget.status, `${path}.status`, errors);
     const visibilityFieldIds = detailFieldIds(widget);
+    validateDetailForms(widget, path, dashboard, source, errors);
     widget.actions?.forEach((action, index) =>
         validateAction(action, `${path}.actions.${index}`, dashboard, source, errors, visibilityFieldIds),
     );
@@ -130,6 +136,9 @@ export function validateNavigationListWidget(
 ): void {
     validateDataRef(dashboard, widget.source, `${path}.source`, source, errors);
     validateRequiredPath("rowKey", widget.rowKey, path, errors);
+    if (widget.create !== undefined) {
+        validateCreateOperation(widget.create, `${path}.create`, dashboard, source, widgetIds, errors);
+    }
     validateBinding(widget.item.title, `${path}.item.title`, errors);
     validateBinding(widget.item.subtitle, `${path}.item.subtitle`, errors);
     validateBinding(widget.item.badge, `${path}.item.badge`, errors);

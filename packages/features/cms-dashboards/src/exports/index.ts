@@ -3,6 +3,14 @@
  * Integrations can install dashboards next to sources; surfaces render them.
  */
 export type {
+    DashboardFormHiddenField,
+    DashboardFormOperation,
+    DashboardSaveOperation,
+    DashboardActionForm,
+    DashboardDeleteOperation,
+    DashboardCreateOperation,
+    DashboardDetailOpenRef,
+    DashboardDetailCreation,
     Dashboard,
     DashboardAction,
     DashboardBinding,
@@ -92,3 +100,5 @@ export {
     isSafeDashboardPath,
 } from "../core/dashboardPaths";
 export { applyDashboardSourceOverlays } from "../core/sourceOverlayDashboard";
+
+export { DASHBOARD_MODAL_FIELD_TYPES } from "../interfaces/dashboard/forms";

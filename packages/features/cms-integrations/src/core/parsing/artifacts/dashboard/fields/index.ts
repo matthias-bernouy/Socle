@@ -1,3 +1,4 @@
+import { parseFormFieldOptions } from "./formValues";
 import {
     isSafeDashboardPath,
     type DashboardField,
@@ -54,6 +55,7 @@ function parseField(value: unknown, name: string): DashboardField {
     }
     const required = optionalBoolean(value.required, `${name}.required`);
     const base: DashboardFieldBase = {
+        ...parseFormFieldOptions(value, name),
         id: requiredText(value.id, `${name}.id`),
         label: requiredText(value.label, `${name}.label`),
         path: requiredText(value.path, `${name}.path`),

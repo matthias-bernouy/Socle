@@ -1,3 +1,4 @@
+import { parseCreateOperation } from "./forms";
 import type {
     DashboardDataRef,
     DashboardEmbeddedLookupRef,
@@ -7,11 +8,10 @@ import type {
     DashboardOption,
     DashboardResourceExpression,
 } from "@bernouy/cms-dashboards";
-import { DASHBOARD_MAX_NESTED_FIELDS, DASHBOARD_MAX_OPTIONS } from "@bernouy/cms-dashboards";
+import { DASHBOARD_MAX_OPTIONS } from "@bernouy/cms-dashboards";
 import { IntegrationInputError, MissingIntegrationParam } from "../../../errors";
 import { isRecord, text } from "../../definition/values";
 import { optionalText, parseStringList, parseStringMap, requiredText } from "../common";
-import { parseFields } from "./fields";
 
 export function parseDataRef(value: Record<string, unknown>, name: string): DashboardDataRef {
     const itemsPath = optionalText(value.itemsPath, `${name}.itemsPath`);
@@ -49,6 +49,7 @@ export function parseLookup(value: unknown, name: string): DashboardLookupRef {
             ? { descriptionPaths: parseStringList(value.descriptionPaths, `${name}.descriptionPaths`) }
             : {}),
         ...(value.create !== undefined ? { create: parseLookupCreate(value.create, `${name}.create`) } : {}),
+        ...(value.edit !== undefined ? { edit: parseLookupCreate(value.edit, `${name}.edit`) } : {}),
     };
 }
 
@@ -56,7 +57,7 @@ export function parseEmbeddedLookup(value: unknown, name: string): DashboardEmbe
     if (!isRecord(value)) {
         throw new IntegrationInputError(name, "must be an object");
     }
-    if (Object.hasOwn(value, "create")) {
+    if (Object.hasOwn(value, "create") || Object.hasOwn(value, "edit")) {
         throw new IntegrationInputError(`${name}.create`, "is not supported");
     }
     if (Object.hasOwn(value, "descriptionPaths")) {
@@ -105,33 +106,17 @@ function parseLookupSelected(value: unknown, name: string): DashboardResourceExp
 }
 
 function parseLookupCreate(value: unknown, name: string): DashboardLookupCreate {
-    if (!isRecord(value)) {
-        throw new IntegrationInputError(name, "must be an object");
+    const ref = parseCreateOperation(value, name);
+    if (ref.presentation !== "modal") {
+        throw new IntegrationInputError(`${name}.presentation`, "must be modal for lookup details");
     }
-    const mode = requiredText(value.mode, `${name}.mode`);
-    const base = {
-        ...parseEndpointRef(value, name),
-        valuePath: requiredText(value.valuePath, `${name}.valuePath`),
-        labelPath: requiredText(value.labelPath, `${name}.labelPath`),
+    const record = value as Record<string, unknown>;
+    return {
+        ...ref,
+        presentation: "modal",
+        valuePath: requiredText(record.valuePath, `${name}.valuePath`),
+        labelPath: requiredText(record.labelPath, `${name}.labelPath`),
     };
-    if (mode === "inline") {
-        return { ...base, mode };
-    }
-    if (mode === "modal") {
-        if (Array.isArray(value.fields) && value.fields.length > DASHBOARD_MAX_NESTED_FIELDS) {
-            throw new IntegrationInputError(
-                `${name}.fields`,
-                `must contain at most ${DASHBOARD_MAX_NESTED_FIELDS} fields`,
-            );
-        }
-        return {
-            ...base,
-            mode,
-            ...(text(value.title) ? { title: text(value.title)! } : {}),
-            fields: parseFields(value.fields, `${name}.fields`),
-        };
-    }
-    throw new IntegrationInputError(`${name}.mode`, "must be inline or modal");
 }
 
 function parseOption(value: unknown, name: string): DashboardOption {

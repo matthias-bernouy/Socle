@@ -1,3 +1,5 @@
+import { validateFormOperation } from "./shared/forms/operation";
+import { validateOperationFields } from "./shared/forms/creation";
 import type { Source } from "@bernouy/cms-sources";
 import type { DashboardAction, DashboardDto, DashboardWidget } from "../../interfaces/Dashboard";
 import { isSafeDashboardExpression } from "../dashboardPaths";
@@ -32,8 +34,17 @@ export function validateAction(
             validateVisibility(action.visibleWhen, `${path}.visibleWhen`, errors, visibilityFieldIds);
         }
     }
-    if (!action.endpoint && !action.selection && !action.management) {
-        errors.push(`${path} must declare endpoint, management, or selection`);
+    if (action.form !== undefined) {
+        if (action.endpoint || action.management || action.selection || action.download || action.after?.resource) {
+            errors.push(`${path}.form cannot combine endpoint, management, selection, download, or after.resource`);
+        }
+        validateFormOperation(action.form, `${path}.form`, dashboard, source, errors, action.form?.fields ?? []);
+        if (action.form?.fields !== undefined) {
+            validateOperationFields(action.form.fields, `${path}.form.fields`, dashboard, source, errors);
+        }
+    }
+    if (!action.endpoint && !action.selection && !action.management && !action.form) {
+        errors.push(`${path} must declare endpoint, management, selection, or form`);
     }
     if (action.management) {
         validateRequiredId(`${path}.management.installationId`, action.management.installationId, errors);
@@ -69,7 +80,7 @@ export function validateAction(
         errors.push(`${path}.selection.opens references unknown widget "${action.selection.opens}"`);
     }
     if (action.after) {
-        if (!action.endpoint && !action.management) {
+        if (!action.endpoint && !action.management && !action.form) {
             errors.push(`${path}.after requires endpoint or management`);
         }
         validateActionAfter(action, `${path}.after`, dashboard, errors, visibilityFieldIds !== undefined);

@@ -169,7 +169,7 @@ describe("typed dashboard detail fields", () => {
         expect(errors).toContain("lookup is only supported for combobox editors");
         expect(errors).toContain("lookup.create is not supported");
         expect(errors).toContain("item.urlPath must be a safe dotted data path");
-        expect(errors).toContain('duplicate field id "same"');
+        expect(errors).toContain("lookup.create.fields is not supported: reference a detail view");
     });
 
     test("validates number constraints and accepts editable false as readonly", () => {

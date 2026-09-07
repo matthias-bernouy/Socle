@@ -5,7 +5,7 @@ import type {
     DashboardTableColumn,
     DashboardTableDerive,
 } from "@bernouy/cms-dashboards";
-import { DASHBOARD_MAX_NESTED_FIELDS } from "@bernouy/cms-dashboards";
+import { DASHBOARD_MAX_NESTED_FIELDS, isSafeDashboardPath } from "@bernouy/cms-dashboards";
 import { IntegrationInputError } from "../../../../errors";
 import { isRecord } from "../../../definition/values";
 import { optionalBoolean, optionalFiniteNumber, optionalText, requiredText } from "../../common";
@@ -20,12 +20,17 @@ export function parseTableField(
 ): Extract<DashboardField, { type: "table" }> {
     const editable = optionalBoolean(value.editable, `${name}.editable`);
     const addLabel = optionalText(value.addLabel, `${name}.addLabel`);
+    const rowKey = optionalText(value.rowKey, `${name}.rowKey`);
+    if (rowKey !== undefined && (editable !== true || !isSafeDashboardPath(rowKey))) {
+        throw new IntegrationInputError(`${name}.rowKey`, "requires an editable table and a safe dotted data path");
+    }
     if (addLabel && editable !== true) {
         throw new IntegrationInputError(`${name}.addLabel`, "requires an editable table");
     }
     return {
         ...base,
         type: "table",
+        ...(rowKey !== undefined ? { rowKey } : {}),
         columns: parseTableColumns(value.columns, `${name}.columns`, editable === true),
         ...(editable ? { editable } : {}),
         ...(value.derive !== undefined ? { derive: parseTableDerive(value.derive, `${name}.derive`) } : {}),

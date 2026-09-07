@@ -95,7 +95,7 @@ describe("validateDashboard", () => {
         );
     });
 
-    test("validates lookup modal creation fields", () => {
+    test("validates lookup detail references", () => {
         const dashboard = validDashboard();
         const detail = dashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;
         const brand = detail.main[0]!.fields[2] as Extract<
@@ -104,12 +104,12 @@ describe("validateDashboard", () => {
         >["main"][number]["fields"][number] & {
             type: "combobox";
         };
-        if (brand.lookup?.create?.mode === "modal") {
-            brand.lookup.create.fields = [];
+        if (brand.lookup?.create) {
+            brand.lookup.create.viewId = "";
         }
 
         expect(validateDashboard(dashboard, { source })).toContain(
-            "views.1.main.0.fields.2.lookup.create.fields must contain at least one field",
+            "views.1.main.0.fields.2.lookup.create.viewId is required",
         );
     });
 

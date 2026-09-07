@@ -69,11 +69,11 @@ describe("typed dashboard detail field limits", () => {
                 lookup: {
                     ...embeddedLookup(),
                     create: {
-                        mode: "modal",
-                        endpoint: "create",
+                        dashboardId: "taxonomy",
+                        viewId: "detail",
+                        presentation: "modal",
                         valuePath: "id",
                         labelPath: "name",
-                        fields: nestedFields(DASHBOARD_MAX_NESTED_FIELDS),
                     },
                 },
             },
@@ -128,7 +128,7 @@ describe("typed dashboard detail field limits", () => {
                 `views.0.main.0.fields.0.options must contain at most ${DASHBOARD_MAX_OPTIONS} options`,
                 `views.0.main.0.fields.1.columns must contain at most ${DASHBOARD_MAX_NESTED_FIELDS} columns`,
                 `views.0.main.0.fields.2.fields must contain at most ${DASHBOARD_MAX_NESTED_FIELDS} fields`,
-                `views.0.main.0.fields.3.lookup.create.fields must contain at most ${DASHBOARD_MAX_NESTED_FIELDS} fields`,
+                "views.0.main.0.fields.3.lookup.create.fields is not supported: reference a detail view",
             ]),
         );
     });

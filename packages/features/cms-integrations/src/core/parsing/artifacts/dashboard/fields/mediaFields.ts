@@ -10,10 +10,15 @@ export function parseMediaField(
     name: string,
 ): Extract<DashboardField, { type: "media" }> {
     const multiple = optionalBoolean(value.multiple, `${name}.multiple`);
+    if (value.persist !== undefined && value.persist !== "save") {
+        throw new IntegrationInputError(`${name}.persist`, "must be save");
+    }
     return {
         ...base,
         type: "media",
         ...(multiple ? { multiple } : {}),
+        ...(value.persist === "save" ? { persist: "save" as const } : {}),
+        ...(value.staging !== undefined ? { staging: parseStaging(value.staging, `${name}.staging`) } : {}),
         item: parseMediaItem(value.item, `${name}.item`),
         ...(value.actions !== undefined ? { actions: parseMediaActions(value.actions, `${name}.actions`) } : {}),
     };
@@ -39,6 +44,7 @@ export function parseMediaItem(value: unknown, name: string): Extract<DashboardF
     return {
         ...(text(value.idPath) ? { idPath: text(value.idPath)! } : {}),
         urlPath: requiredText(value.urlPath, `${name}.urlPath`),
+        ...(value.endpoint !== undefined ? { endpoint: requiredText(value.endpoint, `${name}.endpoint`) } : {}),
         ...(text(value.altPath) ? { altPath: text(value.altPath)! } : {}),
     };
 }
@@ -73,4 +79,16 @@ export function parseNestedMediaField(
         item: parseMediaItem(value.item, `${name}.item`),
         ...(value.actions !== undefined ? { actions: parseMediaActions(value.actions, `${name}.actions`) } : {}),
     } as DashboardReorderableListItemField;
+}
+
+function parseStaging(value: unknown, name: string): { sessionField: string } {
+    if (!isRecord(value)) {
+        throw new IntegrationInputError(name, "must be an object");
+    }
+    for (const key of Object.keys(value)) {
+        if (key !== "sessionField") {
+            throw new IntegrationInputError(`${name}.${key}`, "is not supported by staged media");
+        }
+    }
+    return { sessionField: requiredText(value.sessionField, `${name}.sessionField`) };
 }
