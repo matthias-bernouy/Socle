@@ -78,6 +78,16 @@ export class DetailFieldState {
         }
     }
 
+    restoreField(fieldId: string, submitted: unknown, previous: unknown): void {
+        if (
+            !Object.hasOwn(this.values, fieldId) ||
+            Object.hasOwn(remainingDraft(this.values, { [fieldId]: submitted }), fieldId)
+        ) {
+            return;
+        }
+        this.record(fieldId, structuredClone(previous));
+    }
+
     find(fieldId: string): WDetailField | undefined {
         return this.fields().find((field) => field.id === fieldId);
     }

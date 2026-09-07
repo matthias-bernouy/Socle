@@ -12,6 +12,7 @@ export type DashboardMediaAction = "upload" | "replace" | "remove" | "reorder";
 export type DashboardMediaActionDetail = {
     action: DashboardMediaAction;
     value: DashboardMediaItem[];
+    previousValue?: DashboardMediaItem[];
     index?: number;
     from?: number;
     to?: number;

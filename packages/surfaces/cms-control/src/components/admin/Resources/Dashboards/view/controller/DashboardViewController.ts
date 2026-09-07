@@ -105,6 +105,12 @@ export class DashboardViewController extends DashboardStateController {
                 );
                 target?.acknowledgeSavedFields(fields);
             },
+            restoreDetailField: (collection, row, field, submitted, previous) => {
+                const target = Array.from(this.querySelectorAll<DashboardWDetail>("cms-dashboard-w-detail")).find(
+                    (node) => node.dataset.widgetId === collection && (node.dataset.rowKey ?? "") === row,
+                );
+                target?.restoreField(field, submitted, previous);
+            },
             clearDetail: () => this.clearDetail(),
             openDetail: (collection, row) => this.openDetail(collection, row),
             setDetailResource: (collection, row, resource) => this.setDetailResource(collection, row, resource),

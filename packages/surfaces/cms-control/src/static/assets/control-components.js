@@ -28554,9 +28554,10 @@ button {
       }
     }
     changed(action, items, detail) {
+      const previousValue = this.items;
       this.pendingItems = items;
       try {
-        dispatchMediaChange(this, action, items, detail);
+        dispatchMediaChange(this, action, items, { ...detail, previousValue });
       } finally {
         this.pendingItems = undefined;
       }
@@ -32896,6 +32897,12 @@ input {
         delete this.displayValues[fieldId];
       }
     }
+    restoreField(fieldId, submitted, previous) {
+      if (!Object.hasOwn(this.values, fieldId) || Object.hasOwn(remainingDraft(this.values, { [fieldId]: submitted }), fieldId)) {
+        return;
+      }
+      this.record(fieldId, structuredClone(previous));
+    }
     find(fieldId) {
       return this.fields().find((field2) => field2.id === fieldId);
     }
@@ -34596,6 +34603,10 @@ p9r-token-input {
     acknowledgeSavedFields(fields) {
       this.runtime.fields.acknowledgeSavedFields(fields);
     }
+    restoreField(field2, submitted, previous) {
+      this.runtime.fields.restoreField(field2, submitted, previous);
+      this.refreshConditionalFields();
+    }
     static get observedAttributes() {
       return ["data-config-json", "data-source-json", "data-row-key", "data-source-id"];
     }
@@ -35993,6 +36004,12 @@ slot { display: contents; }
         if (!syncNestedMediaControl(widget, media2.field, items)) {
           context.render();
         }
+      } else if (media2.previousValue !== undefined) {
+        const draft = context.drafts.get(key);
+        if (draft && Object.hasOwn(draft, media2.field) && !Object.hasOwn(remainingDraft(draft, { [media2.field]: media2.value }), media2.field)) {
+          context.drafts.set(key, { ...draft, [media2.field]: structuredClone(media2.previousValue) });
+        }
+        context.restoreDetailField?.(detail.collection, detail.row, media2.field, media2.value, media2.previousValue);
       }
       ah(error instanceof Error ? error.message : "Dashboard media action failed", { type: "error" });
     }
@@ -37085,6 +37102,10 @@ slot { display: contents; }
         acknowledgeDetailFields: (collection, row, fields) => {
           const target2 = Array.from(this.querySelectorAll("cms-dashboard-w-detail")).find((node) => node.dataset.widgetId === collection && (node.dataset.rowKey ?? "") === row);
           target2?.acknowledgeSavedFields(fields);
+        },
+        restoreDetailField: (collection, row, field2, submitted, previous) => {
+          const target2 = Array.from(this.querySelectorAll("cms-dashboard-w-detail")).find((node) => node.dataset.widgetId === collection && (node.dataset.rowKey ?? "") === row);
+          target2?.restoreField(field2, submitted, previous);
         },
         clearDetail: () => this.clearDetail(),
         openDetail: (collection, row) => this.openDetail(collection, row),

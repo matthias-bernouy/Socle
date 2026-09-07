@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test";
 import { chromium } from "playwright";
 import { resolve } from "node:path";
-import { imageFile, installMediaRoutes, mediaPage } from "./fixture";
+import { imageFile, installMediaRoutes, mediaPage } from "../fixture";
 const bundle = await Bun.file(
-    resolve(import.meta.dir, "../../../../../src/static/assets/control-components.js"),
+    resolve(import.meta.dir, "../../../../../../src/static/assets/control-components.js"),
 ).text();
 const styles = await Bun.file(
-    resolve(import.meta.dir, "../../../../../../../foundation/components/dist/style.css"),
+    resolve(import.meta.dir, "../../../../../../../../foundation/components/dist/style.css"),
 ).text();
 
 test("a failed media upload reports the error and can be retried after a persisted reload", async () => {

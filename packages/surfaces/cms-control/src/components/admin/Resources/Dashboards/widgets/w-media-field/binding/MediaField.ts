@@ -156,9 +156,10 @@ export class DashboardMediaField extends Component {
         items: DashboardMediaItem[],
         detail: Partial<DashboardMediaActionDetail>,
     ): void {
+        const previousValue = this.items;
         this.pendingItems = items;
         try {
-            dispatchMediaChange(this, action, items, detail);
+            dispatchMediaChange(this, action, items, { ...detail, previousValue });
         } finally {
             this.pendingItems = undefined;
         }

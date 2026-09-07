@@ -13,11 +13,18 @@ export const imageFile = {
 };
 export type MediaRecord = { id: string; url: string; alt: string };
 
-export async function installMediaRoutes(page: Page, bundle: string, styles: string, long = false) {
+export async function installMediaRoutes(
+    page: Page,
+    bundle: string,
+    styles: string,
+    long = false,
+    conditional = false,
+) {
     const resource = {
         id: "quality-media",
         title: "Media settings",
         notes: "Saved notes",
+        showMedia: true,
         photos: ["front", "side", "back"].map((id) => ({ id, url: `/media/${id}.svg`, alt: `${id} view` })),
     };
     const actions = ["upload", "replace", "remove", "reorder"] as const;
@@ -29,6 +36,7 @@ export async function installMediaRoutes(page: Page, bundle: string, styles: str
         label: "Product images",
         type: "media",
         multiple: true,
+        ...(conditional ? { visibleWhen: { value: "$field.showMedia", equals: true } } : {}),
         item: { idPath: "id", urlPath: "url", altPath: "alt" },
         actions: {
             upload: { endpoint: "uploadMedia", params: { record: "$resource.id" } },
@@ -41,6 +49,9 @@ export async function installMediaRoutes(page: Page, bundle: string, styles: str
         resource,
         normalize: (value) => Object.assign(resource, value),
         fields: [
+            ...(conditional
+                ? [{ id: "showMedia", path: "showMedia", label: "Show media", type: "checkbox" as const }]
+                : []),
             { id: "title", path: "title", label: "Title", type: "text" },
             ...(long
                 ? Array.from(

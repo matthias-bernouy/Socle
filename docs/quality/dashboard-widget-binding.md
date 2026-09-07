@@ -715,3 +715,47 @@ Concurrent media mutations, inline rollback/retry, nested/conditional media
 coverage, real local storage checks, schemas, editable collections, metadata
 relays and final runtime activation remain outstanding. This checkpoint does
 not complete the goal or its full verification matrix.
+
+## Media failure recovery checkpoint
+
+Failed top-level upload, replacement, removal and reorder operations now restore
+only the submitted media field to its previous value. The action carries that
+interaction snapshot; it is not a response-to-rendering relay. The field state
+compares the failed submission with the current draft before restoring it, so a
+newer same-field edit or cleared lifecycle is not overwritten. The view draft
+receives the same guarded restoration. Unrelated edits stay untouched, and the
+existing binding context applies the rollback without a detail GET or shell
+reconstruction. The old nested media path remains pending migration.
+
+One browser scenario exercises all four failures followed by an inline retry,
+then a full reload to verify fixture persistence. It asserts the note draft,
+focus, selection, original field geometry and unchanged navigation/scroll over
+five subsequent frames. A second scenario hides/reveals a pending upload,
+verifies that its blob remains readable, and finishes either successfully or
+with an error while hidden. Both outcomes preserve another draft and release
+the temporary URL exactly once. A focused field-state test checks rollback
+against a newer edit and an already-cleared lifecycle.
+
+An initial position assertion exposed a 2px grid-height change when adding the
+fourth tile at a 1280px viewport. The original goal-baseline bundle and migrated
+bundle both move the notes from y=567.5 to y=569.5. The test therefore checks
+restoration to the original layout after rollback, rather than requiring the
+pending extra-tile layout to survive its removal. This is an existing grid
+border-sizing behavior, not a newly introduced reload jump. Observations are
+in `media-layout-probe.log`; pending/error screenshots for all four operations
+are in `media-recovery-captures/` and the error captures were inspected.
+
+The resumed initial check caught a nullable URL in the new test; the explicit
+URL precondition fixes its TypeScript error. The final check passes all eight
+gates; UI contracts remain 0 errors, 77 warnings and 11 information. All 39
+browser tests in 35 individually executed files pass (`media-recovery-browser/`),
+as do 181 Control tests. The source build passed (`media-recovery-build.log`);
+subsequent edits only corrected and extended tests. The 225-line field-state
+file remains cohesive around draft/validation lifecycle; the added rollback
+method does not justify a separate module. The 158-line media fixture is also
+retained as one route fixture. There are no directory-fanout errors.
+
+These are route-fixture persistence checks, not real local storage validation.
+Concurrent media mutations, nested controls, schema migration, editable
+collections, remaining legacy renderers and the full local-service matrix are
+still outstanding. The goal remains incomplete.

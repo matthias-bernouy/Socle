@@ -6,6 +6,7 @@ import type { WidgetMediaActionDetail } from "../../widgets/shared";
 import type { DashboardMediaItem } from "../../widgets/w-media-field/types";
 import type { DashboardViewActionContext } from "./context";
 import { once } from "./outcome";
+import { remainingDraft } from "../../domain/drafts";
 
 export async function runDashboardMediaAction(
     context: DashboardViewActionContext,
@@ -55,6 +56,16 @@ export async function runDashboardMediaAction(
             if (!syncNestedMediaControl(widget, media.field, items)) {
                 context.render();
             }
+        } else if (media.previousValue !== undefined) {
+            const draft = context.drafts.get(key);
+            if (
+                draft &&
+                Object.hasOwn(draft, media.field) &&
+                !Object.hasOwn(remainingDraft(draft, { [media.field]: media.value }), media.field)
+            ) {
+                context.drafts.set(key, { ...draft, [media.field]: structuredClone(media.previousValue) });
+            }
+            context.restoreDetailField?.(detail.collection, detail.row, media.field, media.value, media.previousValue);
         }
         showToast(error instanceof Error ? error.message : "Dashboard media action failed", { type: "error" });
     }

@@ -136,6 +136,11 @@ export class DashboardWDetail extends Component {
         this.runtime.fields.acknowledgeSavedFields(fields);
     }
 
+    restoreField(field: string, submitted: unknown, previous: unknown): void {
+        this.runtime.fields.restoreField(field, submitted, previous);
+        this.refreshConditionalFields();
+    }
+
     static get observedAttributes(): string[] {
         return ["data-config-json", "data-source-json", "data-row-key", "data-source-id"];
     }
