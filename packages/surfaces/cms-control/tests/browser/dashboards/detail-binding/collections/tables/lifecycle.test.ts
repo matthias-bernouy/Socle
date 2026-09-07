@@ -4,10 +4,10 @@ import { resolve } from "node:path";
 import { installTableRoutes, tablePage } from "./fixture";
 
 const bundle = await Bun.file(
-    resolve(import.meta.dir, "../../../../../src/static/assets/control-components.js"),
+    resolve(import.meta.dir, "../../../../../../src/static/assets/control-components.js"),
 ).text();
 const styles = await Bun.file(
-    resolve(import.meta.dir, "../../../../../../../foundation/components/dist/style.css"),
+    resolve(import.meta.dir, "../../../../../../../../foundation/components/dist/style.css"),
 ).text();
 
 test("embedded table edits survive pending options and overlapping saves", async () => {

@@ -5,10 +5,10 @@ import { mkdir } from "node:fs/promises";
 import { installTableRoutes, tablePage } from "./fixture";
 
 const bundle = await Bun.file(
-    resolve(import.meta.dir, "../../../../../src/static/assets/control-components.js"),
+    resolve(import.meta.dir, "../../../../../../src/static/assets/control-components.js"),
 ).text();
 const styles = await Bun.file(
-    resolve(import.meta.dir, "../../../../../../../foundation/components/dist/style.css"),
+    resolve(import.meta.dir, "../../../../../../../../foundation/components/dist/style.css"),
 ).text();
 
 type Geometry = { x: number; y: number; width: number; height: number; scrollWidth: number; clientWidth: number };

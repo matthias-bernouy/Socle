@@ -41,7 +41,7 @@ applied by binding to that composed HTML, not used to reconstruct a widget tree.
 | Lists | Filters/search, selection, bulk actions, reordering, pagination where offered | Pending |
 | Details | Create/edit, validation, repeated save, confirmation/cancel, persisted reload | Pending |
 | Dynamic controls | Conditional fields, lookups, relations, schemas, pages, secrets, CMS users | Pending |
-| Collections | Embedded tables, reorderable rows/cards, derived values | Embedded tables verified with route fixtures; reorderable rows/cards pending |
+| Collections | Embedded tables, reorderable rows/cards, derived values | Embedded tables verified with route fixtures; reorderable references established, binding migration and concurrency fixes pending |
 | Media | Upload/replace/remove/reorder/download, real file payload checks | Pending |
 | Concurrency | Delays, errors/retry, double actions, stale/out-of-order/cancelled requests | Pending |
 | UI stability | Long forms, active edits, focus/caret/selection, drafts, scroll/nav position | Pending |
@@ -899,7 +899,7 @@ E2E matrix and final runtime activation still prevent goal completion.
 ### Embedded table reference checkpoint
 
 The next unmigrated family is the table field inside a detail, distinct from
-the already bound top-level table widget. `detail-binding/tables/` now has a
+the already bound top-level table widget. `detail-binding/collections/tables/` now has a
 route fixture, a complete sequential save flow and desktop/mobile references.
 Lookup tests moved under `detail-binding/choices/lookups/` to keep the directory
 within its fanout limit; their behavior is unchanged.
@@ -1070,3 +1070,67 @@ a permanent compatibility contract and must disappear with those consumers.
 Reorderable lists/cards and nested media, metadata relays, complete operator and
 provider coverage, real local writes/cleanup, final performance review and
 runtime activation still prevent goal completion.
+
+
+## Reorderable choice references — migration not yet applied
+
+The new `detail-binding/collections/reorderable/` browser fixtures establish the
+remaining complex field's behavior before replacing its imperative renderer.
+Existing table tests moved into the sibling `collections/tables/` directory;
+their fixtures and bundle paths were adjusted, with no behavioral changes.
+
+Four browser tests cover these reference paths:
+
+- Rows and cards: nested text edits, boolean checkbox, select, shared lookup
+  combobox, real pointer drag, add/remove limits, custom nested position path,
+  opaque metadata, two saves and reloaded values.
+- Page/secret selectors inside card settings: published-page restriction,
+  choosing both references, dragging the owning choice, saving, clearing the
+  credential and reloading. Only fixture key names are returned; no actual
+  credential is created or transmitted.
+- Nested media: upload, replacement and removal return an asset to the parent
+  draft; the subsequent detail save persists the choices. Multipart content,
+  parent identity, previous asset ID, unrelated metadata, notes typed during
+  upload and reloaded asset values are checked.
+- Desktop/mobile captures: rows/cards ready, empty and pending lookup states,
+  expanded card settings and both mobile layouts scrolled to the bottom.
+  Bottom checks include visible notes, stable mobile toolbar and document width.
+
+All persistence here is in controlled route fixtures, not the local database.
+These references do not establish complete error/concurrency coverage or prove
+that reorderable lists have migrated to binding. In particular, required nested
+field validation and remote pagination still need dedicated coverage.
+
+The original goal bundle and the current pre-migration bundle have equal measured
+geometry in all 16 visual pairs. Fifteen pairs are pixel identical; mobile empty
+rows differ by ten border pixels. Representative desktop/mobile, expanded,
+bottom and nested-media images were inspected. Three additional nested-media
+captures record ready, uploaded draft and saved states. Evidence lives under
+`/tmp/cmscore-widget-binding-20260907/` in `reorderable-reference-captures/`,
+`reorderable-reference-pixels.json` and `reorderable-reference-visual.log`.
+Initial timing samples and request counts are retained in
+`reorderable-reference-timings.json`; these single samples are a replay reference,
+not a performance claim. Every initial state issues one detail GET and one shared
+lookup GET.
+
+The separate `reorderable-lifecycle-probe.ts` records actual pre-migration failures
+in `reorderable-lifecycle-before.json` and its log. Across rows/cards and both
+viewport sizes, delayed options preserve the entered text but destroy focus and
+selection. Expanded cards close; the mobile card scenario's scroll changes from
+401 to 292 pixels. A delayed save overwrites a newer edit with its submitted
+value, loses focus/selection, and a second save plus full reload confirms that
+the newer value was lost. Each of the two saves also refetches the lookup: the
+whole sequence has four lookup GETs and two detail GETs including reload.
+These are pending migration requirements, not accepted UI changes or passing
+stability tests.
+
+The affected table/reorderable tests pass independently: 12 tests in ten files.
+The visual comparison was rerun after adding bottom-scroll assertions. No runtime
+source or generated bundle changed in this reference checkpoint. Initial and
+final check:all pass all eight gates; UI contracts remain at 0 errors, 77 warnings
+and 11 information, with no directory-fanout error. The 155-line
+nested fixture is retained as a cohesive definition and route contract, with no
+rule exemption. The next step is the actual binding migration and conversion of
+the observed concurrency failures into strict regression tests. The larger goal,
+including real local persistence, operator coverage and runtime activation,
+remains incomplete.

@@ -1,5 +1,5 @@
 import type { Page } from "playwright";
-import { installReadonlyRoutes } from "../fixture";
+import { installReadonlyRoutes } from "../../fixture";
 
 export async function installRemoteTables(page: Page, bundle: string, styles: string) {
     const fixture = await installReadonlyRoutes(page, bundle, styles, {

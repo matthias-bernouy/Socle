@@ -1,6 +1,6 @@
 import type { DashboardField } from "@bernouy/cms-dashboards";
 import type { Page } from "playwright";
-import { installReadonlyRoutes } from "../fixture";
+import { installReadonlyRoutes } from "../../fixture";
 
 export const tablePage =
     "http://cms.test/admin/sources?source=store&dashboard=summary&collection=detail&row=quality-table";
