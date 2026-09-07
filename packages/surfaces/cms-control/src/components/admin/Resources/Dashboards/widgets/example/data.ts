@@ -1,6 +1,5 @@
 import type { WDetailData, WDetailFieldValue } from "../w-detail/types";
 import type { DashboardMediaItem } from "../w-media-field/types";
-import type { WTableData, WTableRow } from "../w-table/types";
 
 export type ExampleProduct = {
     id: string;
@@ -21,21 +20,6 @@ export const PRODUCTS: ExampleProduct[] = [
     product("prod_1003", "Ceramic Mug", "Active", "Example Supply", "Kitchen", "Online store", "Jul 1"),
     product("prod_1004", "Notebook Set", "Archived", "Paper & Co.", "Stationery", "Hidden", "Jun 28"),
 ];
-
-export function tableData(): WTableData {
-    return {
-        title: "Products",
-        subtitle: "Widget sandbox: selection and bulk checkboxes only.",
-        columns: [
-            { key: "title", label: "Product", primary: true },
-            { key: "status", label: "Status", width: "140px" },
-            { key: "vendor", label: "Vendor", width: "160px" },
-            { key: "category", label: "Category", width: "180px" },
-            { key: "updated", label: "Updated", width: "140px" },
-        ],
-        rows: PRODUCTS.map(tableRow),
-    };
-}
 
 export function detailData(product: ExampleProduct): WDetailData {
     return {
@@ -117,20 +101,6 @@ export function isStringArray(value: WDetailFieldValue): value is string[] {
 
 export function isMediaItems(value: WDetailFieldValue): value is DashboardMediaItem[] {
     return Array.isArray(value) && value.every((item) => typeof item === "object" && item !== null && "url" in item);
-}
-
-function tableRow(product: ExampleProduct): WTableRow {
-    return {
-        id: product.id,
-        collection: "example-products",
-        cells: {
-            title: { title: product.title, meta: product.id },
-            status: { title: product.status, tone: "badge" },
-            vendor: product.vendor,
-            category: product.category,
-            updated: { title: product.updated, tone: "muted" },
-        },
-    };
 }
 
 function product(

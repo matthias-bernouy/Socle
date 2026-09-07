@@ -5,6 +5,7 @@ import { ParamSync } from "../params/ParamSync";
 import { Source } from "../source/Source";
 import { sourceTrigger } from "../source/sourceEvents";
 import type { SourceStatusValue } from "../source/presentation/sourceStatus";
+import { hasLocalSourceData } from "../source/values";
 import { sourceUrl } from "../source/runtime/sourceSpec";
 import { sourceStatusScope } from "./sourceStatusScope";
 
@@ -43,7 +44,7 @@ export class BindingRegistry {
     }
 
     reconcileSource(element: Element): void {
-        if (!element.hasAttribute(SOURCE_ATTR) || !this.hasSourceUrl(element)) {
+        if (!element.hasAttribute(SOURCE_ATTR) || !this.hasSourceInput(element)) {
             this.unregisterSource(element);
             return;
         }
@@ -58,7 +59,7 @@ export class BindingRegistry {
     }
 
     registerSource(element: Element): void {
-        if (!element.isConnected || this.sources.has(element) || !this.hasSourceUrl(element)) {
+        if (!element.isConnected || this.sources.has(element) || !this.hasSourceInput(element)) {
             return;
         }
         const source = new Source(element, this.filters, {
@@ -147,7 +148,10 @@ export class BindingRegistry {
         return true;
     }
 
-    private hasSourceUrl(element: Element): boolean {
-        return sourceUrl(element.getAttribute(SOURCE_ATTR) ?? "").trim() !== "";
+    private hasSourceInput(element: Element): boolean {
+        return (
+            sourceUrl(element.getAttribute(SOURCE_ATTR) ?? "").trim() !== "" ||
+            (sourceTrigger(element) === "auto" && hasLocalSourceData(element))
+        );
     }
 }

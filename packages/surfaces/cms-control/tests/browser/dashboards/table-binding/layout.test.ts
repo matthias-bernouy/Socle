@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { resolve } from "node:path";
 import { chromium } from "playwright";
 
-const bundlePath = resolve(import.meta.dir, "../../../src/static/assets/control-components.js");
+const bundlePath = resolve(import.meta.dir, "../../../../src/static/assets/control-components.js");
 
 test("a wide dashboard table scrolls inside a narrow grid without overflowing the admin content", async () => {
     const browser = await chromium.launch();

@@ -1,4 +1,5 @@
 import { afterEach, expect, test } from "bun:test";
+import { BindingRegistry } from "../../../../src/binding/runtime/BindingRegistry";
 import { Source } from "../../../../src/binding/source/Source";
 import { readSourceData, setSourceData } from "../../../../src/binding/source/values";
 import { el, resetDom, res, settle } from "../../testUtils";
@@ -107,4 +108,35 @@ test("unchanged bound attributes do not retrigger a custom input and erase its d
     expect(control.value).toBe("Unsaved draft");
     expect(host.querySelector("p")!.textContent).toBe("new");
     source.dispose();
+});
+
+test("explicitly seeded URL-less sources bind locally and can transition to network data", async () => {
+    let calls = 0;
+    globalThis.fetch = (async () => {
+        calls += 1;
+        return res(200, '{"name":"Network"}');
+    }) as unknown as typeof fetch;
+    const root = el('<main><div cms-source=""><p>{{ name }}</p></div><div cms-source=""><p>Unseeded</p></div></main>');
+    const host = root.firstElementChild!;
+    setSourceData(host, { name: "Local" });
+    document.body.append(root);
+    const registry = new BindingRegistry(root, {}, {}, () => {});
+    registry.registerSource(host);
+    registry.registerSource(root.lastElementChild!);
+    expect(host.textContent).toBe("Local");
+    expect(registry.sourceCount).toBe(1);
+    expect(calls).toBe(0);
+    setSourceData(host, { name: "Updated" });
+    expect(host.textContent).toBe("Updated");
+    host.setAttribute("cms-source", "/network");
+    registry.reconcileSource(host);
+    await settle();
+    expect(calls).toBe(1);
+    expect(host.textContent).toBe("Network");
+    host.setAttribute("cms-source", "");
+    registry.reconcileSource(host);
+    await settle();
+    expect(registry.sourceCount).toBe(0);
+    expect(readSourceData(host)).toBeUndefined();
+    registry.teardown();
 });

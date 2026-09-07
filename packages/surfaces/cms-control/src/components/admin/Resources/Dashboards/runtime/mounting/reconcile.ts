@@ -1,4 +1,5 @@
 import type { DashboardRuntimeWidget, DetailSelection, RenderContext } from "../../domain";
+import { updateTableFilters } from "../../widgets/w-table/composition";
 import type { DashboardWTable } from "../../widgets/w-table/WTable";
 import type { DashboardWDetail } from "../../widgets/w-detail/WDetail";
 import { requiredSourceParams, sourceWrapper } from "./mountSource";
@@ -36,8 +37,8 @@ export function retainWidgets(
                     continue;
                 }
                 const filters = { ...(context.filters?.get(widget.id) ?? {}) };
-                table.updateFilters(filters);
-                const source = table.querySelector("[cms-source]");
+                updateTableFilters(table, filters);
+                const source = table;
                 const next = sourceWrapper(
                     context.dashboard.source,
                     widget.source,

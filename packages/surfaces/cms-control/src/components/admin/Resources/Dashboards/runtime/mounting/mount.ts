@@ -2,10 +2,10 @@ import { retainWidgets } from "./reconcile";
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import type { DashboardRuntimeWidget, DetailSelection, RenderContext } from "../../domain";
 import "./../../widgets/w-section/WSection";
-import { DashboardWTable } from "../../widgets/w-table/WTable";
+import { tableWithSource } from "./table";
 import { detailElement } from "./detail";
 import { navigationListElement, selectionVars } from "./navigation";
-import { requiredSourceParams, sourceWrapper, tableRowsTemplate } from "./mountSource";
+import { requiredSourceParams, sourceWrapper } from "./mountSource";
 
 let tabsSequence = 0;
 
@@ -142,11 +142,7 @@ function tableElement(
         "dashboardData",
         requiredSourceParams(context, widget.source),
     );
-    const element = new DashboardWTable();
-    element.dataset.widgetId = widget.id;
-    element.configure(widget, filters);
+    const element = tableWithSource(widget, wrapper, filters);
     element.setAttribute("data-selected", context.selectedRows.get(widget.selection?.opens ?? widget.id) ?? "");
-    wrapper.append(tableRowsTemplate(widget));
-    element.append(wrapper);
     return element;
 }

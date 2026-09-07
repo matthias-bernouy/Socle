@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { Button } from "@bernouy/components";
+import "cms-control/components";
+import {
+    tableShell,
+    updateTableFilters,
+} from "cms-control/components/admin/Resources/Dashboards/widgets/w-table/composition";
+import { setSourceData, Button } from "@bernouy/components";
 import "../../../src/components/admin/Resources/Dashboards/widgets/w-table/WTable";
 import {
     WIDGET_ACTION_EVENT,
@@ -20,21 +25,17 @@ afterEach(() => {
 
 describe("dashboard table widget binding", () => {
     test("keeps rows generated in the widget light DOM", async () => {
-        const table = document.createElement("cms-dashboard-w-table");
-        table.setAttribute(
-            "data-config-json",
-            JSON.stringify({
-                widget: "w-table",
-                id: "productsTable",
-                source: { endpoint: "products", itemsPath: "items" },
-                rowKey: "id",
-                columns: [
-                    { id: "title", label: "Product", path: "title", primary: true },
-                    { id: "status", label: "Status", path: "status", format: "badge" },
-                ],
-                selection: { opens: "productDetail" },
-            }),
-        );
+        const table = tableShell({
+            widget: "w-table",
+            id: "productsTable",
+            source: { endpoint: "products", itemsPath: "items" },
+            rowKey: "id",
+            columns: [
+                { id: "title", label: "Product", path: "title", primary: true },
+                { id: "status", label: "Status", path: "status", format: "badge" },
+            ],
+            selection: { opens: "productDetail" },
+        });
 
         const row = document.createElement("cms-dashboard-w-row");
         row.setAttribute("row-key", "1");
@@ -46,7 +47,7 @@ describe("dashboard table widget binding", () => {
         await Promise.resolve();
 
         expect(table.shadowRoot!.querySelector("tbody")).toBeNull();
-        expect(table.shadowRoot!.querySelectorAll("[data-column-header]")).toHaveLength(2);
+        expect(table.querySelectorAll("[data-column-header]")).toHaveLength(2);
         expect(table.querySelectorAll("cms-dashboard-w-row")).toHaveLength(1);
         expect(table.querySelector("cms-dashboard-w-row")?.getAttribute("row-key")).toBe("1");
         expect(table.querySelector("cms-dashboard-w-cell[column='title']")?.textContent).toBe("Racket Pro");
@@ -54,25 +55,21 @@ describe("dashboard table widget binding", () => {
     });
 
     test("emits table action events with the source widget id", async () => {
-        const table = document.createElement("cms-dashboard-w-table");
-        table.setAttribute(
-            "data-config-json",
-            JSON.stringify({
-                widget: "w-table",
-                id: "subscriptionsTable",
-                source: { endpoint: "listSubscriptions", itemsPath: "subscriptions" },
-                rowKey: "email",
-                columns: [{ id: "email", label: "Email", path: "email", primary: true }],
-                actions: [
-                    {
-                        id: "exportSubscriptions",
-                        label: "Export CSV",
-                        endpoint: { endpoint: "exportSubscriptions" },
-                        download: { filename: "newsletter-subscriptions.csv" },
-                    },
-                ],
-            }),
-        );
+        const table = tableShell({
+            widget: "w-table",
+            id: "subscriptionsTable",
+            source: { endpoint: "listSubscriptions", itemsPath: "subscriptions" },
+            rowKey: "email",
+            columns: [{ id: "email", label: "Email", path: "email", primary: true }],
+            actions: [
+                {
+                    id: "exportSubscriptions",
+                    label: "Export CSV",
+                    endpoint: { endpoint: "exportSubscriptions" },
+                    download: { filename: "newsletter-subscriptions.csv" },
+                },
+            ],
+        });
 
         const actions: WidgetActionDetail[] = [];
         table.addEventListener(WIDGET_ACTION_EVENT, (event) => {
@@ -82,7 +79,7 @@ describe("dashboard table widget binding", () => {
         document.body.append(table);
         await Promise.resolve();
 
-        const button = table.shadowRoot!.querySelector("p9r-button") as HTMLElement;
+        const button = table.querySelector("p9r-button") as HTMLElement;
         button.click();
 
         expect(button.shadowRoot?.querySelector("button")?.getAttribute("aria-label")).toBe("Export CSV");
@@ -92,50 +89,49 @@ describe("dashboard table widget binding", () => {
     });
 
     test("renders declared filters and emits the submitted filter values", async () => {
-        const table = document.createElement("cms-dashboard-w-table");
-        table.setAttribute(
-            "data-config-json",
-            JSON.stringify({
-                widget: "w-table",
-                id: "productsTable",
-                source: {
-                    endpoint: "products",
-                    params: { q: "$filter.q", status: "$filter.status" },
-                    itemsPath: "items",
+        const table = tableShell({
+            widget: "w-table",
+            id: "productsTable",
+            source: {
+                endpoint: "products",
+                params: { q: "$filter.q", status: "$filter.status" },
+                itemsPath: "items",
+            },
+            rowKey: "id",
+            columns: [{ id: "title", label: "Product", path: "title", primary: true }],
+            filters: [
+                { id: "q", label: "Search", type: "text", placeholder: "Search products" },
+                {
+                    id: "status",
+                    label: "Status",
+                    type: "select",
+                    options: [
+                        { value: "draft", label: "Draft" },
+                        { value: "published", label: "Published" },
+                    ],
                 },
-                rowKey: "id",
-                columns: [{ id: "title", label: "Product", path: "title", primary: true }],
-                filters: [
-                    { id: "q", label: "Search", type: "text", placeholder: "Search products" },
-                    {
-                        id: "status",
-                        label: "Status",
-                        type: "select",
-                        options: [
-                            { value: "draft", label: "Draft" },
-                            { value: "published", label: "Published" },
-                        ],
-                    },
-                ],
-            }),
-        );
-        table.setAttribute("data-filters-json", JSON.stringify({ q: "racket", status: "published" }));
+            ],
+        });
+        table.setAttribute("cms-source", "");
+        setSourceData(table, {});
+        updateTableFilters(table, { q: "racket", status: "published" });
         const changes: WidgetFilterChangeDetail[] = [];
         table.addEventListener(WIDGET_FILTER_CHANGE_EVENT, (event) =>
             changes.push((event as CustomEvent<WidgetFilterChangeDetail>).detail),
         );
 
-        document.body.append(table);
-        await Promise.resolve();
+        const core = document.createElement("cms-binding-core");
+        core.append(table);
+        document.body.append(core);
+        await new Promise((resolve) => setTimeout(resolve, 10));
 
-        const form = table.shadowRoot!.querySelector<HTMLFormElement>("[data-filters]")!;
+        const form = table.querySelector<HTMLFormElement>("[data-filters]")!;
         const search = form.querySelector<HTMLInputElement>("[name='q']")!;
         const status = form.querySelector<HTMLSelectElement>("[name='status']")!;
         expect(form.hidden).toBeFalse();
-        expect(Array.from(form.querySelectorAll("label")).map((label) => label.textContent)).toEqual([
-            "Search",
-            "StatusAllDraftPublished",
-        ]);
+        expect(
+            Array.from(form.querySelectorAll("cms-dashboard-table-filter")).map((field) => field.getAttribute("label")),
+        ).toEqual(["Search", "Status"]);
         expect({ search: search.value, status: status.value }).toEqual({
             search: "racket",
             status: "published",
@@ -144,7 +140,7 @@ describe("dashboard table widget binding", () => {
         search.value = "pro";
         status.value = "draft";
         form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-        table.shadowRoot!.querySelector<HTMLButtonElement>("[data-filter-clear]")!.click();
+        table.querySelector<HTMLButtonElement>("[data-filter-clear]")!.click();
 
         expect(changes).toEqual([
             { widget: "productsTable", filters: { q: "pro", status: "draft" } },

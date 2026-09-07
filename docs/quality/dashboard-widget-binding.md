@@ -396,3 +396,65 @@ counts. The existing detail event file remains cohesive above the size-review
 threshold. Complex controls, table metadata/configuration, definition/navigation
 relays, examples, real local writes and final runtime activation remain open.
 The complete verification matrix is still pending.
+
+## Table composition checkpoint
+
+`DashboardWTable` no longer accepts object configurations, row data or JSON
+attributes. Its obsolete row/configuration renderer, types and unused mapping
+module are removed. The mounting layer composes headers, actions and filters
+from the dashboard definition before the table host's source activates. Rows
+continue to use binding repeats. Relation tables and the example table use the
+same composition path. Applied filter values are local binding context, not
+values imperatively reapplied by the visual table component.
+
+The original native filter inputs/selects and real HTML form remain in light
+DOM, including Enter submission. Their previous CSS is encapsulated by small
+visual filter wrappers; composition injects no global stylesheet. Table action
+buttons remain the official button component. The table shell retains local
+checkbox selection, confirmation and form events. This preserves existing
+native filter behavior and appearance rather than replacing its controls as
+part of an internal refactor.
+
+`cms-bind-value` now supports native text/search inputs, single selects and
+textareas, in addition to checkboxes and typed custom-element receivers. It
+avoids writing an unchanged applied value, preserving local drafts and caret.
+File inputs and multiple selects are deliberately outside that scalar contract.
+An explicitly seeded automatic source without a URL can activate through the
+ordinary binding registry; unseeded URL-less sources remain inactive. The
+example uses this path without a fabricated endpoint. Registry unit coverage
+checks local updates, transition to a network read and disposal after removing
+the URL; Chromium independently verifies automatic discovery, network rendering
+and registry disposal. This browser check covers mutation delivery rather than
+relying on the DOM emulator's observer behavior.
+
+The controlled E2E flow covers native filter submission/clearing, select-all,
+slow and out-of-order reads, a failed read/retry, CSV filename and bytes,
+normalized edit/create payloads, required validation, fixture persistence after
+full reloads and cancellation/acceptance of clearing. Five frame samples during
+a held response preserve filter/navigation geometry and the new input draft;
+focus and text selection survive completion. The example also covers selection,
+back navigation and absence of source API reads. These are route fixtures, not
+real local database persistence.
+
+Four comparable desktop/mobile captures (all rows and active filter) match the
+original goal bundle pixel-for-pixel and were inspected. The mobile reference
+already clips a long table action row; preserving those pixels does not prove
+that all existing internal overflow is fixed. This joins the previously noted
+detail action-row clipping in the outstanding full UI audit. The dedicated
+wide-table test verifies horizontal scrolling stays inside the table frame.
+Evidence: `table-captures/`, `table-visual-*.log`, `table-timings.json` and
+`table-browser/` under the evidence directory. Five sequential controlled runs
+measured median initial readiness of 171.2ms before and 157.4ms after (ranges
+165.9–194.6ms and 153.8–166.1ms). The full four-state capture sequence makes four
+table reads in either version; these are not real-service latency measurements.
+
+Validation: 253 binding tests, 178 dashboard/widget/detail tests and all eighteen
+dashboard browser files pass individually. One obsolete mapper-only test was
+removed with its unused implementation. Build and final check:all pass all
+eight gates, with unchanged UI-contract totals (0 errors, 77 warnings, 11
+informational findings). The initial table check passed all eight; the resumed
+check caught only formatting in the unfinished example test, now resolved.
+The binding site file remains cohesive at 201 lines; mounting now has eight
+entries, an informational directory finding. Complex detail controls,
+definition/navigation relays, the example detail, real local writes and final
+runtime activation remain incomplete. The overall matrix remains pending.

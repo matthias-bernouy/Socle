@@ -175,6 +175,15 @@ export class ValueSite implements LiveBindingSite {
                 this.element.checked = value === true;
                 return;
             }
+            if (
+                view &&
+                (this.element instanceof view.HTMLTextAreaElement ||
+                    this.element instanceof view.HTMLSelectElement ||
+                    (this.element instanceof view.HTMLInputElement && ["text", "search"].includes(this.element.type)))
+            ) {
+                this.element.value = value == null ? "" : String(value);
+                return;
+            }
             const target = this.element as HTMLElement & { setBindingValue?: (value: unknown) => void };
             target.setBindingValue?.(value);
         };

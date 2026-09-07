@@ -3,7 +3,7 @@ import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import "cms-control/components";
 import { formatDashboardValue } from "cms-control/components/admin/Resources/Dashboards/domain/formatting";
 import { detailData } from "cms-control/components/admin/Resources/Dashboards/runtime/mapping/detail";
-import { tableData } from "cms-control/components/admin/Resources/Dashboards/runtime/mapping/table";
+import { tableShell } from "cms-control/components/admin/Resources/Dashboards/widgets/w-table/composition";
 import {
     appendSourceContent,
     tableRowsTemplate,
@@ -65,34 +65,6 @@ describe("dashboard presentation formats", () => {
         expect(updated.dataset.displayCurrency).toBeUndefined();
     });
 
-    test("applies the same formats to directly mapped table data", () => {
-        const data = tableData(
-            {
-                widget: "w-table",
-                id: "proposals",
-                source: { endpoint: "manageProposals", itemsPath: "items" },
-                rowKey: "id",
-                columns: [
-                    { id: "amount", label: "Amount", path: "fixedTotalCents", format: "money" },
-                    { id: "updated", label: "Updated", path: "updatedAt", format: "date" },
-                ],
-            },
-            [
-                {
-                    id: "proposal-1",
-                    fixedTotalCents: 65_000,
-                    currency: "EUR",
-                    updatedAt: "2026-07-25T13:15:00.000Z",
-                },
-            ],
-        );
-
-        expect(data.rows[0]?.cells).toEqual({
-            amount: formatDashboardValue(65_000, "money", { currency: "EUR" }),
-            updated: formatDashboardValue("2026-07-25T13:15:00.000Z", "date"),
-        });
-    });
-
     test("renders formatted values inside table cells", () => {
         const cell = document.createElement("cms-dashboard-w-cell");
         cell.dataset.displayFormat = "money";
@@ -135,8 +107,7 @@ describe("dashboard presentation formats", () => {
             ],
         } satisfies Extract<DashboardWidget, { widget: "w-table" }>;
         const wrapper = urlSourceWrapper("/proposals", "dashboardData");
-        const table = document.createElement("cms-dashboard-w-table");
-        table.setAttribute("data-config-json", JSON.stringify(widget));
+        const table = tableShell(widget);
         table.append(tableRowsTemplate(widget));
         appendSourceContent(wrapper, table);
         const core = document.createElement("cms-binding-core");

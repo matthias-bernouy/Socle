@@ -122,3 +122,25 @@ test("a bound native checkbox receives booleans and retains a local edit on an u
     expect(input.checked).toBe(true);
     expect(host.querySelector("input")).toBe(input);
 });
+
+test("native text and select bindings preserve drafts until their bound value changes", () => {
+    const { host, region } = mount(
+        '<input cms-bind-value="query"><select cms-bind-value="status"><option value="">All</option><option value="active">Active</option></select><input type="file" cms-bind-value="query">',
+        { query: "Initial", status: "active" },
+    );
+    const input = host.querySelector("input")!;
+    const select = host.querySelector("select")!;
+    expect([input.value, select.value]).toEqual(["Initial", "active"]);
+    input.value = "Unsaved";
+    input.focus();
+    input.setSelectionRange(1, 4);
+    select.value = "";
+    region.update({ value: { query: "Initial", status: "active" } });
+    expect([input.value, select.value]).toEqual(["Unsaved", ""]);
+    expect([document.activeElement, input.selectionStart, input.selectionEnd]).toEqual([input, 1, 4]);
+    region.update({ value: { query: "Submitted", status: "" } });
+    expect([input.value, select.value]).toEqual(["Submitted", ""]);
+    region.update({ value: {} });
+    expect(input.value).toBe("");
+    expect(host.querySelector<HTMLInputElement>('input[type="file"]')!.value).toBe("");
+});

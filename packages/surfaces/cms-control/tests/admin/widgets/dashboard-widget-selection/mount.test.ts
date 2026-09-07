@@ -27,6 +27,6 @@ describe("dashboard widget selection", () => {
         expect(wrapper.getAttribute("cms-source")).toBe(
             "/api/relations/page?relation=product-offers&fromId=product-1&limit=10&offset=0 as dashboardData",
         );
-        expect(table.shadowRoot!.textContent).toContain("Offer");
+        expect(table.querySelector('[data-column-header="title"]')?.textContent).toBe("Offer");
     });
 });

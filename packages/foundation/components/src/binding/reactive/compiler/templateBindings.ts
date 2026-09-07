@@ -10,7 +10,10 @@ export function compileAttributes(
     const value = element.getAttribute("cms-bind-value");
     if (
         value &&
-        (element.localName.includes("-") || element.matches('input[type="checkbox"]')) &&
+        (element.localName.includes("-") ||
+            element.matches(
+                'input:not([type]), input[type="checkbox"], input[type="text"], input[type="search"], select:not([multiple]), textarea',
+            )) &&
         /^[\w$.-]+$/.test(value) &&
         !pathOwnedBySubmitSource(value, boundary)
     ) {

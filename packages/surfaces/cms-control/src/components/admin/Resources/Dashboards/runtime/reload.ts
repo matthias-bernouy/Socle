@@ -10,7 +10,10 @@ export function reloadCollection(root: HTMLElement, widgetId: string): void {
     const widget = Array.from(root.querySelectorAll<HTMLElement>("[data-widget-id]")).find(
         (element) => element.dataset.widgetId === widgetId,
     );
-    const event = widget?.querySelector("[cms-source][cms-reload-on]")?.getAttribute("cms-reload-on");
+    const source = widget?.matches("[cms-source][cms-reload-on]")
+        ? widget
+        : widget?.querySelector("[cms-source][cms-reload-on]");
+    const event = source?.getAttribute("cms-reload-on");
     if (event) {
         root.ownerDocument.dispatchEvent(new Event(event));
     }
