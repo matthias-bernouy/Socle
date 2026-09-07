@@ -8,7 +8,7 @@ import { mountSettings } from "cms-control/components/admin/Resources/Integratio
 import { managementRequest } from "cms-control/components/admin/Resources/Integrations/management/api";
 import { executeEndpointAction } from "cms-control/components/admin/Resources/Dashboards/runtime/actions/endpoint";
 import { WIDGET_ACTION_EVENT } from "cms-control/components/admin/Resources/Dashboards/widgets/shared";
-import { renderSourceManagement } from "cms-control/components/admin/Resources/Dashboards/navigation/management";
+import { navigationContext } from "cms-control/components/admin/Resources/Dashboards/navigation/binding/context";
 import { detail } from "./support";
 
 const originalFetch = globalThis.fetch;
@@ -134,22 +134,47 @@ test("settings save sends expected revision and management dashboard actions unw
 });
 
 test("source-less extension settings are listed under the real parent source", () => {
-    const menu = document.createElement("div");
-    const parent = document.createElement("div");
-    parent.dataset.source = "shop-source";
-    const unrelated = document.createElement("div");
-    unrelated.dataset.source = "newsletter";
-    menu.append(parent, unrelated);
-    renderSourceManagement(menu, "shop-source", [
-        { ...detail(), id: "commerce", label: "Commerce", sourceIds: ["shop-source"] },
-        { ...detail(), id: "stripe", label: "Stripe", sourceIds: [], extensionOf: { kind: "commerce" } },
-    ]);
-    expect(menu.children).toHaveLength(4);
-    expect(menu.lastElementChild).toBe(unrelated);
-    expect(menu.textContent).toContain("Stripe settings");
-    expect(parent.nextElementSibling?.nextElementSibling?.getAttribute("href")).toBe(
-        "/admin/sources?source=shop-source&integration=stripe",
+    const context = navigationContext()(
+        [
+            {
+                source: {
+                    id: "shop-source",
+                    urn: "urn:shop",
+                    name: "Shop",
+                    endpointCount: 0,
+                    dashboardCount: 0,
+                    readonly: false,
+                },
+                endpoints: [],
+                dashboards: [],
+            },
+            {
+                source: {
+                    id: "newsletter",
+                    urn: "urn:newsletter",
+                    name: "Newsletter",
+                    endpointCount: 0,
+                    dashboardCount: 0,
+                    readonly: false,
+                },
+                endpoints: [],
+                dashboards: [],
+            },
+        ],
+        [
+            { ...detail(), id: "commerce", label: "Commerce", sourceIds: ["shop-source"] },
+            { ...detail(), id: "stripe", label: "Stripe", sourceIds: [], extensionOf: { kind: "commerce" } },
+        ],
+        "shop-source",
+        "",
+        false,
+        "stripe",
+        false,
     );
+    const visible = context.navItems.filter((item) => !item.hidden);
+    expect(visible.map((item) => item.label)).toEqual(["Shop", "Settings & health", "Stripe settings", "Newsletter"]);
+    expect(visible[2]!.href).toBe("/admin/sources?source=shop-source&integration=stripe");
+    expect(visible[2]!.active).toBe(true);
 });
 
 test("health does not equate absent revisions with applied configuration and explains observation failures", async () => {

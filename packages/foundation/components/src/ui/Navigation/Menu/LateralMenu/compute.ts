@@ -10,6 +10,7 @@ export const getMenuItems = (slot: HTMLSlotElement | null): HTMLElement[] => {
             (el): el is HTMLElement =>
                 el instanceof HTMLElement &&
                 el.tagName.toLowerCase() === "w13c-lateral-menu-item" &&
-                !el.hasAttribute("disabled"),
+                !el.hasAttribute("disabled") &&
+                !el.hidden,
         );
 };

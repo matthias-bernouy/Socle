@@ -108,7 +108,7 @@ test("page-owned bindings preserve navigation, filtered tables and detail hosts 
         });
         const row = page.locator("cms-dashboard-w-row");
         await row.waitFor();
-        const nav = await page.locator('cms-dashboards-nav [data-source="store"]').elementHandle();
+        const nav = await page.locator('cms-dashboards-nav [data-source="store"]:not([data-nested])').elementHandle();
         const table = await page.locator("cms-dashboard-w-table").elementHandle();
         await page.evaluate(() => document.dispatchEvent(new Event("dashboard:definitions-changed")));
         await page.waitForTimeout(100);

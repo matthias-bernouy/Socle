@@ -10638,7 +10638,7 @@ p {
   var Oa = (t) => {
     if (!t)
       return [];
-    return t.assignedElements({ flatten: true }).filter((e) => e instanceof HTMLElement && e.tagName.toLowerCase() === "w13c-lateral-menu-item" && !e.hasAttribute("disabled"));
+    return t.assignedElements({ flatten: true }).filter((e) => e instanceof HTMLElement && e.tagName.toLowerCase() === "w13c-lateral-menu-item" && !e.hasAttribute("disabled") && !e.hidden);
   };
   var Da = (t, e) => {
     let i = t.shadowRoot?.querySelector("slot:not([name])"), r = Oa(i);
@@ -10757,7 +10757,7 @@ p {
     display: flex;
     align-items: center;
     gap: 10px;
-    height: 34px;
+    height: var(--item-height, 34px);
     padding: 0 10px;
     box-sizing: border-box;
     color: var(--item-color);
@@ -27391,34 +27391,16 @@ ${ThemeNavActions_default}`;
   }
 
   // src/static/admin/_content/sources/_runtime/navigation.html
-  var navigation_default = `<span hidden data-nav-list-source cms-source="/api/dashboards as dashboards" cms-reload-on="dashboard:definitions-changed">
-    <cms-dashboard-input kind="groups" cms-bind-value="dashboards"></cms-dashboard-input>
-</span>
-<span hidden data-nav-installations-source cms-source="/api/integrations/installations as installations" cms-reload-on="integration:updated">
-    <cms-dashboard-input kind="installations" cms-bind-value="installations"></cms-dashboard-input>
-</span>
+  var navigation_default = `<w13c-lateral-menu-item data-add-source manual-active href="{{ navAddHref }}" cms-bind-boolean-active="navAddActive">Add a source</w13c-lateral-menu-item>
+<cms-dashboard-nav-installations hidden data-nav-installations-source cms-reload-on="integration:updated"></cms-dashboard-nav-installations>
+<span class="empty" cms-condition="$source.loading &amp;&amp; !navReady">Loading sources…</span>
+<p9r-alert type="error" cms-condition="$source.error">Unable to load sources. {{ $source.message }}<p9r-button data-nav-retry>Retry</p9r-button></p9r-alert>
+<span class="empty" cms-condition="navEmpty">No sources</span>
+<w13c-lateral-menu-item cms-repeat="navItems as item" data-generated="true" data-source="{{ item.source }}" data-dashboard="{{ item.dashboard }}" href="{{ item.href }}" manual-active cms-bind-boolean-active="item.active" cms-bind-boolean-hidden="item.hidden" cms-bind-boolean-data-nested="item.nested">
+    <cms-dashboard-icon slot="icon" name="{{ item.icon }}" svg="{{ item.svg }}" cms-condition="item.icon || item.svg"></cms-dashboard-icon>
+    {{ item.label }}
+</w13c-lateral-menu-item>
 `;
-
-  // src/components/admin/Resources/Dashboards/runtime/mounting/input.ts
-  class DashboardInput extends HTMLElement {
-    value;
-    setBindingValue(value2) {
-      this.value = value2;
-      this.deliver();
-    }
-    connectedCallback() {
-      this.deliver();
-    }
-    deliver() {
-      if (this.isConnected && this.value !== undefined) {
-        this.dispatchEvent(new CustomEvent("dashboard:bound-value", {
-          bubbles: true,
-          detail: { kind: this.getAttribute("kind"), value: this.value }
-        }));
-      }
-    }
-  }
-  customElements.define("cms-dashboard-input", DashboardInput);
 
   // src/components/admin/Resources/Dashboards/api.ts
   var DASHBOARD_SELECTION_EVENT = "cms-dashboards:selection";
@@ -27511,34 +27493,35 @@ ${ThemeNavActions_default}`;
     return typeof value2 === "string" ? value2.trim() : "";
   }
 
-  // src/components/admin/Resources/Dashboards/navigation/management.ts
-  function renderSourceManagement(menu, source2, installations) {
-    const parent = installations.find((item) => item.sourceIds?.includes(source2));
-    if (!parent) {
-      return;
-    }
-    const related = [parent, ...installations.filter((item) => item.extensionOf?.kind === parent.id)];
-    let anchor = Array.from(menu.children).filter((item) => item instanceof HTMLElement && item.dataset.source === source2).at(-1);
-    for (const item of related) {
-      const link = document.createElement("w13c-lateral-menu-item");
-      link.dataset.generated = "true";
-      link.setAttribute("manual-active", "");
-      link.toggleAttribute("active", new URL(window.location.href).searchParams.get("integration") === item.id);
-      link.classList.add("dashboard-item");
-      link.setAttribute("href", route2(`/admin/sources?source=${encodeURIComponent(source2)}&integration=${encodeURIComponent(item.id)}`));
-      link.textContent = item === parent ? "Settings & health" : `${item.label} settings`;
-      if (anchor) {
-        anchor.after(link);
-      } else {
-        menu.append(link);
+  // src/components/admin/Resources/Dashboards/navigation/mode.ts
+  function isDashboardExampleMode(host) {
+    return host.hasAttribute("example") || window.location.pathname.replace(/\/+$/, "").endsWith("/admin/sources/example");
+  }
+
+  // src/components/admin/Resources/Dashboards/navigation/binding/Installations.ts
+  class NavigationInstallations extends HTMLElement {
+    queued = false;
+    connectedCallback() {
+      const owner = this.closest("cms-dashboards-nav");
+      if (!owner || isDashboardExampleMode(owner)) {
+        return;
       }
-      anchor = link;
+      gd(this, () => {
+        if (!this.queued) {
+          this.queued = true;
+          queueMicrotask(() => {
+            this.queued = false;
+            if (this.isConnected) {
+              mi(owner);
+            }
+          });
+        }
+        return {};
+      });
+      this.setAttribute("cms-source", `${route2("/api/integrations/installations")} as installations`);
     }
   }
-  function sourceForInstallation(id2, installations) {
-    const item = installations.find((item2) => item2.id === id2);
-    return item?.sourceIds?.[0] ?? installations.find((parent) => parent.id === item?.extensionOf?.kind)?.sourceIds?.[0];
-  }
+  customElements.define("cms-dashboard-nav-installations", NavigationInstallations);
 
   // src/components/admin/Resources/Dashboards/navigation/icons/catalog.ts
   var DASHBOARD_ICONS = {
@@ -27703,77 +27686,111 @@ ${ThemeNavActions_default}`;
     return value2 && value2 in DASHBOARD_ICONS ? value2 : undefined;
   }
 
-  // src/components/admin/Resources/Dashboards/navigation/DashboardNavRendering.ts
-  function renderDashboardNavigation(menu, groups, selectedSource, selectedDashboard) {
-    clearGeneratedItems(menu);
-    if (!groups.length) {
-      const empty2 = document.createElement("span");
-      empty2.className = "empty";
-      empty2.dataset.generated = "true";
-      empty2.textContent = "No sources";
-      menu.append(empty2);
-      return;
+  // src/components/admin/Resources/Dashboards/navigation/icons/style.css
+  var style_default8 = `:host { display: inline-flex; width: var(--icon-size, 16px); height: var(--icon-size, 16px); }
+span { display: contents; }
+svg { width: 100%; height: 100%; stroke: currentColor; fill: none; }
+`;
+
+  // src/components/admin/Resources/Dashboards/navigation/icons/Icon.ts
+  class DashboardIcon extends l2 {
+    constructor() {
+      super({ css: style_default8, template: "<span></span>" });
     }
-    for (const group of groups) {
-      const sourceItem = createItem(group.source.name, group.source.svg, group.source.icon, "database");
-      sourceItem.dataset.generated = "true";
-      sourceItem.dataset.source = group.source.id;
-      sourceItem.toggleAttribute("active", group.source.id === selectedSource);
-      menu.append(sourceItem);
-      if (group.source.id === selectedSource && group.dashboards.length > 1) {
-        appendDashboardItems(menu, group, selectedDashboard);
+    static observedAttributes = ["name", "svg"];
+    attributeChangedCallback() {
+      renderIcon(this.shadowRoot.querySelector("span"), this.getAttribute("svg") ?? undefined, this.getAttribute("name") ?? undefined, "database");
+    }
+  }
+  customElements.define("cms-dashboard-icon", DashboardIcon);
+
+  // src/components/admin/Resources/Dashboards/navigation/binding/context.ts
+  function navigationContext() {
+    let items = [];
+    return (groups, installations, source2, dashboard, catalogue, selectedInstallation, example) => {
+      const next = [];
+      const append = (item) => {
+        const previous = items[next.length];
+        next.push(previous?.identity === item.identity ? Object.assign(previous, item) : item);
+      };
+      for (const group of groups) {
+        const id2 = group.source.id;
+        append({
+          identity: `source:${id2}`,
+          label: group.source.name,
+          source: example ? "" : id2,
+          dashboard: "",
+          href: "",
+          icon: group.source.icon ?? "database",
+          svg: group.source.svg ?? "",
+          nested: false,
+          active: id2 === source2 && !catalogue,
+          hidden: false
+        });
+        for (const entry of group.dashboards) {
+          append({
+            identity: `dashboard:${id2}:${entry.id}`,
+            label: entry.meta?.name ?? entry.id,
+            source: example ? "" : id2,
+            dashboard: example ? "" : entry.id,
+            href: "",
+            icon: entry.meta?.icon ?? "layout",
+            svg: entry.meta?.svg ?? "",
+            nested: true,
+            active: !selectedInstallation && entry.id === dashboard,
+            hidden: catalogue || id2 !== source2 || !example && group.dashboards.length < 2
+          });
+        }
+        const parent = installations.find((item) => item.sourceIds?.includes(id2));
+        if (!parent) {
+          continue;
+        }
+        for (const entry of [parent, ...installations.filter((item) => item.extensionOf?.kind === parent.id)]) {
+          append({
+            identity: `installation:${id2}:${entry.id}`,
+            label: entry === parent ? "Settings & health" : `${entry.label} settings`,
+            source: "",
+            dashboard: "",
+            href: route2(`/admin/sources?source=${encodeURIComponent(id2)}&integration=${encodeURIComponent(entry.id)}`),
+            icon: "",
+            svg: "",
+            nested: true,
+            active: entry.id === selectedInstallation,
+            hidden: id2 !== source2
+          });
+        }
       }
+      items = next;
+      return {
+        navItems: items,
+        navEmpty: groups.length === 0,
+        navAddActive: catalogue,
+        navAddHref: route2("/admin/sources?tab=catalogue")
+      };
+    };
+  }
+  var exampleGroups = [
+    {
+      source: {
+        id: "example",
+        urn: "urn:example",
+        name: "Example source",
+        icon: "database",
+        endpointCount: 0,
+        dashboardCount: 1,
+        readonly: true
+      },
+      endpoints: [],
+      dashboards: [
+        { id: "example", source: "example", meta: { name: "Product dashboard", icon: "layout" }, views: [] }
+      ]
     }
-  }
-  function renderDashboardNavigationExample(menu) {
-    clearGeneratedItems(menu);
-    const sourceItem = createItem("Example source", undefined, "database", "database");
-    sourceItem.dataset.generated = "true";
-    sourceItem.toggleAttribute("active", true);
-    menu.append(sourceItem);
-    const dashboardItem = createItem("Product dashboard", undefined, "layout", "layout");
-    dashboardItem.classList.add("dashboard-item");
-    dashboardItem.dataset.generated = "true";
-    dashboardItem.toggleAttribute("active", true);
-    menu.append(dashboardItem);
-  }
-  function appendDashboardItems(menu, group, selectedDashboard) {
-    for (const dashboard of group.dashboards) {
-      const item = createItem(dashboard.meta?.name ?? dashboard.id, dashboard.meta?.svg, dashboard.meta?.icon, "layout");
-      item.classList.add("dashboard-item");
-      item.dataset.generated = "true";
-      item.dataset.source = group.source.id;
-      item.dataset.dashboard = dashboard.id;
-      item.toggleAttribute("active", dashboard.id === selectedDashboard);
-      menu.append(item);
-    }
-  }
-  function createItem(label2, svg2, icon, fallback) {
-    const item = document.createElement("w13c-lateral-menu-item");
-    appendIconSlot(item, svg2, icon, fallback);
-    item.append(document.createTextNode(label2));
-    return item;
-  }
-  function clearGeneratedItems(menu) {
-    menu.querySelectorAll("[data-generated]").forEach((element) => element.remove());
-  }
-  function reconcileNavigation(menu, next) {
-    const key = (item) => `${item.dataset.source ?? ""}/${item.dataset.dashboard ?? ""}/${item.getAttribute("href") ?? ""}/${item.innerHTML}`;
-    const previous = new Map(Array.from(menu.querySelectorAll("[data-generated]")).map((item) => [key(item), item]));
-    let anchor = Array.from(menu.children).filter((item) => !item.hasAttribute("data-generated")).at(-1) ?? null;
-    for (const item of Array.from(next.children)) {
-      const id2 = key(item);
-      const retained = previous.get(id2) ?? item;
-      previous.delete(id2);
-      retained.toggleAttribute("active", item.hasAttribute("active"));
-      if (anchor?.nextElementSibling !== retained) {
-        menu.insertBefore(retained, anchor?.nextSibling ?? null);
-      }
-      anchor = retained;
-    }
-    for (const item of previous.values()) {
-      item.remove();
-    }
+  ];
+
+  // src/components/admin/Resources/Dashboards/navigation/management.ts
+  function sourceForInstallation(id2, installations) {
+    const item = installations.find((item2) => item2.id === id2);
+    return item?.sourceIds?.[0] ?? installations.find((parent) => parent.id === item?.extensionOf?.kind)?.sourceIds?.[0];
   }
 
   // src/components/admin/Resources/Dashboards/navigation/nav.css
@@ -27795,19 +27812,20 @@ w13c-lateral-menu {
     display: none;
 }
 
-w13c-lateral-menu-item {
+::slotted(w13c-lateral-menu-item) {
     --item-font-size: .875rem;
 }
 
-.dashboard-item {
+::slotted([data-nested]) {
     margin-left: 18px;
+    --item-height: 32px;
 }
 
-.dashboard-item::part(item) {
-    height: 32px;
+::slotted([hidden]) {
+    display: none !important;
 }
 
-.empty {
+::slotted(.empty) {
     display: block;
     padding: 8px 10px;
     color: var(--text-muted, #66736f);
@@ -27816,11 +27834,9 @@ w13c-lateral-menu-item {
 `;
 
   // src/components/admin/Resources/Dashboards/navigation/nav.html
-  var nav_default4 = `<w13c-lateral-menu
-    aria-label="Sources navigation"
->
+  var nav_default4 = `<w13c-lateral-menu aria-label="Sources navigation">
     <span slot="header">Sources</span>
-    <w13c-lateral-menu-item data-add-source manual-active>Add a source</w13c-lateral-menu-item>
+    <slot></slot>
 </w13c-lateral-menu>
 `;
 
@@ -27830,56 +27846,37 @@ w13c-lateral-menu-item {
     groups = [];
     selectedSource = "";
     selectedDashboard = "";
-    boundValue = (event) => {
-      const { kind, value: value2 } = event.detail;
-      if (!Array.isArray(value2)) {
-        return;
-      }
-      if (kind === "groups") {
-        this.groups = value2;
-        this.selectedSource ||= defaultDashboardSource(this.groups);
-        this.ensureDashboardSelection();
-      } else if (kind === "installations") {
-        this.installations = value2;
-      } else {
-        return;
-      }
-      this.render();
-    };
+    project = navigationContext();
     constructor() {
       super({ css: nav_default3, template: nav_default4 });
     }
     connectedCallback() {
       super.connectedCallback();
       this.syncFromUrl();
-      this.shadowRoot.addEventListener("click", this.onClick);
+      this.addEventListener("click", this.onClick);
       window.addEventListener("popstate", this.onPopState);
       window.addEventListener("cms-resources:route", this.onResourceRoute);
       window.addEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection);
-      this.query("[data-add-source]").setAttribute("href", route2("/admin/sources?tab=catalogue"));
-      this.updateCatalogueAction();
-      this.addEventListener("dashboard:bound-value", this.boundValue);
+      gd(this, () => this.context());
       this.startBoundSource();
     }
     disconnectedCallback() {
-      this.shadowRoot?.removeEventListener("click", this.onClick);
+      this.removeEventListener("click", this.onClick);
       window.removeEventListener("popstate", this.onPopState);
       window.removeEventListener("cms-resources:route", this.onResourceRoute);
       window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection);
-      this.removeEventListener("dashboard:bound-value", this.boundValue);
     }
     startBoundSource() {
-      if (this.isExampleMode()) {
-        renderDashboardNavigationExample(this.query("w13c-lateral-menu"));
-        return;
-      }
-      if (!this.querySelector("[data-nav-list-source]")) {
+      if (!this.querySelector("[data-add-source]")) {
         const template3 = document.createElement("template");
         template3.innerHTML = navigation_default;
-        for (const source2 of Array.from(template3.content.querySelectorAll("[cms-source]"))) {
-          source2.setAttribute("cms-source", route2(source2.getAttribute("cms-source")));
-        }
         this.append(template3.content.cloneNode(true));
+      }
+      this.setAttribute("data-nav-list-source", "");
+      this.setAttribute("cms-reload-on", "dashboard:definitions-changed");
+      this.setAttribute("cms-source", this.isExampleMode() ? "" : `${route2("/api/dashboards")} as dashboards`);
+      if (this.isExampleMode()) {
+        Hd(this, exampleGroups);
       }
     }
     select(sourceId, dashboardId = "") {
@@ -27901,24 +27898,34 @@ w13c-lateral-menu-item {
         this.selectedDashboard = group.dashboards[0]?.id ?? "";
       }
     }
-    render() {
-      const menu = this.query("w13c-lateral-menu");
+    context() {
+      const data = Md(this);
+      this.groups = Array.isArray(data) ? data : [];
+      const installationSource = this.querySelector("[data-nav-installations-source]");
+      const installations = installationSource ? Md(installationSource) : undefined;
+      this.installations = Array.isArray(installations) ? installations : [];
       const params = new URL(window.location.href).searchParams;
       const installation = params.get("integration");
+      this.selectedSource ||= defaultDashboardSource(this.groups);
       if (installation) {
         this.selectedSource = sourceForInstallation(installation, this.installations) ?? this.selectedSource;
       }
-      this.updateCatalogueAction();
-      const next = document.createElement("div");
-      renderDashboardNavigation(next, this.groups, params.has("tab") || params.has("setup") ? "" : this.selectedSource, installation ? "" : this.selectedDashboard);
-      renderSourceManagement(next, this.selectedSource, this.installations);
-      reconcileNavigation(menu, next);
+      if (Array.isArray(data)) {
+        this.ensureDashboardSelection();
+      }
+      return {
+        ...this.project(this.groups, this.installations, this.selectedSource, this.selectedDashboard, params.has("tab") || params.has("setup"), installation, this.isExampleMode()),
+        navReady: Array.isArray(data),
+        navEmpty: Array.isArray(data) && this.groups.length === 0
+      };
     }
-    updateCatalogueAction() {
-      const params = new URL(window.location.href).searchParams;
-      this.query("[data-add-source]").toggleAttribute("active", params.get("tab") === "catalogue" || params.has("setup"));
+    render() {
+      mi(this);
     }
-    onResourceRoute = () => this.render();
+    onResourceRoute = () => {
+      this.syncFromUrl();
+      this.render();
+    };
     activeGroup() {
       return this.groups.find((group) => group.source.id === this.selectedSource) ?? null;
     }
@@ -27935,6 +27942,10 @@ w13c-lateral-menu-item {
     }
     onClick = (event) => {
       const target2 = event.target;
+      if (target2?.closest("[data-nav-retry]")) {
+        this.ownerDocument.dispatchEvent(new Event("dashboard:definitions-changed"));
+        return;
+      }
       const dashboardButton = target2?.closest("[data-dashboard]");
       if (dashboardButton?.dataset.source && dashboardButton.dataset.dashboard) {
         this.select(dashboardButton.dataset.source, dashboardButton.dataset.dashboard);
@@ -27957,9 +27968,6 @@ w13c-lateral-menu-item {
       this.ensureDashboardSelection();
       this.render();
     };
-    query(selector) {
-      return this.shadowRoot.querySelector(selector);
-    }
   }
   if (!customElements.get("cms-dashboards-nav")) {
     customElements.define("cms-dashboards-nav", DashboardNav);
@@ -30512,7 +30520,7 @@ p9r-token-input {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-table/style.css
-  var style_default8 = `:host {
+  var style_default9 = `:host {
     display: block;
     min-width: 0;
     --dashboard-table-columns: 46px 1fr;
@@ -30661,7 +30669,7 @@ slot {
   class DashboardWTable extends l2 {
     rowsObserver = new MutationObserver(() => this.syncPresentation());
     constructor() {
-      super({ css: style_default8, template: template_default12 });
+      super({ css: style_default9, template: template_default12 });
     }
     set selected(value2) {
       this.setAttribute("data-selected", value2);
@@ -34095,6 +34103,27 @@ slot { display: contents; }
 </div>
 `;
 
+  // src/components/admin/Resources/Dashboards/runtime/mounting/input.ts
+  class DashboardInput extends HTMLElement {
+    value;
+    setBindingValue(value2) {
+      this.value = value2;
+      this.deliver();
+    }
+    connectedCallback() {
+      this.deliver();
+    }
+    deliver() {
+      if (this.isConnected && this.value !== undefined) {
+        this.dispatchEvent(new CustomEvent("dashboard:bound-value", {
+          bubbles: true,
+          detail: { kind: this.getAttribute("kind"), value: this.value }
+        }));
+      }
+    }
+  }
+  customElements.define("cms-dashboard-input", DashboardInput);
+
   // src/components/admin/Resources/Dashboards/runtime/mounting/table.ts
   function tableWithSource(widget, source2, filters = {}) {
     const table = tableShell(widget, filters);
@@ -34283,7 +34312,7 @@ slot { display: contents; }
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-navigation-list/style.css
-  var style_default9 = `:host {
+  var style_default10 = `:host {
     display: block;
     max-inline-size: 960px;
 }
@@ -34344,7 +34373,7 @@ slot { display: contents; }
     rowsObserver = new MutationObserver(() => this.syncItems());
     dragging = null;
     constructor() {
-      super({ css: style_default9, template: template_default13 });
+      super({ css: style_default10, template: template_default13 });
     }
     static observedAttributes = ["heading"];
     attributeChangedCallback() {
@@ -34750,11 +34779,6 @@ slot { display: contents; }
   }
   function query4(root, selector) {
     return selector === "[data-widgets]" ? root.host.querySelector(selector) : root.querySelector(selector);
-  }
-
-  // src/components/admin/Resources/Dashboards/navigation/mode.ts
-  function isDashboardExampleMode(host) {
-    return host.hasAttribute("example") || window.location.pathname.replace(/\/+$/, "").endsWith("/admin/sources/example");
   }
 
   // src/components/admin/Resources/Dashboards/view/controller/DashboardStateController.ts
@@ -35582,7 +35606,7 @@ p {
   }
 
   // src/components/admin/DashboardWorkspace/nav/style.css
-  var style_default10 = `:host {
+  var style_default11 = `:host {
     display: block;
     height: 100%;
     min-width: 0;
@@ -35670,7 +35694,7 @@ w13c-lateral-menu {
   class CmsDashboardNav extends l2 {
     selectedId = "";
     constructor() {
-      super({ css: style_default10, template: template_default15 });
+      super({ css: style_default11, template: template_default15 });
     }
     connectedCallback() {
       super.connectedCallback();
@@ -39345,7 +39369,7 @@ cms-dashboard-icon svg {
     return true;
   }
   // src/components/admin/DashboardWorkspace/configuration/style.css
-  var style_default11 = `:host {
+  var style_default12 = `:host {
     display: block;
     min-width: 0;
 }
@@ -39406,7 +39430,7 @@ p9r-modal {
     views = [];
     internals = this.attachInternals();
     constructor() {
-      super({ css: `${style_default11}${navigation_default2}`, template: template_default17 });
+      super({ css: `${style_default12}${navigation_default2}`, template: template_default17 });
     }
     attributeChangedCallback() {
       if (this.isConnected) {
@@ -40047,7 +40071,7 @@ p9r-modal {
   }
 
   // src/components/admin/Resources/Functions/detail/style.css
-  var style_default12 = `:host {
+  var style_default13 = `:host {
     display: block;
 }
 * {
@@ -40272,7 +40296,7 @@ pre {
       }
     }
     renderState(message) {
-      this.replaceChildren(styleNode(style_default12), state(message));
+      this.replaceChildren(styleNode(style_default13), state(message));
     }
     renderDetail() {
       if (!this.detail) {
@@ -40281,7 +40305,7 @@ pre {
       const shell = document.createElement("cms-shell-detail");
       shell.className = "functions-shell";
       shell.append(backLink(), title(this.detail), headerActions(), inputsSection(this.detail, this.draft, (path) => void this.onInputChange(path)), resultSection(), functionSummarySection(this.detail), contractSection(this.detail));
-      this.replaceChildren(styleNode(style_default12), shell);
+      this.replaceChildren(styleNode(style_default13), shell);
       this.bindRefs();
       hydrateExecuteFields(this, this.detail, this.draft);
     }
@@ -42180,7 +42204,7 @@ details[open] > summary > .chevron {
   }
 
   // src/components/admin/Resources/Integrations/management/presentation/style.css
-  var style_default13 = `cms-integration-management { display: block; border: 1px solid var(--border-default); border-radius: 8px; padding: 1rem; }
+  var style_default14 = `cms-integration-management { display: block; border: 1px solid var(--border-default); border-radius: 8px; padding: 1rem; }
 .management-tabs { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; }
 .management-tabs button { padding: .5rem .8rem; border: 1px solid var(--border-default); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
 .management-tabs button[aria-pressed="true"] { font-weight: 700; border-color: currentColor; }
@@ -42190,7 +42214,7 @@ details[open] > summary > .chevron {
   // src/components/admin/Resources/Integrations/management/presentation/shell.ts
   function renderManagementShell(host, deploymentStatus, configurationLabel, panel, select2) {
     const style = document.createElement("style");
-    style.textContent = style_default13;
+    style.textContent = style_default14;
     const nav = document.createElement("nav");
     nav.className = "management-tabs";
     nav.setAttribute("aria-label", "Source settings");
@@ -43857,7 +43881,7 @@ button[slot="back"]:disabled {
   customElements.define("cms-bloc-choice", BlocChoice);
 
   // src/components/admin/Resources/Blocs/artwork/style.css
-  var style_default14 = `:host { display: block; width: 100%; }
+  var style_default15 = `:host { display: block; width: 100%; }
 .artwork {
     position: relative;
     aspect-ratio: 16 / 9;
@@ -43903,7 +43927,7 @@ button[slot="back"]:disabled {
   // src/components/admin/Resources/Blocs/artwork/LibraryArtwork.ts
   class LibraryArtwork extends l2 {
     constructor() {
-      super({ css: style_default14, template: template_default19 });
+      super({ css: style_default15, template: template_default19 });
     }
     static get observedAttributes() {
       return ["label"];
@@ -43936,7 +43960,7 @@ button[slot="back"]:disabled {
   customElements.define("cms-library-artwork", LibraryArtwork);
 
   // src/components/admin/Resources/Blocs/icons/style.css
-  var style_default15 = `:host { display: inline-flex; width: 16px; height: 16px; flex: none; }
+  var style_default16 = `:host { display: inline-flex; width: 16px; height: 16px; flex: none; }
 svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 `;
 
@@ -43953,7 +43977,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
 
   class LibraryIcon extends l2 {
     constructor() {
-      super({ css: style_default15, template: '<svg viewBox="0 0 24 24" aria-hidden="true"><path/></svg>' });
+      super({ css: style_default16, template: '<svg viewBox="0 0 24 24" aria-hidden="true"><path/></svg>' });
     }
     static get observedAttributes() {
       return ["name"];
@@ -43968,7 +43992,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
   customElements.define("cms-library-icon", LibraryIcon);
 
   // src/components/admin/Resources/Blocs/preview/style.css
-  var style_default16 = `:host {
+  var style_default17 = `:host {
     display: block;
     min-width: 0;
 }
@@ -43990,7 +44014,7 @@ iframe {
   // src/components/admin/Resources/Blocs/preview/BlocPreview.ts
   class BlocPreview extends l2 {
     constructor() {
-      super({ css: style_default16, template: template_default20 });
+      super({ css: style_default17, template: template_default20 });
     }
     static get observedAttributes() {
       return ["src"];
@@ -44097,7 +44121,7 @@ iframe {
 `;
 
   // src/components/admin/Resources/Triggers/style.css
-  var style_default17 = `.triggers-surface {
+  var style_default18 = `.triggers-surface {
     max-width: 1120px;
 }
 
@@ -44330,7 +44354,7 @@ button.run:disabled {
     }
     mount() {
       const style = document.createElement("style");
-      style.textContent = style_default17;
+      style.textContent = style_default18;
       const body = document.createElement("template");
       body.innerHTML = template_default21;
       this.replaceChildren(style, body.content.cloneNode(true));
@@ -45856,7 +45880,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/style.css
-  var style_default18 = `:host {
+  var style_default19 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -45956,7 +45980,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default18)}</style>${String(template_default23)}`;
+  template7.innerHTML = `<style>${String(style_default19)}</style>${String(template_default23)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -47268,7 +47292,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/style.css
-  var style_default19 = `:host { display: contents; }
+  var style_default20 = `:host { display: contents; }
 * { box-sizing: border-box; }
 
 .backdrop {
@@ -47672,7 +47696,7 @@ textarea { min-height: 92px; resize: vertical; }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/ConditionPicker.ts
   var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${String(style_default19)}</style>${String(template_default25)}`;
+  template9.innerHTML = `<style>${String(style_default20)}</style>${String(template_default25)}`;
 
   class ConditionPicker extends HTMLElement {
     _mode = "source";
@@ -50425,7 +50449,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/style.css
-  var style_default20 = `:host {
+  var style_default21 = `:host {
     display: block;
     position: relative;
     min-height: 100%;
@@ -50596,7 +50620,7 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template11 = document.createElement("template");
-  template11.innerHTML = `<style>${[style_default20, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
+  template11.innerHTML = `<style>${[style_default21, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
 `)}</style>${String(template_default27)}`;
 
   class StructureTree extends HTMLElement {
@@ -50647,7 +50671,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/style.css
-  var style_default21 = `:host {
+  var style_default22 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -50756,7 +50780,7 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
   var template12 = document.createElement("template");
-  template12.innerHTML = `<style>${String(style_default21)}</style>${String(template_default28)}`;
+  template12.innerHTML = `<style>${String(style_default22)}</style>${String(template_default28)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -50909,7 +50933,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/style.css
-  var style_default22 = `:host {
+  var style_default23 = `:host {
     display: block;
 }
 
@@ -50998,7 +51022,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template13 = createFieldTemplate(template_default29, style_default22);
+  var template13 = createFieldTemplate(template_default29, style_default23);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -51043,7 +51067,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/style.css
-  var style_default23 = `:host {
+  var style_default24 = `:host {
     display: block;
 }
 
@@ -51480,7 +51504,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template14 = createFieldTemplate(template_default30, `${String(style_default23)}${String(dynamicDataPicker_default)}`);
+  var template14 = createFieldTemplate(template_default30, `${String(style_default24)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -51561,7 +51585,7 @@ input:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/style.css
-  var style_default24 = `:host {
+  var style_default25 = `:host {
     display: block;
 }
 
@@ -51633,7 +51657,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template15 = createFieldTemplate(template_default31, `${String(style_default24)}${String(dynamicDataPicker_default)}`);
+  var template15 = createFieldTemplate(template_default31, `${String(style_default25)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -52465,7 +52489,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/style.css
-  var style_default25 = `:host {
+  var style_default26 = `:host {
     display: block;
 }
 
@@ -52569,7 +52593,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template17 = createFieldTemplate(template_default33, style_default25);
+  var template17 = createFieldTemplate(template_default33, style_default26);
 
   class Select extends HTMLElement {
     constructor() {
@@ -52616,7 +52640,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/style.css
-  var style_default26 = `:host {
+  var style_default27 = `:host {
     display: block;
 }
 
@@ -52729,7 +52753,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template18 = createFieldTemplate(template_default34, style_default26);
+  var template18 = createFieldTemplate(template_default34, style_default27);
 
   class Toggle extends HTMLElement {
     constructor() {
@@ -52752,7 +52776,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/style.css
-  var style_default27 = `:host {
+  var style_default28 = `:host {
     display: block;
 }
 
@@ -52798,7 +52822,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template19 = createFieldTemplate(template_default35, style_default27);
+  var template19 = createFieldTemplate(template_default35, style_default28);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
@@ -59491,7 +59515,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/style.css
-  var style_default28 = `:host {
+  var style_default29 = `:host {
     --editor-v2-bg: #f6f7f7;
     --editor-v2-surface: #ffffff;
     --editor-v2-surface-muted: #f9faf9;
@@ -59619,7 +59643,7 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellTemplate.ts
   function createShellTemplate() {
     const template22 = document.createElement("template");
-    template22.innerHTML = `<style>${[style_default28, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
+    template22.innerHTML = `<style>${[style_default29, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
 `)}</style>${String(template_default38)}`;
     return template22;
   }
@@ -60981,7 +61005,7 @@ label {
 `;
 
   // src/components/editorSystemV2/siteBloc/style.css
-  var style_default29 = `:host {
+  var style_default30 = `:host {
     --builder-accent: #165f4b;
     --builder-border: #dfe5e2;
     --builder-muted: #697873;
@@ -61029,7 +61053,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 
   // src/components/editorSystemV2/siteBloc/SiteBlocBuilder.ts
   var template22 = document.createElement("template");
-  template22.innerHTML = `<style>${String(style_default29)}</style>${String(template_default39)}`;
+  template22.innerHTML = `<style>${String(style_default30)}</style>${String(template_default39)}`;
 
   class SiteBlocBuilder extends HTMLElement {
     controller;
@@ -61190,7 +61214,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/CardMedia/style.css
-  var style_default30 = `:host {
+  var style_default31 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -61315,7 +61339,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   class CardMedia extends l2 {
     constructor() {
       super({
-        css: style_default30,
+        css: style_default31,
         template: template_default40
       });
     }

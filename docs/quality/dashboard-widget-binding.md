@@ -1609,3 +1609,61 @@ leftover diagnostic line's formatting; that diagnostic is removed. No UI
 contract exemption was added. Remaining work still includes definition and
 navigation relays, the management shell/installation/collection branches,
 actual local persistence and the complete operator/provider coverage matrix.
+
+### Source navigation renders its links through binding
+
+The Sources secondary navigation now owns an automatic dashboard source and
+composes its light-DOM links from `_runtime/navigation.html`. Installation reads
+remain nested binding sources; their controller announces a lifecycle refresh
+without transporting response objects. A local projection derives labels,
+selection and management links. `DashboardNavRendering` and the imperative
+`renderSourceManagement` renderer/reconciliation are removed. The dashboard
+view's separate definition relay is still outstanding.
+
+All declared navigation items remain mounted while selection controls their
+visibility. This keeps focused source links stable when dashboards expand or
+collapse. Ordinary repeats receive positional projections, with no repeat key
+or template-reference contract. The official lateral menu now excludes hidden
+items from keyboard navigation. Its item height has a generic CSS variable
+(default unchanged), allowing the existing nested-item height through slots.
+Icon styling stays in a small visual component using the existing sanitizer;
+no light-DOM CSS or private binding core is injected.
+
+Verification under `/tmp/cmscore-navigation-*`:
+
+- `before.log` records the immutable pre-change bundle, captured separately as
+  `before-bundle.js`. `visual.log` passes six before/after pairs: dashboard,
+  extension settings and catalogue, at 1440 and 390 pixels. All six screenshots
+  are pixel-identical. Desktop/dashboard and mobile/extension images were
+  visually inspected; link positions, labels and active states are asserted.
+- `flow.log`: 26 assertions covering a held refresh, five-frame focus/position
+  retention, source/dashboard selection, hidden-item keyboard skipping, a
+  failed GET and retry without replacing links. Exactly four dashboard reads
+  cover initial load, refresh, failure and retry; selection adds no request.
+- `stability.log`: 28 assertions for 40 sources on desktop/mobile, including
+  actual nonzero composed-ancestor scroll and five-frame bottom-link retention.
+  Pending/refreshed screenshots are in `stability-captures/`.
+- `workspace.log` and `lifecycle.log`: existing catalogue exclusivity, settings
+  selection, filtered table and detail-save regressions pass. Example and
+  readonly browser flow files also pass independently.
+- `admin-verified.log`: all 284 admin tests pass, 1258 assertions. `components.log`:
+  all 71 foundation UI tests pass, 287 assertions. An earlier admin run overlapped
+  the foundation build deleting its output and failed module resolution;
+  rerunning after build completion passes. Builds and dependent tests must run
+  sequentially.
+- `build-final.log` passes the workspace build. `quality.log` passes all eight
+  checks, with unchanged UI-contract counts (0 errors, 77 warnings, 11 info).
+  The navigation controller falls from 191 lines to 180; no fanout error or
+  exemption was introduced.
+
+The six visual comparisons made two source-data requests per page in both
+versions. Individual timings are recorded, not interpreted as a performance
+improvement. These tests use intercepted HTTP fixtures; their scope does not
+include real provider configuration writes or database persistence.
+
+Courtside local was restarted on this checkout. Browser login succeeds, the
+12 installed source selections become active, the navigation contains no
+`cms-dashboard-input`, no page JavaScript error is observed during that smoke
+check, and the public homepage responds 200. Local captures are in
+`/tmp/cmscore-navigation-local/`. This is navigation/read smoke coverage, not
+validation of every source action or real configuration persistence.

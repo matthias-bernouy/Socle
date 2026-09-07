@@ -1,6 +1,9 @@
 import sources from "cms-control/static/admin/_content/sources/_runtime/navigation.html" with { type: "text" };
-import "../runtime/mounting/input";
-import { renderSourceManagement, sourceForInstallation } from "./management";
+import "./binding/Installations";
+import "./icons/Icon";
+import { readSourceData, refreshSourceContext, setSourceContext, setSourceData } from "@bernouy/components";
+import { navigationContext, exampleGroups } from "./binding/context";
+import { sourceForInstallation } from "./management";
 import type { IntegrationInstallationRow } from "../../Integrations/model";
 import { Component } from "@bernouy/components/base";
 import {
@@ -12,11 +15,6 @@ import {
     replaceSelectionUrl,
     type DashboardSelection,
 } from "../api";
-import {
-    reconcileNavigation,
-    renderDashboardNavigation,
-    renderDashboardNavigationExample,
-} from "./DashboardNavRendering";
 import css from "./nav.css" with { type: "text" };
 import template from "./nav.html" with { type: "text" };
 import type { DashboardSourceGroup } from "../types";
@@ -26,22 +24,7 @@ export class DashboardNav extends Component {
     private groups: DashboardSourceGroup[] = [];
     private selectedSource = "";
     private selectedDashboard = "";
-    private readonly boundValue = (event: Event): void => {
-        const { kind, value } = (event as CustomEvent).detail;
-        if (!Array.isArray(value)) {
-            return;
-        }
-        if (kind === "groups") {
-            this.groups = value;
-            this.selectedSource ||= defaultDashboardSource(this.groups);
-            this.ensureDashboardSelection();
-        } else if (kind === "installations") {
-            this.installations = value;
-        } else {
-            return;
-        }
-        this.render();
-    };
+    private readonly project = navigationContext();
 
     constructor() {
         super({ css: css as unknown as string, template: template as unknown as string });
@@ -50,36 +33,32 @@ export class DashboardNav extends Component {
     override connectedCallback(): void {
         super.connectedCallback();
         this.syncFromUrl();
-        this.shadowRoot!.addEventListener("click", this.onClick);
+        this.addEventListener("click", this.onClick);
         window.addEventListener("popstate", this.onPopState);
         window.addEventListener("cms-resources:route", this.onResourceRoute);
         window.addEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection as EventListener);
-        this.query<HTMLElement>("[data-add-source]").setAttribute("href", route("/admin/sources?tab=catalogue"));
-        this.updateCatalogueAction();
-        this.addEventListener("dashboard:bound-value", this.boundValue);
+        setSourceContext(this, () => this.context());
         this.startBoundSource();
     }
 
     disconnectedCallback(): void {
-        this.shadowRoot?.removeEventListener("click", this.onClick);
+        this.removeEventListener("click", this.onClick);
         window.removeEventListener("popstate", this.onPopState);
         window.removeEventListener("cms-resources:route", this.onResourceRoute);
         window.removeEventListener(DASHBOARD_SELECTION_EVENT, this.onExternalSelection as EventListener);
-        this.removeEventListener("dashboard:bound-value", this.boundValue);
     }
 
     private startBoundSource(): void {
-        if (this.isExampleMode()) {
-            renderDashboardNavigationExample(this.query<HTMLElement>("w13c-lateral-menu"));
-            return;
-        }
-        if (!this.querySelector("[data-nav-list-source]")) {
+        if (!this.querySelector("[data-add-source]")) {
             const template = document.createElement("template");
             template.innerHTML = sources as unknown as string;
-            for (const source of Array.from(template.content.querySelectorAll("[cms-source]"))) {
-                source.setAttribute("cms-source", route(source.getAttribute("cms-source")!));
-            }
             this.append(template.content.cloneNode(true));
+        }
+        this.setAttribute("data-nav-list-source", "");
+        this.setAttribute("cms-reload-on", "dashboard:definitions-changed");
+        this.setAttribute("cms-source", this.isExampleMode() ? "" : `${route("/api/dashboards")} as dashboards`);
+        if (this.isExampleMode()) {
+            setSourceData(this, exampleGroups);
         }
     }
 
@@ -104,34 +83,44 @@ export class DashboardNav extends Component {
         }
     }
 
-    private render(): void {
-        const menu = this.query<HTMLElement>("w13c-lateral-menu");
+    private context(): Record<string, unknown> {
+        const data = readSourceData(this);
+        this.groups = Array.isArray(data) ? data : [];
+        const installationSource = this.querySelector("[data-nav-installations-source]");
+        const installations = installationSource ? readSourceData(installationSource) : undefined;
+        this.installations = Array.isArray(installations) ? installations : [];
         const params = new URL(window.location.href).searchParams;
         const installation = params.get("integration");
+        this.selectedSource ||= defaultDashboardSource(this.groups);
         if (installation) {
             this.selectedSource = sourceForInstallation(installation, this.installations) ?? this.selectedSource;
         }
-        this.updateCatalogueAction();
-        const next = document.createElement("div");
-        renderDashboardNavigation(
-            next,
-            this.groups,
-            params.has("tab") || params.has("setup") ? "" : this.selectedSource,
-            installation ? "" : this.selectedDashboard,
-        );
-        renderSourceManagement(next, this.selectedSource, this.installations);
-        reconcileNavigation(menu, next);
+        if (Array.isArray(data)) {
+            this.ensureDashboardSelection();
+        }
+        return {
+            ...this.project(
+                this.groups,
+                this.installations,
+                this.selectedSource,
+                this.selectedDashboard,
+                params.has("tab") || params.has("setup"),
+                installation,
+                this.isExampleMode(),
+            ),
+            navReady: Array.isArray(data),
+            navEmpty: Array.isArray(data) && this.groups.length === 0,
+        };
     }
 
-    private updateCatalogueAction(): void {
-        const params = new URL(window.location.href).searchParams;
-        this.query<HTMLElement>("[data-add-source]").toggleAttribute(
-            "active",
-            params.get("tab") === "catalogue" || params.has("setup"),
-        );
+    private render(): void {
+        refreshSourceContext(this);
     }
 
-    private onResourceRoute = (): void => this.render();
+    private onResourceRoute = (): void => {
+        this.syncFromUrl();
+        this.render();
+    };
 
     private activeGroup(): DashboardSourceGroup | null {
         return this.groups.find((group) => group.source.id === this.selectedSource) ?? null;
@@ -156,6 +145,10 @@ export class DashboardNav extends Component {
 
     private onClick = (event: Event): void => {
         const target = event.target as Element | null;
+        if (target?.closest("[data-nav-retry]")) {
+            this.ownerDocument.dispatchEvent(new Event("dashboard:definitions-changed"));
+            return;
+        }
         const dashboardButton = target?.closest<HTMLElement>("[data-dashboard]");
         if (dashboardButton?.dataset.source && dashboardButton.dataset.dashboard) {
             this.select(dashboardButton.dataset.source, dashboardButton.dataset.dashboard);
@@ -180,10 +173,6 @@ export class DashboardNav extends Component {
         this.ensureDashboardSelection();
         this.render();
     };
-
-    private query<T extends Element>(selector: string): T {
-        return this.shadowRoot!.querySelector(selector) as T;
-    }
 }
 
 if (!customElements.get("cms-dashboards-nav")) {

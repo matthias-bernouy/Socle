@@ -16,19 +16,20 @@ w13c-lateral-menu {
     display: none;
 }
 
-w13c-lateral-menu-item {
+::slotted(w13c-lateral-menu-item) {
     --item-font-size: .875rem;
 }
 
-.dashboard-item {
+::slotted([data-nested]) {
     margin-left: 18px;
+    --item-height: 32px;
 }
 
-.dashboard-item::part(item) {
-    height: 32px;
+::slotted([hidden]) {
+    display: none !important;
 }
 
-.empty {
+::slotted(.empty) {
     display: block;
     padding: 8px 10px;
     color: var(--text-muted, #66736f);

@@ -1,14 +1,21 @@
-import { beforeEach, describe, expect, test } from "bun:test";
+import "../../detail/boundDetail";
+import { setSourceData } from "@bernouy/components";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { DashboardNav } from "cms-control/components/admin/Resources/Dashboards/navigation/DashboardNav";
 import { DashboardView } from "cms-control/components/admin/Resources/Dashboards/view/DashboardView";
 import { DASHBOARD_SELECTION_EVENT } from "cms-control/components/admin/Resources/Dashboards/api";
 import { DetailResourceState } from "cms-control/components/admin/Resources/Dashboards/domain";
 import { groups, selectedDashboard } from "./fixtures";
+const originalFetch = globalThis.fetch;
 
 describe("dashboard deep links", () => {
     beforeEach(() => {
+        globalThis.fetch = (async () => Response.json([])) as unknown as typeof fetch;
         document.body.replaceChildren();
         window.history.replaceState(null, "", `/admin/sources?source=commerce&dashboard=${selectedDashboard}`);
+    });
+    afterEach(() => {
+        globalThis.fetch = originalFetch;
     });
 
     test("preserves the URL selection while bound dashboard data hydrates", async () => {
@@ -16,10 +23,19 @@ describe("dashboard deep links", () => {
             document.body.append(component);
             expect(selectionOf(component)).toBe(selectedDashboard);
 
-            const target = component.querySelector<HTMLElement & { setBindingValue(value: unknown): void }>(
-                "cms-dashboard-input[kind=groups]",
-            )!;
-            target.setBindingValue(groups);
+            if (component instanceof DashboardNav) {
+                const core = document.createElement("cms-binding-core");
+                component.remove();
+                core.append(component);
+                document.body.append(core);
+                component.setAttribute("cms-source", "");
+                setSourceData(component, groups);
+            } else {
+                const target = component.querySelector<HTMLElement & { setBindingValue(value: unknown): void }>(
+                    "cms-dashboard-input[kind=groups]",
+                )!;
+                target.setBindingValue(groups);
+            }
             await new Promise((resolve) => setTimeout(resolve, 0));
 
             expect(selectionOf(component)).toBe(selectedDashboard);
