@@ -11,7 +11,7 @@ export interface MountableTemplate {
 }
 
 export type TextPlan = { path: NodePath; template: string };
-export type AttributePlan = { path: NodePath; name: string; template: string };
+export type AttributePlan = { path: NodePath; name: string; template: string; boolean?: true };
 export type ConditionPlan = {
     path: NodePath;
     condition: CompiledCondition;

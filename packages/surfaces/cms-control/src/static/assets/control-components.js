@@ -12440,8 +12440,8 @@ p {
   function cl(t) {
     if (t.length === 0)
       return "";
-    let e = 320, i = 140, r = 32, o = 8, n = 10, a = 22, s = e - r - o, d = i - n - a, u = n + d, p = Math.max(...t.map((B) => B.value), 1), b = t.length, m = t.map((B, rt) => [r + (b === 1 ? s / 2 : rt / (b - 1) * s), n + (1 - B.value / p) * d]), H = m.map(([B, rt]) => `${B.toFixed(1)},${rt.toFixed(1)}`).join(" "), Vd = `${m[0][0].toFixed(1)},${u} ${H} ${m[b - 1][0].toFixed(1)},${u}`, Dd = m.map(([B, rt]) => `<circle class="dot" cx="${B.toFixed(1)}" cy="${rt.toFixed(1)}" r="2.5"/>`).join("");
-    return `<svg class="line" viewBox="0 0 ${e} ${i}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${r}" y1="${n}" x2="${r}" y2="${u}"/><line class="axis" x1="${r}" y1="${u}" x2="${e - o}" y2="${u}"/><text class="tick" x="${r - 4}" y="${n + 3}" text-anchor="end">${hh(p)}</text><text class="tick" x="${r - 4}" y="${u}" text-anchor="end">0</text><polygon class="area" points="${Vd}" fill="url(#lc-grad)"/><polyline class="stroke" points="${H}"/>${Dd}<text class="tick" x="${r}" y="${i - 6}">${L(t[0].label)}</text><text class="tick" x="${e - o}" y="${i - 6}" text-anchor="end">${L(t[b - 1].label)}</text></svg>`;
+    let e = 320, i = 140, r = 32, o = 8, n = 10, a = 22, s = e - r - o, d = i - n - a, u = n + d, p = Math.max(...t.map((B) => B.value), 1), b = t.length, m = t.map((B, rt) => [r + (b === 1 ? s / 2 : rt / (b - 1) * s), n + (1 - B.value / p) * d]), z = m.map(([B, rt]) => `${B.toFixed(1)},${rt.toFixed(1)}`).join(" "), Vd = `${m[0][0].toFixed(1)},${u} ${z} ${m[b - 1][0].toFixed(1)},${u}`, Dd = m.map(([B, rt]) => `<circle class="dot" cx="${B.toFixed(1)}" cy="${rt.toFixed(1)}" r="2.5"/>`).join("");
+    return `<svg class="line" viewBox="0 0 ${e} ${i}" role="img"><defs><linearGradient id="lc-grad" x1="0" y1="0" x2="0" y2="1"><stop class="grad-top" offset="0%"/><stop class="grad-bottom" offset="100%"/></linearGradient></defs><line class="axis" x1="${r}" y1="${n}" x2="${r}" y2="${u}"/><line class="axis" x1="${r}" y1="${u}" x2="${e - o}" y2="${u}"/><text class="tick" x="${r - 4}" y="${n + 3}" text-anchor="end">${hh(p)}</text><text class="tick" x="${r - 4}" y="${u}" text-anchor="end">0</text><polygon class="area" points="${Vd}" fill="url(#lc-grad)"/><polyline class="stroke" points="${z}"/>${Dd}<text class="tick" x="${r}" y="${i - 6}">${L(t[0].label)}</text><text class="tick" x="${e - o}" y="${i - 6}" text-anchor="end">${L(t[b - 1].label)}</text></svg>`;
   }
   function ul(t, e) {
     if (t.length === 0)
@@ -12776,7 +12776,7 @@ p {
   var Sl = "cms-source-success-redirect";
   var Cl = "cms-source-success-redirect-param";
   var S = "cms-repeat";
-  var I = "cms-condition";
+  var P = "cms-condition";
   var f = "cms-page-state";
   var wh = ["loaded", "loading", "empty", "error"];
   var kh = ["auto", "submit", "change"];
@@ -12789,7 +12789,7 @@ p {
     return kh.includes(t ?? "");
   }
   var O = "cms-params:change";
-  var P = "cms-state:change";
+  var R = "cms-state:change";
   var Eh = new RegExp("#\\{\\s*([A-Za-z0-9_][A-Za-z0-9_.:-]*)\\s*\\}", "g");
   var Ah = new RegExp("#\\{\\s*[A-Za-z0-9_][A-Za-z0-9_.:-]*\\s*\\}");
   var Lh = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
@@ -12867,12 +12867,12 @@ p {
         console.warn(`${f}: no key - set ${f}="<key>" or a name attribute`, this.el);
         return;
       }
-      this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), this.el.ownerDocument.addEventListener(P, this.onState);
+      this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), this.el.ownerDocument.addEventListener(R, this.onState);
       let t = this.el.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
       this.childObserver = new t(this.onChildren), this.childObserver.observe(this.el, { childList: true });
     }
     dispose() {
-      if (this.el.removeEventListener("input", this.onInput), this.el.removeEventListener("change", this.onChange), this.el.ownerDocument.removeEventListener(P, this.onState), this.childObserver?.disconnect(), this.childObserver = null, this.timer)
+      if (this.el.removeEventListener("input", this.onInput), this.el.removeEventListener("change", this.onChange), this.el.ownerDocument.removeEventListener(R, this.onState), this.childObserver?.disconnect(), this.childObserver = null, this.timer)
         clearTimeout(this.timer);
       if (this.reflectTimer)
         clearTimeout(this.reflectTimer);
@@ -12924,7 +12924,7 @@ p {
       this.last = t, qt(this.key, t, this.el.ownerDocument);
     }
   }
-  var y = "cms-param-sync";
+  var _ = "cms-param-sync";
   var Ch = 300;
 
   class Qe {
@@ -12945,11 +12945,11 @@ p {
     };
     constructor(t) {
       this.el = t;
-      this.key = (t.getAttribute(y) || "").trim() || t.name || "";
+      this.key = (t.getAttribute(_) || "").trim() || t.name || "";
     }
     start() {
       if (!this.key) {
-        console.warn(`${y}: no key — set ${y}="<param>" or a name attribute`, this.el);
+        console.warn(`${_}: no key — set ${_}="<param>" or a name attribute`, this.el);
         return;
       }
       this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), document.addEventListener(O, this.onParams), window.addEventListener("popstate", this.onParams), this.childObserver = new MutationObserver(this.onChildren), this.childObserver.observe(this.el, { childList: true });
@@ -13027,10 +13027,10 @@ p {
     return false;
   }
   function Nt(t, e, i) {
-    C(t, h, e, (r) => i.registerSource(r)), C(t, y, e, (r) => i.registerParamSync(r)), C(t, f, e, (r) => i.registerPageStateSync(r));
+    C(t, h, e, (r) => i.registerSource(r)), C(t, _, e, (r) => i.registerParamSync(r)), C(t, f, e, (r) => i.registerPageStateSync(r));
   }
   function Bl(t, e, i) {
-    C(t, h, e, (r) => i.unregisterSource(r)), C(t, y, e, (r) => i.unregisterParamSync(r)), C(t, f, e, (r) => i.unregisterPageStateSync(r));
+    C(t, h, e, (r) => i.unregisterSource(r)), C(t, _, e, (r) => i.unregisterParamSync(r)), C(t, f, e, (r) => i.unregisterPageStateSync(r));
   }
   function Ol(t, e, i) {
     if (t.nodeType !== Node.ELEMENT_NODE || !e)
@@ -13040,8 +13040,8 @@ p {
       return;
     if (e === h)
       i.reconcileSource(r);
-    else if (e === y)
-      if (r.hasAttribute(y))
+    else if (e === _)
+      if (r.hasAttribute(_))
         i.registerParamSync(r);
       else
         i.unregisterParamSync(r);
@@ -13118,12 +13118,12 @@ p {
     if (r)
       e.addEventListener(O, i), e.defaultView?.addEventListener?.("popstate", i);
     if (o)
-      e.addEventListener(P, i);
+      e.addEventListener(R, i);
     return () => {
       if (r)
         e.removeEventListener(O, i), e.defaultView?.removeEventListener?.("popstate", i);
       if (o)
-        e.removeEventListener(P, i);
+        e.removeEventListener(R, i);
     };
   }
   var Th = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
@@ -13138,12 +13138,12 @@ p {
   }
   var Ul = "cms-reload-on";
   var Xl = "cms-source:reload";
-  function _(t) {
+  function w(t) {
     let e = t.getAttribute(bt);
     return Ml(e) ? e : "auto";
   }
   function Zl(t, e) {
-    let i = t.ownerDocument, r = _(t), o = new Set([...r === "auto" ? [Xl] : [], ...Hh(t)]);
+    let i = t.ownerDocument, r = w(t), o = new Set([...r === "auto" ? [Xl] : [], ...Hh(t)]);
     for (let a of o)
       i.addEventListener(a, e.onReload);
     if (r === "submit" || r === "change") {
@@ -13279,7 +13279,7 @@ p {
     }
   }
   var Oh = { found: false, value: undefined };
-  function w(t, e) {
+  function y(t, e) {
     if (e === ".")
       return { found: true, value: t.value };
     if (e === "value")
@@ -13325,10 +13325,10 @@ p {
   var Dh = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+)(?:\(\s*([\w$.-]+)\s*\))?)?\s*\}\}/g;
   function xt(t, e, i = {}) {
     return t.replace(Dh, (r, o, n, a) => {
-      let s = w(e, o);
+      let s = y(e, o);
       if (!s.found)
         return "";
-      let d = n ? gt(n, i) : undefined, u = a ? w(e, a) : null, p = d ? d(s.value, u?.found ? u.value : undefined) : s.value;
+      let d = n ? gt(n, i) : undefined, u = a ? y(e, a) : null, p = d ? d(s.value, u?.found ? u.value : undefined) : s.value;
       return p == null ? "" : String(p);
     });
   }
@@ -13354,7 +13354,7 @@ p {
     if (t.kind === "path")
       return rd(t.path, e);
     if (t.kind === "filter") {
-      let r = w(e, t.path);
+      let r = y(e, t.path);
       return r.found ? gt(t.name, i)(r.value, t.argument ? rd(t.argument, e) : undefined) : undefined;
     }
     if (t.kind === "not")
@@ -13368,7 +13368,7 @@ p {
     return false;
   }
   function rd(t, e) {
-    let i = w(e, t.trim());
+    let i = y(e, t.trim());
     return i.found ? i.value : undefined;
   }
   function yt(t) {
@@ -13650,16 +13650,16 @@ p {
       return false;
     sd.lastIndex = 0;
     for (let i of t.matchAll(sd))
-      if (R(i[1] ?? "", e))
+      if (H(i[1] ?? "", e))
         return true;
     return false;
   }
   function oi(t, e) {
     if (!e)
       return false;
-    return ii(t).some((i) => R(i, e));
+    return ii(t).some((i) => H(i, e));
   }
-  function R(t, e) {
+  function H(t, e) {
     if (!e)
       return false;
     let i = t.trim().split(".")[0] ?? "";
@@ -13667,11 +13667,18 @@ p {
   }
   function Xt(t, e, i, r) {
     let o = t.getAttribute("cms-bind-value");
-    if (o && (t.localName.includes("-") || t.matches('input:not([type]), input[type="checkbox"], input[type="text"], input[type="search"], select:not([multiple]), textarea')) && /^[\w$.-]+$/.test(o) && !R(o, r))
+    if (o && (t.localName.includes("-") || t.matches('input:not([type]), input[type="checkbox"], input[type="text"], input[type="search"], select:not([multiple]), textarea')) && /^[\w$.-]+$/.test(o) && !H(o, r))
       i.values.push({ path: e, expression: o });
-    for (let n of Array.from(t.attributes))
+    for (let n of Array.from(t.attributes)) {
+      if (n.name.startsWith("cms-bind-boolean-")) {
+        let a = n.name.slice(17);
+        if (/^[a-z][a-z0-9-]*$/.test(a) && /^[\w$.-]+$/.test(n.value) && !H(n.value, r))
+          i.attributes.push({ path: e, name: a, template: n.value, boolean: true });
+        continue;
+      }
       if (n.value.includes("{{") && !Ut(n.value, r))
         i.attributes.push({ path: e, name: n.name, template: n.value });
+    }
   }
   var Qh = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
   function dd(t) {
@@ -13696,14 +13703,14 @@ p {
   }
   function ud(t, e, i, r, o, n) {
     let a = t.getAttribute(S) ?? "";
-    if (i.skipRepeat || !t.hasAttribute(S) || R(a, i.submitBoundary))
+    if (i.skipRepeat || !t.hasAttribute(S) || H(a, i.submitBoundary))
       return false;
-    let s = t.getAttribute(I), d = s ? oi(s, i.submitBoundary) : false;
+    let s = t.getAttribute(P), d = s ? oi(s, i.submitBoundary) : false;
     return r.repeats.push({ path: e, spec: Zt(a), template: hd(t, o, n, { removeRepeat: true, removeCondition: !!i.submitBoundary && !!s && !d, submitBoundary: i.submitBoundary }), rootCondition: d || !s ? null : ri(s, o) }), true;
   }
   function pd(t, e, i, r, o, n) {
-    let a = t.getAttribute(I) ?? "";
-    if (i.skipCondition || !t.hasAttribute(I) || oi(a, i.submitBoundary))
+    let a = t.getAttribute(P) ?? "";
+    if (i.skipCondition || !t.hasAttribute(P) || oi(a, i.submitBoundary))
       return false;
     return r.conditions.push({ path: e, condition: ri(a, o), template: hd(t, o, n, { removeCondition: !!i.submitBoundary, submitBoundary: i.submitBoundary }) }), true;
   }
@@ -13712,7 +13719,7 @@ p {
     if (r.removeRepeat)
       n.removeAttribute(S);
     if (r.removeCondition)
-      n.removeAttribute(I);
+      n.removeAttribute(P);
     return o.appendChild(n), i(o, e, { skipRootCondition: true, skipRootRepeat: r.removeRepeat === true, submitBoundary: r.submitBoundary ?? null });
   }
   function ni(t, e, i, r) {
@@ -13747,7 +13754,7 @@ p {
     }
     let s = dd(a);
     if (s) {
-      if (!R(s, i.submitBoundary))
+      if (!H(s, i.submitBoundary))
         r.rawHtml.push({ path: e, expression: s });
       return;
     }
@@ -13778,16 +13785,29 @@ p {
     name;
     template;
     filters;
-    constructor(t, e, i, r) {
+    boolean;
+    applied = false;
+    lastValue = "";
+    constructor(t, e, i, r, o = false) {
       this.element = t;
       this.name = e;
       this.template = i;
       this.filters = r;
+      this.boolean = o;
     }
     update(t) {
-      let e = xt(this.template, t, this.filters);
-      if (this.element.getAttribute(this.name) !== e)
-        this.element.setAttribute(this.name, e);
+      let e = this.boolean ? y(t, this.template).value === true : xt(this.template, t, this.filters);
+      if (this.applied && e === this.lastValue)
+        return;
+      if (this.applied = true, this.lastValue = e, this.boolean) {
+        let r = e === true;
+        if (this.element.hasAttribute(this.name) !== r)
+          this.element.toggleAttribute(this.name, r);
+        return;
+      }
+      let i = String(e);
+      if (this.element.getAttribute(this.name) !== i)
+        this.element.setAttribute(this.name, i);
     }
   }
 
@@ -13862,7 +13882,7 @@ p {
         return console.warn(`Invalid cms-repeat="${this.spec.path}": ${this.spec.rangeError}`), null;
       if (this.spec.rangeCount !== undefined)
         return Array.from({ length: this.spec.rangeCount }, (i, r) => r);
-      let e = w(t, this.spec.path);
+      let e = y(t, this.spec.path);
       if (!Array.isArray(e.value)) {
         if (e.found && e.value != null)
           console.warn(`cms-repeat="${this.spec.path}" expected an array, got`, e.value);
@@ -13891,7 +13911,7 @@ p {
       let e = this.end.parentNode;
       if (!e)
         return;
-      let i = w(t, this.expression), r = (this.end.ownerDocument ?? document).createElement("template");
+      let i = y(t, this.expression), r = (this.end.ownerDocument ?? document).createElement("template");
       r.innerHTML = i.found && i.value != null ? String(i.value) : "", W(r.content), e.insertBefore(r.content, this.end);
     }
     unmount() {
@@ -13909,7 +13929,7 @@ p {
       this.expression = e;
     }
     update(t) {
-      let e = w(t, this.expression).value;
+      let e = y(t, this.expression).value;
       if (Object.is(e, this.previous))
         return;
       this.previous = e;
@@ -13946,7 +13966,7 @@ p {
     for (let { item: p, node: b } of a) {
       if (b.nodeType !== Node.ELEMENT_NODE)
         throw Error("Compiled attribute binding no longer points to an element.");
-      r.push(new si(b, p.name, p.template, i));
+      r.push(new si(b, p.name, p.template, i, p.boolean));
     }
     for (let { item: p, node: b } of s) {
       let m = pi(b, "cms-condition");
@@ -14082,9 +14102,9 @@ p {
     }
   }
   function _d(t) {
-    let e = new Set, i = Array.from(t.children), r = Array.from(t.querySelectorAll(`[${I}]`));
+    let e = new Set, i = Array.from(t.children), r = Array.from(t.querySelectorAll(`[${P}]`));
     for (let o of [...i, ...r])
-      for (let n of Jh(o.getAttribute(I)))
+      for (let n of Jh(o.getAttribute(P)))
         e.add(n);
     return e;
   }
@@ -14494,7 +14514,7 @@ p {
     return it.get(t)?.value;
   }
   function Md(t, e) {
-    if (_(t) !== "auto")
+    if (w(t) !== "auto")
       throw Error("setSourceData requires an automatic read source; form sources own their submission results.");
     it.set(t, { value: e, local: V(t.getAttribute("cms-source") ?? "") === "" }), Si.get(t)?.(e);
   }
@@ -14548,7 +14568,7 @@ p {
       this.el = t;
       this.filters = e;
       this.options = i;
-      this.formOwned = wt(t, t.ownerDocument) !== null && _(t) !== "auto", this.submission = this.formOwned ? new Li(t, e) : null;
+      this.formOwned = wt(t, t.ownerDocument) !== null && w(t) !== "auto", this.submission = this.formOwned ? new Li(t, e) : null;
       let r = this.formOwned ? $l(t) : Nl(t);
       this.renderer = new mi(t, r, this.filters, { inPlace: this.formOwned }), this.presenter = new vi(t, r, this.renderer, this.options);
     }
@@ -14556,10 +14576,10 @@ p {
       this.stopContext = xd(this.el, () => {
         this.renderer.refreshContext(), this.afterRender();
       });
-      let t = _(this.el) === "auto" ? zd(this.el, (e) => this.acceptData(e)) : undefined;
+      let t = w(this.el) === "auto" ? zd(this.el, (e) => this.acceptData(e)) : undefined;
       if (this.stopListeners = Zl(this.el, { onReload: this.onReload, onReactiveUrlChange: this.onReactiveUrlChange, onSubmit: this.onSubmit, onChange: this.onChange }), t && !this.options.sourceStateForce)
         this.acceptData(t.value);
-      else if (_(this.el) === "auto" || this.options.sourceStateForce)
+      else if (w(this.el) === "auto" || this.options.sourceStateForce)
         this.run();
       else {
         let e = T(this.el.getAttribute(h) ?? "");
@@ -14674,7 +14694,7 @@ p {
       }
       let e = this.sources.get(t);
       if (e) {
-        if (_(t) === "auto")
+        if (w(t) === "auto")
           e.run({ onlyIfUrlChanged: true });
       } else
         this.registerSource(t);
@@ -14735,7 +14755,7 @@ p {
       return true;
     }
     hasSourceInput(t) {
-      return V(t.getAttribute(h) ?? "").trim() !== "" || _(t) === "auto" && Ci(t);
+      return V(t.getAttribute(h) ?? "").trim() !== "" || w(t) === "auto" && Ci(t);
     }
   }
 
@@ -14839,7 +14859,7 @@ p {
             Ii(r), this.fixedRanges.mountWithin(r), Nt(r, this.root, this.registry);
           });
         }
-      }), this.observer.observe(this.root, { attributes: true, attributeFilter: [h, y, f], childList: true, subtree: true });
+      }), this.observer.observe(this.root, { attributes: true, attributeFilter: [h, _, f], childList: true, subtree: true });
     }
     teardown(t) {
       if (this.stopped)
@@ -16382,12 +16402,12 @@ p {
   function E2(o) {
     return Array.from(o.children).find((e) => e.localName === "template" && e.hasAttribute("data-p9r-composition-input")) ?? null;
   }
-  function I2(o) {
+  function I(o) {
     return o.hasAttribute("data-p9r-composition") && E2(o) !== null;
   }
   function p(o) {
-    let e = Array.from(o.querySelectorAll("[data-p9r-composition]")).filter(I2);
-    if (o.nodeType === Node.ELEMENT_NODE && I2(o))
+    let e = Array.from(o.querySelectorAll("[data-p9r-composition]")).filter(I);
+    if (o.nodeType === Node.ELEMENT_NODE && I(o))
       e.unshift(o);
     return e;
   }
@@ -26611,6 +26631,31 @@ w13c-lateral-menu-item {
   function isDetailWidget(widget) {
     return widget.widget === "w-detail";
   }
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/directoryContext.ts
+  function directoryContext(host, fields) {
+    const users = fields.filter((field2) => field2.type === "cms-user");
+    let requested = false;
+    return (values, resource) => {
+      requested ||= resource != null && users.some((field2) => matchesDashboardVisibility(field2.visibleWhen, { fields: values, resource }));
+      const directory = host.querySelector("cms-dashboard-directory");
+      const data = directory ? Td(directory) : undefined;
+      const options = Array.isArray(data) ? dashboardUserOptions(data) : [];
+      const failed = directory?.failed === true;
+      return {
+        detailUsersUrl: requested ? route2("/api/users") : "",
+        detailUsersFailed: failed,
+        detailUsersHint: failed ? "Unable to load CMS users. Focus or click to retry." : "",
+        detailUsersOptions: Object.fromEntries(users.map((field2) => {
+          const selected2 = typeof values[field2.id] === "string" ? values[field2.id] : "";
+          return [
+            field2.id,
+            Array.isArray(data) && selected2 && !options.some((option2) => option2.value === selected2) ? [...options, { value: selected2, label: `Unknown CMS user · ${selected2}` }] : options
+          ];
+        }))
+      };
+    };
+  }
+
   // src/components/admin/Resources/Dashboards/runtime/source.ts
   async function fetchSourceJson(sourceId, ref, vars, options = {}) {
     const response = await Cd(sourceUrl(sourceId, ref, vars).href, {
@@ -27358,6 +27403,7 @@ w13c-lateral-menu-item {
   // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/context.ts
   function bindDetailContext(host, widget, draft, displayDraft) {
     const fields = [...widget.main, ...widget.aside ?? []].flatMap((section2) => ("widget" in section2) ? [] : section2.fields);
+    const users = directoryContext(host, fields);
     const actions = actionLayout(widget.actions ?? []);
     const rules = Object.fromEntries(fields.map((field2) => [field2.id, field2.visibleWhen]));
     fd(host, () => {
@@ -27388,6 +27434,7 @@ w13c-lateral-menu-item {
         ];
       }));
       return {
+        ...users(values, resource),
         detailResourcePath: widget.source.itemPath ?? "",
         detailLookupUrls: detailLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
         detailReady: resource !== null && resource !== undefined,
@@ -27398,6 +27445,74 @@ w13c-lateral-menu-item {
         detailRules: rules
       };
     });
+  }
+
+  // src/static/admin/_content/sources/_runtime/detail/users.html
+  var users_default = `<template data-users="source">
+    <cms-dashboard-directory cms-source="{{ detailUsersUrl }}" hidden>
+        <span cms-condition="$source.loading" hidden></span>
+        <span cms-condition="$source.error" hidden></span>
+    </cms-dashboard-directory>
+</template>
+<template data-users="option">
+    <option value="{{ cmsUserOption.value }}">{{ cmsUserOption.label }}</option>
+</template>
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/Directory.ts
+  var sequence = 0;
+
+  class DashboardDirectory extends HTMLElement {
+    failed = false;
+    queued = false;
+    connectedCallback() {
+      this.setAttribute("cms-reload-on", `dashboard:directory:${++sequence}`);
+      fd(this, (value2) => {
+        this.failed = Boolean(value2 && !Array.isArray(value2) && typeof value2 === "object" && "status" in value2);
+        this.refreshOwner();
+        return {};
+      });
+      this.refreshOwner();
+    }
+    retry() {
+      if (this.failed) {
+        this.failed = false;
+        this.ownerDocument.dispatchEvent(new Event(this.getAttribute("cms-reload-on")));
+      }
+    }
+    refreshOwner() {
+      if (this.queued) {
+        return;
+      }
+      this.queued = true;
+      queueMicrotask(() => {
+        this.queued = false;
+        const owner = this.closest("cms-dashboard-w-detail");
+        if (this.isConnected && owner) {
+          bi(owner);
+        }
+      });
+    }
+  }
+  customElements.define("cms-dashboard-directory", DashboardDirectory);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/users.ts
+  function directoryElement() {
+    return declaration("source");
+  }
+  function composeUserOptions(control, id2) {
+    const option2 = declaration("option");
+    option2.setAttribute("cms-repeat", `detailUsersOptions.${id2} as cmsUserOption`);
+    control.setAttribute("cms-bind-boolean-invalid", "detailUsersFailed");
+    control.setAttribute("hint", "{{ detailUsersHint }}");
+    control.setAttribute("hint-level", "error");
+    control.setAttribute("placeholder", "");
+    control.append(option2);
+  }
+  function declaration(kind) {
+    const host = document.createElement("template");
+    host.innerHTML = users_default;
+    return host.content.querySelector(`[data-users="${kind}"]`).content.firstElementChild.cloneNode(true);
   }
 
   // src/static/admin/_content/sources/_runtime/detail/lookup.html
@@ -27460,7 +27575,7 @@ w13c-lateral-menu-item {
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/Lookup.ts
-  var sequence = 0;
+  var sequence2 = 0;
 
   class DashboardLookup extends HTMLElement {
     static observedAttributes = ["request-base", "selected-value"];
@@ -27477,7 +27592,7 @@ w13c-lateral-menu-item {
     declared = [];
     connectedCallback() {
       this.declared = Array.from(this.querySelectorAll("[data-static-options] option")).map((option3) => ({ value: option3.value, label: option3.textContent ?? option3.value }));
-      this.setAttribute("cms-reload-on", `dashboard:lookup:${++sequence}`);
+      this.setAttribute("cms-reload-on", `dashboard:lookup:${++sequence2}`);
       fd(this, (value2) => this.context(value2));
       this.addEventListener("combobox-search", this.onSearch);
       this.addEventListener("combobox-load-more", this.onMore);
@@ -27637,6 +27752,7 @@ w13c-lateral-menu-item {
 <template data-control="number"><p9r-input type="number"></p9r-input></template>
 <template data-control="textarea"><p9r-textarea></p9r-textarea></template>
 <template data-control="select"><p9r-select></p9r-select></template>
+<template data-control="cms-user"><p9r-combobox></p9r-combobox></template>
 <template data-control="combobox"><p9r-combobox></p9r-combobox></template>
 <template data-control="tokens"><p9r-token-input></p9r-token-input></template>
 <template data-control="checkbox"><input type="checkbox" /></template>
@@ -27756,6 +27872,9 @@ w13c-lateral-menu-item {
           control.setAttribute("placeholder", "");
         }
       }
+      if (field2.type === "cms-user") {
+        composeUserOptions(control, field2.id);
+      }
       if (field2.type === "secret-ref") {
         control.setAttribute("api", route2("/api/secrets"));
       }
@@ -27802,6 +27921,7 @@ dd { margin: 0; min-width: 0; }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/composition.ts
   var supported = new Set([
+    "cms-user",
     "text",
     "number",
     "textarea",
@@ -27838,6 +27958,9 @@ dd { margin: 0; min-width: 0; }
     }
     fragment.append(title);
     fragment.append(composeActions());
+    if ([...widget.main, ...widget.aside ?? []].some((section2) => !("widget" in section2) && section2.fields.some((field2) => field2.type === "cms-user"))) {
+      fragment.append(directoryElement());
+    }
     for (const [slot, sections2] of [
       ["bound-main", widget.main],
       ["bound-aside", widget.aside ?? []]
@@ -32881,6 +33004,10 @@ p9r-token-input {
       const control = target2?.closest("[data-field-control]");
       const field2 = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
       if (field2?.input === "cms-user") {
+        if (this.host.hasAttribute("data-declarative")) {
+          this.host.querySelector("cms-dashboard-directory")?.retry();
+          return;
+        }
         this.lookups.retryCmsUser(field2.id);
       }
     }
@@ -38057,11 +38184,11 @@ cms-dashboard-icon svg {
   var Ut2 = "cms-source-success-redirect";
   var Kt2 = "cms-source-success-redirect-param";
   var F2 = "cms-repeat";
-  var P2 = "cms-condition";
+  var E3 = "cms-condition";
   var h2 = "cms-page-state";
   var ui2 = ["auto", "submit", "change"];
-  var S2 = "cms-bind-stop";
-  var l3 = "cms-ready";
+  var y2 = "cms-bind-stop";
+  var p2 = "cms-ready";
   function _t2(t) {
     return ui2.includes(t ?? "");
   }
@@ -38077,10 +38204,10 @@ cms-dashboard-icon svg {
   function ir2(t) {
     return /@\{\s*[A-Za-z0-9_.-]+\s*\}/.test(t);
   }
-  function R3() {
+  function $() {
     return new URLSearchParams(typeof location > "u" ? "" : location.search);
   }
-  function er2(t, r = R3()) {
+  function er2(t, r = $()) {
     return t.replace(ai2, (i, e) => encodeURIComponent(r.get(e) ?? ""));
   }
   function or(t, r = document) {
@@ -38088,7 +38215,7 @@ cms-dashboard-icon svg {
     return t.replace(ci2, (e, o) => encodeURIComponent(i.get(o) ?? ""));
   }
   function nr(t, r) {
-    let i = R3();
+    let i = $();
     if (r === "")
       i.delete(t);
     else
@@ -38201,8 +38328,8 @@ cms-dashboard-icon svg {
       this.last = t, ut2(this.key, t, this.el.ownerDocument);
     }
   }
-  var y2 = "cms-param-sync";
-  var pi2 = 300;
+  var g2 = "cms-param-sync";
+  var li2 = 300;
 
   class ct2 {
     el;
@@ -38222,11 +38349,11 @@ cms-dashboard-icon svg {
     };
     constructor(t) {
       this.el = t;
-      this.key = (t.getAttribute(y2) || "").trim() || t.name || "";
+      this.key = (t.getAttribute(g2) || "").trim() || t.name || "";
     }
     start() {
       if (!this.key) {
-        console.warn(`${y2}: no key — set ${y2}="<param>" or a name attribute`, this.el);
+        console.warn(`${g2}: no key — set ${g2}="<param>" or a name attribute`, this.el);
         return;
       }
       this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), document.addEventListener(M2, this.onParams), window.addEventListener("popstate", this.onParams), this.childObserver = new MutationObserver(this.onChildren), this.childObserver.observe(this.el, { childList: true });
@@ -38241,7 +38368,7 @@ cms-dashboard-icon svg {
     reflect() {
       if (this.timer)
         return;
-      let t = R3().get(this.key) ?? "", r = this.el;
+      let t = $().get(this.key) ?? "", r = this.el;
       if (r.type === "checkbox") {
         let i = t !== "" && t === (r.value || "true");
         if (r.checked !== i)
@@ -38271,7 +38398,7 @@ cms-dashboard-icon svg {
         return;
       if (this.timer)
         clearTimeout(this.timer);
-      this.timer = setTimeout(() => this.write(), pi2);
+      this.timer = setTimeout(() => this.write(), li2);
     }
     write() {
       if (this.reflecting)
@@ -38299,7 +38426,7 @@ cms-dashboard-icon svg {
   }
   function sr(t, r) {
     for (let i = t.parentElement;i && i !== r; i = i.parentElement)
-      if (i.localName === m2 || i.hasAttribute(S2))
+      if (i.localName === m2 || i.hasAttribute(y2))
         return true;
     return false;
   }
@@ -38335,7 +38462,7 @@ cms-dashboard-icon svg {
   function cr2(t) {
     return t instanceof Error ? t.message : String(t);
   }
-  function pr2(t) {
+  function lr(t) {
     let r = t.ownerDocument ?? document, i = r.createDocumentFragment(), e = r.createDocumentFragment();
     for (let o of Array.from(t.childNodes))
       if (o.nodeType === Node.ELEMENT_NODE && o.tagName === "TEMPLATE")
@@ -38344,7 +38471,7 @@ cms-dashboard-icon svg {
         i.appendChild(o), e.appendChild(o.cloneNode(true));
     return { template: e, body: i };
   }
-  function lr(t) {
+  function pr2(t) {
     let r = t.ownerDocument ?? document, i = r.createDocumentFragment(), e = r.createDocumentFragment();
     for (let o of Array.from(t.childNodes))
       if (e.appendChild(o.cloneNode(true)), o.nodeType === Node.ELEMENT_NODE && o.tagName === "TEMPLATE")
@@ -38378,24 +38505,24 @@ cms-dashboard-icon svg {
         r.removeEventListener(V2, i);
     };
   }
-  var li2 = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
+  var pi2 = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
   function D2(t) {
     return w2(t).url;
   }
   function w2(t) {
-    let r = li2.exec(t);
+    let r = pi2.exec(t);
     if (!r)
       return { url: t.trim() };
     return { url: r[1].trim(), alias: r[2] };
   }
   var Sr2 = "cms-reload-on";
   var yr = "cms-source:reload";
-  function g2(t) {
+  function b(t) {
     let r = t.getAttribute(Z2);
     return _t2(r) ? r : "auto";
   }
   function gr(t, r) {
-    let i = t.ownerDocument, e = g2(t), o = new Set([...e === "auto" ? [yr] : [], ...mi2(t)]);
+    let i = t.ownerDocument, e = b(t), o = new Set([...e === "auto" ? [yr] : [], ...mi2(t)]);
     for (let s2 of o)
       i.addEventListener(s2, r.onReload);
     if (e === "submit" || e === "change") {
@@ -38434,7 +38561,7 @@ cms-dashboard-icon svg {
   function tt2(t) {
     return `data-cms-${t}`;
   }
-  function pt2(t) {
+  function lt2(t) {
     return t?.includes("{{") ?? false;
   }
   function vr(t) {
@@ -38443,7 +38570,7 @@ cms-dashboard-icon svg {
   var Si2 = ["src", "srcset"];
   var yi2 = ["sizes", "media"];
   var gi2 = "template";
-  function $(t) {
+  function R3(t) {
     let r = wr2(t, br2), i = new Set;
     for (let e of r.filter((o) => o.localName === "picture")) {
       let o = [e, ...Array.from(e.querySelectorAll("img,source")).filter((n) => n.closest("picture") === e)];
@@ -38454,7 +38581,7 @@ cms-dashboard-icon svg {
       if (!i.has(e) && Cr2(e))
         Fr2(e);
     for (let e of wr2(t, gi2))
-      $(e.content);
+      R3(e.content);
   }
   function Fr2(t) {
     let r = new Map(X2.map((i) => [i, q2(t, i)]));
@@ -38467,19 +38594,19 @@ cms-dashboard-icon svg {
     }
   }
   function Cr2(t) {
-    return t.hasAttribute(_2) || bi2(t) || Si2.some((r) => vi2(q2(t, r))) || yi2.some((r) => pt2(q2(t, r)));
+    return t.hasAttribute(_2) || bi2(t) || Si2.some((r) => vi2(q2(t, r))) || yi2.some((r) => lt2(q2(t, r)));
   }
   function bi2(t) {
     return X2.some((r) => t.hasAttribute(tt2(r)));
   }
   function vi2(t) {
-    return t !== null && (!t.trim() || pt2(t));
+    return t !== null && (!t.trim() || lt2(t));
   }
   function wr2(t, r) {
     return [...typeof t.matches === "function" && t.matches(r) ? [t] : [], ...Array.from(t.querySelectorAll(r))];
   }
 
-  class lt2 {
+  class pt2 {
     start;
     end;
     sites;
@@ -38531,7 +38658,7 @@ cms-dashboard-icon svg {
     }
   }
   var Ci2 = { found: false, value: undefined };
-  function b(t, r) {
+  function S2(t, r) {
     if (r === ".")
       return { found: true, value: t.value };
     if (r === "value")
@@ -38577,10 +38704,10 @@ cms-dashboard-icon svg {
   var ki2 = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+)(?:\(\s*([\w$.-]+)\s*\))?)?\s*\}\}/g;
   function T2(t, r, i = {}) {
     return t.replace(ki2, (e, o, n, s2) => {
-      let a = b(r, o);
+      let a = S2(r, o);
       if (!a.found)
         return "";
-      let c2 = n ? G2(n, i) : undefined, f3 = s2 ? b(r, s2) : null, u2 = c2 ? c2(a.value, f3?.found ? f3.value : undefined) : a.value;
+      let c2 = n ? G2(n, i) : undefined, f3 = s2 ? S2(r, s2) : null, u2 = c2 ? c2(a.value, f3?.found ? f3.value : undefined) : a.value;
       return u2 == null ? "" : String(u2);
     });
   }
@@ -38606,7 +38733,7 @@ cms-dashboard-icon svg {
     if (t.kind === "path")
       return Er2(t.path, r);
     if (t.kind === "filter") {
-      let e = b(r, t.path);
+      let e = S2(r, t.path);
       return e.found ? G2(t.name, i)(e.value, t.argument ? Er2(t.argument, r) : undefined) : undefined;
     }
     if (t.kind === "not")
@@ -38620,7 +38747,7 @@ cms-dashboard-icon svg {
     return false;
   }
   function Er2(t, r) {
-    let i = b(r, t.trim());
+    let i = S2(r, t.trim());
     return i.found ? i.value : undefined;
   }
   function Y2(t) {
@@ -38882,7 +39009,7 @@ cms-dashboard-icon svg {
       let o = false;
       return { expression: t, valid: false, evaluate: () => {
         if (!o)
-          o = true, console.warn(`Invalid cms-condition "${t}": ${Ri(e)}`);
+          o = true, console.warn(`Invalid cms-condition "${t}": ${$i2(e)}`);
         return false;
       } };
     }
@@ -38890,7 +39017,7 @@ cms-dashboard-icon svg {
   function Dr2(t, r, i) {
     return { expression: t, valid: true, evaluate: (e) => Boolean(k2(r, e, i)) };
   }
-  function Ri(t) {
+  function $i2(t) {
     return t instanceof Error ? t.message : String(t);
   }
   var Ar2 = /\{\{\s*([\w$.-]+)(?:\s*\|\s*(\w+))?\s*\}\}/g;
@@ -38902,16 +39029,16 @@ cms-dashboard-icon svg {
       return false;
     Ar2.lastIndex = 0;
     for (let i of t.matchAll(Ar2))
-      if (E3(i[1] ?? "", r))
+      if (x2(i[1] ?? "", r))
         return true;
     return false;
   }
   function gt3(t, r) {
     if (!r)
       return false;
-    return St2(t).some((i) => E3(i, r));
+    return St2(t).some((i) => x2(i, r));
   }
-  function E3(t, r) {
+  function x2(t, r) {
     if (!r)
       return false;
     let i = t.trim().split(".")[0] ?? "";
@@ -38919,22 +39046,29 @@ cms-dashboard-icon svg {
   }
   function et2(t, r, i, e) {
     let o = t.getAttribute("cms-bind-value");
-    if (o && (t.localName.includes("-") || t.matches('input:not([type]), input[type="checkbox"], input[type="text"], input[type="search"], select:not([multiple]), textarea')) && /^[\w$.-]+$/.test(o) && !E3(o, e))
+    if (o && (t.localName.includes("-") || t.matches('input:not([type]), input[type="checkbox"], input[type="text"], input[type="search"], select:not([multiple]), textarea')) && /^[\w$.-]+$/.test(o) && !x2(o, e))
       i.values.push({ path: r, expression: o });
-    for (let n of Array.from(t.attributes))
+    for (let n of Array.from(t.attributes)) {
+      if (n.name.startsWith("cms-bind-boolean-")) {
+        let s2 = n.name.slice(17);
+        if (/^[a-z][a-z0-9-]*$/.test(s2) && /^[\w$.-]+$/.test(n.value) && !x2(n.value, e))
+          i.attributes.push({ path: r, name: s2, template: n.value, boolean: true });
+        continue;
+      }
       if (n.value.includes("{{") && !it2(n.value, e))
         i.attributes.push({ path: r, name: n.name, template: n.value });
+    }
   }
-  var $i2 = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
-  function Rr2(t) {
+  var Ri = /^\{\{\s*([\w.]+)\s*\|\s*innerHTML\s*\}\}$/;
+  function $r(t) {
     let r = t.childNodes.length === 1 ? t.firstChild : null;
     if (!r || r.nodeType !== Node.TEXT_NODE)
       return null;
-    return (r.nodeValue ?? "").trim().match($i2)?.[1] ?? null;
+    return (r.nodeValue ?? "").trim().match(Ri)?.[1] ?? null;
   }
   var zi2 = /^\s*(.+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
   var Bi = /^\$range\((0|[1-9]\d*)\)$/;
-  var $r = 100;
+  var Rr2 = 100;
   function ot2(t) {
     let r = t.match(zi2), i = r ? { path: r[1], name: r[2] } : { path: t.trim() };
     if (!i.path.startsWith("$range("))
@@ -38942,20 +39076,20 @@ cms-dashboard-icon svg {
     let e = Bi.exec(i.path), o = e ? Number(e[1]) : Number.NaN;
     if (!i.name)
       return { ...i, rangeError: "$range(n) requires an alias." };
-    if (!Number.isInteger(o) || o < 0 || o > $r)
-      return { ...i, rangeError: `$range(n) requires an integer from 0 to ${$r}.` };
+    if (!Number.isInteger(o) || o < 0 || o > Rr2)
+      return { ...i, rangeError: `$range(n) requires an integer from 0 to ${Rr2}.` };
     return { ...i, rangeCount: o };
   }
   function zr2(t, r, i, e, o, n) {
     let s2 = t.getAttribute(F2) ?? "";
-    if (i.skipRepeat || !t.hasAttribute(F2) || E3(s2, i.submitBoundary))
+    if (i.skipRepeat || !t.hasAttribute(F2) || x2(s2, i.submitBoundary))
       return false;
-    let a = t.getAttribute(P2), c2 = a ? gt3(a, i.submitBoundary) : false;
+    let a = t.getAttribute(E3), c2 = a ? gt3(a, i.submitBoundary) : false;
     return e.repeats.push({ path: r, spec: ot2(s2), template: Lr2(t, o, n, { removeRepeat: true, removeCondition: !!i.submitBoundary && !!a && !c2, submitBoundary: i.submitBoundary }), rootCondition: c2 || !a ? null : yt2(a, o) }), true;
   }
   function Br2(t, r, i, e, o, n) {
-    let s2 = t.getAttribute(P2) ?? "";
-    if (i.skipCondition || !t.hasAttribute(P2) || gt3(s2, i.submitBoundary))
+    let s2 = t.getAttribute(E3) ?? "";
+    if (i.skipCondition || !t.hasAttribute(E3) || gt3(s2, i.submitBoundary))
       return false;
     return e.conditions.push({ path: r, condition: yt2(s2, o), template: Lr2(t, o, n, { removeCondition: !!i.submitBoundary, submitBoundary: i.submitBoundary }) }), true;
   }
@@ -38964,7 +39098,7 @@ cms-dashboard-icon svg {
     if (e.removeRepeat)
       n.removeAttribute(F2);
     if (e.removeCondition)
-      n.removeAttribute(P2);
+      n.removeAttribute(E3);
     return o.appendChild(n), i(o, r, { skipRootCondition: true, skipRootRepeat: e.removeRepeat === true, submitBoundary: e.submitBoundary ?? null });
   }
   function bt2(t, r, i, e) {
@@ -38997,9 +39131,9 @@ cms-dashboard-icon svg {
       et2(s2, r, e, i.submitBoundary);
       return;
     }
-    let a = Rr2(s2);
+    let a = $r(s2);
     if (a) {
-      if (!E3(a, i.submitBoundary))
+      if (!x2(a, i.submitBoundary))
         e.rawHtml.push({ path: r, expression: a });
       return;
     }
@@ -39030,16 +39164,29 @@ cms-dashboard-icon svg {
     name;
     template;
     filters;
-    constructor(t, r, i, e) {
+    boolean;
+    applied = false;
+    lastValue = "";
+    constructor(t, r, i, e, o = false) {
       this.element = t;
       this.name = r;
       this.template = i;
       this.filters = e;
+      this.boolean = o;
     }
     update(t) {
-      let r = T2(this.template, t, this.filters);
-      if (this.element.getAttribute(this.name) !== r)
-        this.element.setAttribute(this.name, r);
+      let r = this.boolean ? S2(t, this.template).value === true : T2(this.template, t, this.filters);
+      if (this.applied && r === this.lastValue)
+        return;
+      if (this.applied = true, this.lastValue = r, this.boolean) {
+        let e = r === true;
+        if (this.element.hasAttribute(this.name) !== e)
+          this.element.toggleAttribute(this.name, e);
+        return;
+      }
+      let i = String(r);
+      if (this.element.getAttribute(this.name) !== i)
+        this.element.setAttribute(this.name, i);
     }
   }
 
@@ -39114,7 +39261,7 @@ cms-dashboard-icon svg {
         return console.warn(`Invalid cms-repeat="${this.spec.path}": ${this.spec.rangeError}`), null;
       if (this.spec.rangeCount !== undefined)
         return Array.from({ length: this.spec.rangeCount }, (i, e) => e);
-      let r = b(t, this.spec.path);
+      let r = S2(t, this.spec.path);
       if (!Array.isArray(r.value)) {
         if (r.found && r.value != null)
           console.warn(`cms-repeat="${this.spec.path}" expected an array, got`, r.value);
@@ -39143,8 +39290,8 @@ cms-dashboard-icon svg {
       let r = this.end.parentNode;
       if (!r)
         return;
-      let i = b(t, this.expression), e = (this.end.ownerDocument ?? document).createElement("template");
-      e.innerHTML = i.found && i.value != null ? String(i.value) : "", $(e.content), r.insertBefore(e.content, this.end);
+      let i = S2(t, this.expression), e = (this.end.ownerDocument ?? document).createElement("template");
+      e.innerHTML = i.found && i.value != null ? String(i.value) : "", R3(e.content), r.insertBefore(e.content, this.end);
     }
     unmount() {
       Q2(this.start, this.end);
@@ -39161,7 +39308,7 @@ cms-dashboard-icon svg {
       this.expression = r;
     }
     update(t) {
-      let r = b(t, this.expression).value;
+      let r = S2(t, this.expression).value;
       if (Object.is(r, this.previous))
         return;
       this.previous = r;
@@ -39190,30 +39337,30 @@ cms-dashboard-icon svg {
   }
   function Et2(t, r, i) {
     let e = [], o = r.values.map((u2) => ({ item: u2, node: B(t, u2.path) })), n = r.text.map((u2) => ({ item: u2, node: B(t, u2.path) })), s2 = r.attributes.map((u2) => ({ item: u2, node: B(t, u2.path) })), a = r.conditions.map((u2) => ({ item: u2, node: B(t, u2.path) })), c2 = r.repeats.map((u2) => ({ item: u2, node: B(t, u2.path) })), f3 = r.rawHtml.map((u2) => ({ item: u2, node: B(t, u2.path) }));
-    for (let { item: u2, node: p2 } of n) {
-      if (p2.nodeType !== Node.TEXT_NODE)
+    for (let { item: u2, node: l3 } of n) {
+      if (l3.nodeType !== Node.TEXT_NODE)
         throw Error("Compiled text binding no longer points to a text node.");
-      e.push(new vt2(p2, u2.template, i));
+      e.push(new vt2(l3, u2.template, i));
     }
-    for (let { item: u2, node: p2 } of s2) {
-      if (p2.nodeType !== Node.ELEMENT_NODE)
+    for (let { item: u2, node: l3 } of s2) {
+      if (l3.nodeType !== Node.ELEMENT_NODE)
         throw Error("Compiled attribute binding no longer points to an element.");
-      e.push(new Ft2(p2, u2.name, u2.template, i));
+      e.push(new Ft2(l3, u2.name, u2.template, i, u2.boolean));
     }
-    for (let { item: u2, node: p2 } of a) {
-      let x2 = Pt2(p2, "cms-condition");
-      e.push(new Ct2(x2.start, x2.end, u2.condition, u2.template));
+    for (let { item: u2, node: l3 } of a) {
+      let P2 = Pt2(l3, "cms-condition");
+      e.push(new Ct2(P2.start, P2.end, u2.condition, u2.template));
     }
-    for (let { item: u2, node: p2 } of c2) {
-      let x2 = Pt2(p2, `cms-repeat ${u2.spec.path}`);
-      e.push(new wt2(x2.start, x2.end, u2.spec, u2.template, u2.rootCondition));
+    for (let { item: u2, node: l3 } of c2) {
+      let P2 = Pt2(l3, `cms-repeat ${u2.spec.path}`);
+      e.push(new wt2(P2.start, P2.end, u2.spec, u2.template, u2.rootCondition));
     }
-    for (let { item: u2, node: p2 } of f3) {
-      let x2 = Pt2(p2, `cms-html ${u2.expression}`);
-      e.push(new kt(x2.start, x2.end, u2.expression));
+    for (let { item: u2, node: l3 } of f3) {
+      let P2 = Pt2(l3, `cms-html ${u2.expression}`);
+      e.push(new kt(P2.start, P2.end, u2.expression));
     }
-    for (let { item: u2, node: p2 } of o)
-      e.push(new xt2(p2, u2.expression));
+    for (let { item: u2, node: l3 } of o)
+      e.push(new xt2(l3, u2.expression));
     return e;
   }
   function B(t, r) {
@@ -39250,12 +39397,12 @@ cms-dashboard-icon svg {
     }
     static fromTemplate(t, r, i = {}) {
       let e = t.cloneNode(true), o = t.cloneNode(true);
-      $(o);
+      R3(o);
       let n = bt2(o, r, i, v2.fromTemplate);
       return new v2(e, o, n, r);
     }
     static bindChildrenInPlace(t, r, i = {}) {
-      $(t);
+      R3(t);
       let o = (t.ownerDocument ?? document).createDocumentFragment();
       for (let a of Array.from(t.childNodes))
         o.appendChild(a.cloneNode(true));
@@ -39263,7 +39410,7 @@ cms-dashboard-icon svg {
       return s2.update(r), s2;
     }
     mount(t, r, i = null) {
-      let e = t.ownerDocument ?? document, o = e.createComment("cms-region start"), n = e.createComment("cms-region end"), s2 = this.executableTemplate.cloneNode(true), a = new lt2(o, n, Et2(s2, this.plan, this.filters));
+      let e = t.ownerDocument ?? document, o = e.createComment("cms-region start"), n = e.createComment("cms-region end"), s2 = this.executableTemplate.cloneNode(true), a = new pt2(o, n, Et2(s2, this.plan, this.filters));
       return a.update(r), t.insertBefore(o, i), t.insertBefore(s2, i), t.insertBefore(n, i), a;
     }
     cloneRaw() {
@@ -39328,9 +39475,9 @@ cms-dashboard-icon svg {
     }
   }
   function Qr2(t) {
-    let r = new Set, i = Array.from(t.children), e = Array.from(t.querySelectorAll(`[${P2}]`));
+    let r = new Set, i = Array.from(t.children), e = Array.from(t.querySelectorAll(`[${E3}]`));
     for (let o of [...i, ...e])
-      for (let n of Hi2(o.getAttribute(P2)))
+      for (let n of Hi2(o.getAttribute(E3)))
         r.add(n);
     return r;
   }
@@ -39412,7 +39559,7 @@ cms-dashboard-icon svg {
     let i = Ni2(t);
     if (!i)
       return;
-    let e = {}, o = R3();
+    let e = {}, o = $();
     for (let [n, s2] of Object.entries(i))
       if (s2.from === "queryParam")
         e[n] = o.get(s2.name) ?? "";
@@ -39556,7 +39703,7 @@ cms-dashboard-icon svg {
     return typeof t === "object" && t !== null && Object.getPrototypeOf(t) === null;
   }
   var Ti = new Set(["POST", "PUT", "PATCH", "DELETE"]);
-  function $t2(t, r) {
+  function Rt2(t, r) {
     let i = (t ?? "").trim().toUpperCase();
     if (i === "GET" || i === "POST" || i === "PUT" || i === "PATCH" || i === "DELETE" || i === "HEAD")
       return i;
@@ -39565,13 +39712,13 @@ cms-dashboard-icon svg {
   function zt2(t, r) {
     let i = r.formData ?? W2(t);
     if (r.method === "GET" || r.method === "HEAD")
-      return { kind: "query", url: Yi2(r.url, i), formData: i, data: Rt2(i) };
-    let e = Wi2(Rt2(i), i, r.bodyFields);
+      return { kind: "query", url: Yi2(r.url, i), formData: i, data: $t2(i) };
+    let e = Wi2($t2(i), i, r.bodyFields);
     if (Ti.has(r.method) && Ui2(i))
       return { kind: "formData", url: r.url, formData: i, data: e, body: i };
     return { kind: "json", url: r.url, formData: i, data: e, body: JSON.stringify(e) };
   }
-  function Rt2(t) {
+  function $t2(t) {
     let r = {};
     for (let [i, e] of t.entries()) {
       if (Bt2(e))
@@ -39677,7 +39824,7 @@ cms-dashboard-icon svg {
         this.redirect(i);
     }
     sourceMethod() {
-      return $t2(this.element.getAttribute(Tt2), "POST");
+      return Rt2(this.element.getAttribute(Tt2), "POST");
     }
     submitUrl(t) {
       let r = new URL(t, location.href);
@@ -39734,19 +39881,19 @@ cms-dashboard-icon svg {
     let i = r.defaultView?.HTMLFormElement ?? globalThis.HTMLFormElement;
     return typeof i === "function" && t instanceof i ? t : null;
   }
-  var H = new WeakMap;
+  var H2 = new WeakMap;
   var Nt2 = new WeakMap;
   function Ir2(t, r) {
-    H.set(t, { value: r, local: Zt2(t) && D2(t.getAttribute("cms-source") ?? "") === "" });
+    H2.set(t, { value: r, local: Zt2(t) && D2(t.getAttribute("cms-source") ?? "") === "" });
   }
   function _r2(t, r) {
-    return Nt2.set(t, r), H.get(t);
+    return Nt2.set(t, r), H2.get(t);
   }
   function ti2(t) {
-    Nt2.delete(t), H.delete(t);
+    Nt2.delete(t), H2.delete(t);
   }
   function Zt2(t) {
-    return H.get(t)?.local === true;
+    return H2.get(t)?.local === true;
   }
   class Jt2 {
     el;
@@ -39786,25 +39933,25 @@ cms-dashboard-icon svg {
       this.el = t;
       this.filters = r;
       this.options = i;
-      this.formOwned = U3(t, t.ownerDocument) !== null && g2(t) !== "auto", this.submission = this.formOwned ? new jt2(t, r) : null;
-      let e = this.formOwned ? lr(t) : pr2(t);
+      this.formOwned = U3(t, t.ownerDocument) !== null && b(t) !== "auto", this.submission = this.formOwned ? new jt2(t, r) : null;
+      let e = this.formOwned ? pr2(t) : lr(t);
       this.renderer = new Ot(t, e, this.filters, { inPlace: this.formOwned }), this.presenter = new Vt2(t, e, this.renderer, this.options);
     }
     start() {
       this.stopContext = Xr2(this.el, () => {
         this.renderer.refreshContext(), this.afterRender();
       });
-      let t = g2(this.el) === "auto" ? _r2(this.el, (r) => this.acceptData(r)) : undefined;
+      let t = b(this.el) === "auto" ? _r2(this.el, (r) => this.acceptData(r)) : undefined;
       if (this.stopListeners = gr(this.el, { onReload: this.onReload, onReactiveUrlChange: this.onReactiveUrlChange, onSubmit: this.onSubmit, onChange: this.onChange }), t && !this.options.sourceStateForce)
         this.acceptData(t.value);
-      else if (g2(this.el) === "auto" || this.options.sourceStateForce)
+      else if (b(this.el) === "auto" || this.options.sourceStateForce)
         this.run();
       else {
         let r = w2(this.el.getAttribute(d2) ?? "");
         if (r.url)
           this.presenter.initial(r.alias), this.afterRender();
       }
-      this.el.setAttribute(l3, "");
+      this.el.setAttribute(p2, "");
     }
     dispose() {
       this.stopContext?.(), this.stopContext = null, ti2(this.el), this.abort?.abort(), this.abort = null, this.stopListeners?.(), this.stopListeners = null;
@@ -39912,7 +40059,7 @@ cms-dashboard-icon svg {
       }
       let r = this.sources.get(t);
       if (r) {
-        if (g2(t) === "auto")
+        if (b(t) === "auto")
           r.run({ onlyIfUrlChanged: true });
       } else
         this.registerSource(t);
@@ -39968,12 +40115,12 @@ cms-dashboard-icon svg {
       if (t !== this.root && !this.root.contains(t))
         return false;
       for (let r = t.parentElement;r && r !== this.root; r = r.parentElement)
-        if (r.localName === m2 || r.hasAttribute(S2))
+        if (r.localName === m2 || r.hasAttribute(y2))
           return false;
       return true;
     }
     hasSourceInput(t) {
-      return D2(t.getAttribute(d2) ?? "").trim() !== "" || g2(t) === "auto" && Zt2(t);
+      return D2(t.getAttribute(d2) ?? "").trim() !== "" || b(t) === "auto" && Zt2(t);
     }
   }
 
@@ -40015,7 +40162,7 @@ cms-dashboard-icon svg {
       return true;
     }
   }
-  var ne2 = `${m2}{display:contents}[${d2}]:not([${l3}]){visibility:hidden}`;
+  var ne2 = `${m2}{display:contents}[${d2}]:not([${p2}]){visibility:hidden}`;
 
   // src/components/admin/DashboardWorkspace/configuration/MemberFilter.ts
   class CmsDashboardMemberFilter extends HTMLElement {
@@ -52824,7 +52971,7 @@ textarea:disabled {
   // ../../foundation/components/dist/binding-dom.js
   var Y3 = ["src", "srcset", "sizes", "media", "width", "height"];
   var X3 = "data-cms-network-inert";
-  var x2 = "img,picture,source";
+  var x3 = "img,picture,source";
   function $2(j, z2) {
     if (!Q3(j))
       return j.getAttribute(z2);
@@ -52846,34 +52993,34 @@ textarea:disabled {
   var W3 = ["sizes", "media"];
   var D3 = "template";
   function L3(j) {
-    let z2 = V3(j, x2), F3 = new Set;
-    for (let H2 of z2.filter((J3) => J3.localName === "picture")) {
-      let J3 = [H2, ...Array.from(H2.querySelectorAll("img,source")).filter((f3) => f3.closest("picture") === H2)];
+    let z2 = V3(j, x3), F3 = new Set;
+    for (let H3 of z2.filter((J3) => J3.localName === "picture")) {
+      let J3 = [H3, ...Array.from(H3.querySelectorAll("img,source")).filter((f3) => f3.closest("picture") === H3)];
       if (J3.forEach((f3) => F3.add(f3)), J3.some(C3))
         J3.forEach(y3);
     }
-    for (let H2 of z2)
-      if (!F3.has(H2) && C3(H2))
-        y3(H2);
-    for (let H2 of V3(j, D3))
-      L3(H2.content);
+    for (let H3 of z2)
+      if (!F3.has(H3) && C3(H3))
+        y3(H3);
+    for (let H3 of V3(j, D3))
+      L3(H3.content);
   }
   function S3(j) {
-    for (let z2 of V3(j, x2)) {
+    for (let z2 of V3(j, x3)) {
       let F3 = z2.hasAttribute(X3);
-      for (let H2 of Y3) {
-        let J3 = Z3(H2);
+      for (let H3 of Y3) {
+        let J3 = Z3(H3);
         if (z2.hasAttribute(J3))
-          z2.setAttribute(H2, z2.getAttribute(J3) ?? ""), z2.removeAttribute(J3);
+          z2.setAttribute(H3, z2.getAttribute(J3) ?? ""), z2.removeAttribute(J3);
         else if (F3)
-          z2.removeAttribute(H2);
+          z2.removeAttribute(H3);
       }
       z2.removeAttribute(X3);
     }
     for (let z2 of V3(j, D3))
       S3(z2.content);
   }
-  function p2(j, z2, F3) {
+  function p3(j, z2, F3) {
     if (!Q3(j)) {
       if (F3 === null)
         j.removeAttribute(z2);
@@ -52881,43 +53028,43 @@ textarea:disabled {
         j.setAttribute(z2, F3);
       return;
     }
-    let H2 = Z3(z2);
+    let H3 = Z3(z2);
     if (F3 === null) {
-      j.removeAttribute(z2), j.removeAttribute(H2);
+      j.removeAttribute(z2), j.removeAttribute(H3);
       return;
     }
     if (q3(F3) || G3.includes(z2) && !F3.trim()) {
-      j.setAttribute(H2, F3), j.removeAttribute(z2), L3(j.localName === "picture" ? j : j.closest("picture") ?? j);
+      j.setAttribute(H3, F3), j.removeAttribute(z2), L3(j.localName === "picture" ? j : j.closest("picture") ?? j);
       return;
     }
     if (M3(j)) {
-      j.setAttribute(H2, F3), j.removeAttribute(z2);
+      j.setAttribute(H3, F3), j.removeAttribute(z2);
       return;
     }
-    j.removeAttribute(H2), j.setAttribute(z2, F3);
+    j.removeAttribute(H3), j.setAttribute(z2, F3);
   }
   function y3(j) {
     let z2 = new Map(Y3.map((F3) => [F3, $2(j, F3)]));
     j.setAttribute(X3, "");
     for (let F3 of Y3) {
-      let H2 = z2.get(F3);
-      if (H2 !== null && H2 !== undefined)
-        j.setAttribute(Z3(F3), H2);
+      let H3 = z2.get(F3);
+      if (H3 !== null && H3 !== undefined)
+        j.setAttribute(Z3(F3), H3);
       j.removeAttribute(F3);
     }
   }
   function C3(j) {
-    return j.hasAttribute(X3) || P3(j) || G3.some((z2) => h3($2(j, z2))) || W3.some((z2) => q3($2(j, z2)));
+    return j.hasAttribute(X3) || P2(j) || G3.some((z2) => h3($2(j, z2))) || W3.some((z2) => q3($2(j, z2)));
   }
   function M3(j) {
-    if (j.hasAttribute(X3) || P3(j))
+    if (j.hasAttribute(X3) || P2(j))
       return true;
     let z2 = j.localName === "picture" ? j : j.closest("picture");
     if (!z2)
       return false;
-    return [z2, ...Array.from(z2.querySelectorAll("img,source"))].some((F3) => F3.hasAttribute(X3) || P3(F3));
+    return [z2, ...Array.from(z2.querySelectorAll("img,source"))].some((F3) => F3.hasAttribute(X3) || P2(F3));
   }
-  function P3(j) {
+  function P2(j) {
     return Y3.some((z2) => j.hasAttribute(Z3(z2)));
   }
   function h3(j) {
@@ -55887,7 +56034,7 @@ label {
       this._overlay.style.height = `${rect.height}px`;
     };
     _measurementTargets(target2) {
-      if (!I2(target2)) {
+      if (!I(target2)) {
         return [target2];
       }
       const output = Array.from(target2.children).find((element) => element.hasAttribute(s));
@@ -57039,12 +57186,12 @@ label {
     return runtime2.getClosestEditor(editor.target.parentElement)?.target === editor.target ? null : runtime2.getClosestEditor(editor.target.parentElement) ?? null;
   }
   function slotChildCount2(parent, slot) {
-    const children = I2(parent.target) ? Array.from(parent.target.querySelectorAll(`[${f2}]`)).filter((element) => nearestCompositionHost(element) === parent.target) : Array.from(parent.target.children);
+    const children = I(parent.target) ? Array.from(parent.target.querySelectorAll(`[${f2}]`)).filter((element) => nearestCompositionHost(element) === parent.target) : Array.from(parent.target.children);
     return children.filter((child) => (child.hasAttribute(f2) ? child.getAttribute(f2) || undefined : child.getAttribute("slot") ?? undefined) === (slot.slot ?? undefined)).length;
   }
   function nearestCompositionHost(element) {
     for (let parent = element.parentElement;parent; parent = parent.parentElement) {
-      if (I2(parent)) {
+      if (I(parent)) {
         return parent;
       }
     }
@@ -58309,7 +58456,7 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Domain/Settings/settingAttributes.ts
   function writeSettingAttribute(element, name, value3) {
     if (isNetworkBindingAttribute2(name)) {
-      p2(element, name, value3);
+      p3(element, name, value3);
       return;
     }
     if (value3 === null) {
@@ -59395,13 +59542,13 @@ label {
         });
       }
       getTextCapability() {
-        if (I2(this.target)) {
+        if (I(this.target)) {
           return null;
         }
         return this._managedNativeEditor?.getTextCapability() ?? (this._textCapabilityOverride !== undefined ? this._textCapabilityOverride : super.getTextCapability());
       }
       setTextCapability(capability) {
-        if (I2(this.target)) {
+        if (I(this.target)) {
           return;
         }
         this._textCapabilityOverride = capability;
@@ -59635,7 +59782,7 @@ label {
     let authored = element.hasAttribute(f2);
     for (let parent = element.parentElement;parent; parent = parent.parentElement) {
       authored ||= parent.hasAttribute(f2);
-      if (I2(parent)) {
+      if (I(parent)) {
         return !authored;
       }
     }

@@ -20,6 +20,17 @@ export function compileAttributes(
         plan.values.push({ path, expression: value });
     }
     for (const attribute of Array.from(element.attributes)) {
+        if (attribute.name.startsWith("cms-bind-boolean-")) {
+            const name = attribute.name.slice("cms-bind-boolean-".length);
+            if (
+                /^[a-z][a-z0-9-]*$/.test(name) &&
+                /^[\w$.-]+$/.test(attribute.value) &&
+                !pathOwnedBySubmitSource(attribute.value, boundary)
+            ) {
+                plan.attributes.push({ path, name, template: attribute.value, boolean: true });
+            }
+            continue;
+        }
         if (attribute.value.includes("{{") && !bindingOwnedBySubmitSource(attribute.value, boundary)) {
             plan.attributes.push({ path, name: attribute.name, template: attribute.value });
         }

@@ -70,7 +70,10 @@ unknown): void`. Objects, arrays, booleans, numbers, null and undefined retain
 their types; the engine does not serialize them into attributes. The expression
 is a scope path, not JavaScript, interpolation or an arbitrary property name.
 Native checkboxes also accept this binding: only the boolean `true` checks the
-input; every other value unchecks it. Other native elements do not receive it.
+input; every other value unchecks it. Native text/search inputs (including an
+input without a type), single selects and textareas receive string values, with
+null or undefined becoming an empty string. File inputs and multiple selects
+do not receive this binding.
 
 ```html
 <example-chart cms-bind-value="catalogue.totals"></example-chart>
@@ -90,6 +93,19 @@ local check/uncheck during an unrelated refresh. A changed bound value updates
 the checked property directly; it is not rendered as `checked="false"`, which
 HTML would interpret as checked. Static HTML boolean attributes keep their
 normal presence semantics. This does not bind arbitrary DOM properties.
+
+Use `cms-bind-boolean-invalid="directory.failed"` to bind an attribute's
+presence to a scope path. Only the boolean `true` adds the named attribute;
+every other value removes it. The suffix is a lowercase attribute name, and
+the expression accepts a path only. This also works with native boolean
+attributes such as `disabled` or `required`. Use ordinary interpolation for
+string-valued attributes such as `aria-expanded`, where `"false"` is meaningful.
+
+Both interpolated attributes and boolean attribute bindings apply only when
+their evaluated result changes. Unrelated context refreshes therefore preserve
+local control feedback, such as a required-field error. A changed bound result
+replaces that local attribute value. Source and submit-result boundaries still
+determine which scope owns a binding.
 
 Keep bound children in light DOM under the page core. A visual component may
 slot them into an encapsulated Shadow DOM shell; it must not create another

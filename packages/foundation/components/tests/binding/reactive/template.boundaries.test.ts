@@ -97,4 +97,25 @@ describe("CompiledTemplate — boundaries", () => {
         expect(core.getAttribute("data-id")).toBe("outer");
         expect(text(core.querySelector("span"))).toBe("{{ id }}");
     });
+
+    test("boolean attributes respect nested source and submit-result ownership", () => {
+        const { host, region } = mount(
+            `<form cms-source="/save as result" cms-source-trigger="submit">
+                <input cms-bind-boolean-required="required">
+                <button cms-bind-boolean-disabled="result.pending" disabled>Save</button>
+            </form>
+            <section cms-source="/nested" cms-bind-boolean-hidden="hidden">
+                <input cms-bind-boolean-required="required">
+            </section>`,
+            { required: true, hidden: true, result: { pending: false } },
+        );
+        expect(host.querySelector("form input")!.hasAttribute("required")).toBe(true);
+        expect(host.querySelector("button")!.hasAttribute("disabled")).toBe(true);
+        expect(host.querySelector("section")!.hasAttribute("hidden")).toBe(true);
+        expect(host.querySelector("section input")!.hasAttribute("required")).toBe(false);
+        region.update({ value: { required: false, hidden: false, result: { pending: false } } });
+        expect(host.querySelector("form input")!.hasAttribute("required")).toBe(false);
+        expect(host.querySelector("button")!.hasAttribute("disabled")).toBe(true);
+        expect(host.querySelector("section")!.hasAttribute("hidden")).toBe(false);
+    });
 });

@@ -144,3 +144,44 @@ test("native text and select bindings preserve drafts until their bound value ch
     expect(input.value).toBe("");
     expect(host.querySelector<HTMLInputElement>('input[type="file"]')!.value).toBe("");
 });
+
+test("boolean attribute bindings remove false flags without replacing the focused control", () => {
+    const { host, region } = mount('<input cms-bind-boolean-invalid="failed" cms-bind-boolean-required="required">', {
+        failed: true,
+        required: false,
+    });
+    const input = host.querySelector("input")!;
+    expect(input.getAttribute("invalid")).toBe("");
+    expect(input.required).toBe(false);
+    input.focus();
+    input.value = "Keep this draft";
+    input.setSelectionRange(1, 4);
+    for (const failed of [false, undefined, null, "true", "false", 1]) {
+        region.update({ value: { failed, required: true } });
+        expect(input.hasAttribute("invalid")).toBe(false);
+        expect(input.required).toBe(true);
+        expect([input.value, input.selectionStart, input.selectionEnd]).toEqual(["Keep this draft", 1, 4]);
+        expect(document.activeElement).toBe(input);
+    }
+    region.update({ value: { failed: true } });
+    expect(input.hasAttribute("invalid")).toBe(true);
+    expect(input.required).toBe(false);
+});
+
+test("unchanged external validation bindings leave local field validation feedback intact", () => {
+    const { host, region } = mount('<input cms-bind-boolean-invalid="failed" hint="{{ message }}">', {
+        failed: false,
+        message: "",
+    });
+    const input = host.querySelector("input")!;
+    input.setAttribute("invalid", "");
+    input.setAttribute("hint", "This field is required.");
+    region.update({ value: { failed: false, message: "", unrelated: "Changed" } });
+    expect(input.hasAttribute("invalid")).toBe(true);
+    expect(input.getAttribute("hint")).toBe("This field is required.");
+    region.update({ value: { failed: true, message: "Directory unavailable" } });
+    expect(input.getAttribute("hint")).toBe("Directory unavailable");
+    region.update({ value: { failed: false, message: "" } });
+    expect(input.hasAttribute("invalid")).toBe(false);
+    expect(input.getAttribute("hint")).toBe("");
+});

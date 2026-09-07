@@ -1,3 +1,4 @@
+import { composeUserOptions } from "../lookups/users";
 import { composeLookup } from "../lookups/composition";
 import type { DashboardField } from "@bernouy/cms-dashboards";
 import controls from "cms-control/static/admin/_content/sources/_runtime/detail/controls.html" with { type: "text" };
@@ -75,6 +76,9 @@ export function fieldElement(field: DashboardField, root: string): HTMLElement {
                 control.toggleAttribute("creatable", field.allowCustom === true);
                 control.setAttribute("placeholder", "");
             }
+        }
+        if (field.type === "cms-user") {
+            composeUserOptions(control, field.id);
         }
         if (field.type === "secret-ref") {
             control.setAttribute("api", route("/api/secrets"));

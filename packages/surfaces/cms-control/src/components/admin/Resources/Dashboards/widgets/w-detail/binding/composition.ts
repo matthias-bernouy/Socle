@@ -1,3 +1,4 @@
+import { directoryElement } from "../lookups/users";
 import type { DashboardNavigationListWidget, DashboardSection } from "@bernouy/cms-dashboards";
 import type { DetailWidget } from "../runtime/fieldState";
 import { composeActions } from "./actions";
@@ -5,6 +6,7 @@ import { fieldElement } from "./fields";
 import "./Field";
 
 const supported = new Set([
+    "cms-user",
     "text",
     "number",
     "textarea",
@@ -50,6 +52,13 @@ export function composeDetail(
     }
     fragment.append(title);
     fragment.append(composeActions());
+    if (
+        [...widget.main, ...(widget.aside ?? [])].some(
+            (section) => !("widget" in section) && section.fields.some((field) => field.type === "cms-user"),
+        )
+    ) {
+        fragment.append(directoryElement());
+    }
     for (const [slot, sections] of [
         ["bound-main", widget.main],
         ["bound-aside", widget.aside ?? []],

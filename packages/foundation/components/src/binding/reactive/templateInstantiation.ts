@@ -23,7 +23,7 @@ export function instantiateSites(root: Node, plan: CompilePlan, filters: FilterM
         if (node.nodeType !== Node.ELEMENT_NODE) {
             throw new Error("Compiled attribute binding no longer points to an element.");
         }
-        sites.push(new AttributeSite(node as Element, attribute.name, attribute.template, filters));
+        sites.push(new AttributeSite(node as Element, attribute.name, attribute.template, filters, attribute.boolean));
     }
     for (const { item: condition, node } of conditionTargets) {
         const range = replaceWithAnchors(node, "cms-condition");

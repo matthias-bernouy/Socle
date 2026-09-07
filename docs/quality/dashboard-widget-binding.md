@@ -524,3 +524,60 @@ CMS-user controls and lookups nested in editable collections. It must be removed
 as those controls migrate. Schemas, media, collection controls, metadata relays,
 real local persistence and final runtime activation remain outstanding. This
 checkpoint does not complete the goal or the full verification matrix.
+
+## Shared CMS-user directory checkpoint
+
+Top-level CMS-user fields now use light-DOM comboboxes and option repeats from
+`sources/_runtime/detail/users.html`. A single hidden `cms-dashboard-directory`
+source fetches `/api/users` lazily when at least one user field becomes visible.
+Its controller announces lifecycle changes without transporting the response;
+the owner projects options from the binding's source cache. Several controls
+share that read, and hiding/revealing them retains the successful directory.
+The existing mapping preserves opaque subjects, user labels and unknown-user
+fallbacks. Before a successful read, an unresolved selected subject retains its
+raw label, including during an initial directory failure.
+
+The binding now supports `cms-bind-boolean-<attribute>` for strict-boolean
+presence, required for the existing combobox's `invalid` contract: a string
+`invalid="false"` still marks it invalid. Focused tests cover true/false and
+nonboolean values, nested source and submit-result ownership, and local
+validation feedback. Interpolated attributes and presence bindings retain the
+last applied result, so an unrelated context refresh does not erase a local
+required-field message. A changed bound result still applies. The contract is
+documented in `docs/blocs/data-bindings.md`; no private core or template/key
+mechanism was added.
+
+Browser scenarios cover a shared lazy read, conditional hide/reveal, required
+validation, exact subject save payloads, server normalization and full reloads.
+A held directory response preserves a long-form draft, focus, text selection,
+scroll and navigation geometry over five frames. Another scenario preserves
+an open user search and its text selection when options arrive. Failure then
+focus/click retry performs one new read and clears the error state. Persistence
+is provided by controlled browser routes, not a real local database. The common
+detail fixture now declares UTF-8 so its Unicode user labels match the actual
+admin document instead of being decoded using a legacy browser encoding.
+
+Desktop/mobile loaded/error screenshots retain identical field geometry and
+were inspected against the original goal bundle. Three latest pairs are pixel
+identical; the desktop loaded pair differs by 22 pixels at rounded control
+corners. Five sequential fixture runs measured median loaded readiness of
+189.3ms before / 198.5ms after on desktop (ranges 182.8–210.9 / 181.1–201.9ms)
+and 183.4 / 193.6ms on mobile (164.2–186.4 / 171.5–207.1ms). Error-state medians
+were 163.3 / 172.9ms desktop and 159.6 / 160.7ms mobile. Every run made one
+directory request. These measurements show a modest readiness increase, not a
+speedup or a measurement of local-service latency. Evidence is in
+`cms-user-captures/`, `cms-user-timings.json`, `cms-user-visual-*.log` and
+`cms-user-browser/` under the shared evidence directory.
+
+Validation includes 256 binding tests, 180 Control dashboard/widget/detail
+tests, all 27 dashboard browser files run individually, and the additional
+open-query stability test (29 browser tests in total). The build passes.
+Initial and final check:all pass all eight gates; UI contracts remain at
+0 errors, 77 warnings and 11 informational findings, with no directory-fanout
+errors. The attribute-binding test file is now 187 lines: it remains cohesive
+around live text/attribute/value application, so the advisory size finding is
+retained rather than creating another narrowly split test file.
+The legacy CMS-user loader remains only for details with unmigrated complex
+controls. Schemas, media, editable collections, metadata relays, real local
+persistence and final runtime activation remain outstanding. This checkpoint
+does not complete the goal.

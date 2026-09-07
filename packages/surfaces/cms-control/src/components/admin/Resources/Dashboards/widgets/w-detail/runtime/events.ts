@@ -1,3 +1,4 @@
+import type { DashboardDirectory } from "../lookups/Directory";
 import {
     emitWidgetEvent,
     WIDGET_ACTION_EVENT,
@@ -205,6 +206,10 @@ export class DetailEvents {
         const control = target?.closest<HTMLElement>("[data-field-control]");
         const field = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
         if (field?.input === "cms-user") {
+            if (this.host.hasAttribute("data-declarative")) {
+                this.host.querySelector<DashboardDirectory>("cms-dashboard-directory")?.retry();
+                return;
+            }
             this.lookups.retryCmsUser(field.id);
         }
     }

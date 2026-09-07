@@ -18,14 +18,32 @@ export class TextSite implements LiveBindingSite {
 }
 
 export class AttributeSite implements LiveBindingSite {
+    private applied = false;
+    private lastValue: string | boolean = "";
     constructor(
         private readonly element: Element,
         private readonly name: string,
         private readonly template: string,
         private readonly filters: FilterMap,
+        private readonly boolean = false,
     ) {}
     update(scope: Scope): void {
-        const value = interpolateString(this.template, scope, this.filters);
+        const next = this.boolean
+            ? lookup(scope, this.template).value === true
+            : interpolateString(this.template, scope, this.filters);
+        if (this.applied && next === this.lastValue) {
+            return;
+        }
+        this.applied = true;
+        this.lastValue = next;
+        if (this.boolean) {
+            const present = next === true;
+            if (this.element.hasAttribute(this.name) !== present) {
+                this.element.toggleAttribute(this.name, present);
+            }
+            return;
+        }
+        const value = String(next);
         if (this.element.getAttribute(this.name) !== value) {
             this.element.setAttribute(this.name, value);
         }

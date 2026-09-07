@@ -1,3 +1,4 @@
+import { directoryContext } from "../lookups/directoryContext";
 import { detailLookupUrls } from "../lookups/urls";
 import { readSourceData, setSourceContext } from "@bernouy/components";
 import { fieldValues } from "../../../runtime/mapping";
@@ -16,6 +17,7 @@ export function bindDetailContext(
     const fields = [...widget.main, ...(widget.aside ?? [])].flatMap((section) =>
         "widget" in section ? [] : section.fields,
     );
+    const users = directoryContext(host, fields);
     const actions = actionLayout(widget.actions ?? []);
     const rules = Object.fromEntries(fields.map((field) => [field.id, field.visibleWhen]));
     setSourceContext(host, () => {
@@ -61,6 +63,7 @@ export function bindDetailContext(
                 }),
         );
         return {
+            ...users(values, resource),
             detailResourcePath: widget.source.itemPath ?? "",
             detailLookupUrls: detailLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
             detailReady: resource !== null && resource !== undefined,
