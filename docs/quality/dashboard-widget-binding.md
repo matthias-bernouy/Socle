@@ -581,3 +581,69 @@ The legacy CMS-user loader remains only for details with unmigrated complex
 controls. Schemas, media, editable collections, metadata relays, real local
 persistence and final runtime activation remain outstanding. This checkpoint
 does not complete the goal.
+
+## Media reference and lifecycle findings
+
+The media migration now has a dedicated browser fixture in
+`tests/browser/dashboards/detail-binding/media/`. It exercises a row-scoped
+detail with actual browser file selection and multipart requests, backed by
+controlled routes. Tests verify file names, MIME types and exact file contents;
+upload, replacement, removal and ordering are reread after full reloads. A
+multiple-file choice sends each file once and restores the five persisted
+items. These checks establish fixture persistence only, not local-service
+storage or a provider upload.
+
+A failed upload reports the 503 error and leaves persisted media unchanged.
+Reloading restores the three stored images; choosing the file again succeeds,
+and another full reload retains it. This verifies recovery through an explicit
+reload, not an inline retry or rollback of an optimistic tile.
+
+Preview coverage includes opening originals, thumbnail selection, Home/End,
+arrow wrapping, Escape/Close, focus restoration, broken images and single-image
+navigation visibility. No preview interaction enters the file picker or writes
+data. The test waits for the native dialog's asynchronous close cleanup before
+asserting that the original image URL has been cleared.
+
+Six desktop/mobile grid, preview and empty-state pairs were compared against
+the original goal bundle. Geometry and pixels match exactly; the grid and
+preview images were inspected. Captures and per-state readiness observations
+are in `media-captures/` and `media-visual.log`. The code still uses the old
+media renderer, so these are reference evidence, not proof of its migration.
+The relocated read-only test and its stability helper pass from `readonly/`;
+this grouping keeps the detail-binding directory at eight entries.
+
+The executable `media/baseline.ts` deliberately reports observations instead of
+claiming a passing stability test. Run it with `bun run` from the workspace root;
+`CMS_MEDIA_BASELINE` optionally selects the preserved goal bundle. Both the
+original bundle and the current bundle reproduce silent draft loss: typing
+`Draft during the pending upload` while an upload is held leaves the input stable
+for five frames, but completion restores `Saved notes`, loses focus and changes
+the selection from `[2, 8]` to `[11, 11]`. Scroll remains 792px and the field and
+navigation geometry remain identical. Thus screenshots alone miss this defect.
+The observations are saved as `media-stability-before.json` and
+`media-stability-current.json` in the evidence directory. Each scenario has one
+media action and three detail reads: initial display, the action's resource
+prefetch and its completion refresh. Single observations of response release
+to normalized image display were 15.1ms and 14.8ms; they are not performance
+comparison evidence.
+
+Two source-backed constraints drive the next implementation. The grid's
+`renderGrid()` and preview's `render()` still construct response-driven DOM and
+must be replaced with document-visible binding templates. File selection,
+object-URL ownership, drag interactions and native dialog focus handling remain
+necessary interactions. `runDashboardMediaAction` also currently returns early
+without a detail selection: standalone media actions need explicit coverage
+and correction rather than being hidden by the row-scoped fixture. The legacy
+detail refresh clears local state after an action; preserving unrelated drafts
+and applying only the acknowledged media change is a required migration gate.
+
+The five new media browser tests pass, alongside the relocated read-only test.
+There are now 31 dashboard browser files containing 34 tests; the whole suite
+was not rerun for this test-only checkpoint. Media rendering, failed-operation
+inline recovery, concurrent mutations, real local persistence and the complete goal
+remain unfinished.
+
+Initial and final check:all pass all eight gates for this reference checkpoint.
+UI-contract totals remain 0 errors, 77 warnings and 11 informational findings;
+there are no directory-fanout errors. No production code or generated bundle
+changed in this checkpoint.

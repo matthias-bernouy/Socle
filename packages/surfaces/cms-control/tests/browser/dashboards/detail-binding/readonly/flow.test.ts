@@ -1,13 +1,15 @@
-import { installReadonlyRoutes } from "./fixture";
+import { installReadonlyRoutes } from "../fixture";
 import { checkRefreshStability } from "./stability";
 import { expect, test } from "bun:test";
 import { chromium } from "playwright";
 import { resolve } from "node:path";
 import { mkdir } from "node:fs/promises";
 
-const bundle = await Bun.file(resolve(import.meta.dir, "../../../../src/static/assets/control-components.js")).text();
+const bundle = await Bun.file(
+    resolve(import.meta.dir, "../../../../../src/static/assets/control-components.js"),
+).text();
 const styles = await Bun.file(
-    resolve(import.meta.dir, "../../../../../../foundation/components/dist/style.css"),
+    resolve(import.meta.dir, "../../../../../../../foundation/components/dist/style.css"),
 ).text();
 
 test("readonly binding preserves desktop/mobile layout, loads images and keeps edits stable on refresh", async () => {
