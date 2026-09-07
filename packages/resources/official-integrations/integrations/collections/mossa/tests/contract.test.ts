@@ -18,8 +18,8 @@ describe("Mossa collection 1.0.0", () => {
         const tags = artifacts.map(({ bloc }) => bloc.tag);
 
         expect(mossa.version).toBe("1.0.0");
-        expect(mossa.resources).toHaveLength(96);
-        expect(artifacts).toHaveLength(96);
+        expect(mossa.resources).toHaveLength(99);
+        expect(artifacts).toHaveLength(99);
         expect(new Set(tags).size).toBe(tags.length);
         expect(tags.every((tag) => tag.startsWith("mossa-"))).toBe(true);
         expect(mossa.resources.every(({ id }) => id.startsWith("mossa/blocs/"))).toBe(true);

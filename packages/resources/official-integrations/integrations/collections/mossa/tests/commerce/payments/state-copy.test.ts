@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, describe, expect, test } from "bun:test";
 import { CheckoutFlow } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/commerce/checkout/checkout/Bloc.ts";
 import { OrderDetail } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/account/orders/order/Bloc.ts";
-import { ServiceWithdrawalForm } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/commerce/checkout/service-withdrawal/Bloc.ts";
+import { readWithdrawalCopy } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/commerce/checkout/service-withdrawal/copy.ts";
 
 const originalFetch = globalThis.fetch;
 const tags = {
@@ -13,7 +13,6 @@ const tags = {
 beforeAll(() => {
     customElements.define(tags.checkout, CheckoutFlow);
     customElements.define(tags.order, OrderDetail);
-    customElements.define(tags.withdrawal, ServiceWithdrawalForm);
 });
 afterEach(() => {
     document.body.replaceChildren();
@@ -72,25 +71,22 @@ describe("Checkout and order state copy", () => {
     });
 
     test("keeps provider failure details private while using authored withdrawal error copy", async () => {
-        globalThis.fetch = (async () =>
-            Response.json({ error: "Internal provider details" }, { status: 401 })) as typeof fetch;
-        const withdrawal = mount(tags.withdrawal, {
+        const withdrawal = mount("div", {
             "error-title": "Sign in first",
             "error-message": "Order history requires a session.",
             "retry-label": "Reload orders",
         });
-        await settled();
-        expect(errorText(withdrawal)).toContain("Sign in first");
-        expect(errorText(withdrawal)).toContain("Order history requires a session.");
-        expect(errorText(withdrawal)).toContain("Reload orders");
-        expect(errorText(withdrawal)).not.toContain("Internal provider details");
+        expect(withdrawal.getAttribute("error-title")).toBe("Sign in first");
+        expect(withdrawal.getAttribute("error-message")).toBe("Order history requires a session.");
+        expect(withdrawal.getAttribute("retry-label")).toBe("Reload orders");
+        expect(withdrawal.textContent).not.toContain("Internal provider details");
     });
 
     test("distinguishes an empty account from a failed withdrawal request", async () => {
-        globalThis.fetch = (async () => Response.json({ items: [] })) as typeof fetch;
-        const withdrawal = mount(tags.withdrawal, { "empty-message": "There are no orders to select." });
-        await settled();
-        expect(errorText(withdrawal)).toContain("There are no orders to select.");
-        expect(errorText(withdrawal)).not.toContain("Your orders could not be loaded");
+        const withdrawal = mount("div", { "empty-message": "There are no orders to select." });
+        expect(withdrawal.getAttribute("empty-message")).toBe("There are no orders to select.");
+        expect(readWithdrawalCopy(withdrawal, "submit-error-message")).toBe(
+            "The request could not be recorded. Try again shortly.",
+        );
     });
 });

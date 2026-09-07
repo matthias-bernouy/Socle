@@ -1,34 +1,16 @@
-import { afterEach, beforeAll, expect, test } from "bun:test";
-import { PurchaseList } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/account/orders/purchases/Bloc.ts";
-
-const tag = "mossa-purchases-populated-test";
-const originalFetch = globalThis.fetch;
-
-beforeAll(() => {
-    if (!customElements.get(tag)) {
-        customElements.define(tag, class extends PurchaseList {});
-    }
-});
+import { afterEach, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
+import { syncPurchaseItems } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/account/orders/purchases/presentation.ts";
 
 afterEach(() => {
     document.body.replaceChildren();
-    globalThis.fetch = originalFetch;
     window.history.replaceState(null, "", "/");
 });
 
-const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
-const order = { id: 42, status: "active", totalAmount: 4000, currency: "eur", createdAt: "2026-09-06T12:00:00Z" };
-
-test("populated purchases apply copy changes without refetching and retain native pagination and order links", async () => {
-    const requests: string[] = [];
-    globalThis.fetch = (async (input: RequestInfo | URL) => {
-        requests.push(String(input));
-        return Response.json({
-            items: [{ ...order, lineSummary: { firstTitle: "Demo racket", lineCount: 3 } }],
-            total: 2,
-        });
-    }) as typeof fetch;
-    const list = document.createElement(tag);
+test("formats bound purchases and translates pagination into a source offset", async () => {
+    const list = document.createElement("div");
     for (const [name, value] of Object.entries({
         "page-size": "1",
         "order-url": "/order?id={orderId}",
@@ -40,81 +22,88 @@ test("populated purchases apply copy changes without refetching and retain nativ
         "label-active": "Preparing delivery",
         "pagination-previous-label": "Earlier",
         "pagination-next-label": "Later",
-        "pagination-summary-template": "{start}–{end} / {total} ({page}/{pages})",
     })) {
         list.setAttribute(name, value);
     }
-    document.body.append(list);
-    await settle();
-    const root = list.shadowRoot!;
-    expect(root.querySelector(".order-number")?.textContent).toBe("Demo racket with 2 more products");
-    expect(root.querySelector(".order-date")?.textContent).toBe("Purchase 42 · Purchased September 6, 2026");
-    expect(root.querySelector(".status")?.textContent).toBe("Preparing delivery");
-    expect(root.querySelector(".status")?.getAttribute("data-tone")).toBe("progress");
-    expect(root.querySelector(".amount span")?.textContent).toBe("Amount paid");
-    expect(root.querySelector(".amount strong")?.textContent).toBe("€40.00");
-    expect(root.querySelector("[data-page-label]")?.textContent).toBe("1–1 / 2 (1/2)");
-    const link = list.querySelector("a")!;
-    expect(link.getAttribute("href")).toBe("/order?id=42");
-    expect(link.textContent).toBe("Open purchase");
-    expect(link.closest("mossa-button")?.getAttribute("tone")).toBe("neutral");
-    for (const button of root.querySelectorAll("[data-pagination] mossa-button")) {
-        expect(button.getAttribute("tone")).toBe("neutral");
-    }
-    list.setAttribute("label-active", "Shipment being prepared");
-    expect(root.querySelector(".status")?.textContent).toBe("Shipment being prepared");
-    list.removeAttribute("label-active");
-    expect(root.querySelector(".status")?.textContent).toBe("Order in progress");
-    expect(list.querySelectorAll("[data-generated-purchase-action]").length).toBe(1);
-    expect(requests).toHaveLength(1);
-    const previous = root.querySelector<HTMLButtonElement>("[data-previous]")!;
-    const next = root.querySelector<HTMLButtonElement>("[data-next]")!;
-    expect(previous.textContent).toBe("Earlier");
-    expect(previous.disabled).toBe(true);
-    expect(next.textContent).toBe("Later");
-    next.click();
-    await settle();
-    expect(requests).toHaveLength(2);
-    expect(requests[1]).toContain("offset=1");
-    expect(root.querySelector("[data-page-label]")?.textContent).toBe("2–2 / 2 (2/2)");
-    expect(previous.disabled).toBe(false);
-    expect(next.disabled).toBe(true);
+    list.innerHTML = `
+        <input data-pagination-page type="hidden">
+        <section data-purchases-source>
+            <article
+                data-purchase-item
+                data-order-id="42"
+                data-first-title="Demo racket"
+                data-line-count="3"
+                data-created-at="2026-09-06T12:00:00Z"
+                data-order-status="active"
+                data-total-amount="4000"
+                data-currency="eur"
+            >
+                <strong data-purchase-title></strong>
+                <small data-purchase-meta></small>
+                <mossa-badge data-purchase-status></mossa-badge>
+                <span data-total-label></span>
+                <strong data-total-value></strong>
+                <mossa-button data-order-action><a></a></mossa-button>
+            </article>
+            <mossa-pagination data-pagination total="2"></mossa-pagination>
+        </section>`;
+    syncPurchaseItems(list);
+
+    expect(list.querySelector("[data-purchase-title]")?.textContent).toBe("Demo racket with 2 more products");
+    expect(list.querySelector("[data-purchase-meta]")?.textContent).toBe("Purchase 42 · Purchased September 6, 2026");
+    expect(list.querySelector("[data-purchase-status]")?.textContent).toBe("Preparing delivery");
+    expect(list.querySelector("[data-purchase-status]")?.getAttribute("tone")).toBe("primary");
+    expect(list.querySelector("[data-total-label]")?.textContent).toBe("Amount paid");
+    expect(list.querySelector("[data-total-value]")?.textContent).toBe("€40.00");
+    expect(list.querySelector("a")?.getAttribute("href")).toBe("/order?id=42");
+    expect(list.querySelector("a")?.textContent).toBe("Open purchase");
+
+    const controller = readFileSync(
+        resolve(
+            OFFICIAL_INTEGRATIONS_ROOT,
+            "collections/mossa/blocs/domains/account/orders/purchases/controller/Bloc.ts",
+        ),
+        "utf8",
+    );
+    expect(controller).toContain("mossa-pagination:change");
+    expect(controller).toContain("(page - 1) * this.pageSize");
+    expect(controller).not.toContain("fetch(");
 });
 
-test("operation status copy preserves precedence over order status and has English defaults", async () => {
-    const operations = [
+test("operation state keeps precedence over the order state", () => {
+    const states = [
         [{ settlementStatus: "blocked", claimStatus: "open" }, "review-required", "danger"],
-        [{ claimStatus: "open", paymentStatus: "refunded" }, "dispute-in-progress", "progress"],
-        [{ settlementStatus: "refund_pending" }, "refund-in-progress", "progress"],
+        [{ claimStatus: "open", paymentStatus: "refunded" }, "dispute-in-progress", "warning"],
+        [{ settlementStatus: "refund_pending" }, "refund-in-progress", "warning"],
         [{ paymentStatus: "refunded" }, "refunded", "neutral"],
         [{ paymentStatus: "partially_refunded" }, "partially-refunded", "neutral"],
         [{ paymentStatus: "failed" }, "payment-failed", "danger"],
-        [{ paymentStatus: "cancelled" }, "payment-cancelled", "danger"],
-        [{ paymentStatus: "processing" }, "payment-pending", "progress"],
+        [{ paymentStatus: "processing" }, "payment-pending", "warning"],
     ] as const;
-    globalThis.fetch = (async () =>
-        Response.json({
-            items: operations.map(([operation], index) => ({
-                ...order,
-                id: index + 1,
-                createdAt: "invalid",
-                operation,
-            })),
-            total: operations.length,
-        })) as typeof fetch;
-    const list = document.createElement(tag);
+    const list = document.createElement("div");
     list.setAttribute("unknown-date-label", "Date unavailable");
-    for (const [, status] of operations) {
+    list.innerHTML = `<section data-purchases-source>${states
+        .map(
+            ([operation], index) => `<article
+                data-purchase-item
+                data-order-id="${index + 1}"
+                data-created-at="invalid"
+                data-order-status="active"
+                data-settlement-status="${operation.settlementStatus || ""}"
+                data-payment-status="${operation.paymentStatus || ""}"
+                data-claim-status="${operation.claimStatus || ""}"
+            ><small data-purchase-meta></small><mossa-badge data-purchase-status></mossa-badge></article>`,
+        )
+        .join("")}</section>`;
+    for (const [, status] of states) {
         list.setAttribute(`label-${status}`, `Custom ${status}`);
     }
-    document.body.append(list);
-    await settle();
-    const rows = [...list.shadowRoot!.querySelectorAll(".purchase-row")];
-    for (const [index, [, status, tone]] of operations.entries()) {
-        expect(rows[index]?.querySelector(".status")?.textContent).toBe(`Custom ${status}`);
-        expect(rows[index]?.querySelector(".status")?.getAttribute("data-tone")).toBe(tone);
-        expect(rows[index]?.querySelector(".order-date")?.textContent).toBe("Placed on Date unavailable");
+    syncPurchaseItems(list);
+
+    const rows = [...list.querySelectorAll("[data-purchase-item]")];
+    for (const [index, [, status, tone]] of states.entries()) {
+        expect(rows[index]?.querySelector("[data-purchase-status]")?.textContent).toBe(`Custom ${status}`);
+        expect(rows[index]?.querySelector("[data-purchase-status]")?.getAttribute("tone")).toBe(tone);
+        expect(rows[index]?.querySelector("[data-purchase-meta]")?.textContent).toBe("Placed on Date unavailable");
     }
-    list.removeAttribute("label-partially-refunded");
-    expect(list.shadowRoot!.querySelectorAll(".status")[4]?.textContent).toBe("Partially refunded");
 });

@@ -14,7 +14,7 @@ export const purchaseCopy: Record<string, { selector: string; text: string; attr
         selector: "[data-error-message]",
         text: "Your purchases could not be loaded. Try again shortly.",
     },
-    "loading-label": { selector: "[data-loading] mossa-skeleton", attribute: "label", text: "Loading purchases" },
+    "loading-label": { selector: "[data-loading]", attribute: "label", text: "Loading purchases" },
     "pagination-label": { selector: "[data-pagination]", attribute: "aria-label", text: "Purchase pagination" },
 };
 
@@ -59,12 +59,13 @@ export function purchaseText(
 
 export function syncPurchaseCopy(host: HTMLElement): void {
     for (const [attribute, field] of Object.entries(purchaseCopy)) {
-        const element = host.shadowRoot?.querySelector(field.selector);
         const value = host.getAttribute(attribute)?.trim() || field.text;
-        if (field.attribute) {
-            element?.setAttribute(field.attribute, value);
-        } else if (element) {
-            element.textContent = value;
+        for (const element of host.querySelectorAll(field.selector)) {
+            if (field.attribute) {
+                element.setAttribute(field.attribute, value);
+            } else if (element.textContent !== value) {
+                element.textContent = value;
+            }
         }
     }
 }

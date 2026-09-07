@@ -75,9 +75,11 @@ describe("Mossa Commerce negotiation blocks", () => {
         expect(formRuntime).toContain("system-functions");
         expect(formViewSource).toContain('getAttribute("show-message") === "false"');
         expect(formViewSource).toContain("wholeUnitPrices");
-        expect(formViewSource).toContain('style.setProperty("display", "none", "important")');
-        expect(formViewSource).toContain('toast.setAttribute("tone", error ? "danger" : "success")');
-        expect(formViewSource).toContain('toast.setAttribute("appearance", "filled")');
+        expect(formRuntime).toContain('cms-source-trigger="submit"');
+        expect(formRuntime).toContain('cms-source-method="POST"');
+        expect(formViewSource).toContain("minorUnits");
+        expect(formViewSource).toContain('setAttribute(toast, "tone", error ? "danger" : "success")');
+        expect(formViewSource).not.toContain("fetch(");
         expect(formViewSource).not.toContain('"toast-error-background-color"');
         expect(formRuntime).toContain("<mossa-input");
         expect(formRuntime).toContain("<mossa-textarea");

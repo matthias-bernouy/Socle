@@ -19,7 +19,7 @@ import {
     shippingAmount,
     variantLabel,
 } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/commerce/offers/details/commerce-sale-detail/helpers.ts";
-import { renderSale } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/commerce/offers/details/commerce-sale-detail/render.ts";
+import { syncSalePresentation } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/commerce/offers/details/commerce-sale-detail/presentation.ts";
 
 const blocsRoot = resolve(OFFICIAL_INTEGRATIONS_ROOT, "collections/mossa/blocs/domains/commerce/offers/details");
 
@@ -201,87 +201,82 @@ describe("Commerce seller blocs", () => {
     });
 
     test("renders the server-snapshotted seller proceeds instead of the buyer total", () => {
-        const values = new Map<string, string>();
-        const status = { dataset: {} as Record<string, string>, textContent: "" };
-        const lines = { replaceChildren: (..._children: unknown[]) => undefined };
-        const host = {
-            locale: "fr-FR",
-            root: { querySelector: (selector: string) => (selector === "[data-order-status]" ? status : lines) },
-            setText: (selector: string, value: string) => values.set(selector, value),
-            statusLabel: () => "À traiter",
-            text: (_attribute: string, fallback: string) => fallback,
+        const host = document.createElement("div") as HTMLElement & {
+            locale: string;
+            statusLabel(status: string): string;
+            text(name: string, fallback: string): string;
         };
+        host.locale = "fr-FR";
+        host.statusLabel = () => "À traiter";
+        host.text = (_name, fallback) => fallback;
+        host.innerHTML = `
+            <i
+                data-sale-summary
+                data-status="placed"
+                data-currency="eur"
+                data-financial-currency="eur"
+                data-merchandise-subtotal-amount="11000"
+                data-financial-shipping-amount="450"
+                data-seller-commission-amount="550"
+                data-platform-shipping-share-amount="450"
+                data-seller-shipping-share-amount="0"
+                data-seller-proceeds-amount="10450"
+            ></i>
+            <span data-order-number></span><span data-order-date></span><span data-order-status></span>
+            <span data-subtotal></span><span data-commission></span><span data-shipping></span><span data-total></span>`;
 
-        renderSale(host, {
-            id: 42,
-            status: "placed",
-            currency: "eur",
-            subtotalAmount: 11_000,
-            shippingAmount: 450,
-            totalAmount: 12_070,
-            financialTerms: {
-                merchandiseSubtotalAmount: 11_000,
-                shippingAmount: 450,
-                sellerCommissionAmount: 550,
-                platformShippingShareAmount: 450,
-                sellerShippingShareAmount: 0,
-                sellerProceedsAmount: 10_450,
-                currency: "eur",
-            },
-            lines: [],
-            createdAt: "2026-07-13T12:00:00.000Z",
-        });
+        syncSalePresentation(host);
+        expect(host.querySelector("[data-subtotal]")?.textContent).toBe(formatListMoney(11_000, "eur", "fr-FR"));
+        expect(host.querySelector("[data-commission]")?.textContent).toBe(formatListMoney(-550, "eur", "fr-FR"));
+        expect(host.querySelector("[data-shipping]")?.textContent).toBe("Covered by the platform");
+        expect(host.querySelector("[data-total]")?.textContent).toBe(formatListMoney(10_450, "eur", "fr-FR"));
+        expect(host.querySelector("[data-total]")?.textContent).not.toBe(formatListMoney(12_070, "eur", "fr-FR"));
 
-        expect(values.get("[data-subtotal]")).toBe(formatListMoney(11_000, "eur", "fr-FR"));
-        expect(values.get("[data-commission]")).toBe(formatListMoney(-550, "eur", "fr-FR"));
-        expect(values.get("[data-shipping]")).toBe("Covered by the platform");
-        expect(values.get("[data-total]")).toBe(formatListMoney(10_450, "eur", "fr-FR"));
-        expect(values.get("[data-total]")).not.toBe(formatListMoney(12_070, "eur", "fr-FR"));
-
-        renderSale(host, {
-            id: 43,
-            status: "placed",
-            currency: "eur",
-            subtotalAmount: 11_000,
-            shippingAmount: 450,
-            totalAmount: 11_450,
-            financialTerms: {
-                merchandiseSubtotalAmount: 11_000,
-                shippingAmount: 450,
-                sellerCommissionAmount: 0,
-                platformShippingShareAmount: 0,
-                sellerShippingShareAmount: 450,
-                sellerProceedsAmount: 11_450,
-                currency: "eur",
-            },
-            lines: [],
-            createdAt: "2026-07-13T12:00:00.000Z",
-        });
-
-        expect(values.get("[data-commission]")).toBe(formatListMoney(0, "eur", "fr-FR"));
-        expect(values.get("[data-shipping]")).toBe("+4,50 €");
-        expect(values.get("[data-total]")).toBe(formatListMoney(11_450, "eur", "fr-FR"));
+        const summary = host.querySelector<HTMLElement>("[data-sale-summary]")!;
+        summary.dataset.sellerCommissionAmount = "0";
+        summary.dataset.platformShippingShareAmount = "0";
+        summary.dataset.sellerShippingShareAmount = "450";
+        summary.dataset.sellerProceedsAmount = "11450";
+        syncSalePresentation(host);
+        expect(host.querySelector("[data-commission]")?.textContent).toBe(formatListMoney(0, "eur", "fr-FR"));
+        expect(host.querySelector("[data-shipping]")?.textContent).toBe("+4,50 €");
+        expect(host.querySelector("[data-total]")?.textContent).toBe(formatListMoney(11_450, "eur", "fr-FR"));
     });
 
     test("keeps sale detail Commerce-only and exposes a fulfillment slot", async () => {
-        const compiled = await compile("commerce-sale-detail");
-        expect(compiled.viewSource).toContain("/.cms/sources/commerce/mySale?id=");
-        expect(compiled.viewJS).toContain('slot name="fulfillment"');
-        expect(compiled.viewJS).toContain("offerSnapshot");
-        expect(compiled.viewSource).toContain("sellerCommissionAmount(order)");
-        expect(compiled.viewSource).toContain("sellerShippingShareAmount(order)");
-        expect(compiled.viewSource).toContain("sellerProceedsAmount(order)");
-        expect(compiled.viewSource).toContain("salePresentationStatus(order)");
-        expect(compiled.viewJS).toContain("commerce-fulfillment:updated");
-        expect(compiled.viewSource).not.toContain("formatMoney(order.totalAmount, order.currency");
-        expect(compiled.viewJS).toContain("Net amount to receive");
-        expect(compiled.viewJS).toContain("Platform commission");
-        expect(compiled.viewJS).toContain("Covered by the platform");
-        expect(compiled.viewJS).not.toContain('data-back action="link"');
-        expect(compiled.viewSource).not.toContain("getShipmentForMySale");
-        expect(compiled.viewSource).not.toContain("createShipmentForMySale");
-        expect(compiled.editorSource).toContain('slot: "fulfillment"');
-        expect(compiled.editorSource).not.toContain('attribute: "sale-endpoint"');
+        const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("mossa");
+        if (!definition) {
+            throw new Error("Mossa collection definition not found");
+        }
+        const artifacts =
+            definition.artifacts?.filter(
+                (item): item is Extract<typeof item, { type: "bloc" }> => item.type === "bloc",
+            ) ?? [];
+        const detail = artifacts?.find((artifact) => artifact.bloc.tag === "mossa-commerce-sale-detail");
+        const controller = artifacts?.find((artifact) => artifact.bloc.tag === "mossa-commerce-sale-detail-controller");
+        if (!detail?.bloc.compositionHTML || !detail.bloc.editorJS || !controller?.bloc.viewJS) {
+            throw new Error("Commerce sale detail composition sources not found");
+        }
+        const viewSource = declaredBlocViewSources(controller.bloc);
+        const runtime = `${detail.bloc.compositionHTML}\n${viewSource}`;
+        expect(runtime).toContain("/.cms/sources/commerce/mySale?id=");
+        expect(runtime).toContain('slot name="fulfillment"');
+        expect(runtime).toContain("offerSnapshot");
+        expect(viewSource).toContain("sellerCommissionAmount(order)");
+        expect(viewSource).toContain("sellerShippingShareAmount(order)");
+        expect(viewSource).toContain("sellerProceedsAmount(order)");
+        expect(viewSource).toContain("salePresentationStatus(order)");
+        expect(runtime).toContain("commerce-fulfillment:updated");
+        expect(viewSource).not.toContain("formatMoney(order.totalAmount, order.currency");
+        expect(runtime).toContain("Net amount to receive");
+        expect(runtime).toContain("Platform commission");
+        expect(runtime).toContain("Covered by the platform");
+        expect(runtime).not.toContain('data-back action="link"');
+        expect(viewSource).not.toContain("getShipmentForMySale");
+        expect(viewSource).not.toContain("createShipmentForMySale");
+        expect(viewSource).not.toContain("fetch(");
+        expect(detail.bloc.editorJS).toContain('slot: "fulfillment"');
+        expect(detail.bloc.editorJS).not.toContain('attribute: "sale-endpoint"');
     });
 });
 

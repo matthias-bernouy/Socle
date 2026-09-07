@@ -1,0 +1,13 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-service-withdrawal-controller",
+        "name": "Service withdrawal controller",
+        "group": "Commerce",
+        "description": "Internal form and receipt controller for service withdrawal.",
+        "internal": true,
+        "path": "blocs/domains/commerce/checkout/service-withdrawal",
+        "view": "controller/Bloc.ts",
+        "editor": null
+    }
+}

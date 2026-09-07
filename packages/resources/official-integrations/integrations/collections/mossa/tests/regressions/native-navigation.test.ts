@@ -114,9 +114,8 @@ describe("Mossa native navigation", () => {
             readFileSync(file, "utf8").includes('createElement("a")'),
         );
         expect(sources.map(show).sort()).toEqual([
-            "blocs/domains/account/orders/purchases/Bloc.ts",
             "blocs/domains/commerce/checkout/commerce-stripe-payment/legal-consent.ts",
-            "blocs/domains/commerce/checkout/service-withdrawal/Bloc.ts",
+            "blocs/domains/commerce/checkout/service-withdrawal/controller/receipt.ts",
             "blocs/domains/commerce/fulfillment/commerce-mondial-relay-sale-fulfillment/Bloc.ts",
             "blocs/domains/commerce/offers/pricing/commerce-offer-price-form/controller/Bloc.ts",
         ]);

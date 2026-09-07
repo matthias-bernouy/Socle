@@ -6,6 +6,6 @@
         "group": "Commerce",
         "description": "Presentation for the Commerce service-withdrawal evidence workflow.",
         "path": "blocs/domains/commerce/checkout/service-withdrawal",
-        "view": "Bloc.ts"
+        "composition": "template.html"
     }
 }

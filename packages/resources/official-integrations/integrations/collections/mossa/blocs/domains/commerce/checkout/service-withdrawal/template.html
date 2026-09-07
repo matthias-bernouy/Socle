@@ -1,79 +1,148 @@
-<section class="withdrawal">
-    <div data-loading>
-        <mossa-skeleton height="20rem" animation="wave" label="Loading orders"></mossa-skeleton>
-    </div>
+<mossa-service-withdrawal-controller data-p9r-composition-controller>
+    <mossa-stack gap="lg">
+        <section
+            data-orders-source
+            cms-source="/.cms/sources/commerce/myOrders?limit=100&amp;offset=0"
+            cms-reload-on="mossa-service-withdrawal:reload"
+        >
+            <mossa-skeleton
+                height="20rem"
+                animation="wave"
+                data-withdrawal-copy="loading-label"
+                data-withdrawal-copy-attribute="label"
+                label="Loading orders"
+                cms-condition="$source.loading"
+            ></mossa-skeleton>
 
-    <mossa-surface-card data-error hidden appearance="outlined" density="spacious">
-        <strong slot="title">Request unavailable</strong>
-        <span slot="description" data-error-message></span>
-        <mossa-button slot="actions" data-retry appearance="outlined" tone="neutral"><button type="button">Try again</button></mossa-button>
-    </mossa-surface-card>
+            <mossa-surface-card appearance="outlined" density="spacious" cms-condition="$source.error">
+                <strong slot="title" data-error-title>Request unavailable</strong>
+                <span slot="description" data-error-message>Your orders could not be loaded. Sign in and try again.</span>
+                <mossa-button slot="actions" appearance="outlined" tone="neutral">
+                    <button data-retry type="button">Try again</button>
+                </mossa-button>
+            </mossa-surface-card>
 
-    <form data-form hidden novalidate>
-        <mossa-surface-card appearance="outlined" density="spacious">
-            <strong slot="title" data-withdrawal-copy="form-title">Exercise my right of withdrawal</strong>
-            <span slot="description" data-withdrawal-copy="form-description">
-                This request concerns the platform service associated with an order.
-                It does not automatically cancel the product sale or issue a refund:
-                the request is recorded, timestamped, and reviewed under the applicable contract.
-            </span>
+            <mossa-surface-card appearance="outlined" density="spacious" cms-condition="$source.loaded &amp;&amp; !items.0">
+                <strong slot="title" data-error-title>Request unavailable</strong>
+                <span slot="description" data-empty-message>No order is available on this account.</span>
+            </mossa-surface-card>
 
-            <div class="fields">
-                <label>
-                    <span data-withdrawal-copy="order-label">Related order</span>
-                    <select data-order required></select>
-                </label>
-
-                <label>
-                    <span data-withdrawal-copy="reason-label">Optional details</span>
-                    <textarea
-                        data-reason
-                        maxlength="4000"
-                        rows="5"
-                        placeholder="You may provide the reason or context for your request."
-                    ></textarea>
-                </label>
-
-                <label class="confirmation">
-                    <input data-confirmed type="checkbox" required>
-                    <span data-withdrawal-copy="confirmation-label">
-                        I clearly confirm that I want to withdraw from the platform service
-                        associated with the selected order.
+            <div data-form-card cms-condition="$source.loaded &amp;&amp; items.0">
+                <mossa-surface-card appearance="outlined" density="spacious">
+                    <strong slot="title" data-withdrawal-copy="form-title">Exercise my right of withdrawal</strong>
+                    <span slot="description" data-withdrawal-copy="form-description">
+                        This request concerns the platform service associated with an order. It does not automatically cancel
+                        the product sale or issue a refund: the request is recorded, timestamped, and reviewed under the
+                        applicable contract.
                     </span>
-                </label>
 
-                <p class="notice">
-                    <span data-withdrawal-copy="terms-before-label">Read the</span> <slot name="terms-link"></slot>
-                    <span data-withdrawal-copy="terms-after-label">to understand the service scope and applicable rules.</span>
-                </p>
-                <p class="validation" data-validation role="alert" aria-live="polite"></p>
+                    <mossa-stack gap="md">
+                        <mossa-select
+                            data-withdrawal-control
+                            data-order
+                            name="orderId"
+                            label="Related order"
+                            data-withdrawal-copy="order-label"
+                            data-withdrawal-copy-attribute="label"
+                            required
+                        >
+                            <mossa-option
+                                data-order-option
+                                value="{{ order.id }}"
+                                data-order-id="{{ order.id }}"
+                                data-order-number="{{ order.orderNumber }}"
+                                data-public-id="{{ order.publicId }}"
+                                data-first-title="{{ order.lineSummary.firstTitle }}"
+                                cms-repeat="items as order"
+                            ></mossa-option>
+                        </mossa-select>
+
+                        <mossa-textarea
+                            data-withdrawal-control
+                            data-reason
+                            name="reason"
+                            maxlength="4000"
+                            rows="5"
+                            label="Optional details"
+                            placeholder="You may provide the reason or context for your request."
+                        ></mossa-textarea>
+
+                        <mossa-checkbox data-withdrawal-control data-confirmed required>
+                            <span data-withdrawal-copy="confirmation-label">
+                                I clearly confirm that I want to withdraw from the platform service associated with the selected
+                                order.
+                            </span>
+                        </mossa-checkbox>
+
+                        <small>
+                            <span data-withdrawal-copy="terms-before-label">Read the</span>
+                            <slot name="terms-link"></slot>
+                            <span data-withdrawal-copy="terms-after-label">to understand the service scope and applicable rules.</span>
+                        </small>
+                    </mossa-stack>
+
+                    <mossa-button slot="actions">
+                        <button data-withdrawal-control data-withdrawal-copy="submit-label" type="submit">Confirm my request</button>
+                    </mossa-button>
+                </mossa-surface-card>
             </div>
 
-            <button
-                slot="actions"
-                class="submit"
-                data-submit
-                data-withdrawal-copy="submit-label"
-                type="submit"
-            >Confirm my request</button>
-        </mossa-surface-card>
-    </form>
+            <form
+                data-withdrawal-form
+                cms-source="/.cms/sources/commerce/submitMyMarketplaceServiceWithdrawalRequest as withdrawal"
+                cms-source-trigger="submit"
+                cms-source-method="POST"
+                cms-source-inherit-query="false"
+                cms-source-success-reset="true"
+            >
+                <input data-idempotency-key name="idempotencyKey" type="hidden">
 
-    <mossa-surface-card data-success hidden appearance="outlined" density="spacious">
-        <strong slot="title" data-withdrawal-copy="success-title">Your request was recorded</strong>
-        <span slot="description" data-withdrawal-copy="success-description">
-            Keep this receipt. The platform will separately review any contractual,
-            logistical, and financial consequences.
-        </span>
-        <dl class="receipt">
-            <div><dt data-withdrawal-copy="reference-label">Request reference</dt><dd data-request-reference></dd></div>
-            <div><dt data-withdrawal-copy="receipt-order-label">Order</dt><dd data-order-reference></dd></div>
-            <div><dt data-withdrawal-copy="date-label">Date and time</dt><dd data-confirmed-at></dd></div>
-            <div><dt data-withdrawal-copy="status-label">Status</dt><dd data-status></dd></div>
-        </dl>
-        <mossa-button slot="actions" data-download appearance="outlined" tone="neutral"><button type="button" data-withdrawal-copy="download-label">
-            Download receipt
-        </button></mossa-button>
-        <slot name="back-action" slot="actions"></slot>
-    </mossa-surface-card>
-</section>
+                <mossa-toast tone="danger" appearance="filled" role="alert" cms-condition="$source.error">
+                    <span data-submit-error>The request could not be recorded. Try again shortly.</span>
+                </mossa-toast>
+
+                <mossa-surface-card data-success appearance="outlined" density="spacious" cms-condition="$source.loaded">
+                    <strong slot="title" data-withdrawal-copy="success-title">Your request was recorded</strong>
+                    <span slot="description" data-withdrawal-copy="success-description">
+                        Keep this receipt. The platform will separately review any contractual, logistical, and financial
+                        consequences.
+                    </span>
+                    <mossa-stack gap="sm">
+                        <mossa-info-row
+                            label="Request reference"
+                            data-withdrawal-copy="reference-label"
+                            data-withdrawal-copy-attribute="label"
+                        >
+                            <strong data-request-reference>{{ withdrawal.body.publicId }}</strong>
+                        </mossa-info-row>
+                        <mossa-info-row
+                            label="Order"
+                            data-withdrawal-copy="receipt-order-label"
+                            data-withdrawal-copy-attribute="label"
+                        >
+                            <strong data-order-reference>{{ withdrawal.body.orderNumber }}</strong>
+                        </mossa-info-row>
+                        <mossa-info-row
+                            label="Date and time"
+                            data-withdrawal-copy="date-label"
+                            data-withdrawal-copy-attribute="label"
+                        >
+                            <strong data-confirmed-at>{{ withdrawal.body.submittedAt | dateLong }}</strong>
+                        </mossa-info-row>
+                        <mossa-info-row
+                            label="Status"
+                            data-withdrawal-copy="status-label"
+                            data-withdrawal-copy-attribute="label"
+                        >
+                            <strong data-status>{{ withdrawal.body.status }}</strong>
+                        </mossa-info-row>
+                    </mossa-stack>
+                    <mossa-button slot="actions" appearance="outlined" tone="neutral">
+                        <button data-download data-withdrawal-copy="download-label" type="button">Download receipt</button>
+                    </mossa-button>
+                    <slot name="back-action" slot="actions"></slot>
+                </mossa-surface-card>
+            </form>
+        </section>
+    </mossa-stack>
+</mossa-service-withdrawal-controller>

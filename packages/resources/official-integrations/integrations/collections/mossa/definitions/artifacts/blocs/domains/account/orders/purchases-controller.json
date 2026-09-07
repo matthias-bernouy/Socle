@@ -1,0 +1,13 @@
+{
+    "type": "bloc",
+    "bloc": {
+        "tag": "mossa-purchases-controller",
+        "name": "Purchases controller",
+        "group": "Account",
+        "description": "Internal presentation and pagination controller for purchases.",
+        "internal": true,
+        "path": "blocs/domains/account/orders/purchases",
+        "view": "controller/Bloc.ts",
+        "editor": null
+    }
+}

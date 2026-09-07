@@ -1,8 +1,9 @@
 {
-    "id": "mossa/blocs/commerce-sale-detail",
+    "id": "mossa/blocs/commerce-sale-detail-controller",
     "type": "bloc",
-    "artifact": "mossa-commerce-sale-detail",
+    "artifact": "mossa-commerce-sale-detail-controller",
     "category": "commerce",
+    "defaultActive": false,
     "endpoints": [
         {
             "source": "commerce",
@@ -19,15 +20,7 @@
     ],
     "requires": {
         "resources": [
-            "mossa/blocs/badge",
-            "mossa/blocs/commerce-sale-detail-controller",
-            "mossa/blocs/info-row",
-            "mossa/blocs/responsive-grid",
-            "mossa/blocs/section-header",
-            "mossa/blocs/skeleton",
-            "mossa/blocs/stack",
-            "mossa/blocs/surface-card"
+            "mossa/blocs/commerce-sale-detail"
         ]
-    },
-    "defaultActive": false
+    }
 }

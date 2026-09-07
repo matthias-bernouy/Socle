@@ -1,6 +1,6 @@
 {
     "default-tag": "mossa-commerce-sale-detail",
-    "bloc": "./Bloc.ts",
+    "composition": "./template.html",
     "editor": "./BlocEditor.ts",
     "defaultContent": "./default.html",
     "meta": {

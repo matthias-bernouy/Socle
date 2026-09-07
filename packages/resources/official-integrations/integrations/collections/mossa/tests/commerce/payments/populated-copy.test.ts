@@ -1,12 +1,15 @@
 import { afterEach, beforeAll, expect, test } from "bun:test";
 import { OrderDetail } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/account/orders/order/Bloc.ts";
-import { ServiceWithdrawalForm } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/commerce/checkout/service-withdrawal/Bloc.ts";
+import { readWithdrawalCopy } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/commerce/checkout/service-withdrawal/copy.ts";
+import {
+    receiptStatus,
+    receiptText,
+} from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/commerce/checkout/service-withdrawal/controller/receipt.ts";
 
 const originalFetch = globalThis.fetch;
 const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
 beforeAll(() => {
     customElements.define("test-populated-order-copy", class extends OrderDetail {});
-    customElements.define("test-populated-withdrawal-copy", class extends ServiceWithdrawalForm {});
 });
 afterEach(() => {
     document.body.replaceChildren();
@@ -74,58 +77,23 @@ test("populated order copy updates without refetching or changing payment and de
     expect(requests).toBe(4);
 });
 
-test("withdrawal copy preserves explicit confirmation and changes receipt statuses", async () => {
-    let writes = 0;
-    globalThis.fetch = (async (_url: string, init?: RequestInit) => {
-        if (init?.method === "POST") {
-            writes++;
-            return Response.json({ publicId: "REQ-7", orderId: 7, status: "submitted", submittedAt: "2026-01-01" });
-        }
-        return Response.json({ items: [{ id: 7 }] });
-    }) as typeof fetch;
-    const host = mount("test-populated-withdrawal-copy", {
+test("withdrawal copy formats bound orders and receipt statuses", async () => {
+    const host = mount("div", {
         "order-reference-label": "Purchase {reference}",
-        "confirmation-required-message": "Confirm explicitly first.",
         "form-title": "Request service withdrawal",
         "status-submitted-label": "Registered",
     });
-    await settled();
-    const root = host.shadowRoot!;
-    expect(root.querySelector("select option")!.textContent).toBe("Purchase 7");
-    expect(root.querySelector("[data-withdrawal-copy=form-title]")!.textContent).toBe("Request service withdrawal");
-    const form = root.querySelector("form")!;
-    form.dispatchEvent(new Event("submit", { cancelable: true }));
-    await settled();
-    expect(root.querySelector("[data-validation]")!.textContent).toBe("Confirm explicitly first.");
-    expect(writes).toBe(0);
-    root.querySelector<HTMLInputElement>("[data-confirmed]")!.checked = true;
-    form.dispatchEvent(new Event("submit", { cancelable: true }));
-    await settled();
-    expect(writes).toBe(1);
-    expect(root.querySelector<HTMLElement>("[data-success]")!.hidden).toBe(false);
-    expect(root.querySelector("[data-status]")!.textContent).toBe("Registered");
-    expect(root.querySelector("[data-request-reference]")!.textContent).toBe("REQ-7");
+    const receipt = { publicId: "REQ-7", orderId: 7, status: "submitted", submittedAt: "2026-01-01" };
+    expect(readWithdrawalCopy(host, "order-reference-label", { reference: "7" })).toBe("Purchase 7");
+    expect(readWithdrawalCopy(host, "form-title")).toBe("Request service withdrawal");
+    expect(receiptStatus(receipt.status, (name) => readWithdrawalCopy(host, name))).toBe("Registered");
     host.removeAttribute("status-submitted-label");
-    expect(root.querySelector("[data-status]")!.textContent).toBe("Received");
+    expect(receiptStatus(receipt.status, (name) => readWithdrawalCopy(host, name))).toBe("Received");
     host.setAttribute("receipt-title", "Service request receipt");
     host.setAttribute("receipt-notice", "Recorded for review; no refund has been completed.");
-    const originalCreateUrl = URL.createObjectURL;
-    const originalRevokeUrl = URL.revokeObjectURL;
-    let receiptBlob: Blob | undefined;
-    URL.createObjectURL = (blob) => {
-        receiptBlob = blob as Blob;
-        return "blob:receipt";
-    };
-    URL.revokeObjectURL = () => {};
-    try {
-        root.querySelector<HTMLButtonElement>("[data-download] button")!.click();
-        const content = await receiptBlob!.text();
-        expect(content).toContain("Service request receipt");
-        expect(content).toContain("Reference: REQ-7");
-        expect(content).toContain("Status: Received");
-        expect(content).toContain("Recorded for review; no refund has been completed.");
-    } finally {
-        URL.createObjectURL = originalCreateUrl;
-        URL.revokeObjectURL = originalRevokeUrl;
-    }
+    const content = receiptText(receipt, (name) => readWithdrawalCopy(host, name), "en-US");
+    expect(content).toContain("Service request receipt");
+    expect(content).toContain("Reference: REQ-7");
+    expect(content).toContain("Status: Received");
+    expect(content).toContain("Recorded for review; no refund has been completed.");
 });

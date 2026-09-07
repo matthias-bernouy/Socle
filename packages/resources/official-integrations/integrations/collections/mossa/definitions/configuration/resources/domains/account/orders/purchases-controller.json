@@ -1,7 +1,7 @@
 {
-    "id": "mossa/blocs/purchases",
+    "id": "mossa/blocs/purchases-controller",
     "type": "bloc",
-    "artifact": "mossa-purchases",
+    "artifact": "mossa-purchases-controller",
     "category": "account",
     "defaultActive": false,
     "endpoints": [
@@ -20,14 +20,7 @@
     ],
     "requires": {
         "resources": [
-            "mossa/blocs/badge",
-            "mossa/blocs/button",
-            "mossa/blocs/pagination",
-            "mossa/blocs/purchases-controller",
-            "mossa/blocs/responsive-grid",
-            "mossa/blocs/skeleton",
-            "mossa/blocs/stack",
-            "mossa/blocs/surface-card"
+            "mossa/blocs/purchases"
         ]
     }
 }
