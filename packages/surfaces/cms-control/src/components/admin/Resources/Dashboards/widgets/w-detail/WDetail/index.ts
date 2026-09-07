@@ -1,4 +1,5 @@
 import type { DashboardLookup } from "../lookups/Lookup";
+import { releaseMediaFiles } from "../../w-media-field/binding/files";
 import { readSourceData, setSourceData, refreshSourceContext } from "@bernouy/components";
 import { bindDetailContext } from "../binding/context";
 import { supportsBoundDetail } from "../binding/composition";
@@ -157,6 +158,7 @@ export class DashboardWDetail extends Component {
     }
 
     disconnectedCallback(): void {
+        releaseMediaFiles(this);
         this.syncScheduler.advanceLifecycle();
         this.runtime.events.unbind();
         this.removeEventListener("dashboard:bound-value", this.boundValue);

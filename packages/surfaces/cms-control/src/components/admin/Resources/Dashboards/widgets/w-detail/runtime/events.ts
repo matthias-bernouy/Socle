@@ -170,6 +170,9 @@ export class DetailEvents {
         }
         emitWidgetEvent(this.host, WIDGET_MEDIA_ACTION_EVENT, {
             ...event.detail,
+            widget: this.host.dataset.widgetId,
+            resource: this.fields.currentResource(),
+            fields: this.fields.currentFields(),
             rowKey: this.readData().rowKey,
             field: field.id,
         });

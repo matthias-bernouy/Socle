@@ -48,6 +48,9 @@ export type WidgetFieldChangeDetail = {
 };
 
 export type WidgetMediaActionDetail = DashboardMediaActionDetail & {
+    widget?: string;
+    resource?: unknown;
+    fields?: Record<string, unknown>;
     rowKey: string;
     field: string;
 };

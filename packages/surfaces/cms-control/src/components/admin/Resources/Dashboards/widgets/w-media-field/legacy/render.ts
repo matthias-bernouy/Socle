@@ -1,4 +1,4 @@
-import type { DashboardMediaItem } from "./types";
+import type { DashboardMediaItem } from "../types";
 
 export function renderMediaTile(item: DashboardMediaItem, index: number): HTMLElement {
     const tile = document.createElement("article");

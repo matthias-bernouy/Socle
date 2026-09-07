@@ -5,17 +5,20 @@ import { executeDashboardMediaAction } from "../../runtime/actions";
 import type { WidgetMediaActionDetail } from "../../widgets/shared";
 import type { DashboardMediaItem } from "../../widgets/w-media-field/types";
 import type { DashboardViewActionContext } from "./context";
+import { once } from "./outcome";
 
 export async function runDashboardMediaAction(
     context: DashboardViewActionContext,
     media: WidgetMediaActionDetail,
     widget?: HTMLElement,
 ): Promise<void> {
-    const { group, dashboard, detail } = context;
+    const { group, dashboard } = context;
+    const detail = media.widget ? { collection: media.widget, row: media.rowKey } : context.detail;
     if (!group || !dashboard || !detail) {
         return;
     }
     const key = detailKey(detail.collection, detail.row);
+    const finishAction = once(context.actionCoordinator?.beginAction());
     try {
         const result = await executeDashboardMediaAction(
             group,
@@ -25,6 +28,9 @@ export async function runDashboardMediaAction(
             context.drafts.get(key) ?? {},
             context.groups ?? [group],
         );
+        if (finishAction() === "stale") {
+            return;
+        }
         if (result.nested) {
             if (result.handled && (media.action === "upload" || media.action === "replace") && !result.item) {
                 throw new Error("The media endpoint returned no usable media item");
@@ -37,9 +43,13 @@ export async function runDashboardMediaAction(
             return;
         }
         removeDraftField(context.drafts, key, media.field);
+        context.acknowledgeDetailFields?.(detail.collection, detail.row, { [media.field]: media.value });
         showToast(`Media ${media.action} completed`, { type: "success" });
         context.reload(detail.collection, detail.row);
     } catch (error) {
+        if (finishAction() === "stale") {
+            return;
+        }
         if (media.itemField) {
             const items = restoreNestedDraft(context.drafts, detailKey(detail.collection, detail.row), media);
             if (!syncNestedMediaControl(widget, media.field, items)) {

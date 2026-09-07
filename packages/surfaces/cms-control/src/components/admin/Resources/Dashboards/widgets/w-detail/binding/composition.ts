@@ -6,6 +6,7 @@ import { fieldElement } from "./fields";
 import "./Field";
 
 const supported = new Set([
+    "media",
     "cms-user",
     "text",
     "number",

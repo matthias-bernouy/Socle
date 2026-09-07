@@ -46,8 +46,8 @@ test("media grid, empty state and preview preserve desktop/mobile geometry", asy
                         await page.waitForFunction(() => {
                             const host = document.querySelector("cms-dashboard-w-detail")!;
                             const media =
-                                host.querySelector("cms-dashboard-w-media-field") ??
-                                host.shadowRoot!.querySelector("cms-dashboard-w-media-field")!;
+                                host.querySelector('[data-field-control="photos"]') ??
+                                host.shadowRoot!.querySelector('[data-field-control="photos"]')!;
                             const images = [
                                 ...Array.from(media.querySelectorAll("[data-media-tile] img")),
                                 ...Array.from(
@@ -66,14 +66,17 @@ test("media grid, empty state and preview preserve desktop/mobile geometry", asy
                     }
                     const loadedMs = performance.now() - start;
                     await page.mouse.move(0, 0);
-                    const geometry = await media
-                        .locator("[data-grid], [data-media-tile], [data-preview-dialog]")
-                        .evaluateAll((nodes) =>
-                            nodes.flatMap((node) => {
-                                const box = node.getBoundingClientRect();
-                                return [box.x, box.y, box.width, box.height];
-                            }),
+                    const geometry: number[] = [];
+                    for (const selector of ["[data-grid]", "[data-media-tile]", "[data-preview-dialog]"]) {
+                        geometry.push(
+                            ...(await media.locator(selector).evaluateAll((nodes) =>
+                                nodes.flatMap((node) => {
+                                    const box = node.getBoundingClientRect();
+                                    return [box.x, box.y, box.width, box.height];
+                                }),
+                            )),
                         );
+                    }
                     const key = `${width}-${state}`;
                     if (mode === "before") {
                         before.set(key, geometry);
@@ -91,6 +94,7 @@ test("media grid, empty state and preview preserve desktop/mobile geometry", asy
                                 state,
                                 loadedMs,
                                 reads: fixture.requests.filter((path) => path.endsWith("/item")).length,
+                                images: fixture.images.length,
                             }),
                         );
                     }

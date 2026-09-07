@@ -1,12 +1,12 @@
 import { Component } from "@bernouy/components/base";
-import css from "./styles";
+import css from "../styles";
 import template from "./template.html" with { type: "text" };
-import { MediaDragController } from "./controllers/drag";
-import { MediaPreviewController } from "./controllers/preview";
-import { dispatchMediaChange, LocalMediaFiles } from "./mediaState";
+import { MediaDragController } from "../controllers/drag";
+import { MediaPreviewController } from "../controllers/preview";
+import { dispatchMediaChange, LocalMediaFiles } from "../mediaState";
 import { renderAddTile, renderMediaTile } from "./render";
-import { type DashboardMediaAction, type DashboardMediaActionDetail, type DashboardMediaItem } from "./types";
-import { numberData, tileFromEvent } from "./utils";
+import { type DashboardMediaAction, type DashboardMediaActionDetail, type DashboardMediaItem } from "../types";
+import { numberData, tileFromEvent } from "../utils";
 
 type PendingPick = { action: "upload"; index?: never } | { action: "replace"; index: number };
 

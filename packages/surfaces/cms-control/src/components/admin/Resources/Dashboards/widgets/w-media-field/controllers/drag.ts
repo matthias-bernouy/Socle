@@ -4,7 +4,7 @@ export class MediaDragController {
     private dragFrom: number | null = null;
 
     constructor(
-        private root: () => ShadowRoot,
+        private root: () => ParentNode,
         private move: (from: number, to: number) => void,
         private setSuppressClick: (value: boolean) => void,
     ) {}

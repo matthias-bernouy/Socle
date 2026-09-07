@@ -100,9 +100,14 @@ export async function executeDashboardMediaAction(
     if (!target || !ref) {
         return { handled: false, nested: Boolean(target?.parent), results: [] };
     }
-    const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
-    const resource = itemFrom(data, widget.source);
-    const fields = { ...fieldValues(widget, resource), ...draft };
+    const resource =
+        media.resource !== undefined
+            ? media.resource
+            : itemFrom(
+                  await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } }),
+                  widget.source,
+              );
+    const fields = { ...fieldValues(widget, resource), ...draft, ...(media.fields ?? {}) };
     const mediaVars = mediaActionVars(media);
     const files = media.files ?? (media.file ? [media.file] : []);
     const results = !files.length

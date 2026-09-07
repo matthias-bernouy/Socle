@@ -1,6 +1,6 @@
 import { createReferenceEditor } from "../w-detail/controls/editors";
 import { valueAt } from "../../runtime/expressions";
-import "../w-media-field/WMediaField";
+import "../w-media-field/legacy/WMediaField";
 import type { DashboardMediaItem } from "../w-media-field/types";
 import type { ReorderableListItem, ReorderableListItemField } from "./state";
 

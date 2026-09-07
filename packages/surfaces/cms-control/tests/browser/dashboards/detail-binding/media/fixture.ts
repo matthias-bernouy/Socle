@@ -22,6 +22,7 @@ export async function installMediaRoutes(page: Page, bundle: string, styles: str
     };
     const actions = ["upload", "replace", "remove", "reorder"] as const;
     const calls: Array<{ action: string; params: Record<string, string>; body?: unknown; files: File[] }> = [];
+    const images: string[] = [];
     const field: DashboardField = {
         id: "photos",
         path: "photos",
@@ -61,7 +62,10 @@ export async function installMediaRoutes(page: Page, bundle: string, styles: str
     let pending: Promise<void> | undefined;
     let fail = false;
     let failImage = false;
+    let pendingImage: Promise<void> | undefined;
     await page.route("**/media/*.svg", async (route) => {
+        images.push(new URL(route.request().url()).pathname);
+        await pendingImage;
         if (failImage) {
             await route.fulfill({ status: 503, body: "Image unavailable" });
             return;
@@ -116,6 +120,7 @@ export async function installMediaRoutes(page: Page, bundle: string, styles: str
     });
     return {
         ...fixture,
+        images,
         calls,
         resource,
         fail() {
@@ -123,6 +128,13 @@ export async function installMediaRoutes(page: Page, bundle: string, styles: str
         },
         failImages() {
             failImage = true;
+        },
+        holdImages() {
+            let release = () => {};
+            pendingImage = new Promise<void>((resolve) => {
+                release = resolve;
+            });
+            return release;
         },
         holdAction() {
             let release = () => {};

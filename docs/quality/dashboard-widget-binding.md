@@ -647,3 +647,71 @@ Initial and final check:all pass all eight gates for this reference checkpoint.
 UI-contract totals remain 0 errors, 77 warnings and 11 informational findings;
 there are no directory-fanout errors. No production code or generated bundle
 changed in this checkpoint.
+
+## Bound media controls checkpoint
+
+Top-level media controls now compose `sources/_runtime/detail/media.html` before
+the detail source is compiled. Tile images, selected originals, captions,
+counters and thumbnail repetitions stay in document light DOM. The page binding
+applies their values; `cms-dashboard-media-field` has no response array setter,
+JSON parser, fetcher or response-driven DOM builder. Its `items` getter reads
+the rendered controls for form/action values. A transient interaction snapshot
+keeps newly chosen files available until the field-change event records them.
+
+The field, tile and thumbnail shells encapsulate their styles. Retained
+imperative code handles file picking, multipart `File` objects, object URLs,
+drag feedback, dialog/keyboard focus and native image load/error states. The
+image observer watches bound native URL changes, so replacing an original while
+the preview is open shows loading feedback without closing or losing focus.
+It does not fetch or compose markup. Item projections are cached by input
+reference so an unrelated draft update does not rebuild tile/thumbnail repeats.
+No new binding directive, private core, template-reference or repeat key was
+introduced.
+
+Media actions now carry their originating widget and resource/field snapshot,
+as operation input rather than a rendering relay. This enables standalone
+details and avoids the redundant resource prefetch. Successful operations
+acknowledge only their media field before refreshing. A browser test proves
+that a note typed during a held upload preserves its value, focus, `[2, 8]`
+selection, nonzero scroll and navigation/field geometry, then persists through
+a separate save and full reload. It runs both selected and standalone details.
+The initial read plus completion refresh total two detail reads instead of the
+reference's three. Temporary file URLs are released after acknowledgement;
+their owner is the detail, so an individual conditional control's lifetime
+does not own the draft's URLs.
+
+The action coordinator rejects stale completion effects. A test starts an
+upload, navigates to another record and returns through browser history, then
+types a new draft. Completing the old upload changes fixture persistence but
+does not issue a new detail read, refresh the revisited UI or overwrite that
+draft. The original multipart upload/replace/remove/reorder, multiple-file,
+failed-upload/reload/retry and preview keyboard/error scenarios all pass.
+
+All six desktop/mobile capture pairs retain identical geometry. Both preview
+pairs are pixel identical; the latest grid/empty pairs differ by 49–75 pixels
+around control/add-tile borders. Captures were inspected. Five sequential runs
+measured these median readiness values (milliseconds):
+
+| State | Desktop before / after | Mobile before / after |
+|---|---:|---:|
+| Grid | 204.3 / 196.0 | 174.8 / 192.6 |
+| Preview | 239.3 / 244.5 | 230.2 / 247.8 |
+| Empty | 159.3 / 181.8 | 156.5 / 177.8 |
+
+Each state retains one detail read and respectively 3, 6 or 0 image requests.
+Some initial states are modestly slower; these measurements do not establish
+an overall speedup, and final performance review remains open. Raw ranges and
+request counts are in `media-migration-timings.json`; captures are in
+`media-migrated-captures/`, and the 33 individually executed browser logs are in
+`media-migration-browser/`. All 37 browser tests and 180 Control tests pass.
+Build and initial/final check:all pass all eight gates. UI contracts remain
+0 errors, 77 warnings and 11 informational findings. The media browser directory
+has eight entries (informational); no directory-fanout error was introduced.
+
+The old media widget is now explicitly under `w-media-field/legacy/`, still used
+by unmigrated complex details, reorderable controls and manual examples. It
+must disappear with those consumers; it is not a completed compatibility layer.
+Concurrent media mutations, inline rollback/retry, nested/conditional media
+coverage, real local storage checks, schemas, editable collections, metadata
+relays and final runtime activation remain outstanding. This checkpoint does
+not complete the goal or its full verification matrix.

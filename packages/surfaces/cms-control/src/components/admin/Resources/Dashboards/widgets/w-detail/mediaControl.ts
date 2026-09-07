@@ -1,5 +1,5 @@
 import type { WDetailField } from "./types";
-import "../w-media-field/WMediaField";
+import "../w-media-field/legacy/WMediaField";
 import type { DashboardMediaItem } from "../w-media-field/types";
 
 type MediaControl = HTMLElement & { items: DashboardMediaItem[] };

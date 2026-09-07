@@ -22,6 +22,18 @@ export class LocalMediaFiles {
         URL.revokeObjectURL(url);
         this.urls.delete(url);
     }
+
+    retain(urls: ReadonlySet<string>): void {
+        for (const url of this.urls) {
+            if (!urls.has(url)) {
+                this.revoke(url);
+            }
+        }
+    }
+
+    clear(): void {
+        this.retain(new Set());
+    }
 }
 
 export function dispatchMediaChange(

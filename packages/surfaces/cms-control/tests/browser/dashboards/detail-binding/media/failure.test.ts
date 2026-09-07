@@ -32,14 +32,14 @@ test("a failed media upload reports the error and can be retried after a persist
         const retryChooser = page.waitForEvent("filechooser");
         await media.getByRole("button", { name: "Add media", exact: true }).click();
         await (await retryChooser).setFiles(imageFile);
-        await media.locator('img[src="/media/uploaded-1.svg"]').waitFor();
+        await media.locator('[data-media-tile] img[src="/media/uploaded-1.svg"]').waitFor();
         expect(fixture.resource.photos).toHaveLength(4);
         expect(fixture.calls).toHaveLength(2);
         for (const call of fixture.calls) {
             expect(await call.files[0]!.text()).toBe(imageFile.buffer.toString());
         }
         await page.reload();
-        await media.locator('img[src="/media/uploaded-1.svg"]').waitFor();
+        await media.locator('[data-media-tile] img[src="/media/uploaded-1.svg"]').waitFor();
         expect(await media.locator("[data-media-tile]").count()).toBe(4);
     } finally {
         await browser.close();

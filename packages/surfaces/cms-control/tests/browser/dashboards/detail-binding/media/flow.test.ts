@@ -77,7 +77,7 @@ test("a multiple-file choice sends each file once and reloads the persisted medi
         await media.getByRole("button", { name: "Add media", exact: true }).click();
         expect((await chooser).isMultiple()).toBe(true);
         await (await chooser).setFiles(files);
-        await media.locator('img[src="/media/uploaded-2.svg"]').waitFor();
+        await media.locator('[data-media-tile] img[src="/media/uploaded-2.svg"]').waitFor();
         expect(fixture.calls.map((call) => call.action)).toEqual(["upload", "upload"]);
         expect(fixture.calls.flatMap((call) => call.files.map((file) => file.name)).sort()).toEqual(
             files.map((file) => file.name).sort(),
@@ -87,7 +87,7 @@ test("a multiple-file choice sends each file once and reloads the persisted medi
             expect(await call.files[0]!.text()).toBe(imageFile.buffer.toString());
         }
         await page.reload();
-        await media.locator('img[src="/media/uploaded-2.svg"]').waitFor();
+        await media.locator('[data-media-tile] img[src="/media/uploaded-2.svg"]').waitFor();
         expect(await media.locator("[data-media-tile]").count()).toBe(5);
         expect(fixture.resource.photos).toHaveLength(5);
     } finally {

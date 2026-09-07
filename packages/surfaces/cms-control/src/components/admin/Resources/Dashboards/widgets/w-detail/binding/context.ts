@@ -1,4 +1,5 @@
 import { directoryContext } from "../lookups/directoryContext";
+import { mediaContext } from "../../w-media-field/binding/context";
 import { detailLookupUrls } from "../lookups/urls";
 import { readSourceData, setSourceContext } from "@bernouy/components";
 import { fieldValues } from "../../../runtime/mapping";
@@ -18,6 +19,7 @@ export function bindDetailContext(
         "widget" in section ? [] : section.fields,
     );
     const users = directoryContext(host, fields);
+    const media = mediaContext(host, fields);
     const actions = actionLayout(widget.actions ?? []);
     const rules = Object.fromEntries(fields.map((field) => [field.id, field.visibleWhen]));
     setSourceContext(host, () => {
@@ -63,6 +65,7 @@ export function bindDetailContext(
                 }),
         );
         return {
+            detailMedia: media(values, edits),
             ...users(values, resource),
             detailResourcePath: widget.source.itemPath ?? "",
             detailLookupUrls: detailLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
