@@ -46,6 +46,9 @@ export class DetailEvents {
     }
 
     private onClick = (event: Event): void => {
+        if (!this.owns(event) || (event.target as Element | null)?.closest("[data-operation-form]")) {
+            return;
+        }
         const target = event.target as Element | null;
         this.retryCmsUser(target);
         if (findEventTarget(event, "[data-back]")) {
@@ -81,10 +84,10 @@ export class DetailEvents {
         const tableRemove = target?.closest<HTMLButtonElement>("[data-table-remove]");
         const changedControl = (chip ?? tableAdd ?? tableRemove)?.closest<HTMLElement>("[data-field-control]");
         if (tableAdd) {
-            addTableRow(tableAdd, this.fields, (control, draft) => this.emitFieldChange(control, false, draft));
+            addTableRow(tableAdd, this.fields, (control, draft) => this.emitFieldChange(control, draft));
         }
         if (tableRemove) {
-            removeTableRow(tableRemove, this.fields, (control, draft) => this.emitFieldChange(control, false, draft));
+            removeTableRow(tableRemove, this.fields, (control, draft) => this.emitFieldChange(control, draft));
         }
         if (changedControl) {
             this.afterFieldChange();
@@ -92,10 +95,16 @@ export class DetailEvents {
     };
 
     private onFocusIn = (event: Event): void => {
+        if (!this.owns(event)) {
+            return;
+        }
         this.retryCmsUser(event.target as Element | null);
     };
 
     private onInput = (event: Event): void => {
+        if (!this.owns(event) || (event.target as Element | null)?.closest("[data-operation-form]")) {
+            return;
+        }
         const control = findEventTarget(event, "[data-field-control]");
         const field = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
         if (field?.input === "schema") {
@@ -124,6 +133,9 @@ export class DetailEvents {
     };
 
     private onChange = (event: Event): void => {
+        if (!this.owns(event) || (event.target as Element | null)?.closest("[data-operation-form]")) {
+            return;
+        }
         const control = findEventTarget(event, "[data-field-control]");
         if (!control) {
             return;
@@ -133,12 +145,15 @@ export class DetailEvents {
             updateSchemaControl(field, event);
         }
         this.fields.refreshRequiredValidity(control);
-        this.emitFieldChange(control, Boolean((event as CustomEvent<{ created?: boolean }>).detail?.created));
+        this.emitFieldChange(control);
         updateDerivedTables(control.dataset.fieldControl ?? "", this.fields);
         this.afterFieldChange();
     };
 
     private onMediaAction = (event: CustomEvent<DashboardMediaActionDetail>): void => {
+        if (!this.owns(event)) {
+            return;
+        }
         event.stopPropagation();
         const control = findEventTarget(event, "[data-field-control]");
         const field = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
@@ -155,7 +170,7 @@ export class DetailEvents {
         });
     };
 
-    private emitFieldChange = (control: HTMLElement, created = false, override?: unknown): void => {
+    private emitFieldChange = (control: HTMLElement, override?: unknown): void => {
         const field = this.fields.find(control.dataset.fieldControl ?? "");
         if (!field) {
             return;
@@ -167,7 +182,6 @@ export class DetailEvents {
             rowKey: this.readData().rowKey,
             field: field.id,
             value,
-            ...(created ? { created, resource: this.fields.currentResource() } : {}),
         });
     };
 
@@ -177,6 +191,13 @@ export class DetailEvents {
 
     private displayValue(input: string, control: HTMLElement): string | undefined {
         return input === "money" && "value" in control && typeof control.value === "string" ? control.value : undefined;
+    }
+
+    private owns(event: Event): boolean {
+        const detail = event
+            .composedPath()
+            .find((node) => node instanceof HTMLElement && node.localName === "cms-dashboard-w-detail");
+        return detail === this.host;
     }
 
     private retryCmsUser(target: Element | null): void {

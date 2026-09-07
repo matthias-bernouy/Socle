@@ -1,9 +1,8 @@
 import type { Page } from "playwright";
 import { installReadonlyRoutes } from "../../fixture";
 
-export async function installLookupRoutes(page: Page, bundle: string, styles: string, inlineCreate = false) {
+export async function installLookupRoutes(page: Page, bundle: string, styles: string, allowCustom = false) {
     const fixture = await installReadonlyRoutes(page, bundle, styles, {
-        extraEndpoints: inlineCreate ? [{ endpointId: "create-brand", method: "POST", params: [] }] : [],
         resource: {
             id: "lookup",
             title: "Lookups",
@@ -29,6 +28,7 @@ export async function installLookupRoutes(page: Page, bundle: string, styles: st
                 path: "brand",
                 type: "combobox",
                 label: "Brand",
+                allowCustom,
                 lookup: {
                     endpoint: "brands",
                     itemsPath: "items",
@@ -36,17 +36,6 @@ export async function installLookupRoutes(page: Page, bundle: string, styles: st
                     labelPath: "label",
                     totalPath: "total",
                     selected: "$resource.selected",
-                    ...(inlineCreate
-                        ? {
-                              create: {
-                                  mode: "inline" as const,
-                                  endpoint: "create-brand",
-                                  body: { label: "$value" },
-                                  valuePath: "id",
-                                  labelPath: "label",
-                              },
-                          }
-                        : {}),
                     params: { category: "$field.category", q: "$search", limit: "$limit", offset: "$offset" },
                 },
             },

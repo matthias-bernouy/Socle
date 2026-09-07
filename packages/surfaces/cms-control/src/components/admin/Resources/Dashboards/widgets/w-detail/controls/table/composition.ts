@@ -31,6 +31,7 @@ export function composeTable(control: HTMLElement, field: Extract<DashboardField
         if (field.editable && column.editable) {
             const editor = clone(column.type ?? "text");
             editor.setAttribute("data-table-column", column.id);
+            editor.setAttribute("data-submit-path", column.path);
             editor.setAttribute("aria-label", column.label);
             editor.setAttribute("value", `{{ tableRow.cells.${column.id} }}`);
             if (column.type === "select" || column.type === "combobox") {
@@ -66,6 +67,12 @@ export function composeTable(control: HTMLElement, field: Extract<DashboardField
             cell.textContent = `{{ tableRow.cells.${column.id} }}`;
             row.append(cell);
         }
+    }
+    if (field.editable && field.rowKey) {
+        const identity = clone("identity");
+        identity.setAttribute("data-submit-path", field.rowKey);
+        identity.setAttribute("value", `{{ tableRow.source.${field.rowKey} }}`);
+        row.append(identity);
     }
     if (field.editable) {
         head.append(clone("cell"));

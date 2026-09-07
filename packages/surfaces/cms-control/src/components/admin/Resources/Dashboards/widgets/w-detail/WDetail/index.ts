@@ -1,3 +1,6 @@
+import { configureDetailPresentation } from "./presentation";
+import { connectMediaForms } from "../../../runtime/actions/forms/views/media";
+import { connectDetailForm } from "../../../runtime/actions/forms/views/detail";
 import { readSourceData, refreshSourceContext } from "@bernouy/components";
 import { Component } from "@bernouy/components/base";
 import { bindDetailContext } from "../binding/context";
@@ -12,16 +15,19 @@ import type { WDetailData, WDetailField, WDetailSection } from "../types";
 import "../../w-section/WSection";
 import "cms-control/components/admin/Layout/ShellDetail/ShellDetail";
 import css from "./base.css" with { type: "text" };
+import panelCss from "./panel.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
 
 /** Visual shell and local edit operations. The page binding owns response rendering. */
 export class DashboardWDetail extends Component {
+    private stopMedia?: () => void;
+    private stopForm?: () => void;
     private configuration?: DetailWidget;
     private readonly fields: DetailFieldState;
     private readonly events: DetailEvents;
 
     constructor() {
-        super({ css, template: template as unknown as string });
+        super({ css: css + panelCss, template: template as unknown as string });
         this.fields = new DetailFieldState(
             this.shadowRoot!,
             () => this.readBinding(),
@@ -81,7 +87,12 @@ export class DashboardWDetail extends Component {
         const control = this.fields.control(fieldId);
         const lookup = control?.closest<DashboardLookup>("cms-dashboard-lookup");
         if (lookup && this.fields.find(fieldId)) {
-            this.fields.record(fieldId, value);
+            const field = this.fields.find(fieldId)!;
+            const current = control as HTMLElement & { values?: string[] };
+            this.fields.record(
+                fieldId,
+                field.input === "tokens" ? [...new Set([...(current.values ?? []), String(value)])] : value,
+            );
             lookup.acceptCreatedOption(option);
             refreshSourceContext(this);
         }
@@ -101,6 +112,10 @@ export class DashboardWDetail extends Component {
         refreshSourceContext(this);
     }
 
+    hasUnsavedChanges(): boolean {
+        return Object.keys(this.fields.draft).length > 0;
+    }
+
     currentFieldValues(): Record<string, unknown> {
         return this.fields.currentFields();
     }
@@ -114,12 +129,25 @@ export class DashboardWDetail extends Component {
     }
 
     override connectedCallback(): void {
+        configureDetailPresentation(this);
         this.syncScope();
+        this.stopMedia = connectMediaForms(this);
         this.events.bind();
+        this.stopForm = connectDetailForm(
+            this,
+            () => this.fields.validate(),
+            () => this.fields.draft,
+            (snapshot) => this.fields.acknowledgeDraft(snapshot),
+            this.configuration?.create && this.dataset.rowKey === "__new__" ? this.configuration.save : undefined,
+        );
     }
 
     disconnectedCallback(): void {
         this.events.unbind();
+        this.stopMedia?.();
+        this.stopMedia = undefined;
+        this.stopForm?.();
+        this.stopForm = undefined;
         this.fields.clear();
         releaseMediaFiles(this);
     }

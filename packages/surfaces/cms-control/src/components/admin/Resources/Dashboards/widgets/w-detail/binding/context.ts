@@ -1,3 +1,5 @@
+import { mediaUploadSessions } from "../../../runtime/actions/forms/views/media";
+import { sourceUrl } from "../../../runtime/source";
 import { directoryContext } from "../lookups/directoryContext";
 import { schemaContext } from "../controls/schema/binding/context";
 import { tableContext, tableLookupContexts } from "../controls/table/context";
@@ -26,7 +28,7 @@ export function bindDetailContext(
     const schemas = schemaContext(host, fields);
     const tables = tableContext(host, fields);
     const choices = reorderableContext(host, fields);
-    const actions = actionLayout(widget.actions ?? []);
+    const actions = actionLayout((widget.actions ?? []).filter((action) => !action.form));
     const rules = Object.fromEntries(fields.map((field) => [field.id, field.visibleWhen]));
     setSourceContext(host, () => {
         const source = readSourceData(host);
@@ -71,6 +73,7 @@ export function bindDetailContext(
                 }),
         );
         const nested = choices(values, edits);
+        const sessions = mediaUploadSessions(host);
         return {
             detailChoices: nested.result,
             detailChoiceLookupUrls: choiceLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
@@ -79,11 +82,37 @@ export function bindDetailContext(
             detailTableLookupUrls: tableLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
             ...schemas(values, resource),
             detailMedia: media(values, edits, nested.urls),
+            detailUploadSessions: sessions,
+            detailMediaUploadUrls: Object.fromEntries(
+                fields
+                    .filter((field) => field.type === "media" && field.persist === "save")
+                    .map((field) => {
+                        const ref = field.type === "media" ? field.actions?.upload : undefined;
+                        if (!ref) {
+                            return [field.id, ""];
+                        }
+                        const url = sourceUrl(host.dataset.sourceId ?? "", ref, { resource });
+                        if (sessions[field.id]) {
+                            url.searchParams.set("sessionId", sessions[field.id]!);
+                        }
+                        return [field.id, url.href];
+                    }),
+            ),
             ...users(values, resource),
             detailResourcePath: widget.source.itemPath ?? "",
             detailLookupUrls: detailLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
             detailReady: resource !== null && resource !== undefined,
+            detailPersisted: !widget.create || valueAt(resource, widget.save?.idPath ?? "id") != null,
             detailValues: effective,
+            detailResource: resource,
+            detailSelection: { id: host.dataset.rowKey ?? "" },
+            detailRow: resource,
+            detailOperationVisibility: Object.fromEntries(
+                (widget.actions ?? []).map((action) => [
+                    action.id,
+                    resource != null && matchesDashboardVisibility(action.visibleWhen, { fields: values, resource }),
+                ]),
+            ),
             detailActions: actions(values, resource),
             detailAmounts: amounts,
             detailVisibility: { fields: values, resource },

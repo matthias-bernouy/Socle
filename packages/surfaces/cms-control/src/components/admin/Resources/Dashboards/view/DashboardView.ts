@@ -1,3 +1,4 @@
+import { DETAIL_SAVED_EVENT, type DetailSaved } from "../runtime/actions/forms/views/detail";
 import { retryDashboardSource } from "../runtime/reload";
 import { showToast } from "@bernouy/components";
 import { currentSelection, DASHBOARD_SELECTION_EVENT, pushSelectionUrl, type DashboardSelection } from "../api";
@@ -18,7 +19,6 @@ import {
 } from "../widgets/shared";
 import { runDashboardMediaAction, runDashboardWidgetAction } from "./actions";
 import { DashboardViewController } from "./controller/DashboardViewController";
-import { runDashboardLookupCreate } from "./DashboardViewLookups";
 import baseCss from "./styles/base.css" with { type: "text" };
 import panelsCss from "./styles/panels.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
@@ -36,6 +36,7 @@ export class DashboardView extends DashboardViewController {
             this.syncFromSelection(currentSelection());
         }
         this.addEventListener("click", this.onClick);
+        this.addEventListener(DETAIL_SAVED_EVENT, this.onDetailSaved);
         this.addEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect as EventListener);
         this.addEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
         this.addEventListener(WIDGET_ACTION_EVENT, this.onWidgetAction as EventListener);
@@ -49,6 +50,7 @@ export class DashboardView extends DashboardViewController {
 
     disconnectedCallback(): void {
         this.removeEventListener("click", this.onClick);
+        this.removeEventListener(DETAIL_SAVED_EVENT, this.onDetailSaved);
         this.removeEventListener(WIDGET_ROW_SELECT_EVENT, this.onWidgetRowSelect as EventListener);
         this.removeEventListener(WIDGET_BACK_EVENT, this.onWidgetBack);
         this.removeEventListener(WIDGET_ACTION_EVENT, this.onWidgetAction as EventListener);
@@ -81,7 +83,27 @@ export class DashboardView extends DashboardViewController {
         }
     };
 
+    private onDetailSaved = (event: Event): void => {
+        const detail = event.target as HTMLElement;
+        const saved = (event as CustomEvent<DetailSaved>).detail;
+        if (
+            !saved?.created ||
+            !saved.id ||
+            !this.detailSelection ||
+            this.detailSelection.collection !== detail.dataset.widgetId
+        ) {
+            return;
+        }
+        this.openDetail(this.detailSelection.collection, saved.id);
+    };
+
     private onWidgetRowSelect = (event: CustomEvent<WidgetRowSelectDetail>): void => {
+        if (event.detail.source) {
+            this.selectedSource = event.detail.source;
+        }
+        if (event.detail.dashboard) {
+            this.selectedDashboard = event.detail.dashboard;
+        }
         this.invalidateDetailResource();
         this.detailSelection = { collection: event.detail.collection, row: event.detail.rowKey };
         if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
@@ -142,9 +164,6 @@ export class DashboardView extends DashboardViewController {
         const key = detailKey(this.detailSelection.collection, event.detail.rowKey);
         const previousDraft = this.drafts.get(key) ?? {};
         this.drafts.set(key, { ...previousDraft, [event.detail.field]: event.detail.value });
-        if (event.detail.created) {
-            void runDashboardLookupCreate(this.actionContext(), event.detail, previousDraft, event.target);
-        }
     };
 }
 

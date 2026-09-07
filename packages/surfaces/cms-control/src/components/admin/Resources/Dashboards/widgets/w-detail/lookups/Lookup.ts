@@ -53,7 +53,7 @@ export class DashboardLookup extends HTMLElement {
         }
     }
     acceptCreatedOption(option: DashboardOption): void {
-        this.created = distinctOptions([...this.created, option]);
+        this.created = distinctOptions([option, ...this.created]);
         refreshSourceContext(this);
     }
     private context(rendered: unknown) {
@@ -75,9 +75,9 @@ export class DashboardLookup extends HTMLElement {
         const context = {
             lookupValue: this.getAttribute("selected-value") ?? "",
             lookupOptions: distinctOptions([
+                ...this.created,
                 ...this.declared,
                 ...this.options,
-                ...this.created,
                 ...selectedLookupOptions(this),
             ]),
             lookupHasMore: this.hasMore,

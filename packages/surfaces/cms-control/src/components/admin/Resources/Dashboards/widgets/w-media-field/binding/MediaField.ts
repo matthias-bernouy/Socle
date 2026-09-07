@@ -1,3 +1,4 @@
+import { MediaFormValue } from "./formValue";
 import { Component } from "@bernouy/components/base";
 import { refreshSourceContext } from "@bernouy/components";
 import css from "../styles";
@@ -11,7 +12,15 @@ import { MediaPreview } from "./Preview";
 
 /** Visual shell and local file interactions. The page binding owns every media tile. */
 export class DashboardMediaField extends Component {
+    static formAssociated = true;
     static observedAttributes = ["label", "count"];
+    private readonly formValue: MediaFormValue;
+    get form(): HTMLFormElement | null {
+        return this.formValue.internals.form;
+    }
+    get value(): Array<string | number> {
+        return this.formValue.value;
+    }
     readonly preview: MediaPreview;
     private pendingItems?: DashboardMediaItem[];
     private replaceIndex: number | undefined;
@@ -25,6 +34,7 @@ export class DashboardMediaField extends Component {
     );
     constructor() {
         super({ css: css + slotCss, template: template as unknown as string });
+        this.formValue = new MediaFormValue(this, () => this.items);
         this.preview = new MediaPreview(this);
     }
     override connectedCallback(): void {
@@ -34,6 +44,7 @@ export class DashboardMediaField extends Component {
             this.addEventListener(name, handler);
         }
         this.preview.connect();
+        this.formValue.connect();
     }
     disconnectedCallback(): void {
         this.fileInput.removeEventListener("change", this.onFiles);
@@ -42,6 +53,7 @@ export class DashboardMediaField extends Component {
             this.removeEventListener(name, handler);
         }
         this.preview.disconnect();
+        this.formValue.disconnect();
     }
     attributeChangedCallback(name: string): void {
         if (name === "label") {

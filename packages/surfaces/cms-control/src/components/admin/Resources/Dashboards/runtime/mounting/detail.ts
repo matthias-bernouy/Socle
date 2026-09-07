@@ -1,3 +1,7 @@
+import { composeDetailOperations } from "../actions/forms/views/operations";
+import { composeMediaForms } from "../actions/forms/views/media";
+import { formId } from "../actions/forms/views/composition";
+import { composeLookupCreation } from "../actions/forms/views/creation";
 import { setSourceData } from "@bernouy/components";
 import { setValueAt } from "../expressions";
 import { composeDetail } from "../../widgets/w-detail/binding/composition";
@@ -14,12 +18,6 @@ export function detailElement(
     detail: DetailSelection | null,
 ): HTMLElement {
     const rowKey = detail?.row ?? "";
-    if (rowKey === "__new__") {
-        const element = detailContent(widget, context, rowKey);
-        publishDetailResource(element as DashboardWDetail, widget, {});
-        attachDetailSource(element, widget, context, rowKey);
-        return element;
-    }
     const directResource = matchingDetailResource(widget, context, rowKey);
     if (directResource) {
         const element = detailContent(widget, context, rowKey, directResource);
@@ -40,7 +38,7 @@ export function attachDetailSource(
     const wrapper = sourceWrapper(
         context.dashboard.source,
         widget.source,
-        { selection: { id: rowKey } },
+        { selection: { id: rowKey === "__new__" ? undefined : rowKey } },
         "dashboardData",
         requiredSourceParams(context, widget.source),
     );
@@ -64,16 +62,34 @@ function detailContent(
 ): HTMLElement {
     const element = new DashboardWDetail();
     element.dataset.widgetId = widget.id;
+    element.id = formId();
     element.configure(widget);
     const selection = { collection: widget.id, row: rowKey };
-    element.append(composeDetail(widget, (child) => navigationListElement(child, context, selection)));
+    element.append(
+        composeDetail(widget, context, (child) => navigationListElement(child, context, selection, undefined, element)),
+    );
+    const form = element.querySelector<HTMLFormElement>("[data-detail-save]");
+    if (form && !(widget.create && rowKey === "__new__")) {
+        form.setAttribute("cms-source-success-reload", `#${element.id}`);
+    }
+    composeLookupCreation(element, widget, context);
+    composeMediaForms(element, widget, context);
+    composeDetailOperations(element, widget, context);
     if (directResource !== null) {
         publishDetailResource(element, widget, directResource.resource);
     }
     element.setAttribute("data-row-key", rowKey);
     element.setAttribute("data-source-id", context.dashboard.source);
     for (const relationWidget of widget.relationWidgets ?? []) {
-        element.append(relationDetailSectionElement(relationWidget));
+        const section = relationDetailSectionElement(relationWidget);
+        if (form) {
+            section.removeAttribute("slot");
+            form.querySelector(relationWidget.placement === "aside" ? "[data-form-aside]" : "[data-form-main]")!.append(
+                section,
+            );
+        } else {
+            element.append(section);
+        }
     }
     return element;
 }

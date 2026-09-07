@@ -20,6 +20,8 @@ export type WidgetAction = {
 };
 
 export type WidgetRowSelectDetail = {
+    dashboard?: string;
+    source?: string;
     collection: string;
     rowKey: string;
 };
@@ -44,8 +46,6 @@ export type WidgetFieldChangeDetail = {
     rowKey: string;
     field: string;
     value: WidgetFieldValue;
-    created?: boolean;
-    resource?: unknown;
 };
 
 export type WidgetMediaActionDetail = DashboardMediaActionDetail & {

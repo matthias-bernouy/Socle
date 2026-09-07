@@ -6,7 +6,7 @@ import "./parts/Thumbnail";
 
 export function composeMedia(
     control: HTMLElement,
-    field: { id: string; multiple?: boolean },
+    field: { id: string; multiple?: boolean; persist?: "save" },
     path = `detailMedia.${field.id}`,
 ): void {
     const declarations = document.createElement("template");
@@ -32,5 +32,6 @@ export function composeMedia(
     thumbnail.setAttribute("selected-index", `{{ ${path}.index }}`);
     control.setAttribute("count", `{{ ${path}.items.length }}`);
     control.toggleAttribute("multiple", field.multiple === true);
+    control.toggleAttribute("persist-on-save", field.persist === "save");
     control.append(tile, add, image, caption, counter, thumbnail);
 }

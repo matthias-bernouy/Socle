@@ -1,4 +1,5 @@
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
+import { isCreatable } from "cms-control/components/admin/Resources/Dashboards/runtime/mapping/fieldSupport";
 import { composeDetail } from "cms-control/components/admin/Resources/Dashboards/widgets/w-detail/binding/composition";
 import { expect, test } from "bun:test";
 import { setSourceData } from "@bernouy/components";
@@ -80,4 +81,27 @@ test("bound choice controls preserve their options and emit typed edited values 
     detail.querySelector<HTMLElement>("[data-action=save]")!.click();
     expect(actions).toHaveLength(1);
     expect(tags.getAttribute("aria-invalid")).toBe("true");
+});
+
+test("a referenced lookup detail does not enable free-text creation", () => {
+    const field = {
+        id: "brand",
+        label: "Brand",
+        path: "brandId",
+        type: "combobox" as const,
+        lookup: {
+            endpoint: "brands",
+            valuePath: "id",
+            labelPath: "name",
+            create: {
+                dashboardId: "taxonomy",
+                viewId: "brandDetail",
+                presentation: "modal" as const,
+                valuePath: "id",
+                labelPath: "name",
+            },
+        },
+    };
+    expect(isCreatable(field)).toBe(false);
+    expect(isCreatable({ ...field, allowCustom: true })).toBe(true);
 });

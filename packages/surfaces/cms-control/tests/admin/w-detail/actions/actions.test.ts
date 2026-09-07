@@ -221,7 +221,7 @@ describe("dashboard detail widget actions", () => {
         ]);
     });
 
-    test("applies inline-created lookup options without rerendering", async () => {
+    test("applies options returned by a lookup detail without rerendering", async () => {
         globalThis.fetch = (async () => Response.json([])) as unknown as typeof fetch;
         const detail = document.createElement("cms-dashboard-w-detail") as HTMLElement & {
             applyLookupCreate: (fieldId: string, value: unknown, option: { value: string; label: string }) => void;

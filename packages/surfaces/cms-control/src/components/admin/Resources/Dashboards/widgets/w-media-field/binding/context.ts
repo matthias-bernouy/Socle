@@ -20,16 +20,11 @@ export function mediaContext(owner: HTMLElement, fields: DashboardField[]) {
                         draft && Array.isArray(raw)
                             ? (raw as DashboardMediaItem[])
                             : mediaValue(raw, field, owner.dataset.sourceId ?? "");
+                    const previous = entry?.items ?? [];
                     entry = {
                         raw,
                         draft,
-                        items: items.map((item, index) => ({
-                            ...item,
-                            index,
-                            thumbnail: item.thumbnailUrl || item.url,
-                            title: item.name?.trim() || item.alt?.trim() || `Image ${index + 1}`,
-                            previewAlt: item.alt?.trim() || item.name?.trim() || `Image ${index + 1}`,
-                        })),
+                        items: items.map((item, index) => projectMediaItem(item, index, previous[index])),
                     };
                     cache.set(field.id, entry);
                 }
@@ -57,4 +52,25 @@ export function mediaContext(owner: HTMLElement, fields: DashboardField[]) {
         mediaFiles(owner).retain(urls);
         return result;
     };
+}
+
+/** Stable projection objects let the existing repeat update a tile without replacing its DOM. */
+function projectMediaItem(item: DashboardMediaItem, index: number, previous?: MediaItem): MediaItem {
+    const next: MediaItem = {
+        id: item.id,
+        url: item.url,
+        thumbnailUrl: item.thumbnailUrl,
+        alt: item.alt,
+        name: item.name,
+        pending: item.pending,
+        index,
+        thumbnail: item.thumbnailUrl || item.url,
+        title: item.name?.trim() || item.alt?.trim() || `Image ${index + 1}`,
+        previewAlt: item.alt?.trim() || item.name?.trim() || `Image ${index + 1}`,
+    };
+    // Staging replaces a temporary ID; the same local file still identifies that tile.
+    if (previous && (previous.id === item.id || (previous.pending && previous.url === item.url))) {
+        return Object.assign(previous, next);
+    }
+    return next;
 }

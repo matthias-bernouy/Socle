@@ -41,12 +41,24 @@ server-only modules.
 - Static pages compose custom elements; avoid page-specific inline scripts.
 - Use `@bernouy/components` for `<p9r-*>`, `<w13c-*>`, and binding runtime.
 - Use Control-owned `<cms-*>` tags only for internal admin/editor components.
-- `cms-shell-detail` owns the `back`, `title`, `actions`, and `body` slots.
+- `cms-shell-detail` owns the `back`, `title`, `actions`, `body`, and `footer` slots.
   Put columns in `cms-shell-detail-body`, which owns `main` and `aside`.
   A shared form can occupy `slot="body"` and contain that column component;
   header submit buttons use `form="…"`. Keep controls and their owning form in
   the same light DOM tree, and keep independent action forms outside it.
   The existing `--w-detail-*` sizing variables apply through both shells.
+- `cms-shell-detail[contained]` fills its parent's height, scrolls only its body,
+  and displays a fixed header and footer. Detail views presented in a dialog use
+  `p9r-modal[placement="end"][content-layout="contained"]` and this shell mode;
+  their fields and form stay in the same light DOM. Panel bodies use `tabbed`:
+  above 760 px of available body width, main and aside remain separate columns;
+  otherwise `p9r-tabs` switches between Details and Settings without unmounting
+  fields. No tab bar appears without aside content. `main-label` and `aside-label`
+  customize the shell's labels. `reveal(control)` exposes the relevant region
+  before custom validation focuses a control; native invalid events are handled
+  by the body itself. Ordinary page bodies retain their stacked narrow layout.
+  Panel sections retain the same `cms-detail-section` cards, spacing and typography
+  as page views, over the admin's `--bg-base` background.
 - Events that cross shadow boundaries should use a bubbles/composed event
   helper.
 - Design tokens come from `@bernouy/components/style.css`, exposed through

@@ -56,7 +56,6 @@ function define(tag: string, constructor: CustomElementConstructor) {
     }
 }
 
-define(CMS_BINDING_CORE_TAG, BindingCore);
 define("cms-page-form-controller", PageFormController);
 define("cms-page-copy-source", PageCopySource);
 setBindingFilters({
@@ -65,6 +64,8 @@ setBindingFilters({
     jsonurl: (value) => (value === undefined ? undefined : encodeURIComponent(JSON.stringify(value))),
     lines: (value) => (Array.isArray(value) ? value.join("\n") : value),
 });
+// Existing binding cores connect during registration and must capture the admin filters.
+define(CMS_BINDING_CORE_TAG, BindingCore);
 define("p9r-accordion", Accordion);
 define("p9r-accordion-item", AccordionItem);
 define("p9r-action-menu", ActionMenu);

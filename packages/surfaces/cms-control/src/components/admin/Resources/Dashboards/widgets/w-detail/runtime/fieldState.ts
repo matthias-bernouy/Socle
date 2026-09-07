@@ -4,6 +4,7 @@ import type { WDetailData, WDetailField } from "../types";
 import { serializedTableRows } from "../controls/table/context";
 import { remainingDraft } from "../../../domain/drafts";
 import { validateReorderable } from "../../w-reorderable-list/binding/validation";
+import type { CmsShellDetailBody } from "cms-control/components/admin/Layout/ShellDetail/body/ShellDetailBody";
 
 export type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
 
@@ -64,6 +65,13 @@ export class DetailFieldState {
         return this.values;
     }
 
+    acknowledgeDraft(submitted: Record<string, unknown>): void {
+        this.values = remainingDraft(this.values, submitted);
+        this.displayValues = Object.fromEntries(
+            Object.entries(this.displayValues).filter(([id]) => Object.hasOwn(this.values, id)),
+        );
+    }
+
     syncScope(scopeKey: string): void {
         if (this.scopeKey === scopeKey) {
             return;
@@ -118,7 +126,14 @@ export class DetailFieldState {
     currentFields(): Record<string, unknown> {
         const fields: Record<string, unknown> = { ...this.values };
         const fieldsById = new Map(this.fields().map((field) => [field.id, field]));
-        for (const control of Array.from(this.root.querySelectorAll<HTMLElement>("[data-field-control]"))) {
+        for (const control of Array.from(
+            this.root.querySelectorAll<HTMLElement>(
+                "[data-field-control]:not([data-operation-form] [data-field-control])",
+            ),
+        )) {
+            if (control.closest("cms-dashboard-w-detail") !== this.root) {
+                continue;
+            }
             const field = fieldsById.get(control.dataset.fieldControl ?? "");
             if (field) {
                 fields[field.id] = readFieldControlValue(field, control);
@@ -160,8 +175,13 @@ export class DetailFieldState {
             this.syncRequiredValidity(field, control, values[field.id]);
             invalid ??= invalidFieldControl(field, control);
         }
-        invalid ??= this.root.querySelector<HTMLElement>("[data-field-control][invalid]");
-        invalid?.focus();
+        invalid ??= this.root.querySelector<HTMLElement>(
+            "[data-field-control][invalid]:not([data-operation-form] [data-field-control])",
+        );
+        if (invalid) {
+            invalid.closest<CmsShellDetailBody>("cms-shell-detail-body")?.reveal(invalid);
+            invalid.focus();
+        }
         return invalid === null;
     }
 
@@ -178,8 +198,13 @@ export class DetailFieldState {
 
     control(fieldId: string): HTMLElement | null {
         return (
-            Array.from(this.root.querySelectorAll<HTMLElement>("[data-field-control]")).find(
-                (control) => control.dataset.fieldControl === fieldId,
+            Array.from(
+                this.root.querySelectorAll<HTMLElement>(
+                    "[data-field-control]:not([data-operation-form] [data-field-control])",
+                ),
+            ).find(
+                (control) =>
+                    control.dataset.fieldControl === fieldId && control.closest("cms-dashboard-w-detail") === this.root,
             ) ?? null
         );
     }

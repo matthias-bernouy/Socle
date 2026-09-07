@@ -1,3 +1,4 @@
+import { composeCreation } from "../actions/forms/views/creation";
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import type { DetailSelection, RenderContext } from "../../domain";
 import { DashboardWNavigationList } from "../../widgets/w-navigation-list/WNavigationList";
@@ -44,6 +45,7 @@ export function navigationListElement(
     context: RenderContext,
     detail: DetailSelection | null,
     slot?: string,
+    formOwner?: HTMLElement,
 ): HTMLElement {
     const wrapper = sourceWrapper(
         context.dashboard.source,
@@ -58,6 +60,7 @@ export function navigationListElement(
     }
     wrapper.append(navigationItemsTemplate(widget));
     element.append(wrapper);
+    composeCreation(element, widget, context, formOwner);
     return element;
 }
 

@@ -78,5 +78,5 @@ export function schemaDefinitions(
 }
 
 export function isCreatable(field: Extract<DashboardField, { type: "combobox" | "tokens" }>): boolean {
-    return Boolean(field.allowCustom || field.lookup?.create?.mode === "inline");
+    return field.allowCustom === true;
 }

@@ -1,3 +1,4 @@
+import { submissionName } from "../../../runtime/actions/forms/views/composition";
 import { composeUserOptions } from "../lookups/users";
 import { composeSchema } from "../controls/schema/binding/composition";
 import { composeTable } from "../controls/table/composition";
@@ -10,7 +11,7 @@ import { route } from "../../../api";
 import { composeReadonly, fieldBinding } from "./readonly";
 import { optionList } from "../../../runtime/mapping/fieldSupport";
 
-export function fieldElement(field: DashboardField, root: string): HTMLElement {
+export function fieldElement(field: DashboardField, root: string, form?: { valuesPath?: string }): HTMLElement {
     const template = document.createElement("template");
     template.innerHTML = controls as unknown as string;
     const kind =
@@ -40,6 +41,15 @@ export function fieldElement(field: DashboardField, root: string): HTMLElement {
     } else {
         control.setAttribute("label", field.label);
         control.setAttribute("data-field-control", field.id);
+        if (form && !(field.type === "table" && !field.editable)) {
+            control.setAttribute("name", submissionName(field.name ?? field.path, form.valuesPath));
+            if (field.empty) {
+                control.setAttribute("cms-form-empty", field.empty);
+            }
+            if (field.valueType) {
+                control.setAttribute("cms-form-value-type", field.valueType);
+            }
+        }
         if (field.type === "checkbox") {
             control.setAttribute("cms-bind-boolean-checked", field.path === "." ? root : `${root}.${field.path}`);
             control.setAttribute("aria-label", field.label);

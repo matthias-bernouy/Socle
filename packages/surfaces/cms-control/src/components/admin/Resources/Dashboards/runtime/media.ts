@@ -65,6 +65,9 @@ function mediaUrl(item: unknown, field: MediaDefinition, sourceId: string): stri
 }
 
 function mediaFileEndpoint(field: MediaDefinition): string {
+    if (field.item.endpoint) {
+        return field.item.endpoint;
+    }
     const upload = field.actions?.upload?.endpoint ?? "";
     if (!upload.startsWith("upload") || upload.length <= "upload".length) {
         return "";

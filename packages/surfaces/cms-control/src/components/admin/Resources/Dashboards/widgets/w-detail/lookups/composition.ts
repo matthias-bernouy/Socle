@@ -21,7 +21,7 @@ export function composeLookup(control: HTMLElement, field: LookupField): HTMLEle
         control.setAttribute("loading", "{{ $source.loading }}");
         control.setAttribute("has-more", "{{ lookupHasMore }}");
     }
-    control.toggleAttribute("creatable", Boolean(field.allowCustom || lookup.create?.mode === "inline"));
+    control.toggleAttribute("creatable", field.allowCustom === true);
     const template = document.createElement("template");
     template.innerHTML = templates as unknown as string;
     control.append(
