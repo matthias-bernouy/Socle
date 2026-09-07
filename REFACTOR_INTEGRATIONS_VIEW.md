@@ -1,6 +1,6 @@
 # Refonte des vues des intégrations
 
-Date : 7 septembre 2026. Statut : étape 3 terminée, après révision du contrat de sauvegarde. Arrêt avant l’étape 4.
+Date : 7 septembre 2026. Statut : étape 4 complétée par le contrat de fiche unique et sa validation navigateur ; installation locale des nouvelles vues et sessions médias effectuée et vérifiée sur Courtside. Aucun nouveau commit. Généralisation de l’étape 5 non réalisée.
 
 ## 1. Cadre de travail
 
@@ -9,7 +9,7 @@ Ce document décrit la refonte des fiches des dashboards, de leurs formulaires, 
 - Le travail avance **étape par étape**, dans l’ordre indiqué à la fin du document.
 - **Ne pas créer de commit sans demande explicite.** Après l’étape 2, l’utilisateur a autorisé le commit des documents, du shell migré et de ses tests. Cette autorisation ne déclenche pas les étapes suivantes.
 - **À la fin de chaque étape, arrêter le travail**, présenter le résultat et attendre la demande de poursuivre. Une étape terminée ne déclenche pas automatiquement la suivante.
-- Les étapes 1 et 2 ont été réalisées sur `master`, puis commitées après autorisation (`f97f7f860`). L’étape 3 est réalisée sur `master`, sans nouveau commit, avec relecture ciblée et verrouillage temporaire de l’édition.
+- Les étapes 1 et 2 ont été réalisées sur `master`, puis commitées après autorisation (`f97f7f860`). L’étape 3 a ensuite été commitée après autorisation (`a9446c4f4`). L’étape 4 est réalisée sur `master`, sans nouveau commit.
 - Le développement et les vérifications restent locaux. Aucune modification, installation ou publication en production.
 - Conserver les données et les réglages de la démo Courtside ainsi que les modifications locales sans rapport avec ce chantier.
 - Conserver le principe de versions de départ `1.0.0` demandé pour cette refonte. Ne pas publier de nouvelle version ni construire une couche de compatibilité permanente pour des contrats que nous décidons de remplacer ensemble.
@@ -96,18 +96,19 @@ L’archivage et les autres transitions métier restent des opérations distinct
 
 ### 3.5. Création adaptée au contexte
 
-La modal et les valeurs par défaut sont complémentaires. La définition choisit un parcours adapté à la ressource, et l’intégration applique ses valeurs par défaut métier côté serveur.
+La création et l’édition utilisent une seule définition de fiche et le même endpoint Save. Une capacité `create` explicite autorise la source de lecture à recevoir une sélection sans identifiant et à renvoyer les valeurs initiales métier, sans créer de ressource persistée. Les champs techniques absents utilisent `empty: "omit"`.
 
-Pour un produit, le parcours proposé est :
+Le parcours produit retenu est désormais :
 
-1. `Create product` ouvre une modal courte avec le titre et les informations réellement indispensables pour commencer.
-2. `Create draft` crée le produit avec les valeurs initiales appropriées, notamment un statut brouillon et une visibilité non publique.
-3. La réponse permet d’ouvrir sa fiche complète.
-4. L’utilisateur complète les images, métadonnées, variantes et autres champs, puis enregistre le formulaire principal.
+1. `Create product` ouvre directement la fiche avec ses valeurs initiales.
+2. Les champs et les images sont préparés avant la première sauvegarde. Les uploads temporaires utilisent une session indépendante du produit.
+3. Save crée la ressource et rattache les images dans la transaction métier.
+4. Le succès ouvre la même définition de fiche avec l’identifiant reçu, via la navigation existante et un GET normal.
+5. Les sauvegardes suivantes relisent la même source avec `cms-source-success-reload` et conservent les éléments inchangés.
 
-Annuler la modal avant création ne crée rien. Une fois `Create draft` réussi, le brouillon existe, même si l’utilisateur quitte ensuite la fiche. Le libellé et le parcours doivent rendre ce comportement clair.
+L’API expérimentale de changement d’URL pendant la transaction du binding a été retirée. Aucun nouveau callback de relecture n’est conservé. La première navigation recrée le DOM de la fiche et affiche le chargement pendant son GET ; cette limite est mesurée et documentée comme comportement à évaluer, pas présentée comme une optimisation sans changement visuel.
 
-Pour une marque, la modal peut suffire à réaliser toute la création. Pour une ressource nécessitant beaucoup d’informations avant de pouvoir exister, la création peut ouvrir directement une fiche préremplie. Ces parcours réutilisent les mêmes champs et mécanismes de formulaire.
+Les mêmes vues peuvent s’ouvrir dans une grande modal. Le lookup marque référence la vue de taxonomie pour créer ou modifier via les boutons `+` et crayon. La création réussie sélectionne la ressource depuis le résultat et ferme la modal. L’édition relit sa source avant de fermer et d’actualiser le libellé. Le brouillon du produit reste intact.
 
 Un lookup permettant de créer une marque reste une opération indépendante : la création enregistre immédiatement la marque, puis sélectionne son identifiant dans le produit en cours d’édition. L’association au produit est enregistrée au prochain Save. Annuler les modifications du produit ne supprime pas la marque créée.
 
@@ -134,7 +135,7 @@ La structure désormais implémentée est :
 - déplacer la disposition des colonnes dans un composant `cms-shell-detail-body` ;
 - garder des conteneurs ordinaires pour les contenus principal et latéral, sans multiplier les composants sans responsabilité propre.
 
-Schéma de composition, non exécutable en l’état : les attributs de soumission et les champs sont abrégés. Le composant de body existe depuis l’étape 2 ; le raccord des formulaires des widgets reste à faire.
+Schéma de composition, non exécutable en l’état : les attributs de soumission et les champs sont abrégés. Le composant de body existe depuis l’étape 2 ; l’étape 4 raccorde ce formulaire au widget produit.
 
 ```html
 <section cms-source="/products/42 as item">
@@ -249,18 +250,20 @@ Livrable : [bilan de l’étape 2 et preuves](docs/quality/integration-views/ste
 - [x] Tester les formulaires ordinaires existants pour éviter de modifier implicitement leur comportement.
 - [x] Présenter les résultats et les limites restantes, puis s’arrêter.
 
-Livrable : [bilan de l’étape 3, preuves et limites](docs/quality/integration-views/step-3.md). `cms-bind-value` est retiré ; les contrôles utilisent les attributs interpolés et le binding booléen existant. Arrêt avant le parcours produit.
+Livrable : [bilan de l’étape 3, preuves et limites](docs/quality/integration-views/step-3.md). `cms-bind-value` est retiré ; les contrôles utilisent les attributs interpolés et le binding booléen existant. Commit autorisé : `a9446c4f4`. Le parcours produit fait l’objet de l’étape suivante.
 
 ### Étape 4 — Parcours produit complet
 
-- [ ] Migrer la définition du produit vers la lecture commune, le formulaire principal et les opérations séparées.
-- [ ] Implémenter la modal de création de brouillon, les valeurs par défaut métier et l’ouverture de la fiche créée.
-- [ ] Vérifier les champs de `main` et `aside`, les affichages en lecture seule, les métadonnées et les variantes.
-- [ ] Terminer la création indépendante depuis un lookup, avec sélection dans le brouillon du produit.
-- [ ] Adapter le cycle des images et les endpoints pour valider leurs associations au Save, avec annulation et nettoyage.
-- [ ] Implémenter la suppression si elle est autorisée par le domaine et vérifier les refus métier.
-- [ ] Tester tout le parcours en navigateur et vérifier les données après relecture réelle.
-- [ ] Présenter la fiche produit complète et ses preuves de validation, puis s’arrêter avant la généralisation.
+- [x] Migrer la définition du produit vers la lecture commune, le formulaire principal et les opérations séparées.
+- [x] Remplacer la création courte par la fiche unique initialisée via sa source, puis ouvrir la fiche persistée par la navigation existante.
+- [x] Vérifier les champs de `main` et `aside`, les affichages en lecture seule, les métadonnées et les variantes.
+- [x] Terminer la création indépendante depuis un lookup, avec sélection dans le brouillon du produit.
+- [x] Adapter le cycle des images et les endpoints pour valider leurs associations au Save, avec annulation et nettoyage.
+- [x] Examiner la suppression : aucune suppression produit n’est autorisée par le domaine Commerce ; conserver l’archivage.
+- [x] Tester tout le parcours en navigateur et vérifier les données après relecture réelle.
+- [x] Présenter la fiche produit complète et ses preuves de validation, puis s’arrêter avant la généralisation.
+
+Livrables : [bilan initial de l’étape 4](docs/quality/integration-views/step-4.md) [évolution vers la fiche unique et retrait de l’API expérimentale](docs/quality/integration-views/creation-navigation.md), puis [installation et tests réels sur Courtside local](docs/quality/integration-views/local-installation.md).
 
 ### Étape 5 — Généralisation aux intégrations
 

@@ -20,6 +20,8 @@ Le `path` d’un champ est relatif à cette ressource. Il fournit aussi, par dé
 
 Une propriété optionnelle `name` peut préciser un autre chemin de soumission pour un champ lorsque son nom d’édition diffère de son chemin de lecture. Elle correspond au nom d’un vrai contrôle HTML ; elle ne permet ni expressions ni construction arbitraire de corps. Les fiches migrées doivent privilégier des chemins cohérents plutôt qu’un renommage systématique.
 
+Pour une table éditable, `rowKey` peut désigner un chemin scalaire d’identité métier à conserver lors de la sauvegarde, par exemple `key` pour un axe de variantes existant. La composition ajoute un contrôle caché technique dans chaque ligne ; le contrôle de table soumet cette seule identité avec les cellules éditables, sans recopier l’objet serveur complet. Une nouvelle ligne sans identité omet cette valeur. `rowKey` ne peut pas recouvrir une colonne éditable : l’intégration conserve les propriétés non éditées en retrouvant la ligne par cette identité. Il ne s’agit pas d’une clé de rendu ni d’un nouveau mécanisme de réconciliation du binding.
+
 Les réponses de lecture et d’écriture n’ont pas à utiliser la même URL. Leurs réponses n’ont pas non plus à partager une forme : après succès, la source de lecture est relue. Un succès HTTP 204 est accepté.
 
 ## 3. Formulaire de sauvegarde
@@ -107,7 +109,7 @@ Les actions existantes conservent leurs identifiants, conditions et présentatio
     { "id": "maximumAmount", "path": "maximumAmount", "label": "Maximum amount", "type": "money" },
     { "id": "reason", "path": "reason", "label": "Reason", "type": "textarea" }
   ],
-  "refresh": "response"
+  "refresh": "read"
 }
 ```
 
@@ -119,36 +121,53 @@ Ne pas inventer un `deleteProduct` : cet endpoint n’existe pas dans Commerce a
 
 Les opérations de publication de versions immuables, d’archivage, de paiement ou d’envoi restent explicites. Un téléchargement et un lien de navigation gardent leur nature propre. Les actions qui nécessitent une actualisation relisent la source du détail après succès.
 
-## 6. Création
+## 6. Création et édition d’une même fiche
 
-Ajouter `create` optionnel sur le widget de collection qui propose la création (`w-table` ou `w-navigation-list`). Il référence le détail de destination et utilise le même contrat de formulaire. Son choix de présentation est explicite : `modal` ou `page`.
+Une création réutilise la définition du détail, sa source commune, ses sections, ses champs et son unique `save`. Le détail déclare la capacité `create: {}` (avec `label` et `title` facultatifs). Sa source GET accepte l’absence d’identité et renvoie des valeurs initiales sans créer de ressource persistée. L’intégration fournit les valeurs par défaut métier ; elle peut fournir un jeton scalaire de création pour rendre les nouvelles sauvegardes idempotentes.
+
+La collection (`w-table` ou `w-navigation-list`) référence ce détail :
 
 ```json
 {
   "create": {
-    "label": "Create product",
-    "mode": "modal",
-    "view": "productDetail",
-    "rowPath": "id",
-    "source": { "endpoint": "newProduct" },
-    "endpoint": "createProduct",
-    "submitLabel": "Create draft",
-    "fields": [
-      { "id": "title", "path": "title", "label": "Title", "type": "text", "required": true }
-    ]
+    "viewId": "productDetail",
+    "presentation": "page",
+    "label": "Create product"
   }
 }
 ```
 
-`newProduct` et `createProduct` sont des endpoints à ajouter, pas des endpoints actuellement présents. `source` est facultative lorsque la création n’a pas besoin d’une lecture de valeurs initiales. `fields` réutilise le contrat des champs, sans imposer que la création et l’édition aient les mêmes champs requis. Le mode `page` peut aussi utiliser des sections principales et latérales.
+`presentation` vaut `page` ou `modal`. `dashboardId` facultatif désigne un autre dashboard ; son absence vise le dashboard courant. Les références locales sont validées contre un détail possédant `save` et `create`. Les références entre dashboards sont résolues et contrôlées contre le catalogue installé lors du montage. Un identifiant absent, une cible inexistante ou une capacité absente doit produire une erreur explicite.
 
-Au succès, `rowPath` extrait l’identité depuis la réponse, ouvre `view` et laisse sa source charger la fiche. Si une modal suffit à toute l’opération, la destination peut être omise : actualiser la liste puis fermer la modal. L’absence de destination et celle d’identité nécessaire à une navigation sont validées explicitement.
+Les anciens objets de création `endpoint`, `fields`, `body`, `mode`, `opens` et `rowPath` sont refusés. Aucun formulaire de création parallèle ne subsiste dans la définition. Une modal monte le même détail qu’une page, y compris son contexte de lecture et ses contrôles complexes.
 
-Pour le produit : générer le slug unique côté intégration, appliquer `draft` et `hidden`, puis ouvrir la fiche persistée. Les règles de complétude nécessaires à la publication doivent être distinguées des exigences minimales de création d’un brouillon ; les métadonnées requises par une catégorie ne doivent pas empêcher de créer le brouillon minimal prévu. L’endpoint reste responsable de ces décisions.
+Les champs techniques de Save peuvent utiliser `empty: "omit"` pour l’identité et la révision absentes avant la première sauvegarde. Les autres champs techniques restent requis. La même cible de sauvegarde reçoit le brouillon de création ou la fiche existante. La réponse de création doit contenir son identité scalaire à `save.idPath` (défaut `id`) : elle sert à relire le détail persisté, sans fusionner la réponse de mutation avec les données affichées. Un `204` demeure possible pour une mise à jour, mais ne fournit pas l’identité nécessaire à la première création.
 
-Les créations de sections et questions de Forms, déjà effectuées par des endpoints dédiés, réutilisent leurs paramètres de parent dans les champs techniques. `openSettings` de Delivery est une navigation vers un singleton, pas une création : supprimer l’ambiguïté avec le chemin générique `__new__` lors de la migration.
+Un lookup `create` ou `edit` référence aussi ce détail ; les raccourcis de lookup utilisent uniquement `presentation: "modal"`, avec `valuePath` et `labelPath` explicites. Par exemple :
 
-Le lookup créateur réutilise le même formulaire. Il enregistre sa ressource indépendamment puis sélectionne son identité dans le contrôle appelant. Il ne soumet pas le formulaire principal, ne le marque pas enregistré et ne supprime pas la ressource créée si l’utilisateur abandonne ensuite sa fiche.
+```json
+{
+  "create": {
+    "dashboardId": "taxonomy",
+    "viewId": "brandDetail",
+    "presentation": "modal",
+    "valuePath": "id",
+    "labelPath": "name"
+  }
+}
+```
+
+La marque est sauvegardée indépendamment, puis sélectionnée dans le contrôle appelant ; le formulaire du produit reste un brouillon. L’édition utilise la sélection existante et exige une cible avec `save`, sans exiger la capacité `create`.
+
+### Médias avant la première sauvegarde
+
+Un champ `media` avec `persist: "save"` et une action `upload` déclare `staging: { "sessionField": "uploadSessionId" }`. Le staging est paresseux : le premier upload crée une session, sans produit provisoire. Le contrat multipart utilise la query `sessionId` facultative et répond `{ "sessionId": "…", "media": { "id": 123 } }`. Les uploads suivants réutilisent cette session ; les previews passent par l’endpoint déclaré et cette session.
+
+Le contrôle contribue au vrai formulaire son tableau ordonné d’identités (`name: "mediaIds"`, par exemple) et le champ technique scalaire de session. Save attache les médias à la ressource créée ou modifiée. Le contrat de session ne transporte pas de JSON dans les attributs et n’ajoute pas de projection arbitraire de réponse. Les noms de session sont validés comme les autres noms de formulaire, notamment contre les collisions.
+
+### Opérations indépendantes
+
+Les formulaires d’opérations indépendantes avec `fields` conservent leur contrat propre. Leur modal simple ne monte pas un détail complet : les contrôles complexes ou dépendant d’une autre lecture y restent refusés explicitement. Cette limite ne concerne pas une création ou édition modale de détail. `save.refresh` accepte uniquement `read` ; une opération indépendante peut utiliser `refresh: "none"` lorsqu’elle ne modifie pas la fiche.
 
 ## 7. Relecture après sauvegarde et protection des modifications
 
