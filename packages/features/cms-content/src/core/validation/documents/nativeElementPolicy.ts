@@ -1,6 +1,7 @@
 import {
     isCmsBindingAttribute,
     nativeBindingAttributeIssue,
+    nativeBindingElementIssue,
     nativeFormBindingIssue,
 } from "cms-content/core/validation/blocs/nativeBindings";
 import {
@@ -29,6 +30,10 @@ const BROWSER_FORM_OVERRIDE_ATTRIBUTES = new Set([
 ]);
 
 export function customElementAttributesIssue(element: NativePolicyElement): string | null {
+    const placementIssue = nativeBindingElementIssue(element.localName.toLowerCase(), attributesOf(element));
+    if (placementIssue) {
+        return placementIssue;
+    }
     for (const name of element.getAttributeNames()) {
         const value = element.getAttribute(name) ?? "";
         if (CONTROL_CHARACTER.test(value)) {
@@ -55,6 +60,10 @@ export function nativeElementAttributesIssue(
 ): string | null {
     const tag = element.localName.toLowerCase();
     const attributes = attributesOf(element);
+    const placementIssue = nativeBindingElementIssue(tag, attributes);
+    if (placementIssue) {
+        return placementIssue;
+    }
     const attributeIssue = nativeAttributesIssue(tag, attributes, componentOwned);
     if (attributeIssue) {
         return attributeIssue;

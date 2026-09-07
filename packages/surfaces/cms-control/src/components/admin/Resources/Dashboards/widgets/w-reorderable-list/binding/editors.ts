@@ -26,7 +26,7 @@ export function composeChoiceEditor(
         editor.setAttribute("placeholder", field.placeholder);
     }
     if (field.type === "checkbox") {
-        editor.setAttribute("cms-bind-value", `choice.cells.${field.id}`);
+        editor.setAttribute("cms-bind-boolean-checked", `choice.cells.${field.id}`);
     } else if (field.type !== "media") {
         editor.setAttribute("value", `{{ choice.cells.${field.id} }}`);
     }

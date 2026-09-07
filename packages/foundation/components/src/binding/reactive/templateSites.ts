@@ -5,6 +5,8 @@ import type { CompiledCondition } from "../render/condition";
 import type { RepeatSpec } from "../render/repeat";
 import { clearBetween, type LiveBindingSite, type MountedRegion } from "./MountedRegion";
 import type { MountableTemplate } from "./templatePlan";
+import { acknowledgesControl } from "../source/runtime/submission/acknowledgement";
+import { applyControlAttribute } from "./controls/value";
 
 export class TextSite implements LiveBindingSite {
     constructor(
@@ -13,11 +15,15 @@ export class TextSite implements LiveBindingSite {
         private readonly filters: FilterMap,
     ) {}
     update(scope: Scope): void {
-        this.node.nodeValue = interpolateString(this.template, scope, this.filters);
+        const value = interpolateString(this.template, scope, this.filters);
+        if (this.node.nodeValue !== value) {
+            this.node.nodeValue = value;
+        }
     }
 }
 
 export class AttributeSite implements LiveBindingSite {
+    private revision = 0;
     private applied = false;
     private lastValue: string | boolean = "";
     constructor(
@@ -31,7 +37,7 @@ export class AttributeSite implements LiveBindingSite {
         const next = this.boolean
             ? lookup(scope, this.template).value === true
             : interpolateString(this.template, scope, this.filters);
-        if (this.applied && next === this.lastValue) {
+        if (this.applied && next === this.lastValue && !acknowledgesControl(this.element)) {
             return;
         }
         this.applied = true;
@@ -41,12 +47,35 @@ export class AttributeSite implements LiveBindingSite {
             if (this.element.hasAttribute(this.name) !== present) {
                 this.element.toggleAttribute(this.name, present);
             }
+            this.applyControl(next);
             return;
         }
         const value = String(next);
         if (this.element.getAttribute(this.name) !== value) {
             this.element.setAttribute(this.name, value);
         }
+        this.applyControl(next);
+    }
+    private applyControl(value: string | boolean): void {
+        if (this.name !== "value" && !(this.boolean && ["checked", "selected"].includes(this.name))) {
+            return;
+        }
+        const revision = ++this.revision;
+        const apply = () => {
+            if (revision === this.revision) {
+                applyControlAttribute(this.element as HTMLElement, this.name, value);
+            }
+        };
+        const registry = this.element.ownerDocument.defaultView?.customElements;
+        if (registry && this.element.localName.includes("-") && !registry.get(this.element.localName)) {
+            void registry.whenDefined(this.element.localName).then(apply);
+        } else {
+            registry?.upgrade(this.element);
+            apply();
+        }
+    }
+    unmount(): void {
+        this.revision++;
     }
 }
 
@@ -91,30 +120,31 @@ export class RepeatSite implements LiveBindingSite {
     ) {}
     update(scope: Scope): void {
         const values = this.values(scope);
-        if (
-            values &&
-            !this.rootCondition &&
-            values.length === this.regions.length &&
-            values.every((value, index) => Object.is(value, this.entries[index]))
-        ) {
-            values.forEach((item, index) => this.regions[index]!.update(this.childScope(item, scope)));
-            return;
-        }
-        this.unmount();
-        if (!values) {
-            return;
-        }
+        const visible = values?.filter(
+            (item) => !this.rootCondition || this.rootCondition.evaluate(this.childScope(item, scope)),
+        );
         const parent = this.end.parentNode;
-        if (!parent) {
+        if (!visible || !parent) {
+            this.unmount();
             return;
         }
-        for (const item of values) {
-            const childScope = this.childScope(item, scope);
-            if (!this.rootCondition || this.rootCondition.evaluate(childScope)) {
-                this.regions.push(this.template.mount(parent, childScope, this.end));
-            }
+        for (const region of this.regions.splice(visible.length)) {
+            region.unmount();
         }
-        this.entries = [...values];
+        let before: Node = this.end;
+        for (let index = visible.length - 1; index >= 0; index--) {
+            const item = visible[index];
+            const childScope = this.childScope(item, scope);
+            const region = this.regions[index];
+            if (region && Object.is(item, this.entries[index])) {
+                region.update(childScope);
+            } else {
+                region?.unmount();
+                this.regions[index] = this.template.mount(parent, childScope, before);
+            }
+            before = this.regions[index]!.startNode;
+        }
+        this.entries = [...visible];
     }
     private childScope(item: unknown, parent: Scope): Scope {
         return this.spec.name ? { vars: { [this.spec.name]: item }, parent } : { value: item, parent };
@@ -147,73 +177,31 @@ export class RepeatSite implements LiveBindingSite {
 }
 
 export class RawHtmlSite implements LiveBindingSite {
+    private previous: string | undefined;
     constructor(
         private readonly start: Comment,
         private readonly end: Comment,
         private readonly expression: string,
     ) {}
     update(scope: Scope): void {
+        const result = lookup(scope, this.expression);
+        const value = result.found && result.value != null ? String(result.value) : "";
+        if (value === this.previous) {
+            return;
+        }
+        this.previous = value;
         clearBetween(this.start, this.end);
         const parent = this.end.parentNode;
         if (!parent) {
             return;
         }
-        const result = lookup(scope, this.expression);
         const template = (this.end.ownerDocument ?? document).createElement("template");
-        template.innerHTML = result.found && result.value != null ? String(result.value) : "";
+        template.innerHTML = value;
         prepareNetworkInertBindings(template.content);
         parent.insertBefore(template.content, this.end);
     }
     unmount(): void {
+        this.previous = undefined;
         clearBetween(this.start, this.end);
-    }
-}
-
-/** Typed control input; never assigns arbitrary DOM properties. */
-export class ValueSite implements LiveBindingSite {
-    private revision = 0;
-    private previous: unknown = Symbol("unbound");
-    constructor(
-        private readonly element: HTMLElement,
-        private readonly expression: string,
-    ) {}
-    update(scope: Scope): void {
-        const value = lookup(scope, this.expression).value;
-        if (Object.is(value, this.previous)) {
-            return;
-        }
-        this.previous = value;
-        const revision = ++this.revision;
-        const apply = () => {
-            if (revision !== this.revision) {
-                return;
-            }
-            const view = this.element.ownerDocument.defaultView;
-            if (view && this.element instanceof view.HTMLInputElement && this.element.type === "checkbox") {
-                this.element.checked = value === true;
-                return;
-            }
-            if (
-                view &&
-                (this.element instanceof view.HTMLTextAreaElement ||
-                    this.element instanceof view.HTMLSelectElement ||
-                    (this.element instanceof view.HTMLInputElement && ["text", "search"].includes(this.element.type)))
-            ) {
-                this.element.value = value == null ? "" : String(value);
-                return;
-            }
-            const target = this.element as HTMLElement & { setBindingValue?: (value: unknown) => void };
-            target.setBindingValue?.(value);
-        };
-        const registry = this.element.ownerDocument.defaultView?.customElements;
-        if (registry && this.element.localName.includes("-") && !registry.get(this.element.localName)) {
-            void registry.whenDefined(this.element.localName).then(apply);
-        } else {
-            registry?.upgrade(this.element);
-            apply();
-        }
-    }
-    unmount(): void {
-        this.revision += 1;
     }
 }

@@ -50,60 +50,67 @@ describe("CompiledTemplate — text and attributes", () => {
     });
 });
 
-class ValueReceiver extends HTMLElement {
-    readonly values: unknown[] = [];
-    setBindingValue(value: unknown): void {
-        this.values.push(value);
+class ValueControl extends HTMLElement {
+    static formAssociated = true;
+    readonly received: string[] = [];
+    get value(): string {
+        return this.received.at(-1) ?? "";
+    }
+    set value(value: string) {
+        this.received.push(value);
     }
 }
-customElements.define("test-value-receiver", ValueReceiver);
+customElements.define("test-value-control", ValueControl);
 
-test("typed values reach an opt-in component without serialization and preserve the mounted element", () => {
-    const data = { name: '<unsafe attr="value">', enabled: false };
-    const { host, region } = mount('<test-value-receiver cms-bind-value="item"></test-value-receiver>', { item: data });
-    const receiver = host.firstElementChild as ValueReceiver;
-    expect(receiver.values).toEqual([data]);
-    expect(receiver.values[0]).toBe(data);
-    expect(receiver.outerHTML).not.toContain("unsafe");
-    region.update({ value: { item: data } });
-    expect(receiver.values).toHaveLength(1);
-    for (const value of [false, 0, null, undefined]) {
-        region.update({ value: { item: value } });
-    }
-    expect(receiver.values).toEqual([data, false, 0, null, undefined]);
-    expect(host.firstElementChild).toBe(receiver);
+test("custom form controls use ordinary value interpolation and preserve mounted elements", () => {
+    const { host, region } = mount('<test-value-control value="{{ name }}"></test-value-control>', { name: "Initial" });
+    const control = host.firstElementChild as ValueControl;
+    expect(control.value).toBe("Initial");
+    control.value = "Local draft";
+    region.update({ value: { name: "Initial" } });
+    expect(control.value).toBe("Local draft");
+    region.update({ value: { name: "Updated" } });
+    expect(control.value).toBe("Updated");
+    expect(host.firstElementChild).toBe(control);
 });
 
-test("a disposed binding does not deliver a queued value after a late custom-element definition", async () => {
-    const { region } = mount('<test-late-value cms-bind-value="item"></test-late-value>', { item: 42 });
+test("disposing an ordinary attribute binding cancels its queued control update", async () => {
+    const { region } = mount('<test-late-control value="{{ name }}"></test-late-control>', { name: "Initial" });
     region.unmount();
-    const values: unknown[] = [];
+    const received: string[] = [];
     customElements.define(
-        "test-late-value",
+        "test-late-control",
         class extends HTMLElement {
-            setBindingValue(value: unknown): void {
-                values.push(value);
+            static formAssociated = true;
+            get value(): string {
+                return received.at(-1) ?? "";
+            }
+            set value(value: string) {
+                received.push(value);
             }
         },
     );
     await Promise.resolve();
-    expect(values).toEqual([]);
+    expect(received).toEqual([]);
 });
 
-test("arbitrary native elements and nested source contents are not typed binding receivers", () => {
+test("native elements are not arbitrary property receivers and nested reads own their contents", () => {
     const { host } = mount(
-        '<div cms-bind-value="item"></div><section cms-source="/other"><test-value-receiver cms-bind-value="item"></test-value-receiver></section>',
-        { item: 42 },
+        '<div value="{{ name }}"></div><section cms-source="/other"><test-value-control value="{{ name }}"></test-value-control></section>',
+        { name: "Initial" },
     );
-    expect((host.querySelector("test-value-receiver") as ValueReceiver).values).toEqual([]);
-    expect(host.querySelector("div")!.textContent).toBe("");
+    expect((host.querySelector("test-value-control") as ValueControl).received).toEqual([]);
+    expect("value" in host.querySelector("div")!).toBe(false);
 });
 
 test("a bound native checkbox receives booleans and retains a local edit on an unchanged refresh", () => {
-    const { host, region } = mount('<input type="checkbox" cms-bind-value="enabled"><span>{{ name }}</span>', {
-        enabled: false,
-        name: "Initial",
-    });
+    const { host, region } = mount(
+        '<input type="checkbox" cms-bind-boolean-checked="enabled"><span>{{ name }}</span>',
+        {
+            enabled: false,
+            name: "Initial",
+        },
+    );
     const input = host.querySelector("input")!;
     expect(input.checked).toBe(false);
     input.click();
@@ -125,7 +132,7 @@ test("a bound native checkbox receives booleans and retains a local edit on an u
 
 test("native text and select bindings preserve drafts until their bound value changes", () => {
     const { host, region } = mount(
-        '<input cms-bind-value="query"><select cms-bind-value="status"><option value="">All</option><option value="active">Active</option></select><input type="file" cms-bind-value="query">',
+        '<input value="{{ query }}"><select value="{{ status }}"><option value="">All</option><option value="active">Active</option></select><input type="file" value="{{ query }}">',
         { query: "Initial", status: "active" },
     );
     const input = host.querySelector("input")!;
@@ -184,4 +191,20 @@ test("unchanged external validation bindings leave local field validation feedba
     region.update({ value: { failed: false, message: "" } });
     expect(input.hasAttribute("invalid")).toBe(false);
     expect(input.getAttribute("hint")).toBe("");
+});
+
+test("multiple select options use boolean attributes and retain edits until their bound selection changes", () => {
+    const { host, region } = mount(
+        '<select multiple><option value="a" cms-bind-boolean-selected="a">A</option><option value="b" cms-bind-boolean-selected="b">B</option></select>',
+        { a: true, b: false },
+    );
+    const select = host.querySelector("select")!;
+    expect(Array.from(select.options, (option) => option.selected)).toEqual([true, false]);
+    select.options[1]!.selected = true;
+    region.update({ value: { a: true, b: false } });
+    expect(Array.from(select.options, (option) => option.selected)).toEqual([true, true]);
+    region.update({ value: { a: false, b: true } });
+    region.update({ value: { a: false, b: false } });
+    expect(Array.from(select.options, (option) => option.selected)).toEqual([false, false]);
+    expect(host.querySelector("select")).toBe(select);
 });

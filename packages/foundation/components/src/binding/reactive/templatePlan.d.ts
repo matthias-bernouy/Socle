@@ -26,7 +26,6 @@ export type RepeatPlan = {
 export type RawHtmlPlan = { path: NodePath; expression: string };
 
 export type CompilePlan = {
-    values: RawHtmlPlan[];
     text: TextPlan[];
     attributes: AttributePlan[];
     conditions: ConditionPlan[];

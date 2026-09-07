@@ -41,7 +41,7 @@ export function fieldElement(field: DashboardField, root: string): HTMLElement {
         control.setAttribute("label", field.label);
         control.setAttribute("data-field-control", field.id);
         if (field.type === "checkbox") {
-            control.setAttribute("cms-bind-value", field.path === "." ? root : `${root}.${field.path}`);
+            control.setAttribute("cms-bind-boolean-checked", field.path === "." ? root : `${root}.${field.path}`);
             control.setAttribute("aria-label", field.label);
         } else if (
             field.type !== "media" &&

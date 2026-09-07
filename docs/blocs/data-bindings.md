@@ -62,37 +62,32 @@ This allows declared scalar/list branches without a component constructing DOM
 from response data. It does not add general parentheses, filter chains or a
 template-reference mechanism.
 
-## Typed control inputs
+## Form control values
 
-Use `cms-bind-value="catalogue.items"` when a custom element needs the resolved
-value itself. The element opts in by implementing `setBindingValue(value:
-unknown): void`. Objects, arrays, booleans, numbers, null and undefined retain
-their types; the engine does not serialize them into attributes. The expression
-is a scope path, not JavaScript, interpolation or an arbitrary property name.
-Native checkboxes also accept this binding: only the boolean `true` checks the
-input; every other value unchecks it. Native text/search inputs (including an
-input without a type), single selects and textareas receive string values, with
-null or undefined becoming an empty string. File inputs and multiple selects
-do not receive this binding.
+Use ordinary attribute interpolation for text values. The binding synchronizes
+`value` with the live property of native inputs, selects, textareas and
+form-associated custom elements. Custom controls keep their existing `value`
+contract and native `ElementInternals.setFormValue()` participation. There is
+no separate typed component receiver method.
 
 ```html
-<example-chart cms-bind-value="catalogue.totals"></example-chart>
-<input type="checkbox" cms-bind-value="settings.enabled">
+<input name="quantity" type="number" value="{{ item.quantity }}">
+<select name="status" value="{{ item.status }}">...</select>
+<input name="enabled" type="checkbox" cms-bind-boolean-checked="item.enabled">
 ```
 
-The receiver must cache values delivered before connection and render when
-connected. Repeated delivery of the identical value is skipped (`Object.is`);
-replace objects when publishing changes. A pending custom-element definition
-receives the latest value, and unmounting cancels queued delivery. Normal source,
-condition, repetition and form-result ownership still apply. This is a runtime
-component-authoring contract; the visual editor does not provide a new generic
-property-binding picker.
+Checkboxes use the existing boolean-presence binding: only boolean `true`
+checks the input. Never interpolate `checked="false"`, since native HTML treats
+its presence as checked. Repeated native select options are mounted before the
+select value is applied. Multiple selects can bind each option's `selected`
+attribute with the same boolean mechanism.
 
-For a native checkbox, unchanged source values are not reapplied, preserving a
-local check/uncheck during an unrelated refresh. A changed bound value updates
-the checked property directly; it is not rendered as `checked="false"`, which
-HTML would interpret as checked. Static HTML boolean attributes keep their
-normal presence semantics. This does not bind arbitrary DOM properties.
+Unchanged bound values preserve local drafts, focus and selection. A changed
+value updates its existing control. After a successful Save and targeted read,
+submitted fields accept the read value even when the server normalized the
+input back to its previous value. File inputs never receive a programmatically
+assigned value. Late custom-element definitions receive the latest pending
+attribute value; disposing the binding cancels that pending property update.
 
 Use `cms-bind-boolean-invalid="directory.failed"` to bind an attribute's
 presence to a scope path. Only the boolean `true` adds the named attribute;
@@ -110,6 +105,50 @@ determine which scope owns a binding.
 Keep bound children in light DOM under the page core. A visual component may
 slot them into an encapsulated Shadow DOM shell; it must not create another
 core or inject document-level CSS to compensate for hidden bindings.
+
+## Save and targeted refresh
+
+A form may declare `cms-source-success-reload="#detail"`. The ID must identify
+one active automatic read source in the same binding core. Its URL, source
+instance and selection generation are checked before applying late effects.
+The mutation response is not merged into the source; a successful response,
+including HTTP 204, triggers a GET of that source only.
+
+Values are captured before editing is locked. The form and target source stay
+mounted and busy until the write and requested read finish. The lock blocks
+user edits and other submissions in that scope without disabling controls or
+changing their layout. A form using this reload attribute does not reset by
+default; an explicit `cms-source-success-reset` still takes precedence.
+
+A same-URL read retains its loaded or empty content, sets `$source.refreshing`,
+and reports `$source.refreshError` on failure. Bind retry feedback to the read
+source's state, so a successful retry clears it. Initial reads and URL changes
+keep the ordinary loading/error behavior. Unchanged JSON branches retain their
+references; repeated entries retain nodes when unchanged at the same index.
+Changed or moved entries can remount; this is not keyed reconciliation.
+
+`reloadSource(element)` from `@bernouy/components/binding` (also the package
+root) awaits one read and returns whether it succeeded. A bubbling
+`cms-source:reload` dispatched on the source retries only that source. A
+legacy document-dispatched event still refreshes automatic sources globally.
+
+Successful completion events/publication/reset/navigation wait for the read.
+If the mutation succeeded but the read failed, `cms-source:refresh-failed`
+carries a `FormSubmitResult` with `ok: true` and `refresh.ok: false`; ordinary
+success effects are not fired. Retry the read without replaying the mutation.
+Mutation failures retain the draft and publish the existing failure event.
+
+`cms-source-serialization="typed-json"` opts request-body forms into typed
+serialization of their real named controls, including external `form="id"`
+controls. Numbers and boolean checkboxes retain their types. Explicit
+`cms-form-value-type="string|number|boolean"` and `cms-form-empty="null|omit"`
+handle other scalar conventions. Bracket names build objects and indexed
+arrays; terminal `[]` appends values. Duplicate/conflicting paths, unsafe keys,
+sparse arrays and invalid scalar values fail before sending. Read-only,
+disabled and unnamed controls are excluded; binary uploads use ordinary
+multipart forms. Tokens keep their current comma-separated string contract;
+ordinary commas are not interpreted as arrays. Forms without the opt-in keep
+their existing serialization.
 
 ## Applying an action result to a source
 

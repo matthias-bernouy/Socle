@@ -1,5 +1,11 @@
 # Dashboard widget binding refactor
 
+> Historical implementation checkpoints. The typed `cms-bind-value` receiver
+> described below was subsequently removed during integration-view stage 3.
+> Current controls use ordinary value interpolation and boolean attributes;
+> see [the current binding contract](../blocs/data-bindings.md).
+
+
 Status: in progress. This document tracks the full refactor; intermediate green
 checks are not completion evidence. The starting revision is `b91be35c7`.
 

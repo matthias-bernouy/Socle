@@ -7,18 +7,6 @@ export function compileAttributes(
     plan: CompilePlan,
     boundary: SubmitSourceBoundary | null,
 ): void {
-    const value = element.getAttribute("cms-bind-value");
-    if (
-        value &&
-        (element.localName.includes("-") ||
-            element.matches(
-                'input:not([type]), input[type="checkbox"], input[type="text"], input[type="search"], select:not([multiple]), textarea',
-            )) &&
-        /^[\w$.-]+$/.test(value) &&
-        !pathOwnedBySubmitSource(value, boundary)
-    ) {
-        plan.values.push({ path, expression: value });
-    }
     for (const attribute of Array.from(element.attributes)) {
         if (attribute.name.startsWith("cms-bind-boolean-")) {
             const name = attribute.name.slice("cms-bind-boolean-".length);

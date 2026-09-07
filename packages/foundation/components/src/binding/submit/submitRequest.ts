@@ -2,7 +2,7 @@ import { serializeForm } from "./formSerialization";
 import type { FormSubmitResult, SubmitFormOptions } from "./types";
 
 export async function submitForm(form: HTMLFormElement, options: SubmitFormOptions): Promise<FormSubmitResult> {
-    const serialized = serializeForm(form, options);
+    const serialized = options.serialized ?? serializeForm(form, options);
     const headers = new Headers({ Accept: "application/json" });
     const init: RequestInit = { method: options.method, headers, signal: options.signal };
 

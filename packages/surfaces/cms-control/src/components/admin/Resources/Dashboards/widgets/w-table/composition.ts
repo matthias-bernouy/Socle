@@ -51,7 +51,7 @@ export function tableShell(widget: TableWidget, filters: Record<string, string> 
             control.name = filter.id;
             control.dataset.filterId = filter.id;
             control.setAttribute("aria-label", filter.label);
-            control.setAttribute("cms-bind-value", `tableFilters.${filter.id}`);
+            control.setAttribute("value", `{{ tableFilters.${filter.id} }}`);
             if (filter.placeholder) {
                 control.setAttribute("placeholder", filter.placeholder);
             }

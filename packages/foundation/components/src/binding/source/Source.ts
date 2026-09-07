@@ -12,8 +12,12 @@ import { SourceRenderer } from "./presentation/sourceRenderer";
 import { SourcePresenter } from "./presentation/sourcePresenter";
 import { type SourceStatusOptions, type SourceStatusValue } from "./presentation/sourceStatus";
 import { ownerForm, SourceSubmission } from "./submission";
-import { connectSourceData, disconnectSourceData, rememberSourceData } from "./values";
+import { connectSourceData, disconnectSourceData, readSourceData, rememberSourceData } from "./values";
 import { connectSourceContext } from "./presentation/sourceContext";
+import { shareUnchanged } from "./runtime/refresh/reconcile";
+import { connectSourceReload } from "./runtime/refresh/registry";
+import { acknowledgeForm } from "./runtime/submission/acknowledgement";
+import { SubmissionTransaction } from "./runtime/submission/transaction";
 
 export { clearRuntimeStamps } from "./runtime/runtimeStamps";
 export { RELOAD_ATTR, RELOAD_EVENT } from "./sourceEvents";
@@ -31,6 +35,12 @@ export class Source {
     private abort: AbortController | null = null;
     private stopListeners: (() => void) | null = null;
     private stopContext: (() => void) | null = null;
+    private stopReload: (() => void) | null = null;
+    private transaction: SubmissionTransaction | null = null;
+    private hasData = false;
+    private pendingRefresh: { url: string; promise: Promise<boolean> } | null = null;
+    private dataUrl: string | null = null;
+    private selectionEpoch = 0;
     private lastUrl: string | null = null;
     private status: SourceStatusValue = {
         loading: false,
@@ -42,7 +52,7 @@ export class Source {
     private readonly submission: SourceSubmission | null;
 
     private readonly onReload = () => {
-        if (this.el.isConnected) {
+        if (this.el.isConnected && !this.pendingRefresh) {
             void this.run();
         }
     };
@@ -90,6 +100,35 @@ export class Source {
     }
 
     start(): void {
+        if (sourceTrigger(this.el) === "auto") {
+            this.stopReload = connectSourceReload(this.el, {
+                generation: () => this.selectionEpoch,
+                url: () =>
+                    resolveReactiveUrl(
+                        parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "").url,
+                        this.el.ownerDocument,
+                    ),
+                reload: (acknowledge) => {
+                    const url = resolveReactiveUrl(
+                        parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "").url,
+                        this.el.ownerDocument,
+                    );
+                    if (this.pendingRefresh?.url === url) {
+                        return this.pendingRefresh.promise;
+                    }
+                    const promise = this.run({ acknowledge });
+                    if (acknowledge) {
+                        this.pendingRefresh = { url, promise };
+                        void promise.finally(() => {
+                            if (this.pendingRefresh?.promise === promise) {
+                                this.pendingRefresh = null;
+                            }
+                        });
+                    }
+                    return promise;
+                },
+            });
+        }
         this.stopContext = connectSourceContext(this.el, () => {
             this.renderer.refreshContext();
             this.afterRender();
@@ -119,6 +158,10 @@ export class Source {
     }
 
     dispose(): void {
+        this.stopReload?.();
+        this.stopReload = null;
+        this.transaction?.release();
+        this.transaction = null;
         this.stopContext?.();
         this.stopContext = null;
         disconnectSourceData(this.el);
@@ -132,79 +175,136 @@ export class Source {
     renderTemplate(): void {
         this.abort?.abort();
         this.abort = null;
+        this.transaction?.release();
+        this.transaction = null;
+        this.hasData = false;
+        this.dataUrl = null;
         this.renderer.template();
     }
 
-    async run(opts?: { onlyIfUrlChanged?: boolean }): Promise<void> {
+    async run(opts?: { onlyIfUrlChanged?: boolean; acknowledge?: HTMLFormElement }): Promise<boolean> {
+        if (this.transaction?.locked) {
+            return false;
+        }
         if (this.options.sourceStateForce && this.options.sourceStateForce !== "loaded") {
             this.abort?.abort();
             this.abort = null;
             this.presenter.forced(this.options.sourceStateForce);
-            return;
+            return false;
         }
 
         const spec = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "");
         if (!spec.url) {
-            return;
+            return false;
         }
         const url = resolveReactiveUrl(spec.url, this.el.ownerDocument);
         if (opts?.onlyIfUrlChanged && url === this.lastUrl) {
-            return;
+            return false;
+        }
+        const refreshing = !this.formOwned && this.hasData && url === this.dataUrl;
+        if (url !== this.lastUrl) {
+            this.selectionEpoch += 1;
         }
         this.lastUrl = url;
-
-        const submission = this.submission?.capture() ?? null;
-        if (this.formOwned && !submission) {
-            return;
+        let transaction: SubmissionTransaction | null = null;
+        try {
+            if (this.submission) {
+                transaction = SubmissionTransaction.prepare(this.el, this.submission, url);
+                if (!transaction) {
+                    return false;
+                }
+                this.transaction = transaction;
+            }
+        } catch (error) {
+            const result = {
+                ok: false,
+                status: 0,
+                statusText: "Invalid form",
+                body: null,
+                message: error instanceof Error ? error.message : String(error),
+                form: this.el as HTMLFormElement,
+            };
+            this.presenter.result(spec.alias, result);
+            this.afterRender();
+            this.submission?.complete(result, spec.alias);
+            return false;
+        }
+        if (this.formOwned && !transaction) {
+            return false;
         }
 
-        this.presenter.loading(spec.alias);
+        if (refreshing) {
+            this.presenter.refresh(spec.alias);
+        } else {
+            this.presenter.loading(spec.alias);
+        }
         this.afterRender();
         this.abort?.abort();
         const ac = new AbortController();
         this.abort = ac;
 
-        if (this.formOwned) {
-            if (!submission) {
-                return;
+        if (transaction) {
+            try {
+                const result = await transaction.send(url, ac.signal);
+                if (!result) {
+                    if (!ac.signal.aborted) {
+                        this.presenter.initial(spec.alias);
+                        this.afterRender();
+                    }
+                    return false;
+                }
+                this.abort = null;
+                this.presenter.result(spec.alias, result);
+                this.afterRender();
+                this.submission!.complete(result, spec.alias);
+                return result.ok && result.refresh?.ok !== false;
+            } finally {
+                if (this.abort === ac) {
+                    this.abort = null;
+                }
+                transaction.release();
+                if (this.transaction === transaction) {
+                    this.transaction = null;
+                }
             }
-            const result = await this.submission!.send(submission, url, ac.signal);
-            if (ac.signal.aborted) {
-                return;
-            }
-            this.abort = null;
-            this.presenter.result(spec.alias, result);
-            this.afterRender();
-            this.submission!.complete(result, spec.alias);
-            return;
         }
 
         const outcome = await (this.options.read ?? runFetch)(url, ac.signal);
         if (ac.signal.aborted || outcome.kind === "aborted") {
-            return;
+            return false;
         }
         const current = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "");
         if (resolveReactiveUrl(current.url, this.el.ownerDocument) !== url) {
             void this.run({ onlyIfUrlChanged: true });
-            return;
+            return false;
         }
         this.abort = null;
         if (outcome.kind === "error") {
-            this.presenter.error(spec.alias, url, outcome.status, outcome.message);
+            if (refreshing) {
+                this.presenter.refresh(spec.alias, { status: outcome.status, message: outcome.message });
+            } else {
+                this.presenter.error(spec.alias, url, outcome.status, outcome.message);
+            }
             this.afterRender();
-            return;
+            return false;
         }
 
-        this.acceptData(outcome.data);
+        this.acceptData(
+            refreshing ? shareUnchanged(readSourceData(this.el), outcome.data) : outcome.data,
+            opts?.acknowledge,
+        );
+        return true;
     }
 
-    private acceptData(value: unknown): void {
+    private acceptData(value: unknown, acknowledge?: HTMLFormElement): void {
         this.abort?.abort();
         this.abort = null;
         rememberSourceData(this.el, value);
+        this.hasData = true;
         const spec = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "");
         this.lastUrl = resolveReactiveUrl(spec.url, this.el.ownerDocument);
-        this.presenter.data(spec.alias, value);
+        this.dataUrl = this.lastUrl;
+        acknowledgeForm(acknowledge, () => this.presenter.data(spec.alias, value));
         this.afterRender();
     }
 

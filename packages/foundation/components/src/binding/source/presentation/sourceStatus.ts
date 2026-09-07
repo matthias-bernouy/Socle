@@ -6,6 +6,8 @@ export type SourceStatusValue = {
     loaded: boolean;
     empty: boolean;
     error: boolean;
+    refreshing?: boolean;
+    refreshError?: boolean;
     status?: unknown;
     message?: unknown;
 };

@@ -63,7 +63,7 @@ describe("Source — status condition selection", () => {
         expect(text(src.querySelector("p"))).toBe("Form");
     });
 
-    test("error with no error condition updates common body and later success reuses it", async () => {
+    test("a refresh error keeps common body data and later success updates it", async () => {
         responseSequence([
             { status: 200, body: JSON.stringify({ name: "Ada" }) },
             { status: 500, body: "" },
@@ -77,7 +77,7 @@ describe("Source — status condition selection", () => {
         expect(text(src.querySelector("p"))).toBe("Hello Ada");
 
         await source.run();
-        expect(text(src.querySelector("p"))).toBe("Hello");
+        expect(text(src.querySelector("p"))).toBe("Hello Ada");
         expect(src.querySelector("input")).toBe(input);
 
         await source.run();

@@ -12,6 +12,10 @@ export class MountedRegion {
         private readonly sites: LiveBindingSite[],
     ) {}
 
+    get startNode(): Comment {
+        return this.start;
+    }
+
     update(scope: Scope): void {
         for (const site of this.sites) {
             site.update(scope);

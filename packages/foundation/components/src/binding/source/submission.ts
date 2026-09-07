@@ -6,19 +6,28 @@ import {
     SOURCE_SUCCESS_REDIRECT_ATTR,
     SOURCE_SUCCESS_REDIRECT_PARAM_ATTR,
     SOURCE_SUCCESS_RESET_ATTR,
+    SOURCE_SUCCESS_RELOAD_ATTR,
     type SourceMethod,
 } from "../core/attrs";
 import { interpolateString, type FilterMap } from "../core/interpolate";
 import type { Scope } from "../core/scope";
 import { resolveSourceBodyFields } from "./presentation/sourceBody";
-import { CMS_SOURCE_FAILED_EVENT, CMS_SOURCE_SUCCESS_EVENT } from "./submissionEvents";
-import { collectFormData, normalizeFormMethod, submitForm, type FormSubmitResult } from "../submit/formSubmit";
+import { CMS_SOURCE_FAILED_EVENT, CMS_SOURCE_REFRESH_FAILED_EVENT, CMS_SOURCE_SUCCESS_EVENT } from "./submissionEvents";
+import {
+    collectFormData,
+    normalizeFormMethod,
+    serializeForm,
+    submitForm,
+    type FormSubmitResult,
+    type SerializedForm,
+} from "../submit/formSubmit";
 
 type CapturedSubmission = {
     form: HTMLFormElement;
     method: SourceMethod;
     formData: FormData;
     bodyFields: ReturnType<typeof resolveSourceBodyFields>;
+    serialized: SerializedForm;
 };
 
 const LEGACY_FORM_SUCCESS_EVENT = "form:success";
@@ -30,20 +39,23 @@ export class SourceSubmission {
         private readonly filters: FilterMap,
     ) {}
 
-    capture(): CapturedSubmission | null {
+    capture(url: string): CapturedSubmission | null {
         const form = ownerForm(this.element, this.element.ownerDocument);
         if (!form) {
             return null;
         }
         const method = this.sourceMethod();
+        const formData = collectFormData(form);
+        const bodyFields =
+            method === "GET" || method === "HEAD"
+                ? undefined
+                : resolveSourceBodyFields(this.element.getAttribute(SOURCE_BODY_ATTR), this.element.ownerDocument);
         return {
             form,
             method,
-            formData: collectFormData(form),
-            bodyFields:
-                method === "GET" || method === "HEAD"
-                    ? undefined
-                    : resolveSourceBodyFields(this.element.getAttribute(SOURCE_BODY_ATTR), this.element.ownerDocument),
+            formData,
+            bodyFields,
+            serialized: serializeForm(form, { url: this.submitUrl(url), method, formData, bodyFields }),
         };
     }
 
@@ -54,10 +66,17 @@ export class SourceSubmission {
             signal,
             bodyFields: captured.bodyFields,
             formData: captured.formData,
+            serialized: captured.serialized,
         });
     }
 
     complete(result: FormSubmitResult, alias: string | undefined): void {
+        if (result.ok && result.refresh?.ok === false) {
+            this.element.dispatchEvent(
+                new CustomEvent(CMS_SOURCE_REFRESH_FAILED_EVENT, { bubbles: true, composed: true, detail: result }),
+            );
+            return;
+        }
         this.dispatchResult(result);
         if (!result.ok) {
             return;
@@ -110,6 +129,9 @@ export class SourceSubmission {
         }
         if (value === "true" || value === "1" || value === "yes" || value === "") {
             return true;
+        }
+        if (this.element.hasAttribute(SOURCE_SUCCESS_RELOAD_ATTR)) {
+            return false;
         }
         const method = this.sourceMethod();
         return method !== "GET" && method !== "HEAD";

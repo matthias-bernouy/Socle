@@ -72,6 +72,8 @@ export const p9rExternalsPlugin: BunPlugin = {
                     `export const CMS_BINDING_ATTRIBUTES = {\n` +
                     `    bindingDisabled: "cms-binding-disabled",\n` +
                     `    condition: "cms-condition",\n` +
+                    `    formValueType: "cms-form-value-type",\n` +
+                    `    formEmpty: "cms-form-empty",\n` +
                     `    paramSync: "cms-param-sync",\n` +
                     `    pageState: "cms-page-state",\n` +
                     `    repeat: "cms-repeat",\n` +
@@ -81,6 +83,8 @@ export const p9rExternalsPlugin: BunPlugin = {
                     `    sourceId: "cms-source-id",\n` +
                     `    sourceMethod: "cms-source-method",\n` +
                     `    sourcePublish: "cms-source-publish",\n` +
+                    `    sourceSerialization: "cms-source-serialization",\n` +
+                    `    sourceSuccessReload: "cms-source-success-reload",\n` +
                     `    sourceSuccessRedirect: "cms-source-success-redirect",\n` +
                     `    sourceSuccessRedirectParam: "cms-source-success-redirect-param",\n` +
                     `    sourceSuccessReset: "cms-source-success-reset",\n` +

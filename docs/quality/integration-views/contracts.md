@@ -1,13 +1,13 @@
 # Contrats de la refonte des vues — étape 1
 
-Statut : contrat cible pour relecture, non implémenté. Le [plan principal](../../../REFACTOR_INTEGRATIONS_VIEW.md) définit le périmètre et les arrêts. Les noms introduits ici seront la référence des étapes suivantes ; ils ne décrivent pas des attributs actuellement disponibles.
+Statut : contrats métier cibles pour les étapes 4 et 5 ; le shell et les primitives génériques de formulaire/relecture sont implémentés aux étapes 2 et 3. Le [plan principal](../../../REFACTOR_INTEGRATIONS_VIEW.md) définit le périmètre et les arrêts. Les sections 4 et 7 décrivent le binding actuel ; les définitions métier restent à migrer.
 
 ## 1. Répartition des responsabilités
 
 - `@bernouy/cms-dashboards` décrit et valide les fiches, champs et opérations, ainsi que les appels autorisés par un dashboard.
 - `@bernouy/cms-integrations` parse les ressources des intégrations et conserve les contrats de leurs opérations de management.
 - `@bernouy/cms-control` compose les fragments HTML, fournit les composants du shell, coordonne une fiche et sa navigation et utilise les événements du binding.
-- `@bernouy/components` gère la lecture, les vrais formulaires, les valeurs des contrôles, la soumission et l’application d’une réponse à une source.
+- `@bernouy/components` gère la lecture, les vrais formulaires, les valeurs des contrôles, la soumission et la relecture ciblée après succès.
 - L’intégration définit les endpoints, valeurs initiales, autorisations, révisions, validations métier et opérations chez les fournisseurs.
 
 La composition peut calculer des chemins et créer la structure à partir d’une définition. Elle ne collecte pas les valeurs de toute la fiche pour fabriquer un autre formulaire ou un objet de requête parallèle. Les composants visuels utilisent les tokens de l’admin et gardent leur CSS dans leur shadow DOM. Le contenu bindé et les vrais formulaires restent dans le light DOM de la page.
@@ -20,7 +20,7 @@ Le `path` d’un champ est relatif à cette ressource. Il fournit aussi, par dé
 
 Une propriété optionnelle `name` peut préciser un autre chemin de soumission pour un champ lorsque son nom d’édition diffère de son chemin de lecture. Elle correspond au nom d’un vrai contrôle HTML ; elle ne permet ni expressions ni construction arbitraire de corps. Les fiches migrées doivent privilégier des chemins cohérents plutôt qu’un renommage systématique.
 
-Les réponses de lecture et d’écriture n’ont pas à utiliser la même URL. Pour appliquer directement une sauvegarde à la lecture, leurs **réponses complètes** doivent cependant avoir la même forme. Exemple : si la lecture renvoie `{ field: … }`, la sauvegarde renvoie aussi cette enveloppe, et non uniquement son contenu.
+Les réponses de lecture et d’écriture n’ont pas à utiliser la même URL. Leurs réponses n’ont pas non plus à partager une forme : après succès, la source de lecture est relue. Un succès HTTP 204 est accepté.
 
 ## 3. Formulaire de sauvegarde
 
@@ -68,7 +68,8 @@ Le mode typé sérialise les contrôles du vrai formulaire, y compris ceux assoc
 | Nombre ou montant | Nombre fini après la conversion propre au contrôle ; un montant conserve la convention d’unité déclarée. |
 | Checkbox booléenne | `true` ou `false`, y compris lorsqu’elle est décochée. La validation `required` du contrôle reste une règle distincte. |
 | Select | Chaîne par défaut ; conversion explicite si le champ déclare `valueType: "number"` ou `"boolean"`. |
-| Multi-select ou tokens | Tableau, y compris `[]`. |
+| Multi-select natif | Tableau, y compris `[]`. |
+| Tokens existants | Chaîne séparée par des virgules ; conversion en tableau seulement si explicitement prévue. |
 | Table ou liste éditable | Tableau de valeurs structurées ; `[]` signifie vider cette collection. |
 | Métadonnées éditables | Objet des valeurs éditables ; traiter explicitement les clés non exposées et les effacements. |
 | Valeur optionnelle vide | Politique déclarée : chaîne vide, `null` ou omission. Aucune conversion arbitraire de la chaîne `"null"`. |
@@ -77,9 +78,9 @@ Le mode typé sérialise les contrôles du vrai formulaire, y compris ceux assoc
 
 Pour les contrôles natifs dont le type HTML ne suffit pas, utiliser `cms-form-value-type="string|number|boolean"`. `cms-form-empty="null|omit"` exprime une politique de vide spécifique ; sans cet attribut, les textes restent des chaînes vides et les nombres facultatifs vides sont omis. Une valeur numérique ou booléenne invalide bloque l’envoi. Ces attributs sont génériques et ne contiennent pas de schéma JSON.
 
-Les composants associés aux formulaires exposent un contrat typé commun, proposé sous la forme `getFormValue()`, pour retourner leur valeur éditable naturelle. Les composants structurés possèdent leur propre valeur de contrôle, comme une liste de références ou des lignes éditées. Ils continuent à participer aux formulaires natifs avec `ElementInternals` ; le mode typé utilise cette valeur commune sans la convertir en texte JSON dans le DOM. La lecture reste assurée par `cms-bind-value` et `setBindingValue()`.
+Les composants associés aux formulaires conservent leur contrat existant : propriété `value`, état `checked` pour les contrôles booléens et participation native via `ElementInternals.setFormValue()`. Aucun `getFormValue()` ni nouveau `setBindingValue()` n’est requis. Le binding renseigne les propriétés existantes avec l’interpolation habituelle.
 
-Le collecteur générique considère un contrôle structuré comme une seule contribution. Il ne collecte pas aussi ses contrôles internes ; ceux-ci ne doivent pas être associés séparément au même formulaire sous les mêmes noms. Ce contrat ne doit pas devenir une méthode permettant à un widget de retourner arbitrairement toute la fiche.
+Le champ de tokens existant expose une chaîne séparée par des virgules dans `value` et dans sa contribution au formulaire. Il conserve ce format. Une éventuelle conversion vers un tableau doit être explicite et compatible avec ce contrôle ; aucune chaîne ordinaire n’est découpée automatiquement. Le multi-select natif, lui, expose plusieurs valeurs sélectionnées. Les listes et objets éditables se composent à partir de contrôles nommés ; un widget ne doit pas retourner arbitrairement toute la fiche. Les contrôles associés au formulaire sont collectés selon leur association effective, sans exclure leurs descendants sur la seule base de leur imbrication visuelle.
 
 Les noms imbriqués utilisent les crochets. Le mode typé doit produire de vrais tableaux pour les indices numériques, rejeter les collisions scalaire/objet et les segments dangereux, et éviter les ambiguïtés entre deux contrôles du même nom. Il ne change pas rétroactivement le traitement actuel des noms contenant des points.
 
@@ -116,7 +117,7 @@ Les détails propres au montant, à la devise et à sa validation reprennent le 
 
 Ne pas inventer un `deleteProduct` : cet endpoint n’existe pas dans Commerce aujourd’hui. Le produit conserve l’archivage ; la suppression standard sera validée sur une ressource qui possède une vraie suppression, par exemple une marque non référencée. Toute extension métier de suppression du produit doit être décidée séparément.
 
-Les opérations de publication de versions immuables, d’archivage, de paiement ou d’envoi restent explicites. Un téléchargement et un lien de navigation gardent leur nature propre. Les actions qui ne renvoient pas une fiche complète déclarent `refresh: "read"` lorsqu’une relecture du détail est nécessaire.
+Les opérations de publication de versions immuables, d’archivage, de paiement ou d’envoi restent explicites. Un téléchargement et un lien de navigation gardent leur nature propre. Les actions qui nécessitent une actualisation relisent la source du détail après succès.
 
 ## 6. Création
 
@@ -141,7 +142,7 @@ Ajouter `create` optionnel sur le widget de collection qui propose la création 
 
 `newProduct` et `createProduct` sont des endpoints à ajouter, pas des endpoints actuellement présents. `source` est facultative lorsque la création n’a pas besoin d’une lecture de valeurs initiales. `fields` réutilise le contrat des champs, sans imposer que la création et l’édition aient les mêmes champs requis. Le mode `page` peut aussi utiliser des sections principales et latérales.
 
-Au succès, `rowPath` extrait l’identité depuis la réponse, ouvre `view` et fournit la réponse complète à sa source. Si une modal suffit à toute l’opération, la destination peut être omise : actualiser la liste puis fermer la modal. L’absence de destination et celle d’identité nécessaire à une navigation sont validées explicitement.
+Au succès, `rowPath` extrait l’identité depuis la réponse, ouvre `view` et laisse sa source charger la fiche. Si une modal suffit à toute l’opération, la destination peut être omise : actualiser la liste puis fermer la modal. L’absence de destination et celle d’identité nécessaire à une navigation sont validées explicitement.
 
 Pour le produit : générer le slug unique côté intégration, appliquer `draft` et `hidden`, puis ouvrir la fiche persistée. Les règles de complétude nécessaires à la publication doivent être distinguées des exigences minimales de création d’un brouillon ; les métadonnées requises par une catégorie ne doivent pas empêcher de créer le brouillon minimal prévu. L’endpoint reste responsable de ces décisions.
 
@@ -149,26 +150,19 @@ Les créations de sections et questions de Forms, déjà effectuées par des end
 
 Le lookup créateur réutilise le même formulaire. Il enregistre sa ressource indépendamment puis sélectionne son identité dans le contrôle appelant. Il ne soumet pas le formulaire principal, ne le marque pas enregistré et ne supprime pas la ressource créée si l’utilisateur abandonne ensuite sa fiche.
 
-## 7. Application de réponse et protection des modifications
+## 7. Relecture après sauvegarde et protection des modifications
 
-Retenir `cms-source-success-update="#source-id"`. La cible est un identifiant unique de source de lecture automatique situé dans le même `cms-binding-core`. Pas de sélection ambiguë, de ciblage d’un autre core ni de cible qui soit un formulaire de soumission.
+Décision révisée après l’étape 2 : aucune application directe de la réponse de mutation. `cms-source-success-reload="#source-id"` cible un identifiant unique de source automatique du même core. Le runtime vérifie l’instance, l’URL et la génération de sélection ; une réponse tardive ne doit pas modifier une autre fiche.
 
-- Résoudre la cible au départ de la soumission et capturer son instance et sa génération de lecture.
-- Accepter uniquement une réponse JSON complète compatible avec la source cible. Une réponse vide ou un succès sans JSON ne vide pas la fiche et produit un diagnostic. Valider le schéma lorsqu’il est déclaré ; sans schéma, la compatibilité métier relève du contrat et des tests de l’intégration. Le binding ne peut pas la déduire en comparant les clés de deux objets.
-- Appliquer `result.body` avec `setSourceData()` après un succès et avant de publier les effets de succès, de fermer une modal ou de naviguer.
-- Garder la source affichée dans son état chargé et mettre à jour ses bindings en place. `cms-source-success-reset="false"` est utilisé pour les fiches.
-- Si la cible a été remplacée, si sa sélection ou son URL a changé, ignorer l’application locale de l’ancienne réponse. Une simple identité DOM ne suffit pas si l’élément est réutilisé pour une autre ressource.
-- Une erreur métier ou réseau ne remplace pas la source. Un timeout ne prouve pas que le serveur n’a rien enregistré ; proposer une vérification avant de répéter une opération non idempotente.
+Capturer les valeurs avant de verrouiller l’édition. Attendre la mutation puis le GET ciblé, en conservant les contrôles montés. Les valeurs normalisées sont appliquées au formulaire sauvegardé, y compris lorsque la réponse de lecture est identique à celle d’avant la saisie. Le formulaire n’est pas réinitialisé par défaut lorsqu’il déclare cette relecture ; un réglage explicite reste prioritaire.
 
-Pour `refresh: "read"`, relire uniquement la source concernée en conservant la fiche affichée. Ne pas diffuser une relecture globale des dashboards. Si la mutation réussit mais que cette relecture échoue, afficher ces deux résultats distinctement et permettre de relire sans rejouer la mutation.
+La relecture conserve les données affichées et expose `refreshing` puis éventuellement `refreshError` sur l’état de la source de lecture. Une erreur de mutation conserve la saisie. Une mutation réussie suivie d’une erreur de lecture émet `cms-source:refresh-failed` avec `ok: true` et `refresh.ok: false`, sans lancer les effets ordinaires de succès. Le feedback de relecture suit la source de lecture ; un retry GET le fait disparaître sans rejouer la mutation.
 
-Le cycle typé conserve trois informations par contrôle : valeur de référence, valeur envoyée et saisie courante. Un champ soumis resté identique à sa valeur envoyée reçoit la valeur normalisée du serveur et devient enregistré. Un champ modifié depuis l’envoi reste édité. Les paramètres techniques suivent la réponse acceptée.
+Les conflits métier HTTP 409 sont traités comme des erreurs de sauvegarde et conservent le brouillon. Il n’y a pas de saisie concurrente pendant Save ni de fusion à trois versions. Pour les opérations indépendantes, le brouillon principal reste intact lorsque ses bindings serveur ne changent pas. Lors de la migration métier, une opération qui peut modifier les mêmes champs devra faire résoudre le brouillon avant de démarrer : le binding ne promet pas de fusion entre un brouillon et des champs changés par une autre opération.
 
-Pour une autre opération, un champ localement intact reçoit la nouvelle référence. Une saisie locale inchangée côté serveur est conservée. Si la référence serveur et la saisie ont changé différemment, conserver la saisie, afficher le conflit et demander un choix entre la valeur enregistrée et la saisie avant un nouvel envoi. Une valeur déjà identique au résultat serveur n’est pas un conflit. Les listes structurées sont comparées comme une unité dans ce premier contrat ; aucune fusion automatique par ligne n’est promise.
+Les branches JSON inchangées conservent leur référence et les éléments répétés inchangés à la même position restent montés. Une ligne déplacée ou modifiée peut être remontée. Aucun attribut `key`, mécanisme de recherche d’identité ou transport de valeurs structurées par une méthode de composant n’est introduit.
 
-Le contrôleur de fiche de Control coordonne une mutation à la fois pour la même ressource et conserve la navigation. Le binding gère le cycle du formulaire et ses valeurs, sans connaissance de `expectedVersion` ou du domaine. Les autres fiches et les formulaires ordinaires restent indépendants.
-
-Conserver la référence des valeurs structurées inchangées afin de ne pas remonter inutilement leurs répétitions. L’ajout d’une réconciliation générale par `key` reste exclu. Les limites mesurées des répétitions ou des contrôles structurés doivent être signalées si elles empêchent les critères de stabilité.
+La sérialisation typée et la relecture ciblée sont documentées dans [le contrat du binding](../../blocs/data-bindings.md). Les définitions métier, la création et les médias seront migrés aux étapes 4 et 5.
 
 ## 8. Adaptations métier identifiées
 

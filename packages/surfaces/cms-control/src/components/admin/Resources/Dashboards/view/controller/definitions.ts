@@ -34,9 +34,9 @@ export class DashboardDefinitions {
         this.stop = observeSource(source, (state) => {
             if (state.disposed) {
                 this.complete(new Error("Dashboard definitions were disconnected"));
-            } else if (state.error) {
+            } else if (state.error || state.refreshError) {
                 this.complete(new Error(String(state.message ?? "Dashboard definitions could not be loaded")));
-            } else if ((state.loaded || state.empty) && Array.isArray(state.data)) {
+            } else if (!state.refreshing && (state.loaded || state.empty) && Array.isArray(state.data)) {
                 accept(state.data, this.pending.length === 0);
                 this.complete();
             }

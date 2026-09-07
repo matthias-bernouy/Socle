@@ -23,8 +23,13 @@ export function listenSourceEvents(source: Element, callbacks: SourceEventCallba
     const doc = source.ownerDocument;
     const trigger = sourceTrigger(source);
     const reloadEvents = new Set([...(trigger === "auto" ? [RELOAD_EVENT] : []), ...namedReloadEvents(source)]);
+    const onReload = (event: Event) => {
+        if (event.type !== RELOAD_EVENT || event.target === doc || event.target === source) {
+            callbacks.onReload();
+        }
+    };
     for (const eventName of reloadEvents) {
-        doc.addEventListener(eventName, callbacks.onReload);
+        doc.addEventListener(eventName, onReload);
     }
 
     if (trigger === "submit" || trigger === "change") {
@@ -34,7 +39,7 @@ export function listenSourceEvents(source: Element, callbacks: SourceEventCallba
         form?.addEventListener(eventName, listener as EventListener);
         return () => {
             for (const eventName of reloadEvents) {
-                doc.removeEventListener(eventName, callbacks.onReload);
+                doc.removeEventListener(eventName, onReload);
             }
             form?.removeEventListener(eventName, listener as EventListener);
         };
@@ -47,7 +52,7 @@ export function listenSourceEvents(source: Element, callbacks: SourceEventCallba
     );
     return () => {
         for (const eventName of reloadEvents) {
-            doc.removeEventListener(eventName, callbacks.onReload);
+            doc.removeEventListener(eventName, onReload);
         }
         stopUrlListeners();
     };

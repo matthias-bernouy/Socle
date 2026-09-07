@@ -1,6 +1,7 @@
 export type FormSubmitMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD";
 
 export type SerializedFormValue =
+    | null
     | FormDataEntryValue
     | number
     | boolean
@@ -21,6 +22,7 @@ export type FormSubmitResult = {
     body: unknown;
     message: string;
     form: HTMLFormElement;
+    refresh?: { ok: boolean; message: string };
 };
 
 export type AdditionalFormFields = Record<string, string | number | boolean>;
@@ -31,4 +33,5 @@ export type SubmitFormOptions = {
     signal?: AbortSignal;
     bodyFields?: AdditionalFormFields;
     formData?: FormData;
+    serialized?: SerializedForm;
 };

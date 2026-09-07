@@ -12,7 +12,7 @@
             <option cms-repeat="schemaRow.options as schemaOption" value="{{ schemaOption.value }}">{{ schemaOption.label }}</option>
         </p9r-select>
         <label cms-condition="schemaRow.checkbox" cms-bind-boolean-data-required="schemaRow.required">
-            <input type="checkbox" data-schema-key="{{ schemaRow.id }}" cms-bind-value="schemaRow.checked"
+            <input type="checkbox" data-schema-key="{{ schemaRow.id }}" cms-bind-boolean-checked="schemaRow.checked"
                 aria-label="{{ schemaRow.label }}" aria-required="{{ schemaRow.required }}">
             <span>{{ schemaRow.label }}</span>
         </label>

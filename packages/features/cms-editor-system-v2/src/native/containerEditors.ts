@@ -56,6 +56,23 @@ export class NativeFormEditor extends Editor {
                         ],
                     },
                     {
+                        type: "select",
+                        label: "Form values",
+                        attribute: CMS_BINDING_ATTRIBUTES.sourceSerialization,
+                        defaultValue: "",
+                        options: [
+                            { label: "Standard", value: "" },
+                            { label: "Typed JSON", value: "typed-json" },
+                        ],
+                        help: "Typed JSON supports nested field names and typed values for request-body submissions.",
+                    },
+                    {
+                        type: "text",
+                        label: "Reload source after success",
+                        attribute: CMS_BINDING_ATTRIBUTES.sourceSuccessReload,
+                        help: "The source element ID prefixed with #, such as #order-detail.",
+                    },
+                    {
                         type: "page-link",
                         label: "Redirect after success",
                         attribute: CMS_BINDING_ATTRIBUTES.sourceSuccessRedirect,

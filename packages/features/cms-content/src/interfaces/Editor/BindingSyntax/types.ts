@@ -3,6 +3,8 @@ export const CMS_BINDING_CORE_TAG = "cms-binding-core";
 export const CMS_BINDING_ATTRIBUTES = {
     bindingDisabled: "cms-binding-disabled",
     condition: "cms-condition",
+    formValueType: "cms-form-value-type",
+    formEmpty: "cms-form-empty",
     paramSync: "cms-param-sync",
     pageState: "cms-page-state",
     repeat: "cms-repeat",
@@ -12,6 +14,8 @@ export const CMS_BINDING_ATTRIBUTES = {
     sourceId: "cms-source-id",
     sourceMethod: "cms-source-method",
     sourcePublish: "cms-source-publish",
+    sourceSerialization: "cms-source-serialization",
+    sourceSuccessReload: "cms-source-success-reload",
     sourceSuccessRedirect: "cms-source-success-redirect",
     sourceSuccessRedirectParam: "cms-source-success-redirect-param",
     sourceSuccessReset: "cms-source-success-reset",
@@ -57,3 +61,10 @@ export type CmsSourceMethod = (typeof CMS_SOURCE_METHODS)[number];
 export type CmsSourceState = (typeof CMS_SOURCE_STATES)[number];
 export type CmsSourceStateForce = CmsSourceState;
 export type CmsSourceStatusCondition = { sourceId?: string; state: CmsSourceState };
+
+export const CMS_SOURCE_SERIALIZATIONS = ["typed-json"] as const;
+export const CMS_FORM_VALUE_TYPES = ["string", "number", "boolean"] as const;
+export const CMS_FORM_EMPTY_BEHAVIORS = ["null", "omit"] as const;
+export type CmsSourceSerialization = (typeof CMS_SOURCE_SERIALIZATIONS)[number];
+export type CmsFormValueType = (typeof CMS_FORM_VALUE_TYPES)[number];
+export type CmsFormEmptyBehavior = (typeof CMS_FORM_EMPTY_BEHAVIORS)[number];

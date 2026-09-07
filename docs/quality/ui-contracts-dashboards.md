@@ -1,5 +1,11 @@
 # Dashboard UI contract follow-up
 
+> Historical implementation checkpoints. The typed `cms-bind-value` receiver
+> described below was subsequently removed during integration-view stage 3.
+> Current controls use ordinary value interpolation and boolean attributes;
+> see [the current binding contract](../blocs/data-bindings.md).
+
+
 Dashboard navigation, definitions and widget reads use the existing document
 binding core. Their source/repetition/condition trees are light-DOM children,
 including the operator workspace runtime. Visual widgets retain encapsulated

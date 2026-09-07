@@ -48,6 +48,14 @@ describe("prepare_bloc editor catalog output", () => {
         );
         const bloc = await prepare_bloc(view, editor, "Demo form", "Forms", "", "demo-form");
         expect(bloc.editorJS).toContain("cms-source");
+        for (const attribute of [
+            "cms-source-serialization",
+            "cms-source-success-reload",
+            "cms-form-value-type",
+            "cms-form-empty",
+        ]) {
+            expect(bloc.editorJS).toContain(attribute);
+        }
     });
 
     test("exposes binding constants through the control editor subpath", async () => {
@@ -67,6 +75,14 @@ describe("prepare_bloc editor catalog output", () => {
         );
         const bloc = await prepare_bloc(view, editor, "Demo control form", "Forms", "", "demo-control-form");
         expect(bloc.editorJS).toContain("cms-source");
+        for (const attribute of [
+            "cms-source-serialization",
+            "cms-source-success-reload",
+            "cms-form-value-type",
+            "cms-form-empty",
+        ]) {
+            expect(bloc.editorJS).toContain(attribute);
+        }
     });
 
     test("embeds default content into editor catalog registrations", async () => {

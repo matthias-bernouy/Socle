@@ -1,6 +1,8 @@
 import { collectFormData } from "./formControls";
 import { appendSerializedValue } from "./nestedFormData";
 import type { AdditionalFormFields, FormSubmitMethod, SerializedForm, SerializedFormData } from "./types";
+import { serializeTypedForm } from "./typed/serialize";
+import { SOURCE_SERIALIZATION_ATTR } from "../core/attrs";
 
 const BODY_METHODS = new Set<FormSubmitMethod>(["POST", "PUT", "PATCH", "DELETE"]);
 
@@ -24,6 +26,17 @@ export function serializeForm(
     options: { url: string; method: FormSubmitMethod; bodyFields?: AdditionalFormFields; formData?: FormData },
 ): SerializedForm {
     const formData = options.formData ?? collectFormData(form);
+    const mode = form.getAttribute(SOURCE_SERIALIZATION_ATTR);
+    if (mode && mode !== "typed-json") {
+        throw new Error("cms-source-serialization must be typed-json when specified.");
+    }
+    if (mode === "typed-json") {
+        if (!BODY_METHODS.has(options.method)) {
+            throw new Error("typed-json requires a method with a request body.");
+        }
+        const data = withAdditionalFields(serializeTypedForm(form), formData, options.bodyFields);
+        return { kind: "json", url: options.url, formData, data, body: JSON.stringify(data) };
+    }
     if (options.method === "GET" || options.method === "HEAD") {
         return {
             kind: "query",

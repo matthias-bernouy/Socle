@@ -51,7 +51,7 @@ describe("Source — source status conditions", () => {
         expect(src.querySelector(".error")).toBeNull();
     });
 
-    test("renders empty and error conditions without using slots", async () => {
+    test("renders empty and error conditions when the source URL changes", async () => {
         responseSequence([
             { status: 200, body: JSON.stringify([]) },
             { status: 500, body: "" },
@@ -68,6 +68,7 @@ describe("Source — source status conditions", () => {
         expect(text(src.querySelector(".empty"))).toBe("No rows");
         expect(src.querySelector(".error")).toBeNull();
 
+        src.setAttribute("cms-source", "/other");
         await source.run();
         expect(src.querySelector(".empty")).toBeNull();
         expect(text(src.querySelector(".error"))).toBe("Failed 500");
@@ -144,6 +145,7 @@ describe("Source — source status conditions", () => {
         await source.run();
         expect(text(src.querySelector(".fallback"))).toBe("Fallback");
 
+        src.setAttribute("cms-source", "/other");
         await source.run();
         expect(text(src.querySelector(".fallback"))).toBe("Fallback");
     });

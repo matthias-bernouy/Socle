@@ -30,10 +30,13 @@ export abstract class DashboardWorkspaceController extends Component {
     }
 
     private readonly sessionChanged = (state: SourceObservation): void => {
-        if (!this.isConnected || state.disposed || state.loading) {
+        if (!this.isConnected || state.disposed || state.loading || state.refreshing) {
             return;
         }
-        if (state.error) {
+        if (state.refreshError && this.session) {
+            return;
+        }
+        if (state.error || state.refreshError) {
             this.sources.select(null);
             this.session = null;
             this.runtime = null;
@@ -81,10 +84,13 @@ export abstract class DashboardWorkspaceController extends Component {
         if (!this.isConnected || state.disposed || !this.dashboard || this.dashboard.status !== "published") {
             return;
         }
+        if (state.refreshing || (state.refreshError && this.runtime !== null)) {
+            return;
+        }
         if (state.loading) {
             delete document.documentElement.dataset.dashboardScope;
             this.message("Loading dashboard…");
-        } else if (state.error) {
+        } else if (state.error || state.refreshError) {
             this.runtime = null;
             if (this.isProfilePage()) {
                 this.renderWorkspace();

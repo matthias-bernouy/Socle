@@ -1,8 +1,13 @@
+import { isTypedSourceBody } from "./sourceBody";
 import { isSafeNavigationalUrl } from "cms-content/core/utils/safeUrl";
 import {
     CMS_BINDING_ATTRIBUTES,
     isCmsQueryParamName,
     isCmsSourceMethod,
+    isCmsSourceSerialization,
+    isCmsSourceSuccessReload,
+    isCmsFormValueType,
+    isCmsFormEmptyBehavior,
     isCmsSourceState,
     isCmsSourceTrigger,
     parseCondition,
@@ -37,6 +42,18 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
     if (name === CMS_BINDING_ATTRIBUTES.source) {
         const source = parseSource(value);
         return source && isInternalEndpoint(source.url) ? null : "CMS source must use a same-site endpoint";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.sourceSuccessReload) {
+        return isCmsSourceSuccessReload(value) ? null : "CMS source success reload must identify one source by #id";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.sourceSerialization) {
+        return isCmsSourceSerialization(value) ? null : "CMS source serialization must be typed-json";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.formValueType) {
+        return isCmsFormValueType(value) ? null : "CMS form value type must be string, number or boolean";
+    }
+    if (name === CMS_BINDING_ATTRIBUTES.formEmpty) {
+        return isCmsFormEmptyBehavior(value) ? null : "CMS form empty behavior must be null or omit";
     }
     if (name === CMS_BINDING_ATTRIBUTES.sourceBody) {
         return isTypedSourceBody(value) ? null : "CMS source body must be a typed parameter map";
@@ -80,6 +97,20 @@ export function nativeBindingAttributeIssue(attribute: string, value: string): s
     return "CMS runtime binding state cannot be persisted";
 }
 
+export function nativeBindingElementIssue(tag: string, attributes: Readonly<Record<string, string>>): string | null {
+    for (const name of [CMS_BINDING_ATTRIBUTES.sourceSerialization, CMS_BINDING_ATTRIBUTES.sourceSuccessReload]) {
+        if (attributes[name] !== undefined && tag !== "form") {
+            return `CMS submission attribute "${name}" requires a form`;
+        }
+    }
+    for (const name of [CMS_BINDING_ATTRIBUTES.formValueType, CMS_BINDING_ATTRIBUTES.formEmpty]) {
+        if (attributes[name] !== undefined && !["input", "select", "textarea"].includes(tag) && !tag.includes("-")) {
+            return `CMS form attribute "${name}" requires a control`;
+        }
+    }
+    return null;
+}
+
 export function nativeFormBindingIssue(attributes: Readonly<Record<string, string>>): string | null {
     for (const forbidden of ["action", "formaction", "method", "target"]) {
         if (attributes[forbidden] !== undefined) {
@@ -97,7 +128,12 @@ export function nativeFormBindingIssue(attributes: Readonly<Record<string, strin
     if (attributes[CMS_BINDING_ATTRIBUTES.sourceTrigger] !== "submit") {
         return 'native forms require cms-source-trigger="submit"';
     }
+    if (attributes[CMS_BINDING_ATTRIBUTES.sourceSerialization] !== undefined && method === "GET") {
+        return "CMS typed-json serialization requires a request-body form method";
+    }
     for (const name of [
+        CMS_BINDING_ATTRIBUTES.sourceSerialization,
+        CMS_BINDING_ATTRIBUTES.sourceSuccessReload,
         CMS_BINDING_ATTRIBUTES.sourceBody,
         CMS_BINDING_ATTRIBUTES.sourceInheritQuery,
         CMS_BINDING_ATTRIBUTES.sourceId,
@@ -126,43 +162,4 @@ function isInternalEndpoint(value: string): boolean {
 
 function isSafeInternalRedirect(value: string): boolean {
     return isSafeNavigationalUrl(value) && isInternalEndpoint(value);
-}
-
-function isTypedSourceBody(value: string): boolean {
-    let parsed: unknown;
-    try {
-        parsed = JSON.parse(value);
-    } catch {
-        return false;
-    }
-    return (
-        isRecord(parsed) &&
-        Object.keys(parsed).length > 0 &&
-        Object.entries(parsed).every(([name, source]) => Boolean(name.trim()) && isTypedSourceParam(source))
-    );
-}
-
-function isTypedSourceParam(value: unknown): boolean {
-    if (!isRecord(value) || typeof value.from !== "string") {
-        return false;
-    }
-    const keys = Object.keys(value).sort().join(",");
-    if (value.from === "queryParam") {
-        return keys === "from,name" && isCmsQueryParamName(value.name as string | undefined);
-    }
-    if (value.from === "state") {
-        return keys === "from,name" && typeof value.name === "string" && PAGE_STATE_KEY.test(value.name);
-    }
-    if (value.from !== "raw" || keys !== "from,value") {
-        return false;
-    }
-    return (
-        (typeof value.value === "string" && Boolean(value.value.trim())) ||
-        (typeof value.value === "number" && Number.isFinite(value.value)) ||
-        typeof value.value === "boolean"
-    );
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null && !Array.isArray(value);
 }

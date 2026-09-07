@@ -70,6 +70,8 @@ export function removeSource(editor: Editor, confirmRemoveSourceDependents: (cou
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourcePublish);
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceSuccessRedirect);
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceSuccessReset);
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceSuccessReload);
+    editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceSerialization);
     editor.target.removeAttribute(CMS_BINDING_ATTRIBUTES.sourceTrigger);
     editor.target.removeAttribute(BINDING_READY_ATTRIBUTE);
     return true;

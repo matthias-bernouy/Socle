@@ -76,6 +76,8 @@ describe("editor binding conditions", () => {
         expect(CMS_BINDING_ATTRIBUTES).toEqual({
             bindingDisabled: "cms-binding-disabled",
             condition: "cms-condition",
+            formValueType: "cms-form-value-type",
+            formEmpty: "cms-form-empty",
             paramSync: "cms-param-sync",
             pageState: "cms-page-state",
             repeat: "cms-repeat",
@@ -85,6 +87,8 @@ describe("editor binding conditions", () => {
             sourceId: "cms-source-id",
             sourceMethod: "cms-source-method",
             sourcePublish: "cms-source-publish",
+            sourceSerialization: "cms-source-serialization",
+            sourceSuccessReload: "cms-source-success-reload",
             sourceStateForce: "cms-source-state-force",
             sourceSuccessRedirect: "cms-source-success-redirect",
             sourceSuccessRedirectParam: "cms-source-success-redirect-param",

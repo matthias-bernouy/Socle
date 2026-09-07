@@ -15,6 +15,7 @@ import type { FormSubmitResult } from "../../submit/formSubmit";
 export class SourcePresenter {
     private readonly conditions: Set<SourceState>;
     private renderedBody = false;
+    private currentData: unknown;
 
     constructor(
         private readonly el: Element,
@@ -54,12 +55,24 @@ export class SourcePresenter {
     }
 
     data(alias: string | undefined, data: unknown): void {
+        this.currentData = data;
         const state = isEmpty(data) ? "empty" : "loaded";
         const sourceStatus = statusValue(state, data);
         publishSourceStatus(this.el, sourceStatus, this.options);
         const scope = this.scope(alias, sourceStatus, data);
         this.renderer.body(scope);
         this.renderedBody = true;
+    }
+
+    refresh(alias: string | undefined, failure?: { status: number | null; message: string }): void {
+        const status = {
+            ...statusValue(isEmpty(this.currentData) ? "empty" : "loaded", this.currentData),
+            refreshing: !failure,
+            refreshError: Boolean(failure),
+            ...(failure ?? {}),
+        };
+        publishSourceStatus(this.el, status, this.options);
+        this.renderer.body(this.scope(alias, status, this.currentData));
     }
 
     result(alias: string | undefined, result: FormSubmitResult): void {

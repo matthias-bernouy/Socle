@@ -21,6 +21,8 @@ const NATIVE_MUTABLE_BINDING_ATTRIBUTES: Readonly<Record<string, ReadonlySet<str
         CMS_BINDING_ATTRIBUTES.sourceMethod,
         CMS_BINDING_ATTRIBUTES.sourceSuccessRedirect,
         CMS_BINDING_ATTRIBUTES.sourceSuccessReset,
+        CMS_BINDING_ATTRIBUTES.sourceSuccessReload,
+        CMS_BINDING_ATTRIBUTES.sourceSerialization,
         CMS_BINDING_ATTRIBUTES.sourceInheritQuery,
         CMS_BINDING_ATTRIBUTES.sourceTrigger,
     ]),
@@ -41,6 +43,8 @@ const ALLOWED_SETTING_TYPES: Readonly<Record<string, Readonly<Record<string, Set
         [CMS_BINDING_ATTRIBUTES.source]: "endpoint-picker",
         [CMS_BINDING_ATTRIBUTES.sourceSuccessRedirect]: "page-link",
         [CMS_BINDING_ATTRIBUTES.sourceSuccessReset]: "segmented",
+        [CMS_BINDING_ATTRIBUTES.sourceSuccessReload]: "text",
+        [CMS_BINDING_ATTRIBUTES.sourceSerialization]: "select",
         [CMS_BINDING_ATTRIBUTES.sourceInheritQuery]: "segmented",
         autocomplete: "select",
     },
@@ -69,6 +73,7 @@ const CONTROLLED_VALUES: Readonly<Record<string, Readonly<Record<string, Readonl
     button: { type: new Set(["button", "submit"]) },
     form: {
         [CMS_BINDING_ATTRIBUTES.sourceSuccessReset]: new Set(["true", "false"]),
+        [CMS_BINDING_ATTRIBUTES.sourceSerialization]: new Set(["", "typed-json"]),
         [CMS_BINDING_ATTRIBUTES.sourceInheritQuery]: new Set(["true", "false"]),
         autocomplete: new Set(["on", "off"]),
     },
@@ -148,6 +153,14 @@ export function isNativeEditorSettingValueAllowed(
 
     const tag = target.localName.toLowerCase();
     const attribute = setting.attribute.toLowerCase();
+    if (attribute === CMS_BINDING_ATTRIBUTES.sourceSuccessReload) {
+        return value === "" || nativeBindingAttributeIssue(attribute, value) === null;
+    }
+    if (attribute === CMS_BINDING_ATTRIBUTES.sourceSerialization && value === "typed-json") {
+        return ["POST", "PUT", "PATCH", "DELETE"].includes(
+            target.getAttribute(CMS_BINDING_ATTRIBUTES.sourceMethod) ?? "",
+        );
+    }
     const controlled = CONTROLLED_VALUES[tag]?.[attribute];
     if (controlled) {
         return controlled.has(value);
@@ -213,6 +226,17 @@ export function isNativeEditorAttributeMutationAllowed(
             delete attributes[name];
         } else {
             attributes[name] = value === true ? "" : value;
+        }
+    }
+    if (tag === "form") {
+        const normalizedChanges = canonicalizeNativeEditorAttributeChanges(changes);
+        const resulting = (attribute: string) =>
+            Object.hasOwn(normalizedChanges, attribute) ? normalizedChanges[attribute] : target.getAttribute(attribute);
+        if (
+            resulting(CMS_BINDING_ATTRIBUTES.sourceSerialization) === "typed-json" &&
+            !["POST", "PUT", "PATCH", "DELETE"].includes(String(resulting(CMS_BINDING_ATTRIBUTES.sourceMethod)))
+        ) {
+            return false;
         }
     }
     return nativeAttributeSetIssue(tag, attributes) === null;
@@ -326,6 +350,8 @@ function systemAttributeValueAllowed(tag: string, attribute: string, value: stri
         return value === "submit";
     }
     if (
+        attribute === CMS_BINDING_ATTRIBUTES.sourceSuccessReload ||
+        attribute === CMS_BINDING_ATTRIBUTES.sourceSerialization ||
         attribute === CMS_BINDING_ATTRIBUTES.sourceSuccessReset ||
         attribute === CMS_BINDING_ATTRIBUTES.sourceInheritQuery
     ) {

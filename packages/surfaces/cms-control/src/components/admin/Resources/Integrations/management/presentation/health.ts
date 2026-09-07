@@ -1,5 +1,5 @@
 import type { IntegrationHealthEnvelope, IntegrationManagement } from "@bernouy/cms-integrations";
-import { readSourceData, setSourceContext } from "@bernouy/components";
+import { observeSource, readSourceData, refreshSourceContext, setSourceContext } from "@bernouy/components";
 import { route } from "../../api";
 import { healthContext } from "./healthContext";
 import markup from "cms-control/static/admin/_content/sources/_management/health.html" with { type: "text" };
@@ -23,10 +23,20 @@ export function mountHealth(
     host.append(template.content.cloneNode(true));
     let loading = true;
     const project = healthContext(management);
-    setSourceContext(host, (data) => {
-        loading = data === undefined;
+    setSourceContext(host, () => {
         const value = readSourceData(host) as IntegrationHealthEnvelope | null | undefined;
-        return project(value ?? undefined);
+        return { ...project(value ?? undefined), healthBusy: loading };
+    });
+    const stop = observeSource(host, (state) => {
+        if (state.disposed) {
+            stop();
+            return;
+        }
+        const pending = state.loading || state.refreshing === true;
+        if (loading !== pending) {
+            loading = pending;
+            refreshSourceContext(host);
+        }
     });
     const refresh = () => {
         // A completed action must supersede any observation started before it completed.

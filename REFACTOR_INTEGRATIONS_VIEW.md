@@ -1,6 +1,6 @@
 # Refonte des vues des intégrations
 
-Date : 7 septembre 2026. Statut : étape 2 terminée, arrêt avant l’étape 3.
+Date : 7 septembre 2026. Statut : étape 3 terminée, après révision du contrat de sauvegarde. Arrêt avant l’étape 4.
 
 ## 1. Cadre de travail
 
@@ -9,7 +9,7 @@ Ce document décrit la refonte des fiches des dashboards, de leurs formulaires, 
 - Le travail avance **étape par étape**, dans l’ordre indiqué à la fin du document.
 - **Ne pas créer de commit sans demande explicite.** Après l’étape 2, l’utilisateur a autorisé le commit des documents, du shell migré et de ses tests. Cette autorisation ne déclenche pas les étapes suivantes.
 - **À la fin de chaque étape, arrêter le travail**, présenter le résultat et attendre la demande de poursuivre. Une étape terminée ne déclenche pas automatiquement la suivante.
-- Les étapes 1 et 2 ont été autorisées et réalisées sur `master`, sans commit. Le shell et ses usages sont migrés ; l’étape 3 attend une nouvelle demande de poursuivre.
+- Les étapes 1 et 2 ont été réalisées sur `master`, puis commitées après autorisation (`f97f7f860`). L’étape 3 est réalisée sur `master`, sans nouveau commit, avec relecture ciblée et verrouillage temporaire de l’édition.
 - Le développement et les vérifications restent locaux. Aucune modification, installation ou publication en production.
 - Conserver les données et les réglages de la démo Courtside ainsi que les modifications locales sans rapport avec ce chantier.
 - Conserver le principe de versions de départ `1.0.0` demandé pour cette refonte. Ne pas publier de nouvelle version ni construire une couche de compatibilité permanente pour des contrats que nous décidons de remplacer ensemble.
@@ -165,46 +165,23 @@ Le `cms-binding-core` est fourni par la composition de page existante. Les widge
 
 ## 5. Retour de sauvegarde et stabilité de la fiche
 
-### 5.1. Raccord déclaratif à la source de lecture
+Décision révisée après l’étape 2 : **ne pas implémenter `cms-source-success-update` ni appliquer la réponse de sauvegarde à la lecture**. L’intégration peut retourner un résultat d’opération ou un succès sans corps. Le client relit la source concernée.
 
-Ajouter un mécanisme générique permettant à un formulaire de désigner la source de lecture à actualiser après succès. Le contrat de l’étape 1 retient `cms-source-success-update` comme nom cible ; cet attribut reste à implémenter à l’étape 3.
+### 5.1. Relecture ciblée sans reconstruction
 
-```html
-<section id="product-detail" cms-source="/products/42 as item">
-    <form
-        cms-source="/products/save as saved"
-        cms-source-trigger="submit"
-        cms-source-success-reset="false"
-        cms-source-success-update="#product-detail"
-    >
-        <!-- Technical fields and editable controls -->
-    </form>
-</section>
-```
+Après succès, relire uniquement la source de la fiche, sans publication globale provoquant des requêtes dans toutes les vues. Le contenu déjà chargé reste affiché pendant cette relecture. Distinguer le chargement initial du rafraîchissement et conserver les données si le rafraîchissement échoue.
 
-Ce nouvel attribut n’existe pas encore. Son contrat proposé est d’appliquer le corps de la réponse réussie à la source ciblée. La réponse doit être complète et compatible avec le résultat de lecture ; une réponse partielle ne doit pas remplacer silencieusement toute la fiche.
+Comparer les données précédentes et reçues. Préserver les références des objets et listes de contenu identique, puis ne mettre à jour que les bindings modifiés. Les nœuds de texte, attributs et contenus HTML inchangés ne doivent pas être réécrits. Les répétitions inchangées, y compris celles ayant une condition, gardent leurs éléments. Une liste dont la structure change reste une limite à mesurer ; aucun contrat `key` n’est ajouté.
 
-`setSourceData()` permet déjà cette actualisation sans GET supplémentaire. Il faut connecter cette capacité à la soumission déclarative et définir la résolution de la cible, sa portée et le traitement des réponses devenues obsolètes. Le mécanisme existant de publication et de relecture peut rester utile lorsqu’une opération ne renvoie pas la fiche complète.
+La réponse d’une ancienne sélection ne doit jamais remplacer la fiche désormais affichée. Une relecture lancée par une opération doit aussi vérifier l’instance et l’URL de sa cible.
 
-La source garde son état d’affichage chargé. Le chargement de l’opération appartient au formulaire concerné, sans remettre toute la fiche dans son état de chargement initial.
+### 5.2. Verrouillage temporaire de l’édition
 
-### 5.2. Préserver les modifications encore en cours
+Capturer les valeurs réelles du formulaire avant tout verrouillage. Empêcher ensuite l’édition et les autres mutations de cette fiche pendant la sauvegarde et la relecture qui suit. Conserver les contrôles montés, leur contenu, leurs dimensions et le focus ; ne pas griser ou remonter toute la fiche.
 
-La donnée enregistrée et la saisie locale ne doivent pas être confondues.
+Après succès et relecture, afficher les données enregistrées et libérer l’édition. Après échec de sauvegarde, conserver la saisie et libérer l’édition. Si la sauvegarde réussit mais que la relecture échoue, distinguer les deux résultats, garder le contenu affiché et permettre de relire sans rejouer la mutation.
 
-1. Au submit, mémoriser les valeurs réellement envoyées.
-2. Au succès, appliquer la réponse comme nouvelle donnée de référence de la fiche.
-3. Pour un champ soumis dont la valeur n’a pas changé depuis le submit, appliquer la valeur confirmée par le serveur, y compris sa normalisation éventuelle.
-4. Pour un champ modifié pendant la requête, conserver la saisie actuelle et son état non enregistré.
-5. Actualiser les paramètres techniques, notamment la révision, à partir de la réponse acceptée.
-
-Exemple : l’utilisateur envoie `Racket`, puis saisit `Junior racket` pendant la requête. La réponse confirme `Racket`, révision `8`. La référence enregistrée et les champs de révision passent à `8`, tandis que l’input garde `Junior racket` pour la prochaine sauvegarde.
-
-Une opération indépendante ne marque jamais le formulaire principal comme enregistré. Ses champs non modifiés peuvent recevoir les nouvelles valeurs ; ses modifications locales restent présentes. Si l’opération change un champ également modifié localement, signaler le conflit et empêcher son écrasement silencieux. Actualiser une révision ne doit pas servir à contourner un conflit non résolu.
-
-Prévoir une seule mutation simultanée par fiche tout en permettant de continuer la saisie. Une réponse d’une ancienne fiche, d’une ancienne cible ou d’une requête remplacée ne doit pas actualiser la fiche désormais affichée. Une erreur ne réinitialise pas le formulaire et ne déclenche pas de nouvelle tentative automatique avec une révision différente.
-
-Les dashboards possèdent déjà une logique d’acquittement des valeurs envoyées et de conservation des modifications ultérieures. Il faut réutiliser son comportement validé en le raccordant aux vrais contrôles et au cycle de formulaire générique.
+Cette première version n’autorise pas la saisie pendant Save. Elle n’introduit donc pas de fusion à trois versions pour ce cas. Les conflits avec d’autres sessions restent vérifiés par les révisions de l’intégration. Les opérations indépendantes ne marquent pas le formulaire principal enregistré. Son brouillon est conservé si ses bindings serveur ne changent pas. Une opération susceptible de modifier les mêmes champs devra faire résoudre le brouillon avant de démarrer ; ce garde-fou métier sera raccordé lors de la migration des fiches.
 
 ## 6. Responsabilités et limites à traiter
 
@@ -215,7 +192,7 @@ Les dashboards possèdent déjà une logique d’acquittement des valeurs envoy�
 | Soumission des types | Les formulaires actuels ne conservent pas automatiquement tous les types JSON. Définir un contrat commun pour nombres, booléens, listes, objets structurés et valeurs vidées. |
 | Contrôles complexes | Métadonnées, tableaux, listes réordonnables et médias doivent participer à la soumission sans un second moteur de collecte dans chaque widget. |
 | Contrôles en lecture seule, conditionnels ou désactivés | Distinguer visibilité, édition et participation à la soumission. L’absence d’un champ ne doit pas effacer une donnée par accident. |
-| Réponse de sauvegarde | Pour l’application directe à une source, elle doit avoir la forme complète attendue par cette source. Adapter les endpoints concernés. |
+| Réponse de sauvegarde | Aucune forme commune avec la lecture n’est imposée. Le succès déclenche une relecture ciblée. |
 | Conflits et changements simultanés | Préserver les brouillons ne suffit pas : ne pas réenregistrer silencieusement une valeur contredite par une opération indépendante. |
 | Répétitions | Le binding actuel peut remonter les éléments répétés lorsque les objets de la liste changent d’identité. Mesurer les effets sur les tableaux et les listes éditables. |
 | Images | Prévoir le cycle des fichiers en attente, l’état final validé, les erreurs et le nettoyage. Le stockage des fichiers n’est pas atomique avec la transaction des données. |
@@ -263,14 +240,16 @@ Livrable : [bilan de l’étape 2 et preuves](docs/quality/integration-views/ste
 
 ### Étape 3 — Formulaires et binding génériques
 
-- [ ] Raccorder les vrais contrôles à la soumission, avec un contrat commun pour les valeurs simples et structurées.
-- [ ] Implémenter le raccord de succès à une source de lecture en s’appuyant sur `setSourceData()`.
-- [ ] Raccorder la conservation des modifications locales et l’acquittement des seules valeurs effectivement enregistrées.
-- [ ] Gérer les erreurs, les conflits, les doubles soumissions, les réponses tardives et les changements de fiche.
-- [ ] Préserver les contrôles montés et limiter les mises à jour visuelles aux éléments concernés.
-- [ ] Mettre à jour les exports, contrats, validation, compilation, édition et documentation touchés par les nouveaux attributs.
-- [ ] Tester les formulaires ordinaires existants pour éviter de modifier implicitement leur comportement.
-- [ ] Présenter les résultats et les limites restantes, puis s’arrêter.
+- [x] Raccorder les vrais contrôles à la soumission, avec un contrat commun pour les valeurs simples et structurées.
+- [x] Raccorder le succès à une relecture ciblée de la source, sans application directe du corps de réponse.
+- [x] Verrouiller temporairement l’édition après capture des valeurs et jusqu’à la fin de la relecture ; conserver la saisie sur échec.
+- [x] Gérer les erreurs, les conflits, les doubles soumissions, les réponses tardives et les changements de fiche.
+- [x] Préserver le contenu pendant une relecture de la même source, conserver les références identiques et limiter les écritures DOM aux bindings modifiés.
+- [x] Mettre à jour les exports, contrats, validation, compilation, édition et documentation touchés par les nouveaux attributs.
+- [x] Tester les formulaires ordinaires existants pour éviter de modifier implicitement leur comportement.
+- [x] Présenter les résultats et les limites restantes, puis s’arrêter.
+
+Livrable : [bilan de l’étape 3, preuves et limites](docs/quality/integration-views/step-3.md). `cms-bind-value` est retiré ; les contrôles utilisent les attributs interpolés et le binding booléen existant. Arrêt avant le parcours produit.
 
 ### Étape 4 — Parcours produit complet
 

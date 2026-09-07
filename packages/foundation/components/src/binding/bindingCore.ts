@@ -47,12 +47,14 @@ export {
 export { currentState, setState, STATE_CHANGE_EVENT } from "./params";
 export {
     CMS_SOURCE_FAILED_EVENT,
+    CMS_SOURCE_REFRESH_FAILED_EVENT,
     CMS_SOURCE_SUCCESS_EVENT,
     type CmsSourceResultEvent,
     type CmsSourceResultEventMap,
 } from "./source/submissionEvents";
 export type { FormSubmitResult } from "./submit/formSubmit";
 export { readSourceData, setSourceData } from "./source/values";
+export { reloadSource } from "./source/runtime/refresh/registry";
 export { setSourceContext, refreshSourceContext, type SourceContext } from "./source/presentation/sourceContext";
 
 /** Filter set passed to every source's interpolation. Empty until a host wires

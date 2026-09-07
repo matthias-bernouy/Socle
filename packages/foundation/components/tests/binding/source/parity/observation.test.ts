@@ -5,7 +5,7 @@ import { el, resetDom } from "../../testUtils";
 
 afterEach(resetDom);
 
-test("source observation follows rendered loading, success, errors, empty data and disposal", async () => {
+test("source observation follows loading, refresh failure, empty data and disposal", async () => {
     const host = el(
         '<div cms-source="/items"><p>{{ name }}</p><p cms-condition="$source.error">{{ $source.message }}</p></div>',
     );
@@ -26,7 +26,16 @@ test("source observation follows rendered loading, success, errors, empty data a
     ]);
     response = new Response("Unavailable", { status: 503 });
     await source.run();
-    expect(states.at(-1)).toMatchObject({ error: true, status: 503, data: { name: "Ada" } });
+    expect(states.at(-2)).toMatchObject({ loading: false, loaded: true, refreshing: true, refreshError: false });
+    expect(states.at(-1)).toMatchObject({
+        loading: false,
+        loaded: true,
+        error: false,
+        refreshing: false,
+        refreshError: true,
+        status: 503,
+        data: { name: "Ada" },
+    });
     response = Response.json([]);
     await source.run();
     expect(states.at(-1)).toMatchObject({ empty: true, data: [] });
