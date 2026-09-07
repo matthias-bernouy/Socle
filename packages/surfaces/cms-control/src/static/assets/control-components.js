@@ -13664,7 +13664,7 @@ p {
   }
   function Xt(t, e, i, r) {
     let o = t.getAttribute("cms-bind-value");
-    if (o && t.localName.includes("-") && /^[\w$.-]+$/.test(o) && !R(o, r))
+    if (o && (t.localName.includes("-") || t.matches('input[type="checkbox"]')) && /^[\w$.-]+$/.test(o) && !R(o, r))
       i.values.push({ path: e, expression: o });
     for (let n of Array.from(t.attributes))
       if (n.value.includes("{{") && !Ut(n.value, r))
@@ -13905,9 +13905,14 @@ p {
       let i = ++this.revision, r = () => {
         if (i !== this.revision)
           return;
+        let n = this.element.ownerDocument.defaultView;
+        if (n && this.element instanceof n.HTMLInputElement && this.element.type === "checkbox") {
+          this.element.checked = e === true;
+          return;
+        }
         this.element.setBindingValue?.(e);
       }, o = this.element.ownerDocument.defaultView?.customElements;
-      if (o && !o.get(this.element.localName))
+      if (o && this.element.localName.includes("-") && !o.get(this.element.localName))
         o.whenDefined(this.element.localName).then(r);
       else
         o?.upgrade(this.element), r();
@@ -16236,9 +16241,87 @@ p {
     return Boolean(field.allowCustom || field.lookup?.create?.mode === "inline");
   }
 
+  // src/components/admin/Resources/Dashboards/runtime/mapping/money.ts
+  function currencyFractionDigits2(currency) {
+    if (!currency) {
+      return 2;
+    }
+    try {
+      return new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits ?? 2;
+    } catch {
+      return 2;
+    }
+  }
+  function formatMinorUnits(value, fractionDigits, allowDecimals, locale = dashboardLocale()) {
+    const minorUnits = integerValue(value);
+    if (minorUnits === undefined) {
+      return "";
+    }
+    const factor = 10n ** BigInt(fractionDigits);
+    const absolute = minorUnits < 0n ? -minorUnits : minorUnits;
+    const major = absolute / factor;
+    const remainder = absolute % factor;
+    const sign = minorUnits < 0n ? "-" : "";
+    if (fractionDigits === 0 || !allowDecimals && remainder === 0n) {
+      return `${sign}${major}`;
+    }
+    const separator = decimalSeparator(locale);
+    return `${sign}${major}${separator}${remainder.toString().padStart(fractionDigits, "0")}`;
+  }
+  function parseMajorUnits(rawValue, fractionDigits, allowDecimals) {
+    const value = rawValue.trim().replaceAll(/\s/gu, "");
+    if (!value) {
+      return { ok: true, value: "" };
+    }
+    const pattern = allowDecimals && fractionDigits > 0 ? /^([+-]?)(\d+)(?:([,.])(\d+))?$/u : /^([+-]?)(\d+)$/u;
+    const match = pattern.exec(value);
+    if (!match) {
+      return {
+        ok: false,
+        message: allowDecimals ? `Enter an amount with up to ${fractionDigits} decimal places.` : "Enter a whole amount without decimals."
+      };
+    }
+    const fraction = match[4] ?? "";
+    if (fraction.length > fractionDigits) {
+      return { ok: false, message: `Enter an amount with up to ${fractionDigits} decimal places.` };
+    }
+    const factor = 10n ** BigInt(fractionDigits);
+    const major = BigInt(match[2]);
+    const minor = BigInt(fraction.padEnd(fractionDigits, "0") || "0");
+    const signed = (match[1] === "-" ? -1n : 1n) * (major * factor + minor);
+    const parsed = Number(signed);
+    if (!Number.isSafeInteger(parsed)) {
+      return { ok: false, message: "Enter a smaller amount." };
+    }
+    return { ok: true, value: parsed };
+  }
+  function integerValue(value) {
+    if (typeof value === "number" && Number.isSafeInteger(value)) {
+      return BigInt(value);
+    }
+    if (typeof value === "string" && /^[+-]?\d+$/u.test(value)) {
+      const parsed = BigInt(value);
+      if (parsed <= BigInt(Number.MAX_SAFE_INTEGER) && parsed >= BigInt(Number.MIN_SAFE_INTEGER)) {
+        return parsed;
+      }
+    }
+    return;
+  }
+  function dashboardLocale() {
+    if (typeof navigator !== "undefined" && navigator.language) {
+      return navigator.language;
+    }
+    return typeof document !== "undefined" && document.documentElement.lang ? document.documentElement.lang : "en-US";
+  }
+  function decimalSeparator(locale) {
+    return new Intl.NumberFormat(locale).formatToParts(1.1).find((part) => part.type === "decimal")?.value ?? ".";
+  }
+
   // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/filters.ts
   var dashboardDisplayFilters = {
     dashboardTokens: (value) => tokenValue(value).join(","),
+    dashboardAmount: (value, currency) => formatMinorUnits(value, currencyFractionDigits2(textValue(currency) || undefined), true),
+    dashboardWholeAmount: (value, currency) => formatMinorUnits(value, currencyFractionDigits2(textValue(currency) || undefined), false),
     dashboardDefined: (value) => value !== null && value !== undefined,
     dashboardTrimmedText: (value) => textValue(value).trim(),
     dashboardValueKind: (value) => {
@@ -26674,6 +26757,8 @@ w13c-lateral-menu-item {
 <template data-control="select"><p9r-select></p9r-select></template>
 <template data-control="combobox"><p9r-combobox></p9r-combobox></template>
 <template data-control="tokens"><p9r-token-input></p9r-token-input></template>
+<template data-control="checkbox"><input type="checkbox" /></template>
+<template data-control="amount"><p9r-input type="text"></p9r-input></template>
 <template data-control="secret-ref"><cms-credential-select></cms-credential-select></template>
 <template data-control="page-link"><cms-editor-v2-page-link></cms-editor-v2-page-link></template>
 <template data-control="readonly">
@@ -26729,19 +26814,24 @@ w13c-lateral-menu-item {
   function fieldElement(field2, root) {
     const template = document.createElement("template");
     template.innerHTML = controls_default;
-    const kind = field2.type === "readonly" ? field2.format ?? "readonly" : field2.type;
+    const kind = field2.type === "readonly" ? field2.format ?? "readonly" : field2.type === "money" ? "amount" : field2.type;
     const control = template.content.querySelector(`[data-control="${kind === "text" && field2.type === "readonly" ? "readonly" : kind}"]`).content.firstElementChild.cloneNode(true);
     const wrapper = document.createElement("cms-dashboard-detail-field");
     wrapper.setAttribute("label", field2.label);
     wrapper.toggleAttribute("required", field2.required === true);
-    wrapper.toggleAttribute("internal-label", field2.type !== "readonly");
+    wrapper.toggleAttribute("internal-label", field2.type !== "readonly" && field2.type !== "checkbox");
     if (field2.type === "readonly") {
       composeReadonly(control, field2, root);
       wrapper.append(...Array.from(control.childNodes));
     } else {
       control.setAttribute("label", field2.label);
       control.setAttribute("data-field-control", field2.id);
-      control.setAttribute("value", fieldBinding(root, field2.path, field2.type === "tokens" ? "dashboardTokens" : undefined));
+      if (field2.type === "checkbox") {
+        control.setAttribute("cms-bind-value", field2.path === "." ? root : `${root}.${field2.path}`);
+        control.setAttribute("aria-label", field2.label);
+      } else {
+        control.setAttribute("value", fieldBinding(root, field2.path, field2.type === "tokens" ? "dashboardTokens" : undefined));
+      }
       control.toggleAttribute("required", field2.required === true);
       if ("placeholder" in field2 && field2.placeholder) {
         control.setAttribute("placeholder", field2.placeholder);
@@ -26752,6 +26842,12 @@ w13c-lateral-menu-item {
             control.setAttribute(key, String(field2[key]));
           }
         }
+      }
+      if (field2.type === "money") {
+        const filter = field2.allowDecimals === false ? "dashboardWholeAmount" : "dashboardAmount";
+        const currency = field2.currencyPath ? `(${root}.${field2.currencyPath})` : "";
+        control.setAttribute("value", fieldBinding(root, field2.path, `${filter}${currency}`));
+        control.setAttribute("inputmode", field2.allowDecimals === false ? "numeric" : "decimal");
       }
       if (field2.type === "textarea") {
         control.setAttribute("rows", String(field2.rows ?? 4));
@@ -26799,7 +26895,9 @@ dd { margin: 0; min-width: 0; }
 :host([internal-label]) dt { display: none; }
 :host([required]:not([internal-label])) dt { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 :host([required]:not([internal-label])) dt::after { content: "* Required"; color: var(--text-muted, #94a3b8); flex-shrink: 0; font-size: 10px; font-weight: 650; text-transform: none; }
+:host([required]:not([internal-label]):has([invalid])) dt::after { color: var(--danger-base, #dc2626); }
 ::slotted(*) { width: 100%; min-width: 0; }
+::slotted(input[type="checkbox"]) { width: auto; }
 ::slotted(span) { color: #66736f; overflow-wrap: anywhere; }
 ::slotted(.readonly-list) { display: grid; gap: 4px; padding: 0; margin: 0; list-style: none; color: #66736f; overflow-wrap: anywhere; word-break: break-word; }
 ::slotted(.readonly-empty) { color: #8a9692; font-style: italic; }
@@ -26829,10 +26927,12 @@ dd { margin: 0; min-width: 0; }
     "page-link",
     "readonly",
     "combobox",
-    "tokens"
+    "tokens",
+    "checkbox",
+    "money"
   ]);
   function supportsBoundDetail(widget) {
-    return [...widget.main, ...widget.aside ?? []].every((section) => !("widget" in section) && section.fields.every((field2) => supported.has(field2.type) && !field2.visibleWhen && !(("lookup" in field2) && field2.lookup))) && !(widget.actions ?? []).some((action) => action.visibleWhen);
+    return [...widget.main, ...widget.aside ?? []].every((section) => !("widget" in section) && section.fields.every((field2) => supported.has(field2.type) && !field2.visibleWhen && !(("lookup" in field2) && field2.lookup) && !(field2.type === "money" && typeof field2.allowDecimals === "object"))) && !(widget.actions ?? []).some((action) => action.visibleWhen);
   }
   function composeDetail(widget) {
     const fragment = document.createDocumentFragment();
@@ -26950,82 +27050,6 @@ dd { margin: 0; min-width: 0; }
   }
   function isRenderableUrl(value2) {
     return /^(https?:|blob:|data:|\/)/.test(value2);
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/mapping/money.ts
-  function currencyFractionDigits2(currency) {
-    if (!currency) {
-      return 2;
-    }
-    try {
-      return new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits ?? 2;
-    } catch {
-      return 2;
-    }
-  }
-  function formatMinorUnits(value2, fractionDigits, allowDecimals, locale = dashboardLocale()) {
-    const minorUnits = integerValue(value2);
-    if (minorUnits === undefined) {
-      return "";
-    }
-    const factor = 10n ** BigInt(fractionDigits);
-    const absolute = minorUnits < 0n ? -minorUnits : minorUnits;
-    const major2 = absolute / factor;
-    const remainder = absolute % factor;
-    const sign = minorUnits < 0n ? "-" : "";
-    if (fractionDigits === 0 || !allowDecimals && remainder === 0n) {
-      return `${sign}${major2}`;
-    }
-    const separator = decimalSeparator(locale);
-    return `${sign}${major2}${separator}${remainder.toString().padStart(fractionDigits, "0")}`;
-  }
-  function parseMajorUnits(rawValue, fractionDigits, allowDecimals) {
-    const value2 = rawValue.trim().replaceAll(/\s/gu, "");
-    if (!value2) {
-      return { ok: true, value: "" };
-    }
-    const pattern = allowDecimals && fractionDigits > 0 ? /^([+-]?)(\d+)(?:([,.])(\d+))?$/u : /^([+-]?)(\d+)$/u;
-    const match = pattern.exec(value2);
-    if (!match) {
-      return {
-        ok: false,
-        message: allowDecimals ? `Enter an amount with up to ${fractionDigits} decimal places.` : "Enter a whole amount without decimals."
-      };
-    }
-    const fraction = match[4] ?? "";
-    if (fraction.length > fractionDigits) {
-      return { ok: false, message: `Enter an amount with up to ${fractionDigits} decimal places.` };
-    }
-    const factor = 10n ** BigInt(fractionDigits);
-    const major2 = BigInt(match[2]);
-    const minor = BigInt(fraction.padEnd(fractionDigits, "0") || "0");
-    const signed = (match[1] === "-" ? -1n : 1n) * (major2 * factor + minor);
-    const parsed = Number(signed);
-    if (!Number.isSafeInteger(parsed)) {
-      return { ok: false, message: "Enter a smaller amount." };
-    }
-    return { ok: true, value: parsed };
-  }
-  function integerValue(value2) {
-    if (typeof value2 === "number" && Number.isSafeInteger(value2)) {
-      return BigInt(value2);
-    }
-    if (typeof value2 === "string" && /^[+-]?\d+$/u.test(value2)) {
-      const parsed = BigInt(value2);
-      if (parsed <= BigInt(Number.MAX_SAFE_INTEGER) && parsed >= BigInt(Number.MIN_SAFE_INTEGER)) {
-        return parsed;
-      }
-    }
-    return;
-  }
-  function dashboardLocale() {
-    if (typeof navigator !== "undefined" && navigator.language) {
-      return navigator.language;
-    }
-    return typeof document !== "undefined" && document.documentElement.lang ? document.documentElement.lang : "en-US";
-  }
-  function decimalSeparator(locale) {
-    return new Intl.NumberFormat(locale).formatToParts(1.1).find((part) => part.type === "decimal")?.value ?? ".";
   }
 
   // src/components/admin/Resources/Dashboards/runtime/lookups/targets.ts
@@ -38502,7 +38526,7 @@ cms-dashboard-icon svg {
   }
   function et(t, r, i, e) {
     let o = t.getAttribute("cms-bind-value");
-    if (o && t.localName.includes("-") && /^[\w$.-]+$/.test(o) && !E3(o, e))
+    if (o && (t.localName.includes("-") || t.matches('input[type="checkbox"]')) && /^[\w$.-]+$/.test(o) && !E3(o, e))
       i.values.push({ path: r, expression: o });
     for (let n of Array.from(t.attributes))
       if (n.value.includes("{{") && !it2(n.value, e))
@@ -38743,9 +38767,14 @@ cms-dashboard-icon svg {
       let i = ++this.revision, e = () => {
         if (i !== this.revision)
           return;
+        let n = this.element.ownerDocument.defaultView;
+        if (n && this.element instanceof n.HTMLInputElement && this.element.type === "checkbox") {
+          this.element.checked = r === true;
+          return;
+        }
         this.element.setBindingValue?.(r);
       }, o = this.element.ownerDocument.defaultView?.customElements;
-      if (o && !o.get(this.element.localName))
+      if (o && this.element.localName.includes("-") && !o.get(this.element.localName))
         o.whenDefined(this.element.localName).then(e);
       else
         o?.upgrade(this.element), e();

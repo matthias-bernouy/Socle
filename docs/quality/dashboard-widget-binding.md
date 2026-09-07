@@ -197,3 +197,43 @@ The browser dashboard directory now has eight entries, an informational fanout
 finding; its two fixture directories group their respective browser scenarios.
 There are no new blocking findings. The full scope remains in progress and the
 local runtime still needs final bundle activation and verification.
+
+## Checkbox and amount checkpoint
+
+Native checkbox values now bind directly through `cms-bind-value`, using strict
+boolean values. The binding compiler accepts this existing attribute on native
+checkboxes, and its value site updates only their checked property. Other native
+elements do not become arbitrary property receivers. Unchanged boolean values
+are not reapplied, preserving a local toggle during an unrelated refresh. This
+keeps the existing native checkbox appearance and avoids HTML's presence-based
+`checked="false"` behavior. Engine tests cover initial false, local edits,
+subsequent true/false changes, missing values and non-boolean inputs.
+
+Money inputs now use the static amount-control template, the official input,
+and pure formatting filters backed by the existing minor-unit conversion and
+currency precision functions. Existing parsing and validation still produce
+integer minor units for actions. Conditional decimal rules remain part of the
+pending visibility/draft-scope migration, not a completed path.
+
+The controlled Chromium scenario checks initial true/false checkboxes, required
+checkbox validation, decimal precision errors, comma decimal input, integer-only
+amounts, a zero-decimal currency, zero values, two saves and full reloads. It
+verifies exact boolean/integer payloads and no redundant detail read after a
+save with a returned resource. During a held refresh it preserves an edited
+checkbox, the amount draft, focus and text selection. All field controls are in
+the document light DOM. This is route-handler persistence, not a real local
+service write.
+
+Initial desktop/mobile screenshots match the goal's original bundle
+pixel-for-pixel, with equal control positions and no document overflow. Captures
+were inspected under `scalars-captures/`. Five controlled runs recorded median
+initial loads of 185.5ms before and 163.9ms after (ranges 181.7–187.8ms and
+163.3–191.5ms), with one detail read in each case. The first save's median was
+45.6ms, with one write and no additional read. These mocked-route measurements
+do not establish production performance. Logs and measurements are in
+`scalars-run-*.log` and `scalars-timings.json`.
+
+Validation for this checkpoint: 248 binding tests and 132 dashboard/widget tests
+passed; all nine dashboard browser files passed individually. Build and all eight
+check:all gates passed. UI-contract counts remain unchanged. The full verification
+matrix and final local-runtime activation remain incomplete.

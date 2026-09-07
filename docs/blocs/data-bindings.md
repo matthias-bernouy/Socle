@@ -62,17 +62,19 @@ This allows declared scalar/list branches without a component constructing DOM
 from response data. It does not add general parentheses, filter chains or a
 template-reference mechanism.
 
-## Typed custom-element inputs
+## Typed control inputs
 
 Use `cms-bind-value="catalogue.items"` when a custom element needs the resolved
 value itself. The element opts in by implementing `setBindingValue(value:
 unknown): void`. Objects, arrays, booleans, numbers, null and undefined retain
 their types; the engine does not serialize them into attributes. The expression
 is a scope path, not JavaScript, interpolation or an arbitrary property name.
-Native elements do not receive this binding.
+Native checkboxes also accept this binding: only the boolean `true` checks the
+input; every other value unchecks it. Other native elements do not receive it.
 
 ```html
 <example-chart cms-bind-value="catalogue.totals"></example-chart>
+<input type="checkbox" cms-bind-value="settings.enabled">
 ```
 
 The receiver must cache values delivered before connection and render when
@@ -82,6 +84,12 @@ receives the latest value, and unmounting cancels queued delivery. Normal source
 condition, repetition and form-result ownership still apply. This is a runtime
 component-authoring contract; the visual editor does not provide a new generic
 property-binding picker.
+
+For a native checkbox, unchanged source values are not reapplied, preserving a
+local check/uncheck during an unrelated refresh. A changed bound value updates
+the checked property directly; it is not rendered as `checked="false"`, which
+HTML would interpret as checked. Static HTML boolean attributes keep their
+normal presence semantics. This does not bind arbitrary DOM properties.
 
 Keep bound children in light DOM under the page core. A visual component may
 slot them into an encapsulated Shadow DOM shell; it must not create another

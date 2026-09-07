@@ -63,7 +63,14 @@ export async function installReadonlyRoutes(
                           {
                               id: "save",
                               label: "Save choices",
-                              endpoint: { endpoint: "save", body: { brand: "$field.brand", tags: "$field.tags" } },
+                              endpoint: {
+                                  endpoint: "save",
+                                  body: Object.fromEntries(
+                                      choices.fields
+                                          .filter((field) => field.type !== "readonly")
+                                          .map((field) => [field.id, `$field.${field.id}`]),
+                                  ),
+                              },
                               after: { resource: "$result" },
                           },
                       ],

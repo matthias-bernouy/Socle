@@ -7,7 +7,8 @@ import { optionList } from "../../../runtime/mapping/fieldSupport";
 export function fieldElement(field: DashboardField, root: string): HTMLElement {
     const template = document.createElement("template");
     template.innerHTML = controls as unknown as string;
-    const kind = field.type === "readonly" ? (field.format ?? "readonly") : field.type;
+    const kind =
+        field.type === "readonly" ? (field.format ?? "readonly") : field.type === "money" ? "amount" : field.type;
     const control = template.content
         .querySelector<HTMLTemplateElement>(
             `[data-control="${kind === "text" && field.type === "readonly" ? "readonly" : kind}"]`,
@@ -16,17 +17,22 @@ export function fieldElement(field: DashboardField, root: string): HTMLElement {
     const wrapper = document.createElement("cms-dashboard-detail-field");
     wrapper.setAttribute("label", field.label);
     wrapper.toggleAttribute("required", field.required === true);
-    wrapper.toggleAttribute("internal-label", field.type !== "readonly");
+    wrapper.toggleAttribute("internal-label", field.type !== "readonly" && field.type !== "checkbox");
     if (field.type === "readonly") {
         composeReadonly(control, field, root);
         wrapper.append(...Array.from(control.childNodes));
     } else {
         control.setAttribute("label", field.label);
         control.setAttribute("data-field-control", field.id);
-        control.setAttribute(
-            "value",
-            fieldBinding(root, field.path, field.type === "tokens" ? "dashboardTokens" : undefined),
-        );
+        if (field.type === "checkbox") {
+            control.setAttribute("cms-bind-value", field.path === "." ? root : `${root}.${field.path}`);
+            control.setAttribute("aria-label", field.label);
+        } else {
+            control.setAttribute(
+                "value",
+                fieldBinding(root, field.path, field.type === "tokens" ? "dashboardTokens" : undefined),
+            );
+        }
         control.toggleAttribute("required", field.required === true);
         if ("placeholder" in field && field.placeholder) {
             control.setAttribute("placeholder", field.placeholder);
@@ -37,6 +43,12 @@ export function fieldElement(field: DashboardField, root: string): HTMLElement {
                     control.setAttribute(key, String(field[key]));
                 }
             }
+        }
+        if (field.type === "money") {
+            const filter = field.allowDecimals === false ? "dashboardWholeAmount" : "dashboardAmount";
+            const currency = field.currencyPath ? `(${root}.${field.currencyPath})` : "";
+            control.setAttribute("value", fieldBinding(root, field.path, `${filter}${currency}`));
+            control.setAttribute("inputmode", field.allowDecimals === false ? "numeric" : "decimal");
         }
         if (field.type === "textarea") {
             control.setAttribute("rows", String(field.rows ?? 4));

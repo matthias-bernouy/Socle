@@ -14,6 +14,8 @@ const supported = new Set([
     "readonly",
     "combobox",
     "tokens",
+    "checkbox",
+    "money",
 ]);
 
 /** Temporary migration boundary; extend it as the remaining control families migrate. */
@@ -23,7 +25,11 @@ export function supportsBoundDetail(widget: DetailWidget): boolean {
             (section) =>
                 !("widget" in section) &&
                 section.fields.every(
-                    (field) => supported.has(field.type) && !field.visibleWhen && !("lookup" in field && field.lookup),
+                    (field) =>
+                        supported.has(field.type) &&
+                        !field.visibleWhen &&
+                        !("lookup" in field && field.lookup) &&
+                        !(field.type === "money" && typeof field.allowDecimals === "object"),
                 ),
         ) && !(widget.actions ?? []).some((action) => action.visibleWhen)
     );

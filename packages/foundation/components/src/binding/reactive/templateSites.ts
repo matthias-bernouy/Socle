@@ -138,7 +138,7 @@ export class RawHtmlSite implements LiveBindingSite {
     }
 }
 
-/** Typed opt-in input for custom elements; never assigns arbitrary DOM properties. */
+/** Typed control input; never assigns arbitrary DOM properties. */
 export class ValueSite implements LiveBindingSite {
     private revision = 0;
     private previous: unknown = Symbol("unbound");
@@ -157,11 +157,16 @@ export class ValueSite implements LiveBindingSite {
             if (revision !== this.revision) {
                 return;
             }
+            const view = this.element.ownerDocument.defaultView;
+            if (view && this.element instanceof view.HTMLInputElement && this.element.type === "checkbox") {
+                this.element.checked = value === true;
+                return;
+            }
             const target = this.element as HTMLElement & { setBindingValue?: (value: unknown) => void };
             target.setBindingValue?.(value);
         };
         const registry = this.element.ownerDocument.defaultView?.customElements;
-        if (registry && !registry.get(this.element.localName)) {
+        if (registry && this.element.localName.includes("-") && !registry.get(this.element.localName)) {
             void registry.whenDefined(this.element.localName).then(apply);
         } else {
             registry?.upgrade(this.element);

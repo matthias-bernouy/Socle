@@ -90,11 +90,35 @@ test("a disposed binding does not deliver a queued value after a late custom-ele
     expect(values).toEqual([]);
 });
 
-test("native elements and nested source contents are not typed binding receivers", () => {
+test("arbitrary native elements and nested source contents are not typed binding receivers", () => {
     const { host } = mount(
         '<div cms-bind-value="item"></div><section cms-source="/other"><test-value-receiver cms-bind-value="item"></test-value-receiver></section>',
         { item: 42 },
     );
     expect((host.querySelector("test-value-receiver") as ValueReceiver).values).toEqual([]);
     expect(host.querySelector("div")!.textContent).toBe("");
+});
+
+test("a bound native checkbox receives booleans and retains a local edit on an unchanged refresh", () => {
+    const { host, region } = mount('<input type="checkbox" cms-bind-value="enabled"><span>{{ name }}</span>', {
+        enabled: false,
+        name: "Initial",
+    });
+    const input = host.querySelector("input")!;
+    expect(input.checked).toBe(false);
+    input.click();
+    expect(input.checked).toBe(true);
+    region.update({ value: { enabled: false, name: "Refreshed" } });
+    expect(input.checked).toBe(true);
+    expect(host.querySelector("span")!.textContent).toBe("Refreshed");
+    region.update({ value: { enabled: true } });
+    region.update({ value: { enabled: false } });
+    expect(input.checked).toBe(false);
+    for (const value of ["false", "true", {}, undefined, null]) {
+        region.update({ value: { enabled: value } });
+        expect(input.checked).toBe(false);
+    }
+    region.update({ value: { enabled: true } });
+    expect(input.checked).toBe(true);
+    expect(host.querySelector("input")).toBe(input);
 });

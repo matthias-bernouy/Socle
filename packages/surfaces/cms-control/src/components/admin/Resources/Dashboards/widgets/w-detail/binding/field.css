@@ -6,7 +6,9 @@ dd { margin: 0; min-width: 0; }
 :host([internal-label]) dt { display: none; }
 :host([required]:not([internal-label])) dt { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 :host([required]:not([internal-label])) dt::after { content: "* Required"; color: var(--text-muted, #94a3b8); flex-shrink: 0; font-size: 10px; font-weight: 650; text-transform: none; }
+:host([required]:not([internal-label]):has([invalid])) dt::after { color: var(--danger-base, #dc2626); }
 ::slotted(*) { width: 100%; min-width: 0; }
+::slotted(input[type="checkbox"]) { width: auto; }
 ::slotted(span) { color: #66736f; overflow-wrap: anywhere; }
 ::slotted(.readonly-list) { display: grid; gap: 4px; padding: 0; margin: 0; list-style: none; color: #66736f; overflow-wrap: anywhere; word-break: break-word; }
 ::slotted(.readonly-empty) { color: #8a9692; font-style: italic; }
