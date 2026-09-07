@@ -2,11 +2,13 @@ import { expect, test } from "bun:test";
 import { chromium, type Locator } from "playwright";
 import { resolve } from "node:path";
 import { mkdir } from "node:fs/promises";
-import { installReadonlyRoutes } from "./fixture";
+import { installReadonlyRoutes } from "../fixture";
 
-const bundle = await Bun.file(resolve(import.meta.dir, "../../../../src/static/assets/control-components.js")).text();
+const bundle = await Bun.file(
+    resolve(import.meta.dir, "../../../../../src/static/assets/control-components.js"),
+).text();
 const styles = await Bun.file(
-    resolve(import.meta.dir, "../../../../../../foundation/components/dist/style.css"),
+    resolve(import.meta.dir, "../../../../../../../foundation/components/dist/style.css"),
 ).text();
 
 test("checkboxes and amounts preserve layout, drafts, validation and typed values through repeated saves", async () => {

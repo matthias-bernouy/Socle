@@ -759,3 +759,53 @@ These are route-fixture persistence checks, not real local storage validation.
 Concurrent media mutations, nested controls, schema migration, editable
 collections, remaining legacy renderers and the full local-service matrix are
 still outstanding. The goal remains incomplete.
+
+## Dynamic schema browser reference
+
+The schema family is still on the legacy detail renderer. New browser fixtures
+establish its behavior before migration: numeric/string/enum/boolean controls,
+required validation, metadata-based exclusions, unknown keys, explicit nulls
+and absent optional values. The main flow performs two saves and full reloads,
+checks the exact typed metadata object, and reveals an excluded field without
+another schema request. The required boolean can validly be false; untouched
+optional booleans stay absent. An unsafe `constructor` definition is omitted.
+
+Lifecycle cases start with a missing category (no schema request), fail a schema
+load, save other fields while preserving the existing metadata object, reload
+successfully, and switch through an empty schema. Another case holds the padel
+response, switches back to tennis and types a draft, then waits for the obsolete
+fixture response to finish. Across five subsequent frames, obsolete controls
+remain absent and the note, focus, selection and position remain stable. These
+cases use browser route fixtures, not local database persistence.
+
+The reference visual case compares ready/loading/empty/error states at 1440px
+and 390px against the original goal bundle, plus the bottom of the mobile
+scrolling pane. Geometry and mobile scroll match in all nine states. The
+captures were inspected; seven final pairs are pixel identical and two empty
+pairs have narrow input-border differences. The optional boolean incorrectly
+shows a Required marker in both bundles: `checkboxLabel` passes undefined as
+the force argument to `toggleAttribute`, which toggles the marker on. This is
+a pre-existing presentation bug to fix during the schema migration, not a
+required-state contract to preserve. Validation correctly treats it as optional.
+
+Five sequential visual runs are in `schema-reference-visual-{0..4}.log`, with
+observations in `schema-reference-timings.json` and images in
+`schema-reference-captures/`. Ready-state medians for original/current bundles
+are 199.1/182.2ms desktop and 176.3/178.6ms mobile; each state makes one detail
+read and one schema request. These values establish a reference only: schemas
+have not migrated, and they do not demonstrate an implementation speedup.
+
+All four new schema browser cases pass, as does the scalar case moved into
+`detail-binding/choices/` to keep directory fanout bounded. The earlier 39-case
+browser suite passed before this test-only addition; the suite now contains 43
+cases in 38 files. The final check passes all eight gates with unchanged UI
+contract totals (0 errors, 77 warnings, 11 information) and no directory-fanout
+errors. No source bundle changed after the media recovery checkpoint.
+
+Next implementation: give schema declarations binding-owned sources, project
+validated definitions and draft values into document-visible repeats and
+conditions, and keep the visual grid/rows styled inside their component shells.
+Preserve schema exclusion and validation contracts. Remove the corresponding
+manual response renderer as consumers migrate. Delayed current responses,
+drafts/focus during schema refresh, provider/operator endpoints and real local
+persistence still require their full migration validation.
