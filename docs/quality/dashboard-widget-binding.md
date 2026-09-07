@@ -237,3 +237,56 @@ Validation for this checkpoint: 248 binding tests and 132 dashboard/widget tests
 passed; all nine dashboard browser files passed individually. Build and all eight
 check:all gates passed. UI-contract counts remain unchanged. The full verification
 matrix and final local-runtime activation remain incomplete.
+
+## Conditional fields and draft context checkpoint
+
+Automatic sources can now derive additional local scope variables through
+`setSourceContext` and reevaluate them with `refreshSourceContext`. The existing
+source renderer applies the scope to its authored template. Local refreshes do
+not fetch, cancel pending reads or publish new source states; source aliases and
+status variables take precedence over context variables. Tests cover local
+conditions, unchanged input drafts/focus/caret, disposal and a pending read.
+
+Detail definitions now declare field visibility through `cms-condition` and a
+pure filter using the existing dashboard visibility evaluator. The context
+projects original resource values and local edits, including field-id/path
+mapping and conditional money precision. It never constructs HTML or delivers
+a response object to a widget renderer. Hidden field drafts survive removal and
+reappearance. Conditional actions, complex controls and nested widget composition
+still require migration; `supportsBoundDetail` remains temporary.
+
+Save handling now acknowledges the submitted snapshot without deleting newer
+edits. Acknowledged local values are released when the returned/reloaded resource
+arrives, allowing server normalization to appear. Raw amount drafts remain
+available while a save or read is pending. The E2E exposed a separate settings
+bug: resource reconciliation compared an empty row identifier with undefined,
+so standalone details ignored returned save resources. Their empty selection is
+now normalized consistently.
+
+The controlled flow covers nested all/any conditions using fields and resource
+properties, hidden required fields, hide/show draft retention, dynamic decimal
+precision, normalized saves and full reloads. It then holds another save, edits
+text and a comma-decimal amount during that request, and verifies the newer
+drafts, focus, caret and detail geometry after completion. A subsequent failed
+read and successful retry retain those drafts; a final save/reload verifies the
+newer values were persisted by the fixture. Separate action tests check failed
+saves and preservation of newer/unrelated draft entries.
+
+Desktop/mobile captures for hidden, visible and invalid field states match the
+original goal bundle pixel-for-pixel. Focus targets are explicitly equalized
+and animations are disabled for image comparison. Images were inspected under
+`conditions-captures/`; geometry checks cover every visible control and document
+overflow. Both implementations make one initial detail read and no extra reads
+when changing conditions. Five runs using frame-based readiness checks measured
+median loads of 198.2ms before and 184.2ms after (ranges 180.6–220.2ms and
+175.9–205.7ms). Evidence: `conditions-visual-*.log` and
+`conditions-timings.json`. These controlled routes do not establish real-service
+latency or local database persistence.
+
+Validation: 250 binding tests, 134 dashboard/widget tests and all eleven browser
+files passed (browser files individually). Build and all eight check:all gates
+passed; UI contracts remain at 0 errors, 77 warnings and 11 informational findings.
+The source/event lifecycle files remain cohesive above the size-review threshold.
+`WDetail` and `fieldState` still contain legacy responsibilities pending removal;
+their larger interim size is tracked rather than hidden by mechanical splits.
+The full scope, real local write flows and final runtime activation remain open.

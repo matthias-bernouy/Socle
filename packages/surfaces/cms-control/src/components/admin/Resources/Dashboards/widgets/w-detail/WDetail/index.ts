@@ -1,4 +1,5 @@
-import { readSourceData, setSourceData } from "@bernouy/components";
+import { readSourceData, setSourceData, refreshSourceContext } from "@bernouy/components";
+import { bindDetailContext } from "../binding/context";
 import { composeDetail, supportsBoundDetail } from "../binding/composition";
 import { valueAt } from "../../../runtime/expressions";
 import { Component } from "@bernouy/components/base";
@@ -24,6 +25,12 @@ export class DashboardWDetail extends Component {
         this.configuration = widget;
         if (!this.hasAttribute("data-declarative") && supportsBoundDetail(widget)) {
             this.setAttribute("data-declarative", "");
+            bindDetailContext(
+                this,
+                widget,
+                (resource) => this.runtime.fields.draftForResource(resource),
+                () => this.runtime.fields.displayDraft,
+            );
             this.append(composeDetail(widget));
         }
     }
@@ -117,6 +124,10 @@ export class DashboardWDetail extends Component {
         }
     }
 
+    acknowledgeSavedFields(fields: Record<string, unknown>): void {
+        this.runtime.fields.acknowledgeSavedFields(fields);
+    }
+
     static get observedAttributes(): string[] {
         return ["data-config-json", "data-source-json", "data-row-key", "data-source-id"];
     }
@@ -162,7 +173,11 @@ export class DashboardWDetail extends Component {
     }
 
     private refreshConditionalFields(): void {
-        if (this.mode !== "bound" || this.hasAttribute("data-declarative")) {
+        if (this.hasAttribute("data-declarative")) {
+            refreshSourceContext(this);
+            return;
+        }
+        if (this.mode !== "bound") {
             return;
         }
         const binding = this.readBinding();

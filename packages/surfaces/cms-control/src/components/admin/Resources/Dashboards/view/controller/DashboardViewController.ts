@@ -6,6 +6,7 @@ import type { DashboardSourceGroup } from "../../types";
 import type { DashboardViewActionContext } from "../actions";
 import { renderDashboardShell, renderExampleShell } from "../rendering";
 import { DashboardStateController } from "./DashboardStateController";
+import type { DashboardWDetail } from "../../widgets/w-detail/WDetail";
 
 export class DashboardViewController extends DashboardStateController {
     private readonly boundValue = (event: Event): void => {
@@ -98,6 +99,12 @@ export class DashboardViewController extends DashboardStateController {
             reloadDefinitions: () => this.reloadDefinitions(),
             reload: (collection, row) => this.reloadDetail(collection, row),
             reloadCollection: (widgetId) => reloadCollection(this, widgetId),
+            acknowledgeDetailFields: (collection, row, fields) => {
+                const target = Array.from(this.querySelectorAll<DashboardWDetail>("cms-dashboard-w-detail")).find(
+                    (node) => node.dataset.widgetId === collection && (node.dataset.rowKey ?? "") === row,
+                );
+                target?.acknowledgeSavedFields(fields);
+            },
             clearDetail: () => this.clearDetail(),
             openDetail: (collection, row) => this.openDetail(collection, row),
             setDetailResource: (collection, row, resource) => this.setDetailResource(collection, row, resource),

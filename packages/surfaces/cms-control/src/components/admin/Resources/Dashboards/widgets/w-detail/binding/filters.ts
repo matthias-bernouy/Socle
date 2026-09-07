@@ -1,14 +1,17 @@
 import { formatDashboardDate, formatDashboardMoney } from "../../../domain/formatting";
 import { readonlyValue, textValue, tokenValue } from "../../../runtime/mapping/fieldSupport";
-import { currencyFractionDigits, formatMinorUnits } from "../../../runtime/mapping/money";
+import { matchesDashboardVisibility } from "../../../runtime/expressions";
+import type { DashboardVisibilityRule } from "@bernouy/cms-dashboards";
 
 /** Pure value formatting/predicates; these filters never receive or construct DOM. */
 export const dashboardDisplayFilters = {
+    dashboardVisibility: (value: unknown, rule: unknown) =>
+        Boolean(value && typeof value === "object") &&
+        matchesDashboardVisibility(
+            rule as DashboardVisibilityRule | undefined,
+            value as { fields: Record<string, unknown>; resource: unknown },
+        ),
     dashboardTokens: (value: unknown) => tokenValue(value).join(","),
-    dashboardAmount: (value: unknown, currency: unknown) =>
-        formatMinorUnits(value, currencyFractionDigits(textValue(currency) || undefined), true),
-    dashboardWholeAmount: (value: unknown, currency: unknown) =>
-        formatMinorUnits(value, currencyFractionDigits(textValue(currency) || undefined), false),
     dashboardDefined: (value: unknown) => value !== null && value !== undefined,
     dashboardTrimmedText: (value: unknown) => textValue(value).trim(),
     dashboardValueKind: (value: unknown) => {

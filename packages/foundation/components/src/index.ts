@@ -137,3 +137,8 @@ export type { FilterMap, Filter } from "./binding/core/interpolate";
 
 export { requestBindingData, type BindingRequestResult } from "./binding/submit/submitRequest";
 export { readSourceData, setSourceData } from "./binding/source/values";
+export {
+    setSourceContext,
+    refreshSourceContext,
+    type SourceContext,
+} from "./binding/source/presentation/sourceContext";

@@ -46,7 +46,11 @@ export async function installReadonlyRoutes(
     page: Page,
     script: string,
     styles: string,
-    choices?: { fields: DashboardField[]; resource: Record<string, unknown> },
+    choices?: {
+        fields: DashboardField[];
+        resource: Record<string, unknown>;
+        normalize?: (resource: Record<string, unknown>) => Record<string, unknown>;
+    },
 ) {
     const requests: string[] = [];
     const saved: Record<string, unknown>[] = [];
@@ -80,6 +84,8 @@ export async function installReadonlyRoutes(
           }
         : group;
     let pending: Promise<void> | undefined;
+    let pendingSave: Promise<void> | undefined;
+    let failNextRead = false;
     await page.route("http://cms.test/**", async (route) => {
         const path = new URL(route.request().url()).pathname;
         requests.push(path);
@@ -98,11 +104,20 @@ export async function installReadonlyRoutes(
             if (pending) {
                 await pending;
             }
-            await route.fulfill({ json: current });
+            if (failNextRead) {
+                failNextRead = false;
+                await route.fulfill({ status: 503, json: { error: "Temporary test failure" } });
+            } else {
+                await route.fulfill({ json: current });
+            }
         } else if (path.endsWith("/save")) {
             const body = route.request().postDataJSON();
             saved.push(body);
+            if (pendingSave) {
+                await pendingSave;
+            }
             current = { ...current, ...body };
+            current = choices?.normalize?.(current) ?? current;
             await route.fulfill({ json: current });
         } else if (path === "/example.svg") {
             await route.fulfill({
@@ -117,6 +132,16 @@ export async function installReadonlyRoutes(
     return {
         requests,
         saved,
+        failRead() {
+            failNextRead = true;
+        },
+        holdSave() {
+            let release = () => {};
+            pendingSave = new Promise<void>((resolve) => {
+                release = resolve;
+            });
+            return release;
+        },
         hold() {
             let release = () => {};
             pending = new Promise<void>((resolve) => {

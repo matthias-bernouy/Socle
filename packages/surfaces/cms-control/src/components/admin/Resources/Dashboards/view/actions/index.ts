@@ -1,5 +1,6 @@
 import { showToast } from "@bernouy/components";
 import { detailKey } from "../../domain";
+import { remainingDraft } from "../../domain/drafts";
 import { executeDashboardAction, executeDashboardTableAction } from "../../runtime/actions";
 import type { WidgetActionDetail } from "../../widgets/shared";
 import type { DashboardViewActionContext } from "./context";
@@ -34,16 +35,14 @@ export async function runDashboardWidgetAction(
     const key = actionDetail ? detailKey(actionDetail.collection, actionDetail.row) : "";
     const finishAction = once(context.actionCoordinator?.beginAction());
     try {
+        const submittedFields = structuredClone({ ...(context.drafts.get(key) ?? {}), ...(action.fields ?? {}) });
         const result = actionDetail
             ? await executeDashboardAction(
                   group,
                   dashboard,
                   actionDetail,
                   action.action,
-                  {
-                      ...(context.drafts.get(key) ?? {}),
-                      ...(action.fields ?? {}),
-                  },
+                  submittedFields,
                   action.resource,
                   context.groups ?? [group],
               )
@@ -57,9 +56,6 @@ export async function runDashboardWidgetAction(
                   context.filters?.get(action.widget ?? "") ?? {},
                   detail ?? undefined,
               );
-        if (actionDetail) {
-            context.drafts.delete(key);
-        }
         let definitionsReloaded = false;
         if (result.invalidatesSchema && context.reloadDefinitions) {
             try {
@@ -86,6 +82,15 @@ export async function runDashboardWidgetAction(
                 context.render();
             }
             return;
+        }
+        if (actionDetail) {
+            const remaining = remainingDraft(context.drafts.get(key) ?? {}, submittedFields);
+            if (Object.keys(remaining).length) {
+                context.drafts.set(key, remaining);
+            } else {
+                context.drafts.delete(key);
+            }
+            context.acknowledgeDetailFields?.(actionDetail.collection, actionDetail.row, submittedFields);
         }
         const target = postActionResourceTarget(
             result.after,

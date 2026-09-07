@@ -24,13 +24,7 @@ export function supportsBoundDetail(widget: DetailWidget): boolean {
         [...widget.main, ...(widget.aside ?? [])].every(
             (section) =>
                 !("widget" in section) &&
-                section.fields.every(
-                    (field) =>
-                        supported.has(field.type) &&
-                        !field.visibleWhen &&
-                        !("lookup" in field && field.lookup) &&
-                        !(field.type === "money" && typeof field.allowDecimals === "object"),
-                ),
+                section.fields.every((field) => supported.has(field.type) && !("lookup" in field && field.lookup)),
         ) && !(widget.actions ?? []).some((action) => action.visibleWhen)
     );
 }
@@ -38,7 +32,7 @@ export function supportsBoundDetail(widget: DetailWidget): boolean {
 /** Compose declarations once, before cms-source compiles; never receives response data. */
 export function composeDetail(widget: DetailWidget): DocumentFragment {
     const fragment = document.createDocumentFragment();
-    const root = widget.source.itemPath ? `dashboardData.${widget.source.itemPath}` : "dashboardData";
+    const root = "detailValues";
     const title = document.createElement("span");
     title.slot = "bound-title";
     if (widget.title?.path) {
@@ -60,7 +54,7 @@ export function composeDetail(widget: DetailWidget): DocumentFragment {
     )) {
         action.slot = "bound-actions";
         action.dataset.widget = widget.id;
-        action.setAttribute("cms-condition", "$source.loaded || $source.empty");
+        action.setAttribute("cms-condition", "detailReady");
         fragment.append(action);
     }
     for (const [slot, sections] of [
@@ -81,7 +75,7 @@ function sectionElement(section: DashboardSection, slot: string, root: string): 
     const element = document.createElement("cms-detail-section");
     element.slot = slot;
     element.setAttribute("heading", section.title);
-    element.setAttribute("cms-condition", "$source.loaded || $source.empty");
+    element.setAttribute("cms-condition", "detailReady");
     if (section.description) {
         element.setAttribute("description", section.description);
     }

@@ -116,6 +116,28 @@ This interface is intended for automatic read sources. Native form submissions
 continue to use their existing result and success-event contract. It is not an
 alternative HTML renderer or a reason to add hidden object-relay elements.
 
+## Local source context
+
+`setSourceContext(element, project)` and `refreshSourceContext(element)` are
+exported by `@bernouy/components` and `@bernouy/components/binding`. They let a
+source's authored conditions and interpolations depend on local editing state.
+Register the projection before source activation, or replace it while active.
+It returns additional scope variables; the source alias, `$source` and `$sources`
+keep their normal values and cannot be replaced by this context.
+
+The projection runs when the source body is evaluated. Its argument is the
+current presentation value, which may be undefined or an error result; use
+`readSourceData(element)` when a local editing model needs the last successful
+read. Keep projections limited to deriving values, without HTTP requests or DOM
+construction. The binding engine applies the resulting scope to the authored
+HTML; no custom-element data receiver is necessary.
+
+After changing local state, call `refreshSourceContext(element)`. It updates the
+existing template without fetching, cancelling a pending request or publishing
+a new source status. Ordinary condition/repeat behavior still applies. Disposal
+disconnects refresh delivery; the registered projection remains attached to the
+element through a weak reference for subsequent activation.
+
 ## Forms
 
 The form container is native HTML owned by the CMS editor. A collection may

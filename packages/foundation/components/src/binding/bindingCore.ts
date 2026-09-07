@@ -53,6 +53,7 @@ export {
 } from "./source/submissionEvents";
 export type { FormSubmitResult } from "./submit/formSubmit";
 export { readSourceData, setSourceData } from "./source/values";
+export { setSourceContext, refreshSourceContext, type SourceContext } from "./source/presentation/sourceContext";
 
 /** Filter set passed to every source's interpolation. Empty until a host wires
  *  one in via `setBindingFilters` (the concrete filters are a later step). */

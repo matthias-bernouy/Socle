@@ -15,6 +15,9 @@ export function fieldElement(field: DashboardField, root: string): HTMLElement {
         )!
         .content.firstElementChild!.cloneNode(true) as HTMLElement;
     const wrapper = document.createElement("cms-dashboard-detail-field");
+    if (field.visibleWhen) {
+        wrapper.setAttribute("cms-condition", `detailVisibility | dashboardVisibility(detailRules.${field.id})`);
+    }
     wrapper.setAttribute("label", field.label);
     wrapper.toggleAttribute("required", field.required === true);
     wrapper.toggleAttribute("internal-label", field.type !== "readonly" && field.type !== "checkbox");
@@ -45,10 +48,8 @@ export function fieldElement(field: DashboardField, root: string): HTMLElement {
             }
         }
         if (field.type === "money") {
-            const filter = field.allowDecimals === false ? "dashboardWholeAmount" : "dashboardAmount";
-            const currency = field.currencyPath ? `(${root}.${field.currencyPath})` : "";
-            control.setAttribute("value", fieldBinding(root, field.path, `${filter}${currency}`));
-            control.setAttribute("inputmode", field.allowDecimals === false ? "numeric" : "decimal");
+            control.setAttribute("value", `{{ detailAmounts.${field.id}.value }}`);
+            control.setAttribute("inputmode", `{{ detailAmounts.${field.id}.inputmode }}`);
         }
         if (field.type === "textarea") {
             control.setAttribute("rows", String(field.rows ?? 4));

@@ -12,6 +12,7 @@ import { SourcePresenter } from "./presentation/sourcePresenter";
 import { type SourceStatusOptions } from "./presentation/sourceStatus";
 import { ownerForm, SourceSubmission } from "./submission";
 import { connectSourceData, disconnectSourceData, rememberSourceData } from "./values";
+import { connectSourceContext } from "./presentation/sourceContext";
 
 export { clearRuntimeStamps } from "./runtime/runtimeStamps";
 export { RELOAD_ATTR, RELOAD_EVENT } from "./sourceEvents";
@@ -27,6 +28,7 @@ export class Source {
     private readonly presenter: SourcePresenter;
     private abort: AbortController | null = null;
     private stopListeners: (() => void) | null = null;
+    private stopContext: (() => void) | null = null;
     private lastUrl: string | null = null;
     private readonly formOwned: boolean;
     private readonly submission: SourceSubmission | null;
@@ -74,6 +76,10 @@ export class Source {
     }
 
     start(): void {
+        this.stopContext = connectSourceContext(this.el, () => {
+            this.renderer.refreshContext();
+            this.afterRender();
+        });
         const supplied =
             sourceTrigger(this.el) === "auto"
                 ? connectSourceData(this.el, (value) => this.acceptData(value))
@@ -99,6 +105,8 @@ export class Source {
     }
 
     dispose(): void {
+        this.stopContext?.();
+        this.stopContext = null;
         disconnectSourceData(this.el);
         this.abort?.abort();
         this.abort = null;

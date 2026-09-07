@@ -13,6 +13,7 @@ export type DashboardViewActionContext = {
     reloadDefinitions?: () => Promise<void>;
     reload: (collection: string, row: string) => void;
     reloadCollection?: (widgetId: string) => void;
+    acknowledgeDetailFields?: (collection: string, row: string, fields: Record<string, unknown>) => void;
     clearDetail: () => void;
     openDetail: (collection: string, row: string) => void;
     setDetailResource?: (collection: string, row: string, resource: unknown) => void;

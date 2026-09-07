@@ -57,7 +57,7 @@ export function retainWidgets(
                 if (
                     !resource ||
                     resource.collection !== widget.id ||
-                    resource.row !== detail?.row ||
+                    resource.row !== (detail?.row ?? "") ||
                     resource.sourceId !== context.dashboard.source ||
                     resource.dashboardId !== context.dashboard.id ||
                     resource.resource == null

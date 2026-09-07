@@ -2,6 +2,7 @@ import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import { valueAt } from "../../../runtime/expressions";
 import { invalidFieldControl, readFieldControlValue } from "../controls";
 import type { WDetailData, WDetailField } from "../types";
+import { remainingDraft } from "../../../domain/drafts";
 
 export type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
 
@@ -15,6 +16,8 @@ export type DetailBinding = {
 export class DetailFieldState {
     private scopeKey = "";
     private values: Record<string, unknown> = {};
+    private displayValues: Record<string, string> = {};
+    private acknowledged: { fields: Record<string, unknown>; resource: unknown } | null = null;
 
     constructor(
         private readonly container: ShadowRoot,
@@ -30,21 +33,49 @@ export class DetailFieldState {
         return this.values;
     }
 
+    get displayDraft(): Record<string, string> {
+        return this.displayValues;
+    }
+
+    acknowledgeSavedFields(fields: Record<string, unknown>): void {
+        this.acknowledged = { fields, resource: this.currentResource() };
+    }
+
+    draftForResource(resource: unknown): Record<string, unknown> {
+        if (this.acknowledged && !Object.is(this.acknowledged.resource, resource)) {
+            this.values = remainingDraft(this.values, this.acknowledged.fields);
+            this.displayValues = Object.fromEntries(
+                Object.entries(this.displayValues).filter(([id]) => Object.hasOwn(this.values, id)),
+            );
+            this.acknowledged = null;
+        }
+        return this.values;
+    }
+
     syncScope(scopeKey: string): void {
         if (this.scopeKey === scopeKey) {
             return;
         }
         this.scopeKey = scopeKey;
         this.values = {};
+        this.displayValues = {};
+        this.acknowledged = null;
     }
 
     clear(): void {
         this.scopeKey = "";
         this.values = {};
+        this.displayValues = {};
+        this.acknowledged = null;
     }
 
-    record(fieldId: string, value: unknown): void {
+    record(fieldId: string, value: unknown, displayValue?: string): void {
         this.values[fieldId] = value;
+        if (displayValue !== undefined) {
+            this.displayValues[fieldId] = displayValue;
+        } else {
+            delete this.displayValues[fieldId];
+        }
     }
 
     find(fieldId: string): WDetailField | undefined {

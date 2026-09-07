@@ -113,6 +113,13 @@ export class DetailEvents {
         if (control) {
             this.fields.refreshRequiredValidity(control);
         }
+        if (control && field && this.host.hasAttribute("data-declarative")) {
+            this.fields.record(
+                field.id,
+                readFieldControlValue(field, control),
+                this.displayValue(field.input, control),
+            );
+        }
         if (field && this.isBound()) {
             this.lookups.schedule(field.id);
             this.schemas.schedule(field.id);
@@ -165,7 +172,7 @@ export class DetailEvents {
             return;
         }
         const value = readFieldControlValue(field, control);
-        this.fields.record(field.id, value);
+        this.fields.record(field.id, value, this.displayValue(field.input, control));
         emitWidgetEvent(this.host, WIDGET_FIELD_CHANGE_EVENT, {
             rowKey: this.readData().rowKey,
             field: field.id,
@@ -180,6 +187,10 @@ export class DetailEvents {
             this.schemas.schedule(fieldId);
         }
         this.refreshConditionalFields();
+    }
+
+    private displayValue(input: string, control: HTMLElement): string | undefined {
+        return input === "money" && "value" in control && typeof control.value === "string" ? control.value : undefined;
     }
 
     private retryCmsUser(target: Element | null): void {

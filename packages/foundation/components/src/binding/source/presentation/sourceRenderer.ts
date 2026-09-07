@@ -4,12 +4,14 @@ import { type MountedInPlaceRegion } from "../../reactive/MountedRegion";
 import { type MountedRegion } from "../../reactive/MountedRegion";
 import { type Scope } from "../../core/scope";
 import { type CapturedSourceContent } from "./sourceContent";
+import { sourceContext } from "./sourceContext";
 
 export class SourceRenderer {
     private readonly bodyTemplate: CompiledTemplate | null;
     private bodyRegion: MountedRegion | null = null;
     private inPlaceRegion: MountedInPlaceRegion | null = null;
     private rendered: "none" | "body" = "none";
+    private scope: Scope | null = null;
 
     constructor(
         private readonly el: Element,
@@ -21,6 +23,8 @@ export class SourceRenderer {
     }
 
     body(scope: Scope): void {
+        this.scope = scope;
+        scope = { ...scope, vars: { ...sourceContext(this.el, scope.value), ...scope.vars } };
         if (this.options.inPlace) {
             if (!this.inPlaceRegion) {
                 this.inPlaceRegion = CompiledTemplate.bindChildrenInPlace(this.el, scope, this.filters);
@@ -40,7 +44,14 @@ export class SourceRenderer {
         this.rendered = "body";
     }
 
+    refreshContext(): void {
+        if (this.scope) {
+            this.body(this.scope);
+        }
+    }
+
     template(): void {
+        this.scope = null;
         this.inPlaceRegion?.unmount();
         this.inPlaceRegion = null;
         this.clear();
