@@ -21,7 +21,7 @@ export function composeMedia(
     add.setAttribute("cms-condition", `${path}.showAdd`);
     const image = part("image");
     image.setAttribute("cms-condition", `${path}.open`);
-    image.setAttribute("src", `{{ ${path}.preview.url }}`);
+    image.setAttribute("data-cms-src", `{{ ${path}.preview.url }}`);
     image.setAttribute("alt", `{{ ${path}.preview.previewAlt }}`);
     const caption = part("caption");
     caption.textContent = `{{ ${path}.preview.title }}`;

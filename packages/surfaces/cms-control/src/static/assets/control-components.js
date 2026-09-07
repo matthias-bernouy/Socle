@@ -34345,1010 +34345,6 @@ slot {
     customElements.define("cms-dashboard-w-table", DashboardWTable);
   }
 
-  // src/static/admin/_content/sources/_runtime/table.html
-  var table_default2 = `<template data-table-control="column"><span slot="columns" role="columnheader"></span></template>
-<template data-table-control="action"><p9r-button slot="actions" type="button"></p9r-button></template>
-<template data-table-control="filters">
-    <form slot="filters" data-filters>
-        <cms-dashboard-table-filters>
-            <button slot="actions" type="submit">Apply filters</button>
-            <button slot="actions" type="button" data-filter-clear>Clear filters</button>
-        </cms-dashboard-table-filters>
-    </form>
-</template>
-<template data-table-control="text"><cms-dashboard-table-filter slot="fields"><input type="text"></cms-dashboard-table-filter></template>
-<template data-table-control="select"><cms-dashboard-table-filter slot="fields"><select><option value="">All</option></select></cms-dashboard-table-filter></template>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/presentation/filters.css
-  var filters_default = `:host {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 12px;
-    align-items: end;
-    padding: 12px 16px;
-    border-bottom: 1px solid #e8ecea;
-    background: #fbfcfb;
-}
-
-.fields {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-    gap: 10px;
-    min-width: 0;
-}
-
-.actions {
-    display: flex;
-    gap: 8px;
-}
-
-::slotted(button) {
-    min-height: 36px;
-    border: 1px solid #cfd9d4;
-    border-radius: 6px;
-    background: #fff;
-    color: #29443b;
-    cursor: pointer;
-    font: inherit;
-    font-size: 12px;
-    font-weight: 750;
-    padding: 7px 11px;
-}
-
-::slotted(button[type="submit"]) {
-    border-color: #165f4b;
-    background: #165f4b;
-    color: #fff;
-}
-
-@media (max-width: 760px) {
-    :host {
-        grid-template-columns: 1fr;
-    }
-
-    .actions {
-        justify-content: flex-end;
-    }
-}
-
-slot { display: contents; }
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/presentation/filters.html
-  var filters_default2 = `<div class="fields"><slot name="fields"></slot></div>
-<div class="actions"><slot name="actions"></slot></div>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/presentation/Filters.ts
-  class DashboardTableFilters extends l2 {
-    constructor() {
-      super({ css: filters_default, template: filters_default2 });
-    }
-  }
-  customElements.define("cms-dashboard-table-filters", DashboardTableFilters);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/presentation/filter.css
-  var filter_default = `:host {
-    display: grid;
-    gap: 5px;
-    min-width: 0;
-    color: #3d4a46;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-::slotted(input),
-::slotted(select) {
-    box-sizing: border-box;
-    width: 100%;
-    min-height: 36px;
-    border: 1px solid #d7dfdb;
-    border-radius: 6px;
-    background: #fff;
-    color: #14201c;
-    font: inherit;
-    font-weight: 500;
-    padding: 7px 9px;
-}
-
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/presentation/Filter.ts
-  class DashboardTableFilter extends l2 {
-    constructor() {
-      super({ css: filter_default, template: "<span data-label></span><slot></slot>" });
-    }
-    static observedAttributes = ["label"];
-    attributeChangedCallback() {
-      this.shadowRoot.querySelector("[data-label]").textContent = this.getAttribute("label") ?? "";
-    }
-    connectedCallback() {
-      this.addEventListener("click", this.focusControl);
-    }
-    disconnectedCallback() {
-      this.removeEventListener("click", this.focusControl);
-    }
-    focusControl = (event) => {
-      if (event.target === this) {
-        this.querySelector("input, select")?.focus();
-      }
-    };
-  }
-  customElements.define("cms-dashboard-table-filter", DashboardTableFilter);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-table/composition.ts
-  var filterStates = new WeakMap;
-  function tableShell(widget, filters = {}) {
-    const table = new DashboardWTable;
-    table.dataset.widgetId = widget.id;
-    table.setAttribute("heading", widget.title ?? widget.source.endpoint);
-    table.style.setProperty("--dashboard-table-columns", ["46px", ...widget.columns.map((column) => column.width ?? "minmax(7rem, 1fr)")].join(" "));
-    const state = { values: filters };
-    filterStates.set(table, state);
-    fd(table, () => ({ tableFilters: state.values }));
-    for (const column of widget.columns) {
-      const header = fragment("column").firstElementChild;
-      header.dataset.columnHeader = column.id;
-      header.textContent = column.label;
-      table.append(header);
-    }
-    for (const action of widget.actions ?? []) {
-      const button = fragment("action").firstElementChild;
-      button.dataset.action = action.id;
-      button.dataset.widget = widget.id;
-      if (action.selection?.opens) {
-        button.dataset.target = action.selection.opens;
-      }
-      if (action.confirm) {
-        button.dataset.confirm = action.confirm;
-      }
-      setP9rButtonTone(button, action.tone ?? "primary");
-      setP9rButtonLabel(button, action.label);
-      table.append(button);
-    }
-    if (widget.filters?.length) {
-      const form = fragment("filters");
-      const layout = form.querySelector("cms-dashboard-table-filters");
-      for (const filter of widget.filters) {
-        const field2 = fragment(filter.type === "select" ? "select" : "text").firstElementChild;
-        field2.setAttribute("label", filter.label);
-        const control = field2.querySelector("input, select");
-        control.name = filter.id;
-        control.dataset.filterId = filter.id;
-        control.setAttribute("aria-label", filter.label);
-        control.setAttribute("cms-bind-value", `tableFilters.${filter.id}`);
-        if (filter.placeholder) {
-          control.setAttribute("placeholder", filter.placeholder);
-        }
-        if (filter.type === "select") {
-          for (const option2 of filter.options ?? []) {
-            const element = document.createElement("option");
-            element.value = option2.value;
-            element.textContent = option2.label;
-            control.append(element);
-          }
-        }
-        layout.append(field2);
-      }
-      table.append(form);
-    }
-    return table;
-  }
-  function updateTableFilters(table, filters) {
-    const state = filterStates.get(table);
-    if (!state || JSON.stringify(state.values) === JSON.stringify(filters)) {
-      return;
-    }
-    state.values = filters;
-    bi(table);
-  }
-  function fragment(kind) {
-    const template5 = document.createElement("template");
-    template5.innerHTML = table_default2;
-    return template5.content.querySelector(`[data-table-control="${kind}"]`).content.cloneNode(true);
-  }
-
-  // src/static/admin/_content/sources/_runtime/source-states.html
-  var source_states_default = `<p9r-alert type="info" role="status" cms-condition="!dashboardData &amp;&amp; !$source.error">Loading data…</p9r-alert>
-<p9r-alert type="error" cms-condition="$source.error" role="alert">
-    <p>Unable to load this data. {{ $source.message }}</p>
-    <p9r-button type="button" variant="outlined" data-dashboard-source-retry>Retry</p9r-button>
-</p9r-alert>
-`;
-
-  // src/components/admin/Resources/Dashboards/runtime/mounting/mountSource.ts
-  var sourceSequence = 0;
-  function sourceWrapper(sourceId, ref, vars, alias, requiredParams = []) {
-    const params = resolveParams(ref.params, vars);
-    if (requiredParams.some((name) => params[name] === undefined)) {
-      return pendingSourceWrapper();
-    }
-    const url = sourceUrl(sourceId, ref, vars);
-    return urlSourceWrapper(`${url.pathname}${url.search}`, alias);
-  }
-  function requiredSourceParams(context, ref) {
-    const sourceId = ref.sourceId ?? context.dashboard.source;
-    const group = (context.groups ?? [context.group]).find((candidate) => candidate.source.id === sourceId);
-    return group?.endpoints.find((endpoint) => endpoint.endpointId === ref.endpoint)?.params.filter((param) => param.required).map((param) => param.name) ?? [];
-  }
-  function urlSourceWrapper(url, alias) {
-    const wrapper = document.createElement("div");
-    wrapper.setAttribute("cms-source", `${url} as ${alias}`);
-    wrapper.setAttribute("cms-reload-on", `dashboard:retry:${++sourceSequence}`);
-    const template5 = document.createElement("template");
-    template5.innerHTML = source_states_default;
-    wrapper.append(template5.content.cloneNode(true));
-    return wrapper;
-  }
-  function pendingSourceWrapper() {
-    const wrapper = document.createElement("div");
-    wrapper.dataset.dashboardSourcePending = "true";
-    return wrapper;
-  }
-  function tableRowsTemplate(widget) {
-    const row = document.createElement("cms-dashboard-w-row");
-    row.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
-    row.setAttribute("row-key", bindingPath("row", widget.rowKey));
-    if (widget.selection?.opens) {
-      row.setAttribute("collection", widget.selection.opens);
-    }
-    for (const column of widget.columns) {
-      const cell = document.createElement("cms-dashboard-w-cell");
-      cell.setAttribute("column", column.id);
-      if (column.primary) {
-        cell.toggleAttribute("primary", true);
-      }
-      if (column.primary) {
-        cell.setAttribute("meta", "{{ row.id }}");
-      }
-      if (column.format === "badge") {
-        cell.setAttribute("tone", "badge");
-      }
-      if (column.format === "date" || column.format === "money") {
-        cell.dataset.displayFormat = column.format;
-        cell.dataset.displayValue = bindingPath("row", column.path);
-        if (column.format === "money") {
-          cell.dataset.displayCurrency = bindingPath("row", "currency");
-        }
-      }
-      cell.textContent = bindingPath("row", column.path);
-      row.append(cell);
-    }
-    return row;
-  }
-  function navigationItemsTemplate(widget) {
-    const item = document.createElement("cms-dashboard-w-navigation-item");
-    item.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
-    item.setAttribute("row-key", bindingPath("row", widget.rowKey));
-    item.setAttribute("title", bindingPath("row", widget.item.title.path));
-    if (widget.item.subtitle) {
-      item.setAttribute("subtitle", bindingPath("row", widget.item.subtitle.path));
-    }
-    if (widget.item.icon) {
-      item.setAttribute("icon", widget.item.icon);
-    }
-    if (widget.item.badge) {
-      item.setAttribute("badge", bindingPath("row", widget.item.badge.path));
-    }
-    if (widget.selection?.opens) {
-      item.setAttribute("collection", widget.selection.opens);
-    }
-    if (widget.reorderable) {
-      item.toggleAttribute("reorderable", true);
-    }
-    return item;
-  }
-  function repeatPath(alias, path) {
-    return path ? `${alias}.${path}` : alias;
-  }
-  function bindingPath(alias, path) {
-    return `{{ ${path === "." ? alias : `${alias}.${path}`} }}`;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/example/data.ts
-  var PRODUCTS = [
-    product("prod_1001", "Desk Lamp", "Active", "Northwind", "Home", "Online store", "Today"),
-    product("prod_1002", "Canvas Backpack", "Draft", "Acme", "Travel", "Hidden", "Yesterday"),
-    product("prod_1003", "Ceramic Mug", "Active", "Example Supply", "Kitchen", "Online store", "Jul 1"),
-    product("prod_1004", "Notebook Set", "Archived", "Paper & Co.", "Stationery", "Hidden", "Jun 28")
-  ];
-  function detailData2(product) {
-    return {
-      rowKey: product.id,
-      eyebrow: "Product",
-      title: product.title,
-      status: product.status,
-      actions: [
-        { label: "Save changes", tone: "primary", action: "save" },
-        { label: "Duplicate", action: "duplicate" },
-        { label: "Preview", action: "preview" },
-        { label: "Copy link", action: "copy-link", section: "Share", icon: "link" },
-        { label: "Export", action: "export", section: "Share", icon: "download" },
-        { label: "Archive product", tone: "danger", action: "archive", section: "Other actions", icon: "archive" },
-        { label: "Delete product", tone: "danger", action: "delete", section: "Other actions", icon: "trash" }
-      ],
-      main: [
-        {
-          title: "General",
-          fields: [
-            { id: "title", label: "Title", input: "text", value: product.title },
-            { id: "description", label: "Description", input: "textarea", value: product.description },
-            { id: "media", label: "Media", input: "media-list", value: product.media, accept: "image/*" },
-            { id: "category", label: "Category", input: "text", value: product.category }
-          ]
-        }
-      ],
-      aside: [
-        {
-          title: "Status",
-          fields: [
-            {
-              id: "status",
-              label: "Publication",
-              input: "select",
-              value: product.status,
-              options: options("Active", "Draft", "Archived")
-            },
-            {
-              id: "visibility",
-              label: "Visibility",
-              input: "select",
-              value: product.visibility,
-              options: options("Online store", "Hidden")
-            }
-          ]
-        },
-        {
-          title: "Organization",
-          fields: [
-            {
-              id: "vendor",
-              label: "Vendor",
-              input: "combobox",
-              value: product.vendor,
-              options: options("Acme", "Example Supply", "Northwind", "Paper & Co."),
-              placeholder: "Search or add a vendor",
-              creatable: true
-            },
-            {
-              id: "tags",
-              label: "Tags",
-              input: "tokens",
-              value: product.tags,
-              options: options("Featured", "New", "Seasonal"),
-              placeholder: "Search or add tags",
-              creatable: true
-            },
-            { id: "id", label: "Resource id", input: "readonly", value: product.id }
-          ]
-        }
-      ]
-    };
-  }
-  function isStringArray(value2) {
-    return Array.isArray(value2) && value2.every((item) => typeof item === "string");
-  }
-  function isMediaItems(value2) {
-    return Array.isArray(value2) && value2.every((item) => typeof item === "object" && item !== null && ("url" in item));
-  }
-  function product(id2, title, status, vendor, category, visibility2, updated) {
-    return {
-      id: id2,
-      title,
-      status,
-      vendor,
-      category,
-      visibility: visibility2,
-      updated,
-      description: "Editable sandbox content before any data source is wired.",
-      media: media(id2, title),
-      tags: ["Featured", "New"]
-    };
-  }
-  function options(...values) {
-    return values.map((value2) => ({ label: value2, value: value2 }));
-  }
-  function media(id2, title) {
-    return [
-      {
-        id: `${id2}_media_1`,
-        url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=420&q=80",
-        alt: `${title} media`
-      }
-    ];
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/example/index.ts
-  function mountDashboardWidgetExample(root, selectedId) {
-    root.replaceChildren();
-    const selected2 = selectedId ? PRODUCTS.find((item) => item.id === selectedId) ?? null : null;
-    root.append(selected2 ? detailElement(selected2) : tableElement());
-  }
-  function updateDashboardWidgetExampleField(rowKey, field2, value2) {
-    const product2 = PRODUCTS.find((item) => item.id === rowKey);
-    if (!product2) {
-      return;
-    }
-    if (field2 === "title" && typeof value2 === "string") {
-      product2.title = value2;
-    }
-    if (field2 === "status" && typeof value2 === "string") {
-      product2.status = value2;
-    }
-    if (field2 === "vendor" && typeof value2 === "string") {
-      product2.vendor = value2;
-    }
-    if (field2 === "category" && typeof value2 === "string") {
-      product2.category = value2;
-    }
-    if (field2 === "description" && typeof value2 === "string") {
-      product2.description = value2;
-    }
-    if (field2 === "visibility" && typeof value2 === "string") {
-      product2.visibility = value2;
-    }
-    if (field2 === "tags" && isStringArray(value2)) {
-      product2.tags = value2;
-    }
-    if (field2 === "media" && isMediaItems(value2)) {
-      product2.media = value2;
-    }
-  }
-  function tableElement() {
-    const widget = {
-      widget: "w-table",
-      id: "example-products",
-      title: "Products",
-      source: { endpoint: "" },
-      rowKey: "id",
-      selection: { opens: "example-products" },
-      columns: [
-        { id: "title", path: "title", label: "Product", primary: true },
-        { id: "status", path: "status", label: "Status", format: "badge", width: "140px" },
-        { id: "vendor", path: "vendor", label: "Vendor", width: "160px" },
-        { id: "category", path: "category", label: "Category", width: "180px" },
-        { id: "updated", path: "updated", label: "Updated", width: "140px" }
-      ]
-    };
-    const element = tableShell(widget);
-    element.setAttribute("subtitle", "Widget sandbox: selection and bulk checkboxes only.");
-    element.setAttribute("cms-source", "");
-    const rows = tableRowsTemplate(widget);
-    rows.querySelector('[column="updated"]').setAttribute("tone", "muted");
-    element.append(rows);
-    Md(element, { dashboardData: PRODUCTS });
-    return element;
-  }
-  function detailElement(product2) {
-    const element = document.createElement("cms-dashboard-w-detail");
-    element.data = detailData2(product2);
-    return element;
-  }
-
-  // src/components/admin/Resources/Integrations/management/api.ts
-  async function managementRequest(id2, operation, body, refresh = false) {
-    const url = `${route(`/api/integrations/management/${operation}`)}?id=${encodeURIComponent(id2)}${refresh ? "&refresh=true" : ""}`;
-    const response = await fetch(url, body === undefined ? undefined : {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    if (!response.ok) {
-      const detail = await response.json().catch(() => null);
-      throw new Error(detail?.error ?? `Request failed (HTTP ${response.status})`);
-    }
-    return response.json();
-  }
-  var readSettings = (id2) => managementRequest(id2, "settings");
-  var readHealth = (id2, refresh = false) => managementRequest(id2, "health", undefined, refresh);
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/endpoint.ts
-  async function executeEndpointAction(group, groups, action, vars) {
-    if (action.management) {
-      const management = action.management;
-      const input = resolveBody(management.body, vars) ?? vars.fields ?? {};
-      const result = await managementRequest(management.installationId, management.action === "action" ? "action" : "settings", management.action === "action" ? { actionId: management.actionId, input } : input);
-      return { kind: "value", value: result.values, ...actionMeta(group, groups, action) };
-    }
-    if (!action.endpoint) {
-      throw new Error(`Dashboard action "${action.id}" does not declare an endpoint`);
-    }
-    const method = endpointMethod(group, groups, action.endpoint);
-    if (action.download) {
-      const download = await sendSourceDownload(group.source.id, action.endpoint, method, vars);
-      return {
-        kind: "download",
-        blob: download.blob,
-        filename: action.download.filename ?? download.filename ?? `${action.id}.download`,
-        ...actionMeta(group, groups, action)
-      };
-    }
-    return {
-      kind: "value",
-      value: await sendSourceJson(group.source.id, action.endpoint, method, vars),
-      ...actionMeta(group, groups, action)
-    };
-  }
-  function endpointMethod(group, groups, ref) {
-    const sourceId = ref.sourceId ?? group.source.id;
-    const sourceGroup = groups.find((candidate) => candidate.source.id === sourceId);
-    const endpoint = sourceGroup?.endpoints.find((candidate) => candidate.endpointId === ref.endpoint);
-    if (!endpoint) {
-      throw new Error(`Dashboard endpoint "${sourceId}:${ref.endpoint}" was not found`);
-    }
-    return endpoint.method;
-  }
-  function actionMeta(group, groups, action) {
-    return {
-      ...action.after ? { after: action.after } : {},
-      ...action.endpoint && endpointInvalidatesSchema(group, groups, action.endpoint) ? { invalidatesSchema: true } : {}
-    };
-  }
-  function endpointInvalidatesSchema(group, groups, ref) {
-    const sourceId = ref.sourceId ?? group.source.id;
-    return groups.find((candidate) => candidate.source.id === sourceId)?.endpoints.find((endpoint) => endpoint.endpointId === ref.endpoint)?.effects?.invalidatesSchema === true;
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/widgets.ts
-  function findDetailWidget(widgets, id2) {
-    for (const widget of widgets) {
-      if (widget.widget === "w-detail" && widget.id === id2) {
-        return widget;
-      }
-      if (widget.widget === "w-section") {
-        const found = findDetailWidget(widget.children, id2);
-        if (found) {
-          return found;
-        }
-      }
-      if (widget.widget === "w-tabs") {
-        for (const tab of widget.tabs) {
-          const found = findDetailWidget(tab.children, id2);
-          if (found) {
-            return found;
-          }
-        }
-      }
-    }
-    return null;
-  }
-  function findCollectionAction(widgets, actionId, widgetId) {
-    for (const widget of widgets) {
-      if ((widget.widget === "w-table" || widget.widget === "w-navigation-list") && (!widgetId || widget.id === widgetId)) {
-        const action = widget.actions?.find((item) => item.id === actionId);
-        if (action) {
-          return action;
-        }
-      }
-      if (widget.widget === "w-section") {
-        const found = findCollectionAction(widget.children, actionId, widgetId);
-        if (found) {
-          return found;
-        }
-      }
-      if (widget.widget === "w-tabs") {
-        for (const tab of widget.tabs) {
-          const found = findCollectionAction(tab.children, actionId, widgetId);
-          if (found) {
-            return found;
-          }
-        }
-      }
-      if (widget.widget === "w-detail") {
-        const found = findCollectionAction(widget.main.filter((item) => ("widget" in item)), actionId, widgetId);
-        if (found) {
-          return found;
-        }
-      }
-    }
-    return null;
-  }
-  function findMediaField(widget, fieldId, itemFieldId) {
-    const fields = [...widget.main.filter(isDetailSection4), ...widget.aside ?? []].flatMap((section2) => section2.fields);
-    const direct = fields.find((field2) => field2.id === fieldId && field2.type === "media");
-    if (direct) {
-      return { field: direct };
-    }
-    const parent = fields.find((field2) => field2.id === fieldId && field2.type === "reorderable-list");
-    const nested = parent?.fields.find((field2) => field2.id === itemFieldId && field2.type === "media");
-    return parent && nested ? { field: nested, parent } : null;
-  }
-  function isDetailSection4(item) {
-    return !("widget" in item);
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/index.ts
-  async function executeDashboardAction(group, dashboard, detail, actionId, draft, currentResource, groups = [group]) {
-    const widget = findDetailWidget(dashboard.views, detail.collection);
-    if (!widget) {
-      throw new Error(`Dashboard action target "${detail.collection}" was not found`);
-    }
-    const action = widget.actions?.find((item) => item.id === actionId);
-    if (!action) {
-      throw new Error(`Dashboard action "${actionId}" was not found`);
-    }
-    if (!action.endpoint && !action.management) {
-      throw new Error(`Dashboard action "${actionId}" does not declare an endpoint`);
-    }
-    const resource = currentResource ?? await fetchActionResource(dashboard.source, widget, detail.row);
-    const fields = { ...fieldValues(widget, resource), ...draft };
-    if (!matchesDashboardVisibility(action.visibleWhen, { resource, fields })) {
-      throw new Error(`Dashboard action "${actionId}" is not available in the current state`);
-    }
-    return executeEndpointAction(group, groups, action, {
-      selection: { id: detail.row },
-      resource,
-      fields
-    });
-  }
-  async function executeDashboardTableAction(group, dashboard, actionId, widgetId, value2, groups = [group], filters = {}, detail) {
-    const action = findCollectionAction(dashboard.views, actionId, widgetId);
-    if (!action) {
-      throw new Error(`Dashboard table action "${actionId}" was not found`);
-    }
-    if (!action.endpoint && !action.management) {
-      throw new Error(`Dashboard table action "${actionId}" does not declare an endpoint`);
-    }
-    return executeEndpointAction(group, groups, action, {
-      filters: { ...filters },
-      value: value2,
-      ...detail ? {
-        selection: {
-          id: detail.row,
-          [detail.collection]: { id: detail.row }
-        }
-      } : {}
-    });
-  }
-  async function executeDashboardMediaAction(group, dashboard, detail, media2, draft, groups = [group]) {
-    const widget = findDetailWidget(dashboard.views, detail.collection);
-    if (!widget) {
-      throw new Error(`Dashboard media target "${detail.collection}" was not found`);
-    }
-    const target2 = findMediaField(widget, media2.field, media2.itemField);
-    const actions = target2?.field.actions;
-    const ref = actions?.[media2.action];
-    if (!target2 || !ref) {
-      return { handled: false, nested: Boolean(target2?.parent), results: [] };
-    }
-    const resource = media2.resource !== undefined ? media2.resource : itemFrom(await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } }), widget.source);
-    const fields = { ...fieldValues(widget, resource), ...draft, ...media2.fields ?? {} };
-    const mediaVars = mediaActionVars(media2);
-    const files = media2.files ?? (media2.file ? [media2.file] : []);
-    const results = !files.length ? [
-      await sendSourceJson(group.source.id, ref, endpointMethod(group, groups, ref), {
-        resource,
-        fields,
-        media: mediaVars
-      })
-    ] : await Promise.all(files.map((file) => {
-      const body = new FormData;
-      body.set("file", file);
-      return sendSourceForm(group.source.id, ref, endpointMethod(group, groups, ref), { resource, fields, media: mediaVars }, body);
-    }));
-    const item = target2.parent ? resultMediaItem(results[0], target2.field, group.source.id) : undefined;
-    return { handled: true, nested: Boolean(target2.parent), results, ...item ? { item } : {} };
-  }
-  function resultMediaItem(value2, field2, sourceId) {
-    const candidate = value2 && typeof value2 === "object" && !Array.isArray(value2) && "media" in value2 ? value2.media : value2;
-    return mediaValue(candidate, field2, sourceId)[0];
-  }
-  async function fetchActionResource(sourceId, widget, row) {
-    const data = await fetchSourceJson(sourceId, widget.source, { selection: { id: row } });
-    return itemFrom(data, widget.source);
-  }
-  function mediaActionVars(media2) {
-    return {
-      action: media2.action,
-      index: media2.index,
-      from: media2.from,
-      to: media2.to,
-      item: media2.item,
-      previousItem: media2.previousItem,
-      value: media2.value,
-      valueIds: media2.value.map(mediaId).filter(Boolean),
-      itemIndex: media2.itemIndex,
-      itemKey: media2.itemKey,
-      itemField: media2.itemField,
-      itemPath: media2.itemPath,
-      parentItem: media2.parentItem
-    };
-  }
-  function mediaId(item) {
-    return item.id;
-  }
-
-  // src/components/admin/Resources/Dashboards/view/actions/outcome.ts
-  function once(finish) {
-    let completion;
-    return () => completion ??= finish?.() ?? "reuse";
-  }
-  function postActionResource(after, result) {
-    if (!after?.resource) {
-      return { found: false };
-    }
-    const value2 = resolveExpression(after.resource, { result });
-    return value2 === undefined ? { found: false } : { found: true, value: value2 };
-  }
-  function postActionResourceTarget(declaredAfter, after, actionDetail, detail, actionId, result, resource) {
-    if (declaredAfter?.opens) {
-      return after;
-    }
-    if (!actionDetail || actionId.startsWith("delete")) {
-      return null;
-    }
-    if (detail?.row !== "__new__") {
-      return actionDetail;
-    }
-    const row = postActionCreatedId(result, resource);
-    return row ? { collection: detail.collection, row } : null;
-  }
-  function renderResourceTarget(context, target2, after, detail) {
-    if (after || detail?.row === "__new__") {
-      context.openDetail(target2.collection, target2.row);
-      return;
-    }
-    context.render();
-  }
-  function runPostActionFallback(context, after, detail, actionId, result, resource) {
-    const created = postActionCreatedId(result, resource);
-    if (after) {
-      context.openDetail(after.collection, after.row);
-    } else if (!detail) {
-      context.render();
-    } else if (actionId.startsWith("delete")) {
-      context.clearDetail();
-    } else if (detail.row === "__new__" && created) {
-      context.openDetail(detail.collection, created);
-    } else {
-      context.reload(detail.collection, detail.row);
-    }
-  }
-  function changesPostActionSelection(after, detail, actionId, result, resource) {
-    if (after) {
-      return !detail || after.collection !== detail.collection || after.row !== detail.row;
-    }
-    return Boolean(detail && (actionId.startsWith("delete") || detail.row === "__new__" && postActionCreatedId(result, resource) !== null));
-  }
-  function afterTarget(after, result, detail) {
-    if (!after?.opens) {
-      return null;
-    }
-    const rowValue = after.row === undefined ? createdId(result) : resolveExpression(after.row, {
-      result,
-      ...detail ? { selection: { id: detail.row } } : {}
-    });
-    const row = stringValue(rowValue);
-    return row ? { collection: after.opens, row } : null;
-  }
-  function createdId(value2) {
-    if (!value2 || typeof value2 !== "object" || Array.isArray(value2)) {
-      return null;
-    }
-    const id2 = value2.id;
-    if (typeof id2 === "string" && id2.trim()) {
-      return id2;
-    }
-    if (typeof id2 === "number" && Number.isFinite(id2)) {
-      return String(id2);
-    }
-    return null;
-  }
-  function postActionCreatedId(result, resource) {
-    return createdId(result) ?? (resource.found ? createdId(resource.value) : null);
-  }
-  function stringValue(value2) {
-    if (value2 === null || value2 === undefined) {
-      return "";
-    }
-    if (typeof value2 === "string") {
-      return value2;
-    }
-    if (typeof value2 === "number" || typeof value2 === "boolean") {
-      return String(value2);
-    }
-    return "";
-  }
-
-  // src/components/admin/Resources/Dashboards/view/actions/nestedMedia.ts
-  function settleNestedMedia(context, key, media2, widget, item, failed = false) {
-    const bound = widget?.hasAttribute("data-declarative") ? widget : undefined;
-    const draft = { ...context.drafts.get(key) ?? {} };
-    const items = cloneItems2(bound?.currentFieldValues()[media2.field] ?? draft[media2.field]);
-    const parent = nestedMediaParent(items, media2);
-    const current = parent && media2.itemPath ? valueAt(parent, media2.itemPath) : undefined;
-    const expected = media2.value[0] ?? null;
-    if (parent && media2.itemPath && sameMedia(current, expected)) {
-      if (failed) {
-        const previous = media2.action === "replace" ? media2.previousItem : media2.action === "remove" ? media2.item : null;
-        setValueAt(parent, media2.itemPath, previous ?? null);
-      } else if (media2.action === "upload" || media2.action === "replace") {
-        const alt = current && typeof current === "object" && "alt" in current ? current.alt : undefined;
-        setValueAt(parent, media2.itemPath, item ? { ...item, ...typeof alt === "string" ? { alt } : {} } : null);
-      }
-    }
-    draft[media2.field] = items;
-    context.drafts.set(key, draft);
-    if (bound) {
-      bound.applyFieldDraft(media2.field, items);
-      return;
-    }
-    const control = Array.from(widget?.shadowRoot?.querySelectorAll("[data-field-control]") ?? []).find((node) => node.dataset.fieldControl === media2.field);
-    if (control?.data) {
-      control.data = { ...control.data, items: structuredClone(items) };
-    } else {
-      context.render();
-    }
-  }
-  function cloneItems2(value2) {
-    return Array.isArray(value2) ? structuredClone(value2.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item))) : [];
-  }
-  function nestedMediaParent(items, media2) {
-    if (media2.itemKeyPath && valueAt(media2.parentItem, media2.itemKeyPath) != null) {
-      return items.find((item) => String(valueAt(item, media2.itemKeyPath)) === media2.itemKey);
-    }
-    const pending = media2.value[0];
-    if (pending && media2.itemPath) {
-      const parent = items.find((item) => sameMedia(valueAt(item, media2.itemPath), pending));
-      if (parent) {
-        return parent;
-      }
-    }
-    return items[media2.itemIndex ?? -1];
-  }
-  function sameMedia(left, right) {
-    if (left == null || right === null) {
-      return left == null && right === null;
-    }
-    return typeof left === "object" && "id" in left && "url" in left && left.id === right.id && left.url === right.url;
-  }
-
-  // src/components/admin/Resources/Dashboards/view/actions/media.ts
-  async function runDashboardMediaAction(context, media2, widget) {
-    const { group, dashboard } = context;
-    const detail = media2.widget ? { collection: media2.widget, row: media2.rowKey } : context.detail;
-    if (!group || !dashboard || !detail) {
-      return;
-    }
-    const key = detailKey(detail.collection, detail.row);
-    const finishAction = once(context.actionCoordinator?.beginAction());
-    try {
-      const result = await executeDashboardMediaAction(group, dashboard, detail, media2, context.drafts.get(key) ?? {}, context.groups ?? [group]);
-      if (finishAction() === "stale") {
-        return;
-      }
-      if (result.nested) {
-        if (result.handled && (media2.action === "upload" || media2.action === "replace") && !result.item) {
-          throw new Error("The media endpoint returned no usable media item");
-        }
-        settleNestedMedia(context, key, media2, widget, result.item);
-        ah(`Media ${media2.action} completed`, { type: "success" });
-        return;
-      }
-      removeDraftField(context.drafts, key, media2.field);
-      context.acknowledgeDetailFields?.(detail.collection, detail.row, { [media2.field]: media2.value });
-      ah(`Media ${media2.action} completed`, { type: "success" });
-      context.reload(detail.collection, detail.row);
-    } catch (error) {
-      if (finishAction() === "stale") {
-        return;
-      }
-      if (media2.itemField) {
-        settleNestedMedia(context, key, media2, widget, undefined, true);
-      } else if (media2.previousValue !== undefined) {
-        const draft = context.drafts.get(key);
-        if (draft && Object.hasOwn(draft, media2.field) && !Object.hasOwn(remainingDraft(draft, { [media2.field]: media2.value }), media2.field)) {
-          context.drafts.set(key, { ...draft, [media2.field]: structuredClone(media2.previousValue) });
-        }
-        context.restoreDetailField?.(detail.collection, detail.row, media2.field, media2.value, media2.previousValue);
-      }
-      ah(error instanceof Error ? error.message : "Dashboard media action failed", { type: "error" });
-    }
-  }
-  function removeDraftField(drafts, key, field2) {
-    const draft = { ...drafts.get(key) ?? {} };
-    delete draft[field2];
-    Object.keys(draft).length ? drafts.set(key, draft) : drafts.delete(key);
-  }
-
-  // src/components/admin/Resources/Dashboards/view/actions/index.ts
-  async function runDashboardWidgetAction(context, action) {
-    const { group, dashboard, detail } = context;
-    if (!group || !dashboard) {
-      return;
-    }
-    const actionDetail = action.detail ? action.widget ? { collection: action.widget, row: action.row ?? detail?.row ?? "" } : detail : action.widget ? null : detail;
-    const key = actionDetail ? detailKey(actionDetail.collection, actionDetail.row) : "";
-    const finishAction = once(context.actionCoordinator?.beginAction());
-    try {
-      const submittedFields = structuredClone({ ...context.drafts.get(key) ?? {}, ...action.fields ?? {} });
-      const result = actionDetail ? await executeDashboardAction(group, dashboard, actionDetail, action.action, submittedFields, action.resource, context.groups ?? [group]) : await executeDashboardTableAction(group, dashboard, action.action, action.widget, action.value, context.groups ?? [group], context.filters?.get(action.widget ?? "") ?? {}, detail ?? undefined);
-      let definitionsReloaded = false;
-      if (result.invalidatesSchema && context.reloadDefinitions) {
-        try {
-          await context.reloadDefinitions();
-          definitionsReloaded = true;
-        } catch {
-          ah(`${action.action} completed, but CMS definitions could not be reloaded`, { type: "warning" });
-        }
-      }
-      const completion = finishAction();
-      if (result.kind === "download") {
-        downloadBlob(result.blob, result.filename);
-        ah(`${action.action} downloaded`, { type: "success" });
-        if (definitionsReloaded) {
-          context.render();
-        }
-        return;
-      }
-      ah(`${action.action} completed`, { type: "success" });
-      const after = afterTarget(result.after, result.value, actionDetail);
-      const resource = postActionResource(result.after, result.value);
-      if (completion === "stale") {
-        if (definitionsReloaded) {
-          context.render();
-        }
-        return;
-      }
-      if (actionDetail) {
-        const remaining = remainingDraft(context.drafts.get(key) ?? {}, submittedFields);
-        if (Object.keys(remaining).length) {
-          context.drafts.set(key, remaining);
-        } else {
-          context.drafts.delete(key);
-        }
-        context.acknowledgeDetailFields?.(actionDetail.collection, actionDetail.row, submittedFields);
-      }
-      const target2 = postActionResourceTarget(result.after, after, actionDetail, detail, action.action, result.value, resource);
-      if (completion === "reuse" && !result.invalidatesSchema && resource.found && resource.value !== null && target2 && context.setDetailResource) {
-        context.setDetailResource(target2.collection, target2.row, resource.value);
-        renderResourceTarget(context, target2, after, detail);
-        return;
-      }
-      if (definitionsReloaded) {
-        const restoresExplicitTarget = completion === "reload" && after !== null;
-        if (restoresExplicitTarget || changesPostActionSelection(after, detail, action.action, result.value, resource)) {
-          runPostActionFallback(context, after, detail, action.action, result.value, resource);
-        } else {
-          context.render();
-        }
-        return;
-      }
-      if (!actionDetail && !after && action.widget && context.reloadCollection) {
-        context.reloadCollection(action.widget);
-        return;
-      }
-      runPostActionFallback(context, after, detail, action.action, result.value, resource);
-    } catch (error) {
-      finishAction();
-      ah(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
-    }
-  }
-  function downloadBlob(blob, filename) {
-    if (typeof URL.createObjectURL !== "function") {
-      throw new Error("Downloads are not supported in this browser");
-    }
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.hidden = true;
-    document.body.append(link);
-    link.click();
-    link.remove();
-    if (typeof URL.revokeObjectURL === "function") {
-      window.setTimeout(() => URL.revokeObjectURL(url), 0);
-    }
-  }
-
-  // src/static/admin/_content/sources/_runtime/definitions.html
-  var definitions_default = `<div data-dashboard-list-source slot="source-status" cms-source="/api/dashboards as dashboards" cms-reload-on="dashboard:definitions-changed">
-    <cms-dashboard-input hidden kind="groups" cms-bind-value="dashboards"></cms-dashboard-input>
-    <p9r-alert type="error" cms-condition="$source.error">Unable to load dashboards. {{ $source.message }}</p9r-alert>
-</div>
-`;
-
   // src/static/admin/_content/sources/_runtime/detail/users.html
   var users_default = `<template data-users="source">
     <cms-dashboard-directory cms-source="{{ detailUsersUrl }}" hidden>
@@ -35567,7 +34563,7 @@ slot { display: contents; }
   }
 
   // src/static/admin/_content/sources/_runtime/detail/table.html
-  var table_default3 = `<template data-table-template="head"><cms-dashboard-table-row data-table-head></cms-dashboard-table-row></template>
+  var table_default2 = `<template data-table-template="head"><cms-dashboard-table-row data-table-head></cms-dashboard-table-row></template>
 <template data-table-template="row"><cms-dashboard-table-row data-table-row data-table-index="{{ tableRow.index }}"></cms-dashboard-table-row></template>
 <template data-table-template="cell"><span></span></template>
 <template data-table-template="text"><p9r-input></p9r-input></template>
@@ -35598,12 +34594,12 @@ slot { display: contents; }
       itemsPath: host.getAttribute("items-path") || undefined
     };
     const items = itemsFrom(payload, lookup);
-    const options2 = items.flatMap((item) => option2(item, lookup));
+    const options = items.flatMap((item) => option2(item, lookup));
     const totalPath = host.getAttribute("total-path");
     const totalValue = totalPath ? valueAt(payload, totalPath) : undefined;
     const parsedTotal = Number(totalValue);
     const total = Number.isFinite(parsedTotal) && parsedTotal >= 0 ? parsedTotal : undefined;
-    return { options: options2, received: items.length, total };
+    return { options, received: items.length, total };
   }
   function selectedLookupOptions(host) {
     const parent = host.closest("cms-dashboard-w-detail");
@@ -35622,9 +34618,9 @@ slot { display: contents; }
     };
     return (Array.isArray(items) ? items : [items]).flatMap((item) => option2(item, lookup, false).filter((entry) => selected2.has(entry.value)));
   }
-  function distinctOptions(options2) {
+  function distinctOptions(options) {
     const seen = new Set;
-    return options2.filter((option2) => {
+    return options.filter((option2) => {
       if (seen.has(option2.value)) {
         return false;
       }
@@ -35889,7 +34885,7 @@ slot { display: contents; }
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/composition.ts
   function composeTable(control, field2) {
     const template5 = document.createElement("template");
-    template5.innerHTML = table_default3;
+    template5.innerHTML = table_default2;
     const clone = (name) => template5.content.querySelector(`[data-table-template="${name}"]`).content.firstElementChild.cloneNode(true);
     control.setAttribute("data-table-editable", String(field2.editable === true));
     control.style.setProperty("--detail-table-columns", [
@@ -35973,7 +34969,7 @@ slot { display: contents; }
         data-index="{{ media.index }}" data-media-id="{{ media.id }}" data-media-url="{{ media.url }}"
         data-media-thumbnail="{{ media.thumbnailUrl }}" data-media-alt="{{ media.alt }}" data-media-name="{{ media.name }}"
         cms-bind-boolean-data-pending="media.pending">
-        <img src="{{ media.thumbnail }}" alt="{{ media.alt }}">
+        <img data-cms-src="{{ media.thumbnail }}" alt="{{ media.alt }}">
     </cms-dashboard-media-tile>
 </template>
 <template data-media="add"><cms-dashboard-media-add slot="tile"></cms-dashboard-media-add></template>
@@ -35982,7 +34978,7 @@ slot { display: contents; }
 <template data-media="counter"><span slot="counter"></span></template>
 <template data-media="thumbnail">
     <cms-dashboard-media-thumbnail slot="thumbnail" index="{{ media.index }}" label="{{ media.title }}">
-        <img src="{{ media.thumbnail }}" alt="" loading="lazy" decoding="async">
+        <img data-cms-src="{{ media.thumbnail }}" alt="" loading="lazy" decoding="async">
     </cms-dashboard-media-thumbnail>
 </template>
 `;
@@ -36526,7 +35522,7 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
     add.setAttribute("cms-condition", `${path}.showAdd`);
     const image2 = part("image");
     image2.setAttribute("cms-condition", `${path}.open`);
-    image2.setAttribute("src", `{{ ${path}.preview.url }}`);
+    image2.setAttribute("data-cms-src", `{{ ${path}.preview.url }}`);
     image2.setAttribute("alt", `{{ ${path}.preview.previewAlt }}`);
     const caption = part("caption");
     caption.textContent = `{{ ${path}.preview.title }}`;
@@ -37023,8 +36019,8 @@ slot { display: contents; }
         control.setAttribute("rows", String(field2.rows ?? 4));
       }
       if (field2.type === "select" || field2.type === "combobox" || field2.type === "tokens") {
-        const options2 = field2.type === "select" ? field2.options : optionList(field2.options, []);
-        if (field2.type === "select" && !options2.some((option3) => option3.value === "")) {
+        const options = field2.type === "select" ? field2.options : optionList(field2.options, []);
+        if (field2.type === "select" && !options.some((option3) => option3.value === "")) {
           const placeholder = document.createElement("option");
           placeholder.value = "";
           placeholder.disabled = true;
@@ -37032,7 +36028,7 @@ slot { display: contents; }
           placeholder.setAttribute("cms-condition", `!${root}.${field2.path}`);
           control.append(placeholder);
         }
-        for (const item of options2) {
+        for (const item of options) {
           const option3 = document.createElement("option");
           option3.value = item.value;
           option3.textContent = item.label;
@@ -37098,7 +36094,7 @@ dd { margin: 0; min-width: 0; }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/composition.ts
   function composeDetail(widget, navigation) {
-    const fragment2 = document.createDocumentFragment();
+    const fragment = document.createDocumentFragment();
     const root = "detailValues";
     const title = document.createElement("span");
     title.slot = "bound-title";
@@ -37116,15 +36112,15 @@ dd { margin: 0; min-width: 0; }
     } else {
       title.textContent = widget.title?.fallback ?? widget.id;
     }
-    fragment2.append(title);
-    fragment2.append(composeActions());
+    fragment.append(title);
+    fragment.append(composeActions());
     for (const section2 of [...widget.main, ...widget.aside ?? []]) {
       if (!("widget" in section2)) {
-        fragment2.append(...section2.fields.filter((field2) => field2.type === "schema").map(schemaSource));
+        fragment.append(...section2.fields.filter((field2) => field2.type === "schema").map(schemaSource));
       }
     }
     if ([...widget.main, ...widget.aside ?? []].some((section2) => !("widget" in section2) && section2.fields.some((field2) => field2.type === "cms-user"))) {
-      fragment2.append(directoryElement());
+      fragment.append(directoryElement());
     }
     for (const [slot, sections2] of [
       ["bound-main", widget.main],
@@ -37138,13 +36134,13 @@ dd { margin: 0; min-width: 0; }
           const child = navigation(section2);
           child.slot = slot;
           child.setAttribute("data-detail-ready", "{{ detailReady }}");
-          fragment2.append(child);
+          fragment.append(child);
         } else {
-          fragment2.append(sectionElement(section2, slot, root));
+          fragment.append(sectionElement(section2, slot, root));
         }
       }
     }
-    return fragment2;
+    return fragment;
   }
   function sectionElement(section2, slot, root) {
     const element = document.createElement("cms-detail-section");
@@ -37167,6 +36163,1025 @@ dd { margin: 0; min-width: 0; }
   function binding(root, path) {
     return `{{ ${path === "." ? root : `${root}.${path}`} }}`;
   }
+
+  // src/components/admin/Resources/Dashboards/widgets/example/definition.ts
+  var exampleDetail = {
+    widget: "w-detail",
+    id: "example-products",
+    source: { endpoint: "" },
+    title: { path: "title" },
+    status: { path: "status" },
+    actions: [
+      { label: "Save changes", tone: "primary", id: "save" },
+      { label: "Duplicate", id: "duplicate" },
+      { label: "Preview", id: "preview" },
+      { label: "Copy link", id: "copy-link", section: "Share", icon: "link" },
+      { label: "Export", id: "export", section: "Share", icon: "download" },
+      { label: "Archive product", tone: "danger", id: "archive", section: "Other actions", icon: "archive" },
+      { label: "Delete product", tone: "danger", id: "delete", section: "Other actions", icon: "trash" }
+    ],
+    main: [
+      {
+        id: "general",
+        title: "General",
+        fields: [
+          { id: "title", label: "Title", type: "text", path: "title" },
+          { id: "description", label: "Description", type: "textarea", path: "description" },
+          {
+            id: "media",
+            label: "Media",
+            type: "media",
+            path: "media",
+            item: { idPath: "id", urlPath: "url", altPath: "alt" }
+          },
+          { id: "category", label: "Category", type: "text", path: "category" }
+        ]
+      }
+    ],
+    aside: [
+      {
+        id: "status",
+        title: "Status",
+        fields: [
+          {
+            id: "status",
+            label: "Publication",
+            type: "select",
+            path: "status",
+            options: options("Active", "Draft", "Archived")
+          },
+          {
+            id: "visibility",
+            label: "Visibility",
+            type: "select",
+            path: "visibility",
+            options: options("Online store", "Hidden")
+          }
+        ]
+      },
+      {
+        id: "organization",
+        title: "Organization",
+        fields: [
+          {
+            id: "vendor",
+            label: "Vendor",
+            type: "combobox",
+            path: "vendor",
+            options: options("Acme", "Example Supply", "Northwind", "Paper & Co."),
+            allowCustom: true
+          },
+          {
+            id: "tags",
+            label: "Tags",
+            type: "tokens",
+            path: "tags",
+            options: options("Featured", "New", "Seasonal"),
+            allowCustom: true
+          },
+          { id: "id", label: "Resource id", type: "readonly", path: "id" }
+        ]
+      }
+    ]
+  };
+  function options(...values) {
+    return values.map((value2) => ({ label: value2, value: value2 }));
+  }
+
+  // src/static/admin/_content/sources/_runtime/table.html
+  var table_default3 = `<template data-table-control="column"><span slot="columns" role="columnheader"></span></template>
+<template data-table-control="action"><p9r-button slot="actions" type="button"></p9r-button></template>
+<template data-table-control="filters">
+    <form slot="filters" data-filters>
+        <cms-dashboard-table-filters>
+            <button slot="actions" type="submit">Apply filters</button>
+            <button slot="actions" type="button" data-filter-clear>Clear filters</button>
+        </cms-dashboard-table-filters>
+    </form>
+</template>
+<template data-table-control="text"><cms-dashboard-table-filter slot="fields"><input type="text"></cms-dashboard-table-filter></template>
+<template data-table-control="select"><cms-dashboard-table-filter slot="fields"><select><option value="">All</option></select></cms-dashboard-table-filter></template>
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-table/presentation/filters.css
+  var filters_default = `:host {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: end;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e8ecea;
+    background: #fbfcfb;
+}
+
+.fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 10px;
+    min-width: 0;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+}
+
+::slotted(button) {
+    min-height: 36px;
+    border: 1px solid #cfd9d4;
+    border-radius: 6px;
+    background: #fff;
+    color: #29443b;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 750;
+    padding: 7px 11px;
+}
+
+::slotted(button[type="submit"]) {
+    border-color: #165f4b;
+    background: #165f4b;
+    color: #fff;
+}
+
+@media (max-width: 760px) {
+    :host {
+        grid-template-columns: 1fr;
+    }
+
+    .actions {
+        justify-content: flex-end;
+    }
+}
+
+slot { display: contents; }
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-table/presentation/filters.html
+  var filters_default2 = `<div class="fields"><slot name="fields"></slot></div>
+<div class="actions"><slot name="actions"></slot></div>
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-table/presentation/Filters.ts
+  class DashboardTableFilters extends l2 {
+    constructor() {
+      super({ css: filters_default, template: filters_default2 });
+    }
+  }
+  customElements.define("cms-dashboard-table-filters", DashboardTableFilters);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-table/presentation/filter.css
+  var filter_default = `:host {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+    color: #3d4a46;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+::slotted(input),
+::slotted(select) {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 36px;
+    border: 1px solid #d7dfdb;
+    border-radius: 6px;
+    background: #fff;
+    color: #14201c;
+    font: inherit;
+    font-weight: 500;
+    padding: 7px 9px;
+}
+
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-table/presentation/Filter.ts
+  class DashboardTableFilter extends l2 {
+    constructor() {
+      super({ css: filter_default, template: "<span data-label></span><slot></slot>" });
+    }
+    static observedAttributes = ["label"];
+    attributeChangedCallback() {
+      this.shadowRoot.querySelector("[data-label]").textContent = this.getAttribute("label") ?? "";
+    }
+    connectedCallback() {
+      this.addEventListener("click", this.focusControl);
+    }
+    disconnectedCallback() {
+      this.removeEventListener("click", this.focusControl);
+    }
+    focusControl = (event) => {
+      if (event.target === this) {
+        this.querySelector("input, select")?.focus();
+      }
+    };
+  }
+  customElements.define("cms-dashboard-table-filter", DashboardTableFilter);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-table/composition.ts
+  var filterStates = new WeakMap;
+  function tableShell(widget, filters = {}) {
+    const table = new DashboardWTable;
+    table.dataset.widgetId = widget.id;
+    table.setAttribute("heading", widget.title ?? widget.source.endpoint);
+    table.style.setProperty("--dashboard-table-columns", ["46px", ...widget.columns.map((column) => column.width ?? "minmax(7rem, 1fr)")].join(" "));
+    const state = { values: filters };
+    filterStates.set(table, state);
+    fd(table, () => ({ tableFilters: state.values }));
+    for (const column of widget.columns) {
+      const header = fragment("column").firstElementChild;
+      header.dataset.columnHeader = column.id;
+      header.textContent = column.label;
+      table.append(header);
+    }
+    for (const action of widget.actions ?? []) {
+      const button = fragment("action").firstElementChild;
+      button.dataset.action = action.id;
+      button.dataset.widget = widget.id;
+      if (action.selection?.opens) {
+        button.dataset.target = action.selection.opens;
+      }
+      if (action.confirm) {
+        button.dataset.confirm = action.confirm;
+      }
+      setP9rButtonTone(button, action.tone ?? "primary");
+      setP9rButtonLabel(button, action.label);
+      table.append(button);
+    }
+    if (widget.filters?.length) {
+      const form = fragment("filters");
+      const layout = form.querySelector("cms-dashboard-table-filters");
+      for (const filter of widget.filters) {
+        const field2 = fragment(filter.type === "select" ? "select" : "text").firstElementChild;
+        field2.setAttribute("label", filter.label);
+        const control = field2.querySelector("input, select");
+        control.name = filter.id;
+        control.dataset.filterId = filter.id;
+        control.setAttribute("aria-label", filter.label);
+        control.setAttribute("cms-bind-value", `tableFilters.${filter.id}`);
+        if (filter.placeholder) {
+          control.setAttribute("placeholder", filter.placeholder);
+        }
+        if (filter.type === "select") {
+          for (const option3 of filter.options ?? []) {
+            const element = document.createElement("option");
+            element.value = option3.value;
+            element.textContent = option3.label;
+            control.append(element);
+          }
+        }
+        layout.append(field2);
+      }
+      table.append(form);
+    }
+    return table;
+  }
+  function updateTableFilters(table, filters) {
+    const state = filterStates.get(table);
+    if (!state || JSON.stringify(state.values) === JSON.stringify(filters)) {
+      return;
+    }
+    state.values = filters;
+    bi(table);
+  }
+  function fragment(kind) {
+    const template5 = document.createElement("template");
+    template5.innerHTML = table_default3;
+    return template5.content.querySelector(`[data-table-control="${kind}"]`).content.cloneNode(true);
+  }
+
+  // src/static/admin/_content/sources/_runtime/source-states.html
+  var source_states_default = `<p9r-alert type="info" role="status" cms-condition="!dashboardData &amp;&amp; !$source.error">Loading data…</p9r-alert>
+<p9r-alert type="error" cms-condition="$source.error" role="alert">
+    <p>Unable to load this data. {{ $source.message }}</p>
+    <p9r-button type="button" variant="outlined" data-dashboard-source-retry>Retry</p9r-button>
+</p9r-alert>
+`;
+
+  // src/components/admin/Resources/Dashboards/runtime/mounting/mountSource.ts
+  var sourceSequence = 0;
+  function sourceWrapper(sourceId, ref, vars, alias, requiredParams = []) {
+    const params = resolveParams(ref.params, vars);
+    if (requiredParams.some((name) => params[name] === undefined)) {
+      return pendingSourceWrapper();
+    }
+    const url = sourceUrl(sourceId, ref, vars);
+    return urlSourceWrapper(`${url.pathname}${url.search}`, alias);
+  }
+  function requiredSourceParams(context, ref) {
+    const sourceId = ref.sourceId ?? context.dashboard.source;
+    const group = (context.groups ?? [context.group]).find((candidate) => candidate.source.id === sourceId);
+    return group?.endpoints.find((endpoint) => endpoint.endpointId === ref.endpoint)?.params.filter((param) => param.required).map((param) => param.name) ?? [];
+  }
+  function urlSourceWrapper(url, alias) {
+    const wrapper = document.createElement("div");
+    wrapper.setAttribute("cms-source", `${url} as ${alias}`);
+    wrapper.setAttribute("cms-reload-on", `dashboard:retry:${++sourceSequence}`);
+    const template5 = document.createElement("template");
+    template5.innerHTML = source_states_default;
+    wrapper.append(template5.content.cloneNode(true));
+    return wrapper;
+  }
+  function pendingSourceWrapper() {
+    const wrapper = document.createElement("div");
+    wrapper.dataset.dashboardSourcePending = "true";
+    return wrapper;
+  }
+  function tableRowsTemplate(widget) {
+    const row = document.createElement("cms-dashboard-w-row");
+    row.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
+    row.setAttribute("row-key", bindingPath("row", widget.rowKey));
+    if (widget.selection?.opens) {
+      row.setAttribute("collection", widget.selection.opens);
+    }
+    for (const column of widget.columns) {
+      const cell = document.createElement("cms-dashboard-w-cell");
+      cell.setAttribute("column", column.id);
+      if (column.primary) {
+        cell.toggleAttribute("primary", true);
+      }
+      if (column.primary) {
+        cell.setAttribute("meta", "{{ row.id }}");
+      }
+      if (column.format === "badge") {
+        cell.setAttribute("tone", "badge");
+      }
+      if (column.format === "date" || column.format === "money") {
+        cell.dataset.displayFormat = column.format;
+        cell.dataset.displayValue = bindingPath("row", column.path);
+        if (column.format === "money") {
+          cell.dataset.displayCurrency = bindingPath("row", "currency");
+        }
+      }
+      cell.textContent = bindingPath("row", column.path);
+      row.append(cell);
+    }
+    return row;
+  }
+  function navigationItemsTemplate(widget) {
+    const item = document.createElement("cms-dashboard-w-navigation-item");
+    item.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
+    item.setAttribute("row-key", bindingPath("row", widget.rowKey));
+    item.setAttribute("title", bindingPath("row", widget.item.title.path));
+    if (widget.item.subtitle) {
+      item.setAttribute("subtitle", bindingPath("row", widget.item.subtitle.path));
+    }
+    if (widget.item.icon) {
+      item.setAttribute("icon", widget.item.icon);
+    }
+    if (widget.item.badge) {
+      item.setAttribute("badge", bindingPath("row", widget.item.badge.path));
+    }
+    if (widget.selection?.opens) {
+      item.setAttribute("collection", widget.selection.opens);
+    }
+    if (widget.reorderable) {
+      item.toggleAttribute("reorderable", true);
+    }
+    return item;
+  }
+  function repeatPath(alias, path) {
+    return path ? `${alias}.${path}` : alias;
+  }
+  function bindingPath(alias, path) {
+    return `{{ ${path === "." ? alias : `${alias}.${path}`} }}`;
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/example/data.ts
+  var PRODUCTS = [
+    product("prod_1001", "Desk Lamp", "Active", "Northwind", "Home", "Online store", "Today"),
+    product("prod_1002", "Canvas Backpack", "Draft", "Acme", "Travel", "Hidden", "Yesterday"),
+    product("prod_1003", "Ceramic Mug", "Active", "Example Supply", "Kitchen", "Online store", "Jul 1"),
+    product("prod_1004", "Notebook Set", "Archived", "Paper & Co.", "Stationery", "Hidden", "Jun 28")
+  ];
+  function isStringArray(value2) {
+    return Array.isArray(value2) && value2.every((item) => typeof item === "string");
+  }
+  function isMediaItems(value2) {
+    return Array.isArray(value2) && value2.every((item) => typeof item === "object" && item !== null && ("url" in item));
+  }
+  function product(id2, title, status, vendor, category, visibility2, updated) {
+    return {
+      id: id2,
+      title,
+      status,
+      vendor,
+      category,
+      visibility: visibility2,
+      updated,
+      description: "Editable sandbox content before any data source is wired.",
+      media: media(id2, title),
+      tags: ["Featured", "New"]
+    };
+  }
+  function media(id2, title) {
+    return [
+      {
+        id: `${id2}_media_1`,
+        url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=420&q=80",
+        alt: `${title} media`
+      }
+    ];
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/example/index.ts
+  function mountDashboardWidgetExample(root, selectedId) {
+    root.replaceChildren();
+    const selected2 = selectedId ? PRODUCTS.find((item) => item.id === selectedId) ?? null : null;
+    root.append(selected2 ? detailElement(selected2) : tableElement());
+  }
+  function updateDashboardWidgetExampleField(rowKey, field2, value2) {
+    const product2 = PRODUCTS.find((item) => item.id === rowKey);
+    if (!product2) {
+      return;
+    }
+    if (field2 === "title" && typeof value2 === "string") {
+      product2.title = value2;
+    }
+    if (field2 === "status" && typeof value2 === "string") {
+      product2.status = value2;
+    }
+    if (field2 === "vendor" && typeof value2 === "string") {
+      product2.vendor = value2;
+    }
+    if (field2 === "category" && typeof value2 === "string") {
+      product2.category = value2;
+    }
+    if (field2 === "description" && typeof value2 === "string") {
+      product2.description = value2;
+    }
+    if (field2 === "visibility" && typeof value2 === "string") {
+      product2.visibility = value2;
+    }
+    if (field2 === "tags" && isStringArray(value2)) {
+      product2.tags = value2;
+    }
+    if (field2 === "media" && isMediaItems(value2)) {
+      product2.media = value2;
+    }
+  }
+  function tableElement() {
+    const widget = {
+      widget: "w-table",
+      id: "example-products",
+      title: "Products",
+      source: { endpoint: "" },
+      rowKey: "id",
+      selection: { opens: "example-products" },
+      columns: [
+        { id: "title", path: "title", label: "Product", primary: true },
+        { id: "status", path: "status", label: "Status", format: "badge", width: "140px" },
+        { id: "vendor", path: "vendor", label: "Vendor", width: "160px" },
+        { id: "category", path: "category", label: "Category", width: "180px" },
+        { id: "updated", path: "updated", label: "Updated", width: "140px" }
+      ]
+    };
+    const element = tableShell(widget);
+    element.setAttribute("subtitle", "Widget sandbox: selection and bulk checkboxes only.");
+    element.setAttribute("cms-source", "");
+    const rows = tableRowsTemplate(widget);
+    rows.querySelector('[column="updated"]').setAttribute("tone", "muted");
+    element.append(rows);
+    Md(element, { dashboardData: PRODUCTS });
+    return element;
+  }
+  function detailElement(product2) {
+    const element = new DashboardWDetail;
+    element.configure(exampleDetail);
+    element.dataset.widgetId = exampleDetail.id;
+    element.dataset.rowKey = product2.id;
+    element.setAttribute("cms-source", "");
+    element.append(composeDetail(exampleDetail));
+    element.querySelector('[data-field-control="vendor"]').setAttribute("placeholder", "Search or add a vendor");
+    element.querySelector('[data-field-control="tags"]').setAttribute("placeholder", "Search or add tags");
+    Md(element, structuredClone(product2));
+    return element;
+  }
+
+  // src/components/admin/Resources/Integrations/management/api.ts
+  async function managementRequest(id2, operation, body, refresh = false) {
+    const url = `${route(`/api/integrations/management/${operation}`)}?id=${encodeURIComponent(id2)}${refresh ? "&refresh=true" : ""}`;
+    const response = await fetch(url, body === undefined ? undefined : {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!response.ok) {
+      const detail = await response.json().catch(() => null);
+      throw new Error(detail?.error ?? `Request failed (HTTP ${response.status})`);
+    }
+    return response.json();
+  }
+  var readSettings = (id2) => managementRequest(id2, "settings");
+  var readHealth = (id2, refresh = false) => managementRequest(id2, "health", undefined, refresh);
+
+  // src/components/admin/Resources/Dashboards/runtime/actions/endpoint.ts
+  async function executeEndpointAction(group, groups, action, vars) {
+    if (action.management) {
+      const management = action.management;
+      const input = resolveBody(management.body, vars) ?? vars.fields ?? {};
+      const result = await managementRequest(management.installationId, management.action === "action" ? "action" : "settings", management.action === "action" ? { actionId: management.actionId, input } : input);
+      return { kind: "value", value: result.values, ...actionMeta(group, groups, action) };
+    }
+    if (!action.endpoint) {
+      throw new Error(`Dashboard action "${action.id}" does not declare an endpoint`);
+    }
+    const method = endpointMethod(group, groups, action.endpoint);
+    if (action.download) {
+      const download = await sendSourceDownload(group.source.id, action.endpoint, method, vars);
+      return {
+        kind: "download",
+        blob: download.blob,
+        filename: action.download.filename ?? download.filename ?? `${action.id}.download`,
+        ...actionMeta(group, groups, action)
+      };
+    }
+    return {
+      kind: "value",
+      value: await sendSourceJson(group.source.id, action.endpoint, method, vars),
+      ...actionMeta(group, groups, action)
+    };
+  }
+  function endpointMethod(group, groups, ref) {
+    const sourceId = ref.sourceId ?? group.source.id;
+    const sourceGroup = groups.find((candidate) => candidate.source.id === sourceId);
+    const endpoint = sourceGroup?.endpoints.find((candidate) => candidate.endpointId === ref.endpoint);
+    if (!endpoint) {
+      throw new Error(`Dashboard endpoint "${sourceId}:${ref.endpoint}" was not found`);
+    }
+    return endpoint.method;
+  }
+  function actionMeta(group, groups, action) {
+    return {
+      ...action.after ? { after: action.after } : {},
+      ...action.endpoint && endpointInvalidatesSchema(group, groups, action.endpoint) ? { invalidatesSchema: true } : {}
+    };
+  }
+  function endpointInvalidatesSchema(group, groups, ref) {
+    const sourceId = ref.sourceId ?? group.source.id;
+    return groups.find((candidate) => candidate.source.id === sourceId)?.endpoints.find((endpoint) => endpoint.endpointId === ref.endpoint)?.effects?.invalidatesSchema === true;
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/actions/widgets.ts
+  function findDetailWidget(widgets, id2) {
+    for (const widget of widgets) {
+      if (widget.widget === "w-detail" && widget.id === id2) {
+        return widget;
+      }
+      if (widget.widget === "w-section") {
+        const found = findDetailWidget(widget.children, id2);
+        if (found) {
+          return found;
+        }
+      }
+      if (widget.widget === "w-tabs") {
+        for (const tab of widget.tabs) {
+          const found = findDetailWidget(tab.children, id2);
+          if (found) {
+            return found;
+          }
+        }
+      }
+    }
+    return null;
+  }
+  function findCollectionAction(widgets, actionId, widgetId) {
+    for (const widget of widgets) {
+      if ((widget.widget === "w-table" || widget.widget === "w-navigation-list") && (!widgetId || widget.id === widgetId)) {
+        const action = widget.actions?.find((item) => item.id === actionId);
+        if (action) {
+          return action;
+        }
+      }
+      if (widget.widget === "w-section") {
+        const found = findCollectionAction(widget.children, actionId, widgetId);
+        if (found) {
+          return found;
+        }
+      }
+      if (widget.widget === "w-tabs") {
+        for (const tab of widget.tabs) {
+          const found = findCollectionAction(tab.children, actionId, widgetId);
+          if (found) {
+            return found;
+          }
+        }
+      }
+      if (widget.widget === "w-detail") {
+        const found = findCollectionAction(widget.main.filter((item) => ("widget" in item)), actionId, widgetId);
+        if (found) {
+          return found;
+        }
+      }
+    }
+    return null;
+  }
+  function findMediaField(widget, fieldId, itemFieldId) {
+    const fields = [...widget.main.filter(isDetailSection4), ...widget.aside ?? []].flatMap((section2) => section2.fields);
+    const direct = fields.find((field2) => field2.id === fieldId && field2.type === "media");
+    if (direct) {
+      return { field: direct };
+    }
+    const parent = fields.find((field2) => field2.id === fieldId && field2.type === "reorderable-list");
+    const nested = parent?.fields.find((field2) => field2.id === itemFieldId && field2.type === "media");
+    return parent && nested ? { field: nested, parent } : null;
+  }
+  function isDetailSection4(item) {
+    return !("widget" in item);
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/actions/index.ts
+  async function executeDashboardAction(group, dashboard, detail, actionId, draft, currentResource, groups = [group]) {
+    const widget = findDetailWidget(dashboard.views, detail.collection);
+    if (!widget) {
+      throw new Error(`Dashboard action target "${detail.collection}" was not found`);
+    }
+    const action = widget.actions?.find((item) => item.id === actionId);
+    if (!action) {
+      throw new Error(`Dashboard action "${actionId}" was not found`);
+    }
+    if (!action.endpoint && !action.management) {
+      throw new Error(`Dashboard action "${actionId}" does not declare an endpoint`);
+    }
+    const resource = currentResource ?? await fetchActionResource(dashboard.source, widget, detail.row);
+    const fields = { ...fieldValues(widget, resource), ...draft };
+    if (!matchesDashboardVisibility(action.visibleWhen, { resource, fields })) {
+      throw new Error(`Dashboard action "${actionId}" is not available in the current state`);
+    }
+    return executeEndpointAction(group, groups, action, {
+      selection: { id: detail.row },
+      resource,
+      fields
+    });
+  }
+  async function executeDashboardTableAction(group, dashboard, actionId, widgetId, value2, groups = [group], filters = {}, detail) {
+    const action = findCollectionAction(dashboard.views, actionId, widgetId);
+    if (!action) {
+      throw new Error(`Dashboard table action "${actionId}" was not found`);
+    }
+    if (!action.endpoint && !action.management) {
+      throw new Error(`Dashboard table action "${actionId}" does not declare an endpoint`);
+    }
+    return executeEndpointAction(group, groups, action, {
+      filters: { ...filters },
+      value: value2,
+      ...detail ? {
+        selection: {
+          id: detail.row,
+          [detail.collection]: { id: detail.row }
+        }
+      } : {}
+    });
+  }
+  async function executeDashboardMediaAction(group, dashboard, detail, media2, draft, groups = [group]) {
+    const widget = findDetailWidget(dashboard.views, detail.collection);
+    if (!widget) {
+      throw new Error(`Dashboard media target "${detail.collection}" was not found`);
+    }
+    const target2 = findMediaField(widget, media2.field, media2.itemField);
+    const actions = target2?.field.actions;
+    const ref = actions?.[media2.action];
+    if (!target2 || !ref) {
+      return { handled: false, nested: Boolean(target2?.parent), results: [] };
+    }
+    const resource = media2.resource !== undefined ? media2.resource : itemFrom(await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } }), widget.source);
+    const fields = { ...fieldValues(widget, resource), ...draft, ...media2.fields ?? {} };
+    const mediaVars = mediaActionVars(media2);
+    const files = media2.files ?? (media2.file ? [media2.file] : []);
+    const results = !files.length ? [
+      await sendSourceJson(group.source.id, ref, endpointMethod(group, groups, ref), {
+        resource,
+        fields,
+        media: mediaVars
+      })
+    ] : await Promise.all(files.map((file) => {
+      const body = new FormData;
+      body.set("file", file);
+      return sendSourceForm(group.source.id, ref, endpointMethod(group, groups, ref), { resource, fields, media: mediaVars }, body);
+    }));
+    const item = target2.parent ? resultMediaItem(results[0], target2.field, group.source.id) : undefined;
+    return { handled: true, nested: Boolean(target2.parent), results, ...item ? { item } : {} };
+  }
+  function resultMediaItem(value2, field2, sourceId) {
+    const candidate = value2 && typeof value2 === "object" && !Array.isArray(value2) && "media" in value2 ? value2.media : value2;
+    return mediaValue(candidate, field2, sourceId)[0];
+  }
+  async function fetchActionResource(sourceId, widget, row) {
+    const data = await fetchSourceJson(sourceId, widget.source, { selection: { id: row } });
+    return itemFrom(data, widget.source);
+  }
+  function mediaActionVars(media2) {
+    return {
+      action: media2.action,
+      index: media2.index,
+      from: media2.from,
+      to: media2.to,
+      item: media2.item,
+      previousItem: media2.previousItem,
+      value: media2.value,
+      valueIds: media2.value.map(mediaId).filter(Boolean),
+      itemIndex: media2.itemIndex,
+      itemKey: media2.itemKey,
+      itemField: media2.itemField,
+      itemPath: media2.itemPath,
+      parentItem: media2.parentItem
+    };
+  }
+  function mediaId(item) {
+    return item.id;
+  }
+
+  // src/components/admin/Resources/Dashboards/view/actions/outcome.ts
+  function once(finish) {
+    let completion;
+    return () => completion ??= finish?.() ?? "reuse";
+  }
+  function postActionResource(after, result) {
+    if (!after?.resource) {
+      return { found: false };
+    }
+    const value2 = resolveExpression(after.resource, { result });
+    return value2 === undefined ? { found: false } : { found: true, value: value2 };
+  }
+  function postActionResourceTarget(declaredAfter, after, actionDetail, detail, actionId, result, resource) {
+    if (declaredAfter?.opens) {
+      return after;
+    }
+    if (!actionDetail || actionId.startsWith("delete")) {
+      return null;
+    }
+    if (detail?.row !== "__new__") {
+      return actionDetail;
+    }
+    const row = postActionCreatedId(result, resource);
+    return row ? { collection: detail.collection, row } : null;
+  }
+  function renderResourceTarget(context, target2, after, detail) {
+    if (after || detail?.row === "__new__") {
+      context.openDetail(target2.collection, target2.row);
+      return;
+    }
+    context.render();
+  }
+  function runPostActionFallback(context, after, detail, actionId, result, resource) {
+    const created = postActionCreatedId(result, resource);
+    if (after) {
+      context.openDetail(after.collection, after.row);
+    } else if (!detail) {
+      context.render();
+    } else if (actionId.startsWith("delete")) {
+      context.clearDetail();
+    } else if (detail.row === "__new__" && created) {
+      context.openDetail(detail.collection, created);
+    } else {
+      context.reload(detail.collection, detail.row);
+    }
+  }
+  function changesPostActionSelection(after, detail, actionId, result, resource) {
+    if (after) {
+      return !detail || after.collection !== detail.collection || after.row !== detail.row;
+    }
+    return Boolean(detail && (actionId.startsWith("delete") || detail.row === "__new__" && postActionCreatedId(result, resource) !== null));
+  }
+  function afterTarget(after, result, detail) {
+    if (!after?.opens) {
+      return null;
+    }
+    const rowValue = after.row === undefined ? createdId(result) : resolveExpression(after.row, {
+      result,
+      ...detail ? { selection: { id: detail.row } } : {}
+    });
+    const row = stringValue(rowValue);
+    return row ? { collection: after.opens, row } : null;
+  }
+  function createdId(value2) {
+    if (!value2 || typeof value2 !== "object" || Array.isArray(value2)) {
+      return null;
+    }
+    const id2 = value2.id;
+    if (typeof id2 === "string" && id2.trim()) {
+      return id2;
+    }
+    if (typeof id2 === "number" && Number.isFinite(id2)) {
+      return String(id2);
+    }
+    return null;
+  }
+  function postActionCreatedId(result, resource) {
+    return createdId(result) ?? (resource.found ? createdId(resource.value) : null);
+  }
+  function stringValue(value2) {
+    if (value2 === null || value2 === undefined) {
+      return "";
+    }
+    if (typeof value2 === "string") {
+      return value2;
+    }
+    if (typeof value2 === "number" || typeof value2 === "boolean") {
+      return String(value2);
+    }
+    return "";
+  }
+
+  // src/components/admin/Resources/Dashboards/view/actions/nestedMedia.ts
+  function settleNestedMedia(context, key, media2, widget, item, failed = false) {
+    const bound = widget?.hasAttribute("data-declarative") ? widget : undefined;
+    const draft = { ...context.drafts.get(key) ?? {} };
+    const items = cloneItems2(bound?.currentFieldValues()[media2.field] ?? draft[media2.field]);
+    const parent = nestedMediaParent(items, media2);
+    const current = parent && media2.itemPath ? valueAt(parent, media2.itemPath) : undefined;
+    const expected = media2.value[0] ?? null;
+    if (parent && media2.itemPath && sameMedia(current, expected)) {
+      if (failed) {
+        const previous = media2.action === "replace" ? media2.previousItem : media2.action === "remove" ? media2.item : null;
+        setValueAt(parent, media2.itemPath, previous ?? null);
+      } else if (media2.action === "upload" || media2.action === "replace") {
+        const alt = current && typeof current === "object" && "alt" in current ? current.alt : undefined;
+        setValueAt(parent, media2.itemPath, item ? { ...item, ...typeof alt === "string" ? { alt } : {} } : null);
+      }
+    }
+    draft[media2.field] = items;
+    context.drafts.set(key, draft);
+    if (bound) {
+      bound.applyFieldDraft(media2.field, items);
+      return;
+    }
+    const control = Array.from(widget?.shadowRoot?.querySelectorAll("[data-field-control]") ?? []).find((node) => node.dataset.fieldControl === media2.field);
+    if (control?.data) {
+      control.data = { ...control.data, items: structuredClone(items) };
+    } else {
+      context.render();
+    }
+  }
+  function cloneItems2(value2) {
+    return Array.isArray(value2) ? structuredClone(value2.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item))) : [];
+  }
+  function nestedMediaParent(items, media2) {
+    if (media2.itemKeyPath && valueAt(media2.parentItem, media2.itemKeyPath) != null) {
+      return items.find((item) => String(valueAt(item, media2.itemKeyPath)) === media2.itemKey);
+    }
+    const pending = media2.value[0];
+    if (pending && media2.itemPath) {
+      const parent = items.find((item) => sameMedia(valueAt(item, media2.itemPath), pending));
+      if (parent) {
+        return parent;
+      }
+    }
+    return items[media2.itemIndex ?? -1];
+  }
+  function sameMedia(left, right) {
+    if (left == null || right === null) {
+      return left == null && right === null;
+    }
+    return typeof left === "object" && "id" in left && "url" in left && left.id === right.id && left.url === right.url;
+  }
+
+  // src/components/admin/Resources/Dashboards/view/actions/media.ts
+  async function runDashboardMediaAction(context, media2, widget) {
+    const { group, dashboard } = context;
+    const detail = media2.widget ? { collection: media2.widget, row: media2.rowKey } : context.detail;
+    if (!group || !dashboard || !detail) {
+      return;
+    }
+    const key = detailKey(detail.collection, detail.row);
+    const finishAction = once(context.actionCoordinator?.beginAction());
+    try {
+      const result = await executeDashboardMediaAction(group, dashboard, detail, media2, context.drafts.get(key) ?? {}, context.groups ?? [group]);
+      if (finishAction() === "stale") {
+        return;
+      }
+      if (result.nested) {
+        if (result.handled && (media2.action === "upload" || media2.action === "replace") && !result.item) {
+          throw new Error("The media endpoint returned no usable media item");
+        }
+        settleNestedMedia(context, key, media2, widget, result.item);
+        ah(`Media ${media2.action} completed`, { type: "success" });
+        return;
+      }
+      removeDraftField(context.drafts, key, media2.field);
+      context.acknowledgeDetailFields?.(detail.collection, detail.row, { [media2.field]: media2.value });
+      ah(`Media ${media2.action} completed`, { type: "success" });
+      context.reload(detail.collection, detail.row);
+    } catch (error) {
+      if (finishAction() === "stale") {
+        return;
+      }
+      if (media2.itemField) {
+        settleNestedMedia(context, key, media2, widget, undefined, true);
+      } else if (media2.previousValue !== undefined) {
+        const draft = context.drafts.get(key);
+        if (draft && Object.hasOwn(draft, media2.field) && !Object.hasOwn(remainingDraft(draft, { [media2.field]: media2.value }), media2.field)) {
+          context.drafts.set(key, { ...draft, [media2.field]: structuredClone(media2.previousValue) });
+        }
+        context.restoreDetailField?.(detail.collection, detail.row, media2.field, media2.value, media2.previousValue);
+      }
+      ah(error instanceof Error ? error.message : "Dashboard media action failed", { type: "error" });
+    }
+  }
+  function removeDraftField(drafts, key, field2) {
+    const draft = { ...drafts.get(key) ?? {} };
+    delete draft[field2];
+    Object.keys(draft).length ? drafts.set(key, draft) : drafts.delete(key);
+  }
+
+  // src/components/admin/Resources/Dashboards/view/actions/index.ts
+  async function runDashboardWidgetAction(context, action) {
+    const { group, dashboard, detail } = context;
+    if (!group || !dashboard) {
+      return;
+    }
+    const actionDetail = action.detail ? action.widget ? { collection: action.widget, row: action.row ?? detail?.row ?? "" } : detail : action.widget ? null : detail;
+    const key = actionDetail ? detailKey(actionDetail.collection, actionDetail.row) : "";
+    const finishAction = once(context.actionCoordinator?.beginAction());
+    try {
+      const submittedFields = structuredClone({ ...context.drafts.get(key) ?? {}, ...action.fields ?? {} });
+      const result = actionDetail ? await executeDashboardAction(group, dashboard, actionDetail, action.action, submittedFields, action.resource, context.groups ?? [group]) : await executeDashboardTableAction(group, dashboard, action.action, action.widget, action.value, context.groups ?? [group], context.filters?.get(action.widget ?? "") ?? {}, detail ?? undefined);
+      let definitionsReloaded = false;
+      if (result.invalidatesSchema && context.reloadDefinitions) {
+        try {
+          await context.reloadDefinitions();
+          definitionsReloaded = true;
+        } catch {
+          ah(`${action.action} completed, but CMS definitions could not be reloaded`, { type: "warning" });
+        }
+      }
+      const completion = finishAction();
+      if (result.kind === "download") {
+        downloadBlob(result.blob, result.filename);
+        ah(`${action.action} downloaded`, { type: "success" });
+        if (definitionsReloaded) {
+          context.render();
+        }
+        return;
+      }
+      ah(`${action.action} completed`, { type: "success" });
+      const after = afterTarget(result.after, result.value, actionDetail);
+      const resource = postActionResource(result.after, result.value);
+      if (completion === "stale") {
+        if (definitionsReloaded) {
+          context.render();
+        }
+        return;
+      }
+      if (actionDetail) {
+        const remaining = remainingDraft(context.drafts.get(key) ?? {}, submittedFields);
+        if (Object.keys(remaining).length) {
+          context.drafts.set(key, remaining);
+        } else {
+          context.drafts.delete(key);
+        }
+        context.acknowledgeDetailFields?.(actionDetail.collection, actionDetail.row, submittedFields);
+      }
+      const target2 = postActionResourceTarget(result.after, after, actionDetail, detail, action.action, result.value, resource);
+      if (completion === "reuse" && !result.invalidatesSchema && resource.found && resource.value !== null && target2 && context.setDetailResource) {
+        context.setDetailResource(target2.collection, target2.row, resource.value);
+        renderResourceTarget(context, target2, after, detail);
+        return;
+      }
+      if (definitionsReloaded) {
+        const restoresExplicitTarget = completion === "reload" && after !== null;
+        if (restoresExplicitTarget || changesPostActionSelection(after, detail, action.action, result.value, resource)) {
+          runPostActionFallback(context, after, detail, action.action, result.value, resource);
+        } else {
+          context.render();
+        }
+        return;
+      }
+      if (!actionDetail && !after && action.widget && context.reloadCollection) {
+        context.reloadCollection(action.widget);
+        return;
+      }
+      runPostActionFallback(context, after, detail, action.action, result.value, resource);
+    } catch (error) {
+      finishAction();
+      ah(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
+    }
+  }
+  function downloadBlob(blob, filename) {
+    if (typeof URL.createObjectURL !== "function") {
+      throw new Error("Downloads are not supported in this browser");
+    }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.hidden = true;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    if (typeof URL.revokeObjectURL === "function") {
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    }
+  }
+
+  // src/static/admin/_content/sources/_runtime/definitions.html
+  var definitions_default = `<div data-dashboard-list-source slot="source-status" cms-source="/api/dashboards as dashboards" cms-reload-on="dashboard:definitions-changed">
+    <cms-dashboard-input hidden kind="groups" cms-bind-value="dashboards"></cms-dashboard-input>
+    <p9r-alert type="error" cms-condition="$source.error">Unable to load dashboards. {{ $source.message }}</p9r-alert>
+</div>
+`;
 
   // src/components/admin/Resources/Dashboards/runtime/mounting/table.ts
   function tableWithSource(widget, source2, filters = {}) {
@@ -38520,7 +38535,6 @@ p {
     onWidgetFieldChange = (event) => {
       if (this.isExampleMode()) {
         updateDashboardWidgetExampleField(event.detail.rowKey, event.detail.field, event.detail.value);
-        this.renderDashboard();
         return;
       }
       if (!this.detailSelection) {

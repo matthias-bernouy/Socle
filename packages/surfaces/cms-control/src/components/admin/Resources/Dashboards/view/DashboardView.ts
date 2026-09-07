@@ -134,7 +134,6 @@ export class DashboardView extends DashboardViewController {
     private onWidgetFieldChange = (event: CustomEvent<WidgetFieldChangeDetail>): void => {
         if (this.isExampleMode()) {
             updateDashboardWidgetExampleField(event.detail.rowKey, event.detail.field, event.detail.value);
-            this.renderDashboard();
             return;
         }
         if (!this.detailSelection) {

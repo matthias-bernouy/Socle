@@ -1253,3 +1253,71 @@ is still slower in several states, so this is not an overall performance gain;
 the final performance audit remains open. Logs and JSON measurements are retained
 as `reorderable-migration-visual-{0..4}.log`,
 `reorderable-migration-timings.json` and `reorderable-save-timings.json`.
+
+## Sandbox detail uses the same bound composition
+
+The example detail now has a normal `DashboardWidget` definition, composed once
+with `composeDetail`, and a URL-less source seeded through `setSourceData`.
+Product values no longer enter a `WDetailData` response-to-DOM renderer. The
+example's two empty-state hints are applied to the composed controls before
+binding. Its field-change handler updates the in-memory sandbox values without
+replacing the dashboard. This preserves its existing demonstration semantics:
+Save emits an action, and values survive leaving/reopening the detail within the
+same document; it is not a server persistence test.
+
+The browser example flow now checks document light-DOM controls, title and
+textarea editing, five-frame focus/selection/geometry retention, both selects,
+combobox selection, custom tokens, submitted action fields and restored values
+after list/detail navigation. The original table checks still cover bulk
+selection, a URL-less seed, changing to a real fixture endpoint and source
+teardown. `table-binding/example.test.ts` moved into `table-binding/example/`
+beside its new visual test, keeping the parent at seven entries.
+
+Request inspection revealed native `src="{{ ... }}"` images requesting unresolved
+expressions before compilation. Bound media tiles, preview images and thumbnails
+now use the existing `data-cms-src` image runtime, as readonly image fields already
+do. No image adapter or binding feature was added. The example comparison asserts
+that no unresolved image URL is requested: both versions request the document,
+stylesheet, bundle and one actual image, with no API/source requests.
+
+Image inspection also caught an accidentally enabled multiple-media option in
+the example definition. Restoring the original single-media setting removes the
+extra Add tile, and the visual test explicitly checks its absence. Final ready
+and open-menu captures at 1440 and 390 pixels are pixel-identical to their
+before images, with equal field geometry. The four pairs are in
+`example-detail-migrated/`, compared by `example-detail-pixels.json`.
+
+Five sequential before/after trials on the final bundle measure median detail
+navigation readiness of 105.7/106.7 ms at 1440 pixels and 85.9/105.9 ms at 390
+pixels. The mobile overhead remains a performance-audit item. Measurements are
+`example-detail-timings.json` and `example-detail-visual-{0..4}.log` in the
+existing evidence directory. The pre-migration bundle is preserved separately as
+`example-detail-before-bundle.js`.
+
+The comparison also confirms a pre-existing mobile overflow: the standalone
+example is 437 pixels wide in a 390-pixel viewport. The action row contributes to
+this problem. Pixel equality is not an overflow pass; correction and the wider
+navigation/scroll audit remain required before completion.
+
+Validation for this step:
+
+- The 15 affected example/media browser tests in 13 independent files passed,
+  including top-level and nested media failure, preview and draft lifecycles.
+  Results are in `example-detail-browser/`. After the example-only hint and
+  single-media corrections, both example tests were rerun successfully; final
+  flow and visual logs are `example-detail-flow.log` and
+  `example-detail-visual.log`. Five final comparison runs also pass.
+- The final full build passes (`example-detail-build.log`). Initial/final
+  `check:all` both pass all eight checks (`example-detail-{start,final}.log`).
+  UI contracts remain 0 errors, 77 warnings and 11 information. No fanout error
+  or exemption was introduced. The 166-line end-to-end example flow is retained
+  as one cohesive navigation/edit/action/restoration scenario.
+- The prior reorderable migration is committed as `7c6b734ee`.
+
+Configured details and the example now use bound composition. `WDetail` still
+contains unused/manual compatibility entry points and the old view, lookup and
+schema controllers, with tests that still exercise those paths. These must be
+removed or migrated next; keeping them for their tests would not satisfy the
+goal. Definition/navigation object relays, the complete service/operator/provider
+matrix, real local persistence and cleanup, performance/overflow fixes and final
+runtime activation also remain open. The goal is not complete.

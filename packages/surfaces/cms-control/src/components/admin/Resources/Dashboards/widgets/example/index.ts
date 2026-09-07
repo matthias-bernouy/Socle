@@ -1,11 +1,12 @@
-import "../w-detail/WDetail";
-import type { DashboardWDetail } from "../w-detail/WDetail";
+import { DashboardWDetail } from "../w-detail/WDetail";
 import type { WDetailFieldValue } from "../w-detail/types";
 import "../w-table/WTable";
 import { setSourceData } from "@bernouy/components";
+import { composeDetail } from "../w-detail/binding/composition";
+import { exampleDetail } from "./definition";
 import { tableShell, type TableWidget } from "../w-table/composition";
 import { tableRowsTemplate } from "../../runtime/mounting/mountSource";
-import { detailData, isMediaItems, isStringArray, PRODUCTS, type ExampleProduct } from "./data";
+import { isMediaItems, isStringArray, PRODUCTS, type ExampleProduct } from "./data";
 
 export function mountDashboardWidgetExample(root: HTMLElement, selectedId: string | null): void {
     root.replaceChildren();
@@ -71,7 +72,14 @@ function tableElement(): HTMLElement {
 }
 
 function detailElement(product: ExampleProduct): DashboardWDetail {
-    const element = document.createElement("cms-dashboard-w-detail") as unknown as DashboardWDetail;
-    element.data = detailData(product);
+    const element = new DashboardWDetail();
+    element.configure(exampleDetail);
+    element.dataset.widgetId = exampleDetail.id;
+    element.dataset.rowKey = product.id;
+    element.setAttribute("cms-source", "");
+    element.append(composeDetail(exampleDetail));
+    element.querySelector('[data-field-control="vendor"]')!.setAttribute("placeholder", "Search or add a vendor");
+    element.querySelector('[data-field-control="tags"]')!.setAttribute("placeholder", "Search or add tags");
+    setSourceData(element, structuredClone(product));
     return element;
 }

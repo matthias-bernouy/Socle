@@ -1,4 +1,4 @@
-import type { WDetailData, WDetailFieldValue } from "../w-detail/types";
+import type { WDetailFieldValue } from "../w-detail/types";
 import type { DashboardMediaItem } from "../w-media-field/types";
 
 export type ExampleProduct = {
@@ -20,80 +20,6 @@ export const PRODUCTS: ExampleProduct[] = [
     product("prod_1003", "Ceramic Mug", "Active", "Example Supply", "Kitchen", "Online store", "Jul 1"),
     product("prod_1004", "Notebook Set", "Archived", "Paper & Co.", "Stationery", "Hidden", "Jun 28"),
 ];
-
-export function detailData(product: ExampleProduct): WDetailData {
-    return {
-        rowKey: product.id,
-        eyebrow: "Product",
-        title: product.title,
-        status: product.status,
-        actions: [
-            { label: "Save changes", tone: "primary", action: "save" },
-            { label: "Duplicate", action: "duplicate" },
-            { label: "Preview", action: "preview" },
-            { label: "Copy link", action: "copy-link", section: "Share", icon: "link" },
-            { label: "Export", action: "export", section: "Share", icon: "download" },
-            { label: "Archive product", tone: "danger", action: "archive", section: "Other actions", icon: "archive" },
-            { label: "Delete product", tone: "danger", action: "delete", section: "Other actions", icon: "trash" },
-        ],
-        main: [
-            {
-                title: "General",
-                fields: [
-                    { id: "title", label: "Title", input: "text", value: product.title },
-                    { id: "description", label: "Description", input: "textarea", value: product.description },
-                    { id: "media", label: "Media", input: "media-list", value: product.media, accept: "image/*" },
-                    { id: "category", label: "Category", input: "text", value: product.category },
-                ],
-            },
-        ],
-        aside: [
-            {
-                title: "Status",
-                fields: [
-                    {
-                        id: "status",
-                        label: "Publication",
-                        input: "select",
-                        value: product.status,
-                        options: options("Active", "Draft", "Archived"),
-                    },
-                    {
-                        id: "visibility",
-                        label: "Visibility",
-                        input: "select",
-                        value: product.visibility,
-                        options: options("Online store", "Hidden"),
-                    },
-                ],
-            },
-            {
-                title: "Organization",
-                fields: [
-                    {
-                        id: "vendor",
-                        label: "Vendor",
-                        input: "combobox",
-                        value: product.vendor,
-                        options: options("Acme", "Example Supply", "Northwind", "Paper & Co."),
-                        placeholder: "Search or add a vendor",
-                        creatable: true,
-                    },
-                    {
-                        id: "tags",
-                        label: "Tags",
-                        input: "tokens",
-                        value: product.tags,
-                        options: options("Featured", "New", "Seasonal"),
-                        placeholder: "Search or add tags",
-                        creatable: true,
-                    },
-                    { id: "id", label: "Resource id", input: "readonly", value: product.id },
-                ],
-            },
-        ],
-    };
-}
 
 export function isStringArray(value: WDetailFieldValue): value is string[] {
     return Array.isArray(value) && value.every((item) => typeof item === "string");
@@ -124,10 +50,6 @@ function product(
         media: media(id, title),
         tags: ["Featured", "New"],
     };
-}
-
-function options(...values: string[]): Array<{ label: string; value: string }> {
-    return values.map((value) => ({ label: value, value }));
 }
 
 function media(id: string, title: string): DashboardMediaItem[] {
