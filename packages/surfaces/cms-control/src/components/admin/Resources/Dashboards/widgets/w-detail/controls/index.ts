@@ -1,4 +1,5 @@
 import type { WDetailField, WDetailFieldValue } from "../types";
+import { validateReorderable } from "../../w-reorderable-list/binding/validation";
 import { readBoundTableRows } from "./table/context";
 import { isMediaControl, mediaList } from "../mediaControl";
 import { createBasicControl, fieldUsesBasicInternalLabel, readBasicControlValue } from "./basic";
@@ -37,6 +38,9 @@ export function fieldUsesInternalLabel(field: WDetailField): boolean {
 }
 
 export function readFieldControlValue(field: WDetailField, control: HTMLElement): WDetailFieldValue {
+    if (field.input === "reorderable-list" && control.localName === "cms-dashboard-reorderable-field") {
+        return (control as HTMLElement & { items: Record<string, unknown>[] }).items;
+    }
     if (field.input === "media-list" && isMediaControl(control)) {
         return control.items;
     }
@@ -60,6 +64,9 @@ export function readFieldControlDraft(field: WDetailField, control: HTMLElement)
 }
 
 export function invalidFieldControl(field: WDetailField, control: HTMLElement): HTMLElement | null {
+    if (field.input === "reorderable-list" && control.localName === "cms-dashboard-reorderable-field") {
+        return validateReorderable(control) ?? (control.hasAttribute("invalid") ? control : null);
+    }
     if (field.input === "schema") {
         return validateSchemaControl(field, control) ?? (control.hasAttribute("invalid") ? control : null);
     }

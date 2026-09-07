@@ -22,6 +22,7 @@ export type DashboardMediaActionDetail = {
     files?: File[];
     itemIndex?: number;
     itemKey?: string;
+    itemKeyPath?: string;
     itemField?: string;
     itemPath?: string;
     parentItem?: Record<string, unknown>;

@@ -6,31 +6,6 @@ import { composeActions } from "./actions";
 import { fieldElement } from "./fields";
 import "./Field";
 
-const supported = new Set([
-    "table",
-    "schema",
-    "media",
-    "cms-user",
-    "text",
-    "number",
-    "textarea",
-    "select",
-    "secret-ref",
-    "page-link",
-    "readonly",
-    "combobox",
-    "tokens",
-    "checkbox",
-    "money",
-]);
-
-/** Temporary migration boundary; extend it as the remaining control families migrate. */
-export function supportsBoundDetail(widget: DetailWidget): boolean {
-    return [...widget.main, ...(widget.aside ?? [])].every(
-        (section) => "widget" in section || section.fields.every((field) => supported.has(field.type)),
-    );
-}
-
 /** Compose declarations once, before cms-source compiles; never receives response data. */
 export function composeDetail(
     widget: DetailWidget,

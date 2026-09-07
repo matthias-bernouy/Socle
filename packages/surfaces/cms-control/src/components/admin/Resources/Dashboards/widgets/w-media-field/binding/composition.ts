@@ -4,8 +4,11 @@ import "./MediaField";
 import "./parts/Tile";
 import "./parts/Thumbnail";
 
-export function composeMedia(control: HTMLElement, field: Extract<DashboardField, { type: "media" }>): void {
-    const path = `detailMedia.${field.id}`;
+export function composeMedia(
+    control: HTMLElement,
+    field: { id: string; multiple?: boolean },
+    path = `detailMedia.${field.id}`,
+): void {
     const declarations = document.createElement("template");
     declarations.innerHTML = template as unknown as string;
     const part = (kind: string) =>

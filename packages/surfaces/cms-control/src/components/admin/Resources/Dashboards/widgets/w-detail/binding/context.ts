@@ -1,8 +1,9 @@
 import { directoryContext } from "../lookups/directoryContext";
 import { schemaContext } from "../controls/schema/binding/context";
 import { tableContext, tableLookupContexts } from "../controls/table/context";
+import { reorderableContext } from "../../w-reorderable-list/binding/context";
 import { mediaContext } from "../../w-media-field/binding/context";
-import { detailLookupUrls, tableLookupUrls } from "../lookups/urls";
+import { detailLookupUrls, tableLookupUrls, choiceLookupUrls } from "../lookups/urls";
 import { readSourceData, setSourceContext } from "@bernouy/components";
 import { fieldValues } from "../../../runtime/mapping";
 import { matchesDashboardVisibility, setValueAt, valueAt } from "../../../runtime/expressions";
@@ -24,6 +25,7 @@ export function bindDetailContext(
     const media = mediaContext(host, fields);
     const schemas = schemaContext(host, fields);
     const tables = tableContext(host, fields);
+    const choices = reorderableContext(host, fields);
     const actions = actionLayout(widget.actions ?? []);
     const rules = Object.fromEntries(fields.map((field) => [field.id, field.visibleWhen]));
     setSourceContext(host, () => {
@@ -68,12 +70,15 @@ export function bindDetailContext(
                     ];
                 }),
         );
+        const nested = choices(values, edits);
         return {
+            detailChoices: nested.result,
+            detailChoiceLookupUrls: choiceLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
             detailTables: tables(values),
             ...tableLookupContexts(host),
             detailTableLookupUrls: tableLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
             ...schemas(values, resource),
-            detailMedia: media(values, edits),
+            detailMedia: media(values, edits, nested.urls),
             ...users(values, resource),
             detailResourcePath: widget.source.itemPath ?? "",
             detailLookupUrls: detailLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),

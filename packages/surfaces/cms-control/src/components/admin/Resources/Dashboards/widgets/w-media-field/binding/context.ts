@@ -8,8 +8,8 @@ type MediaItem = DashboardMediaItem & { index: number; thumbnail: string; title:
 export function mediaContext(owner: HTMLElement, fields: DashboardField[]) {
     const definitions = fields.filter((field) => field.type === "media");
     const cache = new Map<string, { raw: unknown; draft: boolean; items: MediaItem[] }>();
-    return (values: Record<string, unknown>, edits: Record<string, unknown>) => {
-        const urls = new Set<string>();
+    return (values: Record<string, unknown>, edits: Record<string, unknown>, nestedUrls: Iterable<string> = []) => {
+        const urls = new Set<string>(nestedUrls);
         const result = Object.fromEntries(
             definitions.map((field) => {
                 const raw = values[field.id];

@@ -41,7 +41,7 @@ applied by binding to that composed HTML, not used to reconstruct a widget tree.
 | Lists | Filters/search, selection, bulk actions, reordering, pagination where offered | Pending |
 | Details | Create/edit, validation, repeated save, confirmation/cancel, persisted reload | Pending |
 | Dynamic controls | Conditional fields, lookups, relations, schemas, pages, secrets, CMS users | Pending |
-| Collections | Embedded tables, reorderable rows/cards, derived values | Embedded tables verified with route fixtures; reorderable references established, binding migration and concurrency fixes pending |
+| Collections | Embedded tables, reorderable rows/cards, derived values | Embedded tables and reorderable rows/cards use binding and have route-fixture coverage; manual renderer removal and final coverage audit pending |
 | Media | Upload/replace/remove/reorder/download, real file payload checks | Pending |
 | Concurrency | Delays, errors/retry, double actions, stale/out-of-order/cancelled requests | Pending |
 | UI stability | Long forms, active edits, focus/caret/selection, drafts, scroll/nav position | Pending |
@@ -1134,3 +1134,122 @@ rule exemption. The next step is the actual binding migration and conversion of
 the observed concurrency failures into strict regression tests. The larger goal,
 including real local persistence, operator coverage and runtime activation,
 remains incomplete.
+
+
+## Reorderable fields use document binding
+
+Configured details now compose every field family through binding, including
+reorderable rows/cards. The temporary supported-type gate and the configured
+fallback that forwarded detail/status objects through `cms-dashboard-input`
+have been removed from mounting, reconciliation and `WDetail`. An omitted field
+type retains the existing text-field default. The source-controls browser test
+exercises that default through the shared admin composition.
+
+`widgets/w-reorderable-list/binding/` supplies definition-only composition,
+encapsulated visual shells, pure positional projections and local interaction
+handlers. Rows, controls, options and nested media declarations stay in document
+light DOM. Definitions select controls from static templates; response values
+never construct their HTML. Native checkbox values and disabled button states
+use the binding's typed/boolean bindings. No private core, repeat key, runtime
+template-reference feature or response-object transport was introduced.
+
+Adding/removing/dragging creates a local operation snapshot that preserves opaque
+fields and the configured position path. Unchanged optional controls retain their
+original missing values. Required nested controls now block an invalid save and
+clear their visible error when corrected. Shared lookup sources serve each
+nested combobox field across all rows, preserving query isolation, pagination
+and dependency changes without a request per row or per save.
+
+Nested media reuses the existing bound media component and its static templates.
+The owner retains local blob URLs used by nested fields as well as top-level
+media. Media completion reads the current detail draft, including text that has
+not blurred. Operations carry the existing domain key path to locate a choice
+that moved during a request; settling a stale asset edit checks its submitted
+asset identity before applying a result. The configured path writes the resulting
+local draft back through binding. The remaining manual-example fallback is
+isolated in `view/actions/nestedMedia.ts` and still requires removal with its
+consumers.
+
+The initial nested-media regression test reproduced lost unblurred typing. Its
+failure is retained in `reorderable-migration-media-lifecycle-before.log` in the
+existing evidence directory. The corrected test also moves the affected choice
+during a failed removal, restores its original image on the correct row, keeps a
+new edit on the other row and checks both values after save/reload.
+
+The nine reorderable browser tests cover:
+
+- Rows/cards, real pointer dragging, add/remove limits, required-field errors,
+  all scalar editors, opaque fields and two saved reloads. Assertions require
+  rows and control hosts to be in document light DOM.
+- Delayed options and saves on desktop/mobile for both layouts: draft, focus,
+  selection, expanded card, field geometry and scroll are unchanged over five
+  frames; the newer value survives the next save and reload.
+- Mobile bottom-of-form 503 failure and retry with current notes, selection,
+  toolbar and scroll preserved.
+- Published page/secret references, saved movement and clearing the credential.
+- Two shared remote lookups: isolated queries, stale responses, offset pagination,
+  duplicate load-more interactions, an error/retry and a dependent category.
+- Nested upload/replace/remove with multipart content and parent save; concurrent
+  typing and failed removal after drag; desktop/mobile preview, close, focus
+  restoration and absence of preview writes or file pickers.
+- Sixteen desktop/mobile state comparisons, including expanded settings and
+  scrolled bottoms, plus three nested-media captures with measured geometry.
+
+All of this persistence is in route fixtures. Real local persistence and cleanup,
+operator permissions/endpoints and provider coverage are still separate pending
+requirements. Further nested-media write combinations and new-choice lifecycles
+remain part of the final coverage audit.
+
+The full dashboard browser suite passes independently: 63 tests in 55 files.
+All 181 scoped Control tests in 60 files pass. The full build and initial/final
+check:all pass; UI contracts remain 0 errors, 77 warnings and 11 information.
+Evidence is `reorderable-migration-browser/`, `reorderable-migration-control.log`,
+`reorderable-migration-build.log`, `reorderable-migration-start.log` and
+`reorderable-migration-final.log` under the existing evidence directory.
+
+The eight-entry source/template/test directories and the 162-line interaction
+controller were reviewed as cohesive responsibilities. No fanout error or rule
+exemption was added. Existing mixed legacy/bound files remain 255 lines for
+`WDetail/index.ts` and 274 for `runtime/fieldState.ts`; the pending removal of the
+manual path should remove responsibilities rather than merely repartition them.
+
+Visual inspection found the global `code` background leaking into the new light
+DOM identity label despite equal layout measurements. A plain identity span with
+encapsulated typography preserves the original appearance. Final captures retain
+equal geometry; pixel comparisons are recorded in
+`reorderable-migration-pixels.json`, `reorderable-migrated-captures/` and
+`reorderable-nested-{before,after}/`. The remaining differences are border pixels.
+
+The goal remains active. Manual example renderers, JSON attribute readers,
+definition/navigation object relays, the complete real-service/operator audit,
+final performance review and activation of the validated local runtime still
+prevent completion.
+
+Final reorderable measurements use five sequential before/after trials on the
+final built bundle. The values below are median milliseconds to the fixture
+state; expanded rows measure initial readiness before expansion.
+
+| Layout | State | Width | Before | After |
+| --- | --- | ---: | ---: | ---: |
+| cards | empty | 390 | 157.5 | 179.5 |
+| cards | empty | 1440 | 161.9 | 182.0 |
+| cards | expanded | 390 | 176.5 | 190.4 |
+| cards | expanded | 1440 | 180.3 | 199.6 |
+| cards | pending | 390 | 163.7 | 189.1 |
+| cards | pending | 1440 | 173.8 | 187.3 |
+| cards | ready | 390 | 176.2 | 191.7 |
+| cards | ready | 1440 | 178.7 | 194.2 |
+| rows | empty | 390 | 161.2 | 178.7 |
+| rows | empty | 1440 | 170.5 | 181.0 |
+| rows | pending | 390 | 166.6 | 188.4 |
+| rows | pending | 1440 | 172.5 | 186.1 |
+| rows | ready | 390 | 169.3 | 190.2 |
+| rows | ready | 1440 | 198.6 | 200.1 |
+
+The save interaction median is 53.9 ms before and 49.5 ms after.
+Each old save triggered one additional lookup; the bound version triggers zero.
+Neither version adds a main-detail read for this interaction. Initial readiness
+is still slower in several states, so this is not an overall performance gain;
+the final performance audit remains open. Logs and JSON measurements are retained
+as `reorderable-migration-visual-{0..4}.log`,
+`reorderable-migration-timings.json` and `reorderable-save-timings.json`.

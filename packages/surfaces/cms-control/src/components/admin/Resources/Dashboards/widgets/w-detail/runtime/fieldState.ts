@@ -4,6 +4,7 @@ import { invalidFieldControl, readFieldControlValue, readFieldControlDraft } fro
 import type { WDetailData, WDetailField } from "../types";
 import { serializedTableRows } from "../controls/table/context";
 import { remainingDraft } from "../../../domain/drafts";
+import { validateReorderable } from "../../w-reorderable-list/binding/validation";
 
 export type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
 
@@ -171,6 +172,9 @@ export class DetailFieldState {
             return;
         }
         this.syncRequiredValidity(field, control, readFieldControlValue(field, control));
+        if (control.localName === "cms-dashboard-reorderable-field") {
+            validateReorderable(control, true);
+        }
     }
 
     control(fieldId: string): HTMLElement | null {

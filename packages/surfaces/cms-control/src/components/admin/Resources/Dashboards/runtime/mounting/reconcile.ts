@@ -3,7 +3,7 @@ import { updateTableFilters } from "../../widgets/w-table/composition";
 import type { DashboardWTable } from "../../widgets/w-table/WTable";
 import type { DashboardWDetail } from "../../widgets/w-detail/WDetail";
 import { requiredSourceParams, sourceWrapper } from "./mountSource";
-import { attachDetailSource, publishDetailResource } from "./detail";
+import { publishDetailResource } from "./detail";
 import { selectionVars } from "./navigation";
 
 const contexts = new WeakMap<HTMLElement, RenderContext>();
@@ -63,32 +63,13 @@ export function retainWidgets(
                     resource.dashboardId !== context.dashboard.id ||
                     resource.resource == null
                 ) {
-                    if (
-                        target?.hasAttribute("data-declarative") &&
-                        previousResource?.collection === widget.id &&
-                        previousResource.resource != null
-                    ) {
+                    if (target && previousResource?.collection === widget.id && previousResource.resource != null) {
                         target.ownerDocument.dispatchEvent(new Event(target.getAttribute("cms-reload-on")!));
                     }
-                    if (
-                        target &&
-                        !target.hasAttribute("data-declarative") &&
-                        detail?.row !== "__new__" &&
-                        !target.querySelector('[slot="source-status"]')
-                    ) {
-                        target.configure(widget);
-                        attachDetailSource(target, widget, context, detail?.row ?? "");
-                    }
-                    continue;
-                }
-                if (target?.hasAttribute("data-declarative")) {
-                    publishDetailResource(target, widget, resource.resource);
                     continue;
                 }
                 if (target) {
-                    target.querySelector('[slot="source-status"]')?.remove();
-                    target.configure({ ...widget, source: { ...widget.source, itemPath: undefined } });
-                    target.setBindingValue(resource.resource);
+                    publishDetailResource(target, widget, resource.resource);
                 }
             }
         }

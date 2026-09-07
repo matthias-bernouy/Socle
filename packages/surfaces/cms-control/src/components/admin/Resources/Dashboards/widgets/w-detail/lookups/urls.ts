@@ -62,3 +62,25 @@ export function tableLookupUrls(
             ]),
     );
 }
+
+export function choiceLookupUrls(
+    fields: DashboardField[],
+    sourceId: string,
+    values: Record<string, unknown>,
+    resource: unknown,
+) {
+    return Object.fromEntries(
+        fields
+            .filter((field) => field.type === "reorderable-list")
+            .map((field) => [
+                field.id,
+                Object.fromEntries(
+                    field.fields.flatMap((item) =>
+                        item.type === "combobox" && item.lookup
+                            ? [[item.id, lookupUrl(item.lookup, sourceId, values, resource)]]
+                            : [],
+                    ),
+                ),
+            ]),
+    );
+}

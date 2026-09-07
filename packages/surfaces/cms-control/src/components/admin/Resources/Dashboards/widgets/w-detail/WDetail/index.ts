@@ -1,9 +1,8 @@
 import type { DashboardLookup } from "../lookups/Lookup";
 import { boundSchemas } from "../controls/schema/binding/data";
 import { releaseMediaFiles } from "../../w-media-field/binding/files";
-import { readSourceData, setSourceData, refreshSourceContext } from "@bernouy/components";
+import { readSourceData, refreshSourceContext } from "@bernouy/components";
 import { bindDetailContext } from "../binding/context";
-import { supportsBoundDetail } from "../binding/composition";
 import { valueAt } from "../../../runtime/expressions";
 import { Component } from "@bernouy/components/base";
 import { fieldValues } from "../../../runtime/mapping";
@@ -22,11 +21,9 @@ const styles = [baseCss, controlsCss, schemaCss].join("\n") as unknown as string
 
 export class DashboardWDetail extends Component {
     private configuration?: DetailWidget;
-    private sourceUnavailable = false;
-    private resource: unknown;
     configure(widget: DetailWidget): void {
         this.configuration = widget;
-        if (!this.hasAttribute("data-declarative") && supportsBoundDetail(widget)) {
+        if (!this.hasAttribute("data-declarative")) {
             this.setAttribute("data-declarative", "");
             bindDetailContext(
                 this,
@@ -36,23 +33,11 @@ export class DashboardWDetail extends Component {
             );
         }
     }
-    setBindingValue(value: unknown): void {
-        if (this.hasAttribute("data-declarative")) {
-            setSourceData(this, value);
-            return;
-        }
-        if (value === undefined || Object.is(value, this.resource)) {
-            return;
-        }
-        this.resource = value;
-        this.bindingRevision += 1;
-        this.scheduleBoundDataSync();
-    }
     private readBinding(): DetailBinding | null {
         if (!this.configuration) {
             return readDetailBinding(this.dataset);
         }
-        const data = this.hasAttribute("data-declarative") ? readSourceData(this) : this.resource;
+        const data = readSourceData(this);
         const resource = this.configuration.source.itemPath ? valueAt(data, this.configuration.source.itemPath) : data;
         return resource === undefined || resource === null
             ? null
@@ -63,18 +48,6 @@ export class DashboardWDetail extends Component {
                   sourceId: this.dataset.sourceId ?? "",
               };
     }
-    private readonly boundValue = (event: Event): void => {
-        const { kind, value } = (event as CustomEvent).detail;
-        if (kind === "detail-status" && (event.target as Element).closest("cms-dashboard-w-detail") === this) {
-            event.stopPropagation();
-            this.sourceUnavailable = Boolean(value.loading || value.error);
-            this.syncSourceAvailability();
-        }
-        if (kind === "detail" && (event.target as Element).closest("cms-dashboard-w-detail") === this) {
-            event.stopPropagation();
-            this.setBindingValue(value);
-        }
-    };
     private value: WDetailData = emptyDetailData();
     private readonly runtime: DetailRuntime;
     private readonly syncScheduler = new DetailSyncScheduler();
@@ -143,6 +116,15 @@ export class DashboardWDetail extends Component {
         this.refreshConditionalFields();
     }
 
+    applyFieldDraft(field: string, value: unknown): void {
+        this.runtime.fields.record(field, value);
+        this.refreshConditionalFields();
+    }
+
+    currentFieldValues(): Record<string, unknown> {
+        return this.runtime.fields.currentFields();
+    }
+
     static get observedAttributes(): string[] {
         return ["data-config-json", "data-source-json", "data-row-key", "data-source-id"];
     }
@@ -156,7 +138,6 @@ export class DashboardWDetail extends Component {
     override connectedCallback(): void {
         this.syncScheduler.advanceLifecycle();
         this.runtime.events.bind();
-        this.addEventListener("dashboard:bound-value", this.boundValue);
         if (this.mode === "manual") {
             this.render();
         } else {
@@ -168,7 +149,6 @@ export class DashboardWDetail extends Component {
         releaseMediaFiles(this);
         this.syncScheduler.advanceLifecycle();
         this.runtime.events.unbind();
-        this.removeEventListener("dashboard:bound-value", this.boundValue);
         this.resetState(true);
     }
 
@@ -177,15 +157,6 @@ export class DashboardWDetail extends Component {
             return;
         }
         this.runtime.view.render(this.value);
-        this.syncSourceAvailability();
-    }
-
-    private syncSourceAvailability(): void {
-        for (const target of Array.from(
-            this.shadowRoot!.querySelectorAll("[data-actions], [data-main], [data-aside]"),
-        )) {
-            target.toggleAttribute("inert", this.sourceUnavailable);
-        }
     }
 
     private refreshConditionalFields(): void {

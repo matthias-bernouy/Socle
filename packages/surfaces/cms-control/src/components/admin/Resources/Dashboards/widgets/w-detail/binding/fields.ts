@@ -1,6 +1,7 @@
 import { composeUserOptions } from "../lookups/users";
 import { composeSchema } from "../controls/schema/binding/composition";
 import { composeTable } from "../controls/table/composition";
+import { composeReorderable } from "../../w-reorderable-list/binding/composition";
 import { composeMedia } from "../../w-media-field/binding/composition";
 import { composeLookup } from "../lookups/composition";
 import type { DashboardField } from "@bernouy/cms-dashboards";
@@ -13,7 +14,11 @@ export function fieldElement(field: DashboardField, root: string): HTMLElement {
     const template = document.createElement("template");
     template.innerHTML = controls as unknown as string;
     const kind =
-        field.type === "readonly" ? (field.format ?? "readonly") : field.type === "money" ? "amount" : field.type;
+        field.type === "readonly"
+            ? (field.format ?? "readonly")
+            : field.type === "money"
+              ? "amount"
+              : (field.type ?? "text");
     const control = template.content
         .querySelector<HTMLTemplateElement>(
             `[data-control="${kind === "text" && field.type === "readonly" ? "readonly" : kind}"]`,
@@ -38,7 +43,12 @@ export function fieldElement(field: DashboardField, root: string): HTMLElement {
         if (field.type === "checkbox") {
             control.setAttribute("cms-bind-value", field.path === "." ? root : `${root}.${field.path}`);
             control.setAttribute("aria-label", field.label);
-        } else if (field.type !== "media" && field.type !== "schema" && field.type !== "table") {
+        } else if (
+            field.type !== "media" &&
+            field.type !== "schema" &&
+            field.type !== "table" &&
+            field.type !== "reorderable-list"
+        ) {
             control.setAttribute(
                 "value",
                 fieldBinding(root, field.path, field.type === "tokens" ? "dashboardTokens" : undefined),
@@ -103,9 +113,11 @@ export function fieldElement(field: DashboardField, root: string): HTMLElement {
         wrapper.append(
             field.type === "table"
                 ? composeTable(control, field)
-                : (field.type === "combobox" || field.type === "tokens") && field.lookup
-                  ? composeLookup(control, field)
-                  : control,
+                : field.type === "reorderable-list"
+                  ? composeReorderable(control, field)
+                  : (field.type === "combobox" || field.type === "tokens") && field.lookup
+                    ? composeLookup(control, field)
+                    : control,
         );
     }
     return wrapper;

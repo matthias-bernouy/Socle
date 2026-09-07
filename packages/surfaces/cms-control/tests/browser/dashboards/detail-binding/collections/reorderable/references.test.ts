@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { chromium } from "playwright";
 import { resolve } from "node:path";
-import { installNestedRoutes } from "./nested.fixture";
+import { installNestedRoutes } from "./media/fixture";
 import { reorderablePage } from "./fixture";
 
 const bundle = await Bun.file(

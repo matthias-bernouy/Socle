@@ -2,15 +2,16 @@ import { expect, test } from "bun:test";
 import { chromium, type Page } from "playwright";
 import { resolve } from "node:path";
 import { mkdir } from "node:fs/promises";
-import { installNestedRoutes } from "./nested.fixture";
-import { reorderablePage } from "./fixture";
-import { imageFile } from "../../media/fixture";
+import { installNestedRoutes } from "./fixture";
+import { reorderablePage } from "../fixture";
+import { imageFile } from "../../../media/fixture";
 
 const bundle = await Bun.file(
-    resolve(import.meta.dir, "../../../../../../src/static/assets/control-components.js"),
+    process.env.CMS_REORDERABLE_MEDIA_SCRIPT ??
+        resolve(import.meta.dir, "../../../../../../../src/static/assets/control-components.js"),
 ).text();
 const styles = await Bun.file(
-    resolve(import.meta.dir, "../../../../../../../../foundation/components/dist/style.css"),
+    resolve(import.meta.dir, "../../../../../../../../../foundation/components/dist/style.css"),
 ).text();
 
 test("nested media assets upload, replace and remove before their parent choices persist on save", async () => {
@@ -39,7 +40,7 @@ test("nested media assets upload, replace and remove before their parent choices
         expect(fixture.resource.choices[1]!.photo).toBeNull();
         release();
         await upload;
-        await media(1).locator('img[src="/example.svg?asset=1"]').waitFor();
+        await media(1).locator('[data-media-tile] img[src="/example.svg?asset=1"]').waitFor();
         expect(await notes.inputValue()).toBe("Notes entered during upload");
         expect(await notes.evaluate((node) => (node.getRootNode() as ShadowRoot).activeElement === node)).toBe(true);
         expect(fixture.calls[0]!.params).toEqual({ choice: "client" });
@@ -49,7 +50,7 @@ test("nested media assets upload, replace and remove before their parent choices
         await capture(page, "uploaded-draft");
         await save(page);
         await page.reload();
-        await media(1).locator('img[src="/example.svg?asset=1"]').waitFor();
+        await media(1).locator('[data-media-tile] img[src="/example.svg?asset=1"]').waitFor();
         expect(fixture.resource.choices[1]!.photo).toEqual({
             id: "uploaded-1",
             url: "/example.svg?asset=1",
@@ -61,7 +62,7 @@ test("nested media assets upload, replace and remove before their parent choices
         await media(0).locator("[data-media-tile]").click();
         await (await replacementChooser).setFiles({ ...imageFile, name: "quality-replacement.svg" });
         await replace;
-        await media(0).locator('img[src="/example.svg?asset=2"]').waitFor();
+        await media(0).locator('[data-media-tile] img[src="/example.svg?asset=2"]').waitFor();
         expect(fixture.calls[1]!.params).toEqual({ choice: "agency", previous: "front" });
         const remove = page.waitForResponse((response) => new URL(response.url()).pathname.endsWith("/removeMedia"));
         await media(1).locator("[data-media-tile]").hover();
@@ -71,7 +72,7 @@ test("nested media assets upload, replace and remove before their parent choices
         expect(fixture.calls[2]!.body).toEqual({ choice: "client", id: "uploaded-1" });
         await save(page);
         await page.reload();
-        await media(0).locator('img[src="/example.svg?asset=2"]').waitFor();
+        await media(0).locator('[data-media-tile] img[src="/example.svg?asset=2"]').waitFor();
         await media(1).getByRole("button", { name: "Add media", exact: true }).waitFor();
         expect(fixture.resource.choices[0]!.photo).toEqual({
             id: "uploaded-2",
@@ -100,6 +101,19 @@ async function capture(page: Page, state: string) {
     const directory = process.env.CMS_REORDERABLE_NESTED_CAPTURES;
     if (directory) {
         await mkdir(directory, { recursive: true });
+        await page.mouse.move(0, 0);
         await page.screenshot({ path: `${directory}/nested-${state}.png`, fullPage: true, animations: "disabled" });
+        const positions = [];
+        for (const selector of ["[data-field-control]", ".row[data-index]", "[data-item-field]"]) {
+            positions.push(
+                await page.locator(selector).evaluateAll((nodes) =>
+                    nodes.map((node) => {
+                        const box = node.getBoundingClientRect();
+                        return [box.x, box.y, box.width, box.height];
+                    }),
+                ),
+            );
+        }
+        console.info(JSON.stringify({ state, positions }));
     }
 }

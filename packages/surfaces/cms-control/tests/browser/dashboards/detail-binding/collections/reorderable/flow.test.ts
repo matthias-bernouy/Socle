@@ -23,6 +23,15 @@ test("reorderable rows and cards preserve edits, hidden metadata, drag order and
             const list = page.locator('[data-field-control="choices"]');
             const rows = list.locator(".row[data-index]");
             await rows.first().locator('option[value="head"]').waitFor({ state: "attached" });
+            expect(await list.evaluate((node) => node.getRootNode() === document)).toBe(true);
+            expect(await rows.evaluateAll((nodes) => nodes.every((node) => node.getRootNode() === document))).toBe(
+                true,
+            );
+            expect(
+                await list
+                    .locator("[data-item-field]")
+                    .evaluateAll((nodes) => nodes.every((node) => node.getRootNode() === document)),
+            ).toBe(true);
             const label = rows.first().locator('[data-item-field="label"] input');
             await label.fill("Agency updated");
             expect(await label.inputValue()).toBe("Agency updated");
@@ -46,7 +55,11 @@ test("reorderable rows and cards preserve edits, hidden metadata, drag order and
             await list.getByRole("button", { name: "Add choice", exact: true }).click();
             expect(await rows.count()).toBe(3);
             expect(await list.getByRole("button", { name: "Add choice", exact: true }).isDisabled()).toBe(true);
+            await page.getByRole("button", { name: "Save choices", exact: true }).click();
+            expect(fixture.saved).toHaveLength(0);
+            expect(await rows.last().locator('[data-item-field="label"]').getAttribute("aria-invalid")).toBe("true");
             await rows.last().locator('[data-item-field="label"] input').fill("Partner");
+            expect(await rows.last().locator('[data-item-field="label"]').getAttribute("aria-invalid")).toBeNull();
             await rows.first().locator(".handle").dragTo(rows.last().locator(".handle"));
             expect(
                 await rows

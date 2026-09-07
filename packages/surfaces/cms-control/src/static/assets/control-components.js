@@ -28708,12 +28708,98 @@ input {
     return /^(https?:|blob:|data:|\/)/.test(value2);
   }
 
+  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/media.ts
+  function choiceMedia(owner, fieldId, index, field2, raw, draft, previous) {
+    const source2 = draft && raw && typeof raw === "object" && "id" in raw && "url" in raw ? [raw] : mediaValue(raw, field2, owner.dataset.sourceId ?? "");
+    const items = source2.map((item, itemIndex) => {
+      const projected = {
+        ...item,
+        index: itemIndex,
+        thumbnail: item.thumbnailUrl || item.url,
+        title: item.name?.trim() || item.alt?.trim() || `Image ${itemIndex + 1}`,
+        previewAlt: item.alt?.trim() || item.name?.trim() || `Image ${itemIndex + 1}`
+      };
+      const old = previous?.items[itemIndex];
+      return old && JSON.stringify(old) === JSON.stringify(projected) ? old : projected;
+    });
+    const control = Array.from(owner.querySelectorAll("cms-dashboard-media-field[data-item-field]")).find((node) => node.closest("[data-field-control]")?.dataset.fieldControl === fieldId && node.dataset.itemIndex === String(index) && node.dataset.itemField === field2.id);
+    const open = (control?.preview.opened ?? false) && items.length > 0;
+    return { items, showAdd: items.length === 0, index: 0, open, preview: items[0], counter: `1 / ${items.length}` };
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/context.ts
+  var owners2 = new WeakMap;
+  function reorderableContext(owner, fields) {
+    const state = new Map;
+    owners2.set(owner, state);
+    for (const definition of fields.filter((field2) => field2.type === "reorderable-list")) {
+      state.set(definition.id, { definition, rows: [] });
+    }
+    return (values, edits) => {
+      const urls = new Set;
+      const result = Object.fromEntries(Array.from(state, ([id2, entry]) => {
+        entry.rows = tableRows(values[id2]).map((source2, index) => {
+          const identity = valueAt(source2, entry.definition.itemKey);
+          const row = entry.rows[index] ?? { index, identity: "", title: "", source: source2, cells: {}, media: {} };
+          row.source = source2;
+          row.identity = String(identity ?? index);
+          row.title = String(identity ?? `Item ${index + 1}`);
+          for (const field2 of entry.definition.fields) {
+            const value2 = valueAt(source2, field2.path);
+            if (field2.type === "media") {
+              row.media[field2.id] = choiceMedia(owner, id2, index, field2, value2, Object.hasOwn(edits, id2), row.media[field2.id]);
+              for (const item of row.media[field2.id].items) {
+                urls.add(item.url);
+              }
+            } else {
+              row.cells[field2.id] = field2.type === "checkbox" ? value2 === true || value2 === "true" || value2 === 1 : value2 == null ? "" : String(value2);
+            }
+          }
+          return row;
+        });
+        return [
+          id2,
+          {
+            rows: entry.rows,
+            addDisabled: entry.definition.maxItems !== undefined && entry.rows.length >= entry.definition.maxItems,
+            removeDisabled: entry.definition.minItems !== undefined && entry.rows.length <= entry.definition.minItems
+          }
+        ];
+      }));
+      return { result, urls };
+    };
+  }
+  function readReorderableItems(control) {
+    const owner = control.closest("cms-dashboard-w-detail");
+    const entry = owner ? owners2.get(owner)?.get(control.dataset.fieldControl ?? "") : undefined;
+    if (!entry) {
+      return [];
+    }
+    return Array.from(control.querySelectorAll("cms-dashboard-reorderable-row[data-index]")).map((element) => {
+      const index = Number(element.dataset.index);
+      const row = entry.rows[index];
+      const item = structuredClone(row?.source ?? {});
+      for (const field2 of entry.definition.fields) {
+        const editor = Array.from(element.querySelectorAll("[data-item-field]")).find((node) => node.dataset.itemField === field2.id);
+        if (!editor) {
+          continue;
+        }
+        const value2 = field2.type === "media" ? editor.items[0] ?? null : field2.type === "checkbox" ? editor.checked : ("value" in editor) ? String(editor.value ?? "") : "";
+        if (field2.type === "media" || value2 !== row?.cells[field2.id]) {
+          setValueAt(item, field2.path, value2);
+        }
+      }
+      setValueAt(item, entry.definition.positionPath ?? "position", index);
+      return item;
+    });
+  }
+
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/context.ts
   function mediaContext(owner, fields) {
     const definitions = fields.filter((field2) => field2.type === "media");
     const cache2 = new Map;
-    return (values, edits) => {
-      const urls = new Set;
+    return (values, edits, nestedUrls = []) => {
+      const urls = new Set(nestedUrls);
       const result = Object.fromEntries(definitions.map((field2) => {
         const raw = values[field2.id];
         const draft = Object.hasOwn(edits, field2.id);
@@ -28935,6 +29021,12 @@ input {
     return Object.fromEntries(fields.filter((field2) => field2.type === "table").map((field2) => [
       field2.id,
       Object.fromEntries(field2.columns.flatMap((column) => column.editable && column.type === "combobox" && column.lookup ? [[column.id, lookupUrl(column.lookup, sourceId, values, resource)]] : []))
+    ]));
+  }
+  function choiceLookupUrls(fields, sourceId, values, resource) {
+    return Object.fromEntries(fields.filter((field2) => field2.type === "reorderable-list").map((field2) => [
+      field2.id,
+      Object.fromEntries(field2.fields.flatMap((item) => item.type === "combobox" && item.lookup ? [[item.id, lookupUrl(item.lookup, sourceId, values, resource)]] : []))
     ]));
   }
 
@@ -29376,6 +29468,7 @@ input {
     const media = mediaContext(host, fields);
     const schemas = schemaContext(host, fields);
     const tables2 = tableContext(host, fields);
+    const choices = reorderableContext(host, fields);
     const actions = actionLayout(widget.actions ?? []);
     const rules = Object.fromEntries(fields.map((field2) => [field2.id, field2.visibleWhen]));
     fd(host, () => {
@@ -29405,12 +29498,15 @@ input {
           }
         ];
       }));
+      const nested = choices(values, edits);
       return {
+        detailChoices: nested.result,
+        detailChoiceLookupUrls: choiceLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
         detailTables: tables2(values),
         ...tableLookupContexts(host),
         detailTableLookupUrls: tableLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
         ...schemas(values, resource),
-        detailMedia: media(values, edits),
+        detailMedia: media(values, edits, nested.urls),
         ...users(values, resource),
         detailResourcePath: widget.source.itemPath ?? "",
         detailLookupUrls: detailLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
@@ -29424,635 +29520,175 @@ input {
     });
   }
 
-  // src/static/admin/_content/sources/_runtime/detail/users.html
-  var users_default = `<template data-users="source">
-    <cms-dashboard-directory cms-source="{{ detailUsersUrl }}" hidden>
-        <span cms-condition="$source.loading" hidden></span>
-        <span cms-condition="$source.error" hidden></span>
-    </cms-dashboard-directory>
-</template>
-<template data-users="option">
-    <option value="{{ cmsUserOption.value }}">{{ cmsUserOption.label }}</option>
-</template>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/Directory.ts
-  var sequence = 0;
-
-  class DashboardDirectory extends HTMLElement {
-    failed = false;
-    queued = false;
-    connectedCallback() {
-      this.setAttribute("cms-reload-on", `dashboard:directory:${++sequence}`);
-      fd(this, (value2) => {
-        this.failed = Boolean(value2 && !Array.isArray(value2) && typeof value2 === "object" && "status" in value2);
-        this.refreshOwner();
-        return {};
-      });
-      this.refreshOwner();
-    }
-    retry() {
-      if (this.failed) {
-        this.failed = false;
-        this.ownerDocument.dispatchEvent(new Event(this.getAttribute("cms-reload-on")));
-      }
-    }
-    refreshOwner() {
-      if (this.queued) {
-        return;
-      }
-      this.queued = true;
-      queueMicrotask(() => {
-        this.queued = false;
-        const owner = this.closest("cms-dashboard-w-detail");
-        if (this.isConnected && owner) {
-          bi(owner);
-        }
-      });
-    }
+  // src/components/admin/Resources/Dashboards/widgets/w-section/WSection.ts
+  class DashboardWSection extends CmsDetailSection {
   }
-  customElements.define("cms-dashboard-directory", DashboardDirectory);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/users.ts
-  function directoryElement() {
-    return declaration("source");
-  }
-  function composeUserOptions(control, id2) {
-    const option2 = declaration("option");
-    option2.setAttribute("cms-repeat", `detailUsersOptions.${id2} as cmsUserOption`);
-    control.setAttribute("cms-bind-boolean-invalid", "detailUsersFailed");
-    control.setAttribute("hint", "{{ detailUsersHint }}");
-    control.setAttribute("hint-level", "error");
-    control.setAttribute("placeholder", "");
-    control.append(option2);
-  }
-  function declaration(kind) {
-    const host = document.createElement("template");
-    host.innerHTML = users_default;
-    return host.content.querySelector(`[data-users="${kind}"]`).content.firstElementChild.cloneNode(true);
+  if (!customElements.get("cms-dashboard-w-section")) {
+    customElements.define("cms-dashboard-w-section", DashboardWSection);
   }
 
-  // src/static/admin/_content/sources/_runtime/detail/schema.html
-  var schema_default = `<span data-schema-state="loading">Loading dynamic fields…</span>
-<span data-schema-state="error">Dynamic fields are temporarily unavailable. Existing values are preserved.</span>
-<span data-schema-state="empty">No dynamic fields are configured.</span>
-<div data-schema-state="ready">
-    <cms-dashboard-schema-row data-schema-row>
-        <p9r-input cms-condition="schemaRow.text" type="{{ schemaRow.inputType }}"
-            data-schema-key="{{ schemaRow.id }}" label="{{ schemaRow.label }}" value="{{ schemaRow.value }}"
-            cms-bind-boolean-required="schemaRow.required"></p9r-input>
-        <p9r-select cms-condition="schemaRow.select" data-schema-key="{{ schemaRow.id }}"
-            label="{{ schemaRow.label }}" value="{{ schemaRow.value }}" cms-bind-boolean-required="schemaRow.required">
-            <option cms-condition="schemaRow.placeholder" value="" disabled>Select an option</option>
-            <option cms-repeat="schemaRow.options as schemaOption" value="{{ schemaOption.value }}">{{ schemaOption.label }}</option>
-        </p9r-select>
-        <label cms-condition="schemaRow.checkbox" cms-bind-boolean-data-required="schemaRow.required">
-            <input type="checkbox" data-schema-key="{{ schemaRow.id }}" cms-bind-value="schemaRow.checked"
-                aria-label="{{ schemaRow.label }}" aria-required="{{ schemaRow.required }}">
-            <span>{{ schemaRow.label }}</span>
-        </label>
-        <span cms-condition="schemaRow.unit" data-schema-unit>{{ schemaRow.unit }}</span>
-    </cms-dashboard-schema-row>
-</div>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/Source.ts
-  class DashboardSchemaSource extends HTMLElement {
-    static observedAttributes = ["request-base"];
-    status = "loading";
-    timer;
-    queued = false;
-    connectedCallback() {
-      fd(this, (value2) => {
-        this.status = value2 === undefined ? "loading" : Object.is(value2, Td(this)) ? "ready" : "error";
-        this.refreshOwner();
-        return {};
-      });
-      this.updateUrl(false);
-    }
-    disconnectedCallback() {
-      clearTimeout(this.timer);
-    }
-    attributeChangedCallback(_name, before, after) {
-      if (before !== after && this.isConnected) {
-        this.updateUrl(Boolean(before && !before.includes("{{")));
-      }
-    }
-    updateUrl(debounce) {
-      clearTimeout(this.timer);
-      const url = this.getAttribute("request-base");
-      this.setAttribute("cms-source", "");
-      if (!url || url.includes("{{")) {
-        this.status = "ready";
-        Md(this, []);
-        this.refreshOwner();
-        return;
-      }
-      this.status = "loading";
-      this.refreshOwner();
-      const activate = () => {
-        this.setAttribute("cms-source", `${url} as schemaPayload`);
-      };
-      if (debounce) {
-        this.timer = setTimeout(activate, 250);
-      } else {
-        activate();
-      }
-    }
-    refreshOwner() {
-      if (this.queued) {
-        return;
-      }
-      this.queued = true;
-      queueMicrotask(() => {
-        this.queued = false;
-        const owner = this.closest("cms-dashboard-w-detail");
-        if (this.isConnected && owner) {
-          bi(owner);
-        }
-      });
+  // src/components/admin/Resources/Dashboards/widgets/shared.ts
+  var WIDGET_ROW_SELECT_EVENT = "cms-dashboard-widget:row-select";
+  var WIDGET_BACK_EVENT = "cms-dashboard-widget:back";
+  var WIDGET_ACTION_EVENT = "cms-dashboard-widget:action";
+  var WIDGET_FILTER_CHANGE_EVENT = "cms-dashboard-widget:filter-change";
+  var WIDGET_FIELD_CHANGE_EVENT = "cms-dashboard-widget:field-change";
+  var WIDGET_MEDIA_ACTION_EVENT = "cms-dashboard-widget:media-action";
+  function emitWidgetEvent(host, type, detail) {
+    host.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
+  }
+  function setText(root, selector, value2) {
+    const element = root.querySelector(selector);
+    if (element) {
+      element.textContent = value2;
     }
   }
-  customElements.define("cms-dashboard-schema-source", DashboardSchemaSource);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/field.css
-  var field_default = `:host { display: block; min-width: 0; }
-:host(cms-dashboard-schema-row) { display: grid; }
-slot { display: contents; }
-.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.grid ::slotted([data-schema-state="ready"]) { display: contents; }
-.grid ::slotted([data-schema-state]) { color: #66736f; font-size: 12px; }
-.grid ::slotted([data-schema-state="error"]) { color: #8a1f12; }
-.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
-.row ::slotted(p9r-input), .row ::slotted(p9r-select) { width: 100%; }
-.row ::slotted([data-schema-unit]) {
-    align-items: center; background: #f3f7f5; border: 1px solid #cfd8d4;
-    border-radius: 7px; color: #66736f; display: inline-flex; font-size: 12px;
-    font-weight: 750; justify-content: center; min-height: 36px; min-width: 44px; padding: 0 10px 9px;
-}
-.row ::slotted(label) {
-    align-items: center; color: #16231f; display: flex; font-size: 13px;
-    font-weight: 650; gap: 8px; min-height: 36px;
-}
-.row ::slotted(label[data-required])::after {
-    color: var(--text-muted, #94a3b8); content: "* Required";
-    flex-shrink: 0; font-size: 10px; font-weight: 650; letter-spacing: 0; margin-inline-start: auto;
-}
-.row ::slotted(label[data-required]:has([invalid]))::after { color: var(--danger-base, #dc2626); }
-@media (max-width: 720px) { .grid { grid-template-columns: minmax(0, 1fr); } }
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/Field.ts
-  class SchemaField extends l2 {
-    constructor() {
-      super({ css: field_default, template: '<div class="grid"><slot></slot></div>' });
-    }
-  }
-
-  class SchemaRow extends l2 {
-    constructor() {
-      super({ css: field_default, template: '<div class="row"><slot></slot></div>' });
-    }
-  }
-  customElements.define("cms-dashboard-schema-field", SchemaField);
-  customElements.define("cms-dashboard-schema-row", SchemaRow);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/composition.ts
-  function schemaSource(field2) {
-    const source2 = document.createElement("cms-dashboard-schema-source");
-    source2.hidden = true;
-    source2.setAttribute("cms-source", "");
-    source2.setAttribute("field-id", field2.id);
-    source2.setAttribute("request-base", `{{ detailSchemaUrls.${field2.id} }}`);
-    if (field2.schema.itemsPath) {
-      source2.setAttribute("items-path", field2.schema.itemsPath);
-    }
-    return source2;
-  }
-  function composeSchema(control, field2) {
-    const template3 = document.createElement("template");
-    template3.innerHTML = schema_default;
-    const root = `detailSchemas.${field2.id}`;
-    for (const state of ["loading", "error", "empty", "ready"]) {
-      const element = template3.content.querySelector(`[data-schema-state="${state}"]`);
-      element.setAttribute("cms-condition", state === "empty" ? `${root}.status == 'ready' && ${root}.empty` : `${root}.status == '${state}'`);
-    }
-    template3.content.querySelector("[data-schema-row]").setAttribute("cms-repeat", `${root}.rows as schemaRow`);
-    control.append(template3.content);
-  }
-
-  // src/static/admin/_content/sources/_runtime/detail/table.html
-  var table_default2 = `<template data-table-template="head"><cms-dashboard-table-row data-table-head></cms-dashboard-table-row></template>
-<template data-table-template="row"><cms-dashboard-table-row data-table-row data-table-index="{{ tableRow.index }}"></cms-dashboard-table-row></template>
-<template data-table-template="cell"><span></span></template>
-<template data-table-template="text"><p9r-input></p9r-input></template>
-<template data-table-template="select"><p9r-select></p9r-select></template>
-<template data-table-template="combobox"><p9r-combobox></p9r-combobox></template>
-<template data-table-template="tokens"><p9r-token-input creatable></p9r-token-input></template>
-<template data-table-template="option"><option value="{{ tableOption.value }}">{{ tableOption.label }}</option></template>
-<template data-table-template="add"><button type="button" data-table-add>Add row</button></template>
-<template data-table-template="remove"><button type="button" data-table-remove>Remove</button></template>
-`;
-
-  // src/static/admin/_content/sources/_runtime/detail/lookup.html
-  var lookup_default = `<template data-lookup="states">
-    <span hidden cms-condition="$source.loading"></span>
-    <span hidden cms-condition="$source.error"></span>
-</template>
-<template data-lookup="options">
-    <option cms-repeat="lookupOptions as lookupOption" value="{{ lookupOption.value }}">{{ lookupOption.label }}</option>
-</template>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/options.ts
-  function lookupPage(host, payload) {
-    const lookup = {
-      endpoint: "",
-      valuePath: host.getAttribute("value-path") ?? "id",
-      labelPath: host.getAttribute("label-path") ?? "name",
-      itemsPath: host.getAttribute("items-path") || undefined
+  function setP9rButtonLabel(button, label2) {
+    button.textContent = label2;
+    button.setAttribute("aria-label", label2);
+    const syncNativeButton = () => {
+      button.shadowRoot?.querySelector("button")?.setAttribute("aria-label", label2);
     };
-    const items = itemsFrom(payload, lookup);
-    const options = items.flatMap((item) => option2(item, lookup));
-    const totalPath = host.getAttribute("total-path");
-    const totalValue = totalPath ? valueAt(payload, totalPath) : undefined;
-    const parsedTotal = Number(totalValue);
-    const total = Number.isFinite(parsedTotal) && parsedTotal >= 0 ? parsedTotal : undefined;
-    return { options, received: items.length, total };
-  }
-  function selectedLookupOptions(host) {
-    const parent = host.closest("cms-dashboard-w-detail");
-    const data = parent ? Td(parent) : undefined;
-    const resourcePath = host.getAttribute("resource-path");
-    const resource = resourcePath ? valueAt(data, resourcePath) : data;
-    const expression = host.getAttribute("selected-expression");
-    if (!expression || !isSafeDashboardExpression(expression, ["resource"], true)) {
-      return [];
+    syncNativeButton();
+    if (!button.shadowRoot) {
+      customElements.whenDefined(button.localName).then(syncNativeButton);
     }
-    const items = resolveExpression(expression, { resource });
-    const selected2 = new Set((host.getAttribute("selected-value") ?? "").split(","));
-    const lookup = {
-      valuePath: host.getAttribute("value-path") ?? "id",
-      labelPath: host.getAttribute("label-path") ?? "name"
-    };
-    return (Array.isArray(items) ? items : [items]).flatMap((item) => option2(item, lookup, false).filter((entry) => selected2.has(entry.value)));
   }
-  function distinctOptions(options) {
-    const seen = new Set;
-    return options.filter((option2) => {
-      if (seen.has(option2.value)) {
-        return false;
-      }
-      seen.add(option2.value);
-      return true;
-    });
-  }
-  function option2(item, lookup, fallback = true) {
-    const value2 = textAt(item, lookup.valuePath);
-    const label2 = textAt(item, lookup.labelPath, fallback ? value2 : "");
-    return value2 && label2 ? [{ value: value2, label: label2 }] : [];
+  function setP9rButtonTone(button, tone) {
+    button.removeAttribute("color");
+    button.removeAttribute("variant");
+    if (tone === "primary") {
+      button.setAttribute("color", "primary");
+      button.setAttribute("variant", "filled");
+      return;
+    }
+    if (tone === "danger") {
+      button.setAttribute("color", "danger");
+      button.setAttribute("variant", "ghost");
+      return;
+    }
+    button.setAttribute("variant", "outlined");
   }
 
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/Lookup.ts
-  var sequence2 = 0;
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/icons.ts
+  var SVG_NS3 = "http://www.w3.org/2000/svg";
+  var PATHS = {
+    archive: ["M3 7h18", "M5 7l1 14h12l1-14", "M9 11h6"],
+    download: ["M12 3v12", "m7 10 5 5 5-5", "M5 21h14"],
+    link: [
+      "M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 0 0-7.07-7.07l-.91.91",
+      "M14 11a5 5 0 0 0-7.07 0l-1.41 1.41a5 5 0 0 0 7.07 7.07l.91-.91"
+    ],
+    trash: ["M3 6h18", "M8 6V4h8v2", "M19 6l-1 14H6L5 6", "M10 11v6", "M14 11v6"]
+  };
+  function actionIcon(icon) {
+    if (!icon) {
+      return null;
+    }
+    const svg2 = document.createElementNS(SVG_NS3, "svg");
+    svg2.setAttribute("slot", "icon");
+    svg2.setAttribute("aria-hidden", "true");
+    svg2.setAttribute("viewBox", "0 0 24 24");
+    svg2.setAttribute("focusable", "false");
+    for (const data of PATHS[icon]) {
+      const path = document.createElementNS(SVG_NS3, "path");
+      path.setAttribute("d", data);
+      svg2.append(path);
+    }
+    return svg2;
+  }
 
-  class DashboardLookup extends HTMLElement {
-    static observedAttributes = ["request-base", "selected-value"];
-    timer;
-    query = "";
-    queued = false;
-    sharedContext = {};
-    offset = 0;
-    received = 0;
-    acceptedOffset = 0;
-    pending = false;
-    hasMore = false;
-    previous;
-    options = [];
-    created = [];
-    declared = [];
-    connectedCallback() {
-      this.declared = Array.from(this.querySelectorAll(":scope > [data-static-options] option")).map((option3) => ({ value: option3.value, label: option3.textContent ?? option3.value }));
-      this.setAttribute("cms-reload-on", `dashboard:lookup:${++sequence2}`);
-      fd(this, (value2) => this.context(value2));
-      this.addEventListener("combobox-search", this.onSearch);
-      this.addEventListener("combobox-load-more", this.onMore);
-      this.updateUrl();
-      if (!this.getAttribute("cms-source")) {
-        Md(this, {});
-      }
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/actions.ts
+  function renderDetailActions(actions) {
+    const visible = actions.filter((action) => action.placement !== "more");
+    const overflow = [...visible.slice(3), ...actions.filter((action) => action.placement === "more")];
+    const result = visible.slice(0, 3).map(renderButton);
+    if (overflow.length) {
+      result.push(renderOverflowMenu(overflow));
     }
-    disconnectedCallback() {
-      clearTimeout(this.timer);
-      this.removeEventListener("combobox-search", this.onSearch);
-      this.removeEventListener("combobox-load-more", this.onMore);
+    return result;
+  }
+  function renderButton(action) {
+    const button = document.createElement("p9r-button");
+    button.setAttribute("type", "button");
+    setP9rButtonTone(button, action.tone);
+    button.dataset.action = action.action ?? action.label;
+    if (action.confirm) {
+      button.dataset.confirm = action.confirm;
     }
-    attributeChangedCallback(name, before, after) {
-      if (before === after || !this.isConnected) {
-        return;
+    setP9rButtonLabel(button, action.label);
+    return button;
+  }
+  function renderOverflowMenu(actions) {
+    const menu = document.createElement("p9r-action-menu");
+    menu.setAttribute("label", "More actions");
+    for (const [label2, sectionActions] of groupedSections(actions)) {
+      const section2 = document.createElement("p9r-action-menu-section");
+      section2.setAttribute("label", label2);
+      for (const action of sectionActions) {
+        section2.append(renderMenuItem(action));
       }
-      if (name === "request-base") {
-        clearTimeout(this.timer);
-        this.query = "";
-        this.offset = 0;
-        this.updateUrl();
-      } else {
-        bi(this);
-      }
+      menu.append(section2);
     }
-    acceptCreatedOption(option3) {
-      this.created = distinctOptions([...this.created, option3]);
-      bi(this);
+    return menu;
+  }
+  function renderMenuItem(action) {
+    const item = document.createElement("p9r-action-menu-item");
+    if (action.tone === "danger") {
+      item.setAttribute("color", "danger");
     }
-    context(rendered) {
-      if (rendered !== undefined) {
-        this.pending = false;
-      }
-      const payload = Td(this);
-      if (payload !== undefined && !Object.is(payload, this.previous)) {
-        this.previous = payload;
-        this.acceptedOffset = this.offset;
-        const page = lookupPage(this, payload);
-        this.options = distinctOptions(this.offset ? [...this.options, ...page.options] : page.options);
-        this.received = page.received;
-        this.hasMore = Boolean(this.getAttribute("offset-params")) && (page.total === undefined ? page.received >= 25 : this.offset + page.received < page.total);
-      }
-      const context = {
-        lookupValue: this.getAttribute("selected-value") ?? "",
-        lookupOptions: distinctOptions([
-          ...this.declared,
-          ...this.options,
-          ...this.created,
-          ...selectedLookupOptions(this)
-        ]),
-        lookupHasMore: this.hasMore,
-        lookupLoading: this.pending
-      };
-      const name = this.getAttribute("context-name");
-      if (name) {
-        this.sharedContext = context;
-        this.refreshOwner();
-      }
-      return context;
+    item.dataset.action = action.action ?? action.label;
+    if (action.confirm) {
+      item.dataset.confirm = action.confirm;
     }
-    updateUrl(retry = false) {
-      const base = this.getAttribute("request-base");
-      if (!base || base.includes("{{")) {
-        this.offset = 0;
-        this.setAttribute("cms-source", "");
-        Md(this, {});
-        return;
+    const icon = actionIcon(action.icon);
+    if (icon) {
+      item.append(icon);
+    }
+    item.append(document.createTextNode(action.label));
+    return item;
+  }
+  function groupedSections(actions) {
+    const sections2 = new Map;
+    for (const action of actions) {
+      const label2 = action.section ?? "Other actions";
+      sections2.set(label2, [...sections2.get(label2) ?? [], action]);
+    }
+    return Array.from(sections2);
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/validation.ts
+  function validateReorderable(control, markedOnly = false) {
+    let invalid2 = null;
+    for (const editor of Array.from(control.querySelectorAll("[data-item-field][required]"))) {
+      if (markedOnly && !editor.hasAttribute("data-choice-required-invalid")) {
+        continue;
       }
-      const url = new URL(base, this.ownerDocument.location.href);
-      for (const [attribute, value2] of [
-        ["search-params", this.query],
-        ["offset-params", String(this.offset)]
-      ]) {
-        for (const key of (this.getAttribute(attribute) ?? "").split(" ").filter(Boolean)) {
-          if (attribute === "search-params" && value2 === "") {
-            url.searchParams.delete(key);
-          } else {
-            url.searchParams.set(key, value2);
-          }
+      const missing = editor instanceof HTMLInputElement && editor.type === "checkbox" ? !editor.checked : ("items" in editor) && Array.isArray(editor.items) ? editor.items.length === 0 : !("value" in editor) || String(editor.value ?? "").trim() === "";
+      if (missing) {
+        editor.setAttribute("data-choice-required-invalid", "");
+        editor.setAttribute("invalid", "");
+        editor.setAttribute("aria-invalid", "true");
+        editor.setAttribute("hint", "This field is required.");
+        editor.setAttribute("hint-level", "error");
+        invalid2 ??= editor;
+      } else if (editor.hasAttribute("data-choice-required-invalid")) {
+        for (const attribute of ["data-choice-required-invalid", "invalid", "aria-invalid", "hint", "hint-level"]) {
+          editor.removeAttribute(attribute);
         }
       }
-      const source2 = `${url.pathname}${url.search} as lookupData`;
-      if (this.getAttribute("cms-source") !== source2) {
-        this.pending = true;
-        this.setAttribute("cms-source", source2);
-      } else if (retry) {
-        this.pending = true;
-        this.ownerDocument.dispatchEvent(new Event(this.getAttribute("cms-reload-on")));
+    }
+    if (invalid2 && !markedOnly) {
+      const details = invalid2.closest("cms-dashboard-reorderable-settings")?.shadowRoot?.querySelector("details");
+      if (details) {
+        details.open = true;
       }
     }
-    onSearch = (event) => {
-      if (!this.ownsControl(event) || !this.getAttribute("search-params")) {
-        return;
-      }
-      event.stopPropagation();
-      const query4 = event.detail?.query;
-      clearTimeout(this.timer);
-      this.timer = setTimeout(() => {
-        this.query = typeof query4 === "string" ? query4.slice(0, 200) : "";
-        this.offset = 0;
-        this.updateUrl(true);
-      }, 250);
-    };
-    onMore = (event) => {
-      if (!this.ownsControl(event)) {
-        return;
-      }
-      event.stopPropagation();
-      if (this.hasMore && !this.pending) {
-        this.offset = this.acceptedOffset + this.received;
-        this.updateUrl(true);
-      }
-    };
-    ownsControl(event) {
-      return !this.hasAttribute("context-name") || event.target === this;
-    }
-    refreshOwner() {
-      if (this.queued) {
-        return;
-      }
-      this.queued = true;
-      queueMicrotask(() => {
-        this.queued = false;
-        const owner = this.closest("cms-dashboard-w-detail");
-        if (this.isConnected && owner) {
-          bi(owner);
-        }
-      });
-    }
+    return invalid2;
   }
-  customElements.define("cms-dashboard-lookup", DashboardLookup);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/composition.ts
-  function composeLookup(control, field2) {
-    const lookup = field2.lookup;
-    const host = lookupSource(lookup, field2.id);
-    host.setAttribute("selected-value", control.getAttribute("value") ?? "");
-    const declared = document.createElement("span");
-    declared.hidden = true;
-    declared.setAttribute("data-static-options", "");
-    declared.append(...Array.from(control.children));
-    host.append(declared);
-    control.setAttribute("value", "{{ lookupValue }}");
-    if (field2.type === "combobox") {
-      control.toggleAttribute("remote-search", Boolean(host.getAttribute("search-params")));
-      control.setAttribute("loading", "{{ $source.loading }}");
-      control.setAttribute("has-more", "{{ lookupHasMore }}");
-    }
-    control.toggleAttribute("creatable", Boolean(field2.allowCustom || lookup.create?.mode === "inline"));
-    const template3 = document.createElement("template");
-    template3.innerHTML = lookup_default;
-    control.append(template3.content.querySelector('[data-lookup="options"]').content.cloneNode(true));
-    host.append(control, template3.content.querySelector('[data-lookup="states"]').content.cloneNode(true));
-    return host;
-  }
-  function lookupSource(lookup, path, root = "detailLookupUrls") {
-    const host = document.createElement("cms-dashboard-lookup");
-    host.setAttribute("cms-source", "");
-    host.setAttribute("request-base", `{{ ${root}.${path} }}`);
-    host.setAttribute("resource-path", "{{ detailResourcePath }}");
-    for (const [attribute, value2] of Object.entries({
-      "items-path": lookup.itemsPath,
-      "value-path": lookup.valuePath,
-      "label-path": lookup.labelPath,
-      "total-path": lookup.totalPath,
-      "selected-expression": lookup.selected
-    })) {
-      if (typeof value2 === "string") {
-        host.setAttribute(attribute, value2);
-      }
-    }
-    for (const [attribute, expression] of [
-      ["search-params", "$search"],
-      ["offset-params", "$offset"]
-    ]) {
-      host.setAttribute(attribute, Object.entries(lookup.params ?? {}).filter(([, value2]) => value2 === expression).map(([key]) => key).join(" "));
-    }
-    if (!lookupUsesOffsetPagination(lookup)) {
-      host.removeAttribute("offset-params");
-    }
-    return host;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/field.css
-  var field_default2 = `:host { display: block; min-width: 0; }
-.table { display: grid; gap: 6px; max-width: 100%; min-width: 0; overflow-x: auto; padding-bottom: 2px; }
-.row { display: grid; grid-template-columns: var(--detail-table-columns); gap: 8px; align-items: start; width: 100%; min-width: 0; min-height: 34px; }
-:host([data-table-head]) { color: #66736f; font-size: 11px; font-weight: 750; text-transform: uppercase; }
-:host([data-table-row][data-readonly]) { color: #16231f; font-size: 13px; }
-::slotted(*) { min-width: 0; }
-::slotted(p9r-input), ::slotted(p9r-select), ::slotted(p9r-combobox), ::slotted(p9r-token-input) { width: 100%; }
-::slotted(p9r-input) { --_field-min-height: 34px; --_field-padding-y: 5px; --_field-padding-x: 9px; --_field-font-size: 13px; }
-::slotted(button) { min-height: 30px; border: 1px solid #cfd8d4; border-radius: 6px; background: #fff; color: #0f1f1a; cursor: pointer; font: inherit; font-weight: 700; padding: 4px 8px; font-size: 12px; }
-::slotted(button:hover) { background: #f3f7f5; }
-::slotted([data-table-add]) { width: fit-content; }
-::slotted([data-table-remove]) { color: #8a1f12; }
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/Field.ts
-  class TableField extends l2 {
-    constructor() {
-      super({ css: field_default2, template: '<div class="table"><slot></slot></div>' });
-      for (const type of ["combobox-search", "combobox-load-more"]) {
-        this.addEventListener(type, (event) => {
-          const control = event.composedPath().find((node) => node instanceof HTMLElement && node.hasAttribute("data-table-column"));
-          if (!control) {
-            return;
-          }
-          const source2 = Array.from(this.querySelectorAll("cms-dashboard-lookup[table-column]")).find((node) => node.getAttribute("table-column") === control.dataset.tableColumn);
-          if (source2) {
-            event.stopPropagation();
-            source2.dispatchEvent(new CustomEvent(type, { detail: event.detail }));
-          }
-        });
-      }
-    }
-  }
-
-  class TableRow extends l2 {
-    constructor() {
-      super({ css: field_default2, template: '<div class="row"><slot></slot></div>' });
-    }
-  }
-  customElements.define("cms-dashboard-table-field", TableField);
-  customElements.define("cms-dashboard-table-row", TableRow);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/composition.ts
-  function composeTable(control, field2) {
-    const template3 = document.createElement("template");
-    template3.innerHTML = table_default2;
-    const clone = (name) => template3.content.querySelector(`[data-table-template="${name}"]`).content.firstElementChild.cloneNode(true);
-    control.setAttribute("data-table-editable", String(field2.editable === true));
-    control.style.setProperty("--detail-table-columns", [
-      ...field2.columns.map((column) => column.width ?? "minmax(8rem, 1fr)"),
-      ...field2.editable ? ["72px"] : []
-    ].join(" "));
-    const head = clone("head");
-    const row = clone("row");
-    row.setAttribute("cms-repeat", `detailTables.${field2.id} as tableRow`);
-    row.toggleAttribute("data-readonly", !field2.editable);
-    for (const [index, column] of field2.columns.entries()) {
-      const heading = clone("cell");
-      heading.textContent = column.label;
-      head.append(heading);
-      if (field2.editable && column.editable) {
-        const editor = clone(column.type ?? "text");
-        editor.setAttribute("data-table-column", column.id);
-        editor.setAttribute("aria-label", column.label);
-        editor.setAttribute("value", `{{ tableRow.cells.${column.id} }}`);
-        if (column.type === "select" || column.type === "combobox") {
-          for (const item of column.options ?? []) {
-            const option3 = document.createElement("option");
-            option3.value = item.value;
-            option3.textContent = item.label;
-            editor.append(option3);
-          }
-        }
-        if (column.type === "combobox" && column.lookup) {
-          const source2 = lookupSource(column.lookup, `${field2.id}.${column.id}`, "detailTableLookupUrls");
-          const scope = `tableLookup_${field2.id}_${index}`;
-          source2.setAttribute("context-name", scope);
-          source2.setAttribute("table-column", column.id);
-          const declared = document.createElement("span");
-          declared.hidden = true;
-          declared.setAttribute("data-static-options", "");
-          declared.append(...Array.from(editor.children));
-          source2.hidden = true;
-          source2.append(declared);
-          control.append(source2);
-          const option3 = clone("option");
-          option3.setAttribute("cms-repeat", `${scope}.lookupOptions as tableOption`);
-          editor.append(option3);
-          editor.toggleAttribute("remote-search", Boolean(source2.getAttribute("search-params")));
-          editor.setAttribute("loading", `{{ ${scope}.lookupLoading }}`);
-          editor.setAttribute("has-more", `{{ ${scope}.lookupHasMore }}`);
-        }
-        row.append(editor);
-      } else {
-        const cell = clone("cell");
-        cell.textContent = `{{ tableRow.cells.${column.id} }}`;
-        row.append(cell);
-      }
-    }
-    if (field2.editable) {
-      head.append(clone("cell"));
-      row.append(clone("remove"));
-    }
-    control.append(head, row);
-    if (field2.editable) {
-      const add = clone("add");
-      add.textContent = field2.addLabel ?? "Add row";
-      control.append(add);
-    }
-    return control;
-  }
-
-  // src/static/admin/_content/sources/_runtime/detail/media.html
-  var media_default = `<template data-media="tile">
-    <cms-dashboard-media-tile slot="tile" data-media-tile draggable="true" tabindex="0" aria-label="Replace media"
-        data-index="{{ media.index }}" data-media-id="{{ media.id }}" data-media-url="{{ media.url }}"
-        data-media-thumbnail="{{ media.thumbnailUrl }}" data-media-alt="{{ media.alt }}" data-media-name="{{ media.name }}"
-        cms-bind-boolean-data-pending="media.pending">
-        <img src="{{ media.thumbnail }}" alt="{{ media.alt }}">
-    </cms-dashboard-media-tile>
-</template>
-<template data-media="add"><cms-dashboard-media-add slot="tile"></cms-dashboard-media-add></template>
-<template data-media="image"><img slot="image" data-preview-image decoding="async"></template>
-<template data-media="caption"><span slot="caption"></span></template>
-<template data-media="counter"><span slot="counter"></span></template>
-<template data-media="thumbnail">
-    <cms-dashboard-media-thumbnail slot="thumbnail" index="{{ media.index }}" label="{{ media.title }}">
-        <img src="{{ media.thumbnail }}" alt="" loading="lazy" decoding="async">
-    </cms-dashboard-media-thumbnail>
-</template>
-`;
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/field.css
-  var field_default3 = `:host {
+  var field_default = `:host {
     --media-grid-item-max: 120px;
     --media-grid-item-max-mobile: 112px;
     --media-grid-featured-item-max: calc((var(--media-grid-item-max) * 2) + 8px);
@@ -30491,40 +30127,11 @@ button {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/index.ts
-  var styles_default5 = [field_default3, preview_layout_default, preview_media_default].join(`
+  var styles_default5 = [field_default, preview_layout_default, preview_media_default].join(`
 `);
 
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/field.css
-  var field_default4 = `slot { display: contents; }
-.media-grid ::slotted(*) { max-width: var(--media-grid-item-max); width: 100%; }
-.media-grid ::slotted(cms-dashboard-media-tile:first-child) {
-    grid-column: span 2;
-    grid-row: span 2;
-    max-width: var(--media-grid-featured-item-max);
-}
-::slotted([slot="image"]) {
-    grid-area: 1 / 1;
-    height: 100%;
-    min-height: 0;
-    object-fit: contain;
-    transition: opacity 120ms ease;
-    width: 100%;
-}
-::slotted([slot="image"][data-state="loading"]), ::slotted([slot="image"][data-state="error"]) { opacity: 0.12; }
-:host([layout="card"]) .media-grid ::slotted(*) { aspect-ratio: 4 / 3; max-width: none; }
-:host([layout="card"]) .media-grid ::slotted(cms-dashboard-media-tile:first-child) { grid-column: auto; grid-row: auto; }
-@media (max-width: 720px) {
-    .media-grid ::slotted(*) { max-width: var(--media-grid-item-max-mobile); }
-    .media-grid ::slotted(cms-dashboard-media-tile:first-child) {
-        grid-column: span 1;
-        grid-row: span 1;
-        max-width: var(--media-grid-item-max-mobile);
-    }
-}
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/field.html
-  var field_default5 = `<section class="media-field">
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/legacy/template.html
+  var template_default11 = `<section class="media-field">
     <div class="label-row">
         <span data-label></span>
         <button class="preview-trigger" data-preview-open type="button" hidden>
@@ -30535,14 +30142,14 @@ button {
             <span>Preview</span>
         </button>
     </div>
-    <div class="media-grid" data-grid><slot name="tile"></slot></div>
+    <div class="media-grid" data-grid></div>
     <input data-file type="file" hidden>
     <dialog class="media-preview" data-preview-dialog aria-labelledby="media-preview-title">
         <div class="preview-shell">
             <header class="preview-header">
                 <div>
                     <p class="preview-title" id="media-preview-title">Image preview</p>
-                    <p class="preview-counter" data-preview-counter aria-live="polite"><slot name="counter"></slot></p>
+                    <p class="preview-counter" data-preview-counter aria-live="polite"></p>
                 </div>
                 <button class="preview-close" data-preview-action="close" type="button">
                     <span>Close</span>
@@ -30558,10 +30165,10 @@ button {
                 >&lsaquo;</button>
                 <figure class="preview-figure">
                     <div class="preview-media">
-                        <slot name="image"></slot>
+                        <img class="preview-image" data-preview-image decoding="async" alt="">
                         <p class="preview-status" data-preview-status role="status" hidden></p>
                     </div>
-                    <figcaption data-preview-caption><slot name="caption"></slot></figcaption>
+                    <figcaption data-preview-caption></figcaption>
                 </figure>
                 <button
                     class="preview-nav"
@@ -30570,7 +30177,7 @@ button {
                     aria-label="Next image"
                 >&rsaquo;</button>
             </div>
-            <div class="preview-strip" data-preview-strip role="group" aria-label="Choose an image"><slot name="thumbnail"></slot></div>
+            <div class="preview-strip" data-preview-strip role="group" aria-label="Choose an image"></div>
         </div>
     </dialog>
 </section>
@@ -30640,941 +30247,6 @@ button {
       window.setTimeout(() => this.setSuppressClick(false), 0);
     }
   }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/ImageState.ts
-  class PreviewImageState {
-    host;
-    status;
-    observer = new MutationObserver(() => this.refresh());
-    image = null;
-    url = "";
-    constructor(host, status) {
-      this.host = host;
-      this.status = status;
-    }
-    connect() {
-      this.observer.observe(this.host, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ["src"]
-      });
-      this.host.addEventListener("load", this.onLoad, true);
-      this.host.addEventListener("error", this.onError, true);
-    }
-    disconnect() {
-      this.observer.disconnect();
-      this.host.removeEventListener("load", this.onLoad, true);
-      this.host.removeEventListener("error", this.onError, true);
-    }
-    refresh() {
-      const image = this.host.querySelector("[data-preview-image]");
-      const url = image?.getAttribute("src") ?? "";
-      if (image === this.image && url === this.url) {
-        return;
-      }
-      this.image = image;
-      this.url = url;
-      if (!image || !url) {
-        return;
-      }
-      const ready = image.complete && image.naturalWidth > 0;
-      image.dataset.state = ready ? "ready" : "loading";
-      this.status.textContent = "Loading image…";
-      this.status.hidden = ready;
-    }
-    onLoad = (event) => this.settled(event, false);
-    onError = (event) => this.settled(event, true);
-    settled(event, failed) {
-      const image = event.target;
-      if (!(image instanceof HTMLImageElement) || !image.hasAttribute("data-preview-image")) {
-        return;
-      }
-      this.image = image;
-      this.url = image.getAttribute("src") ?? "";
-      image.dataset.state = failed ? "error" : "ready";
-      this.status.hidden = !failed;
-      if (failed) {
-        this.status.textContent = "Unable to load this image.";
-      }
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/Preview.ts
-  class MediaPreview {
-    host;
-    index = 0;
-    opened = false;
-    restoreFocus = null;
-    dialog;
-    images;
-    constructor(host) {
-      this.host = host;
-      this.dialog = this.query("[data-preview-dialog]");
-      this.images = new PreviewImageState(host, this.query("[data-preview-status]"));
-    }
-    connect() {
-      this.host.addEventListener("click", this.onClick);
-      this.dialog.addEventListener("keydown", this.onKeyDown);
-      this.dialog.addEventListener("close", this.onClose);
-      this.images.connect();
-      this.syncCount();
-    }
-    disconnect() {
-      this.host.removeEventListener("click", this.onClick);
-      this.dialog.removeEventListener("keydown", this.onKeyDown);
-      this.dialog.removeEventListener("close", this.onClose);
-      this.images.disconnect();
-      if (this.dialog.open) {
-        this.dialog.close();
-      }
-    }
-    syncCount() {
-      const count = Number(this.host.getAttribute("count")) || 0;
-      this.query("[data-preview-open]").hidden = count === 0;
-      for (const selector of [
-        "[data-preview-action='previous']",
-        "[data-preview-action='next']",
-        "[data-preview-strip]"
-      ]) {
-        this.query(selector).hidden = count < 2;
-      }
-      if (this.opened && count === 0) {
-        this.dialog.close();
-      }
-      this.index = Math.min(this.index, Math.max(0, count - 1));
-    }
-    onClick = (event) => {
-      const path = event.composedPath();
-      const target2 = path.find((node) => node instanceof HTMLElement && node.matches("[data-preview-open], [data-preview-action], [data-preview-index]"));
-      if (target2?.hasAttribute("data-preview-open")) {
-        if (this.opened || this.host.items.length === 0) {
-          return;
-        }
-        this.restoreFocus = target2;
-        this.index = 0;
-        this.opened = true;
-        this.changeImage();
-        this.dialog.showModal();
-        this.query("[data-preview-action='close']").focus();
-      } else if (target2?.hasAttribute("data-preview-index")) {
-        this.setIndex(Number(target2.dataset.previewIndex), true);
-      } else if (target2?.dataset.previewAction === "close" || path[0] === this.dialog) {
-        this.dialog.close();
-      } else if (target2?.dataset.previewAction === "previous") {
-        this.move(-1);
-      } else if (target2?.dataset.previewAction === "next") {
-        this.move(1);
-      }
-    };
-    onKeyDown = (event) => {
-      const focusThumbnail = Array.from(this.host.querySelectorAll("cms-dashboard-media-thumbnail")).some((node) => Boolean(node.shadowRoot?.activeElement));
-      if (event.key === "Escape") {
-        event.preventDefault();
-        this.dialog.close();
-      } else if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        this.move(-1, focusThumbnail);
-      } else if (event.key === "ArrowRight") {
-        event.preventDefault();
-        this.move(1, focusThumbnail);
-      } else if (event.key === "Home") {
-        event.preventDefault();
-        this.setIndex(0, focusThumbnail);
-      } else if (event.key === "End") {
-        event.preventDefault();
-        this.setIndex(this.host.items.length - 1, focusThumbnail);
-      }
-    };
-    onClose = () => {
-      this.opened = false;
-      this.host.refresh();
-      this.query("[data-preview-status]").hidden = true;
-      this.restoreFocus?.focus();
-      this.restoreFocus = null;
-    };
-    move(offset, focus = false) {
-      const count = this.host.items.length;
-      if (count > 1) {
-        this.setIndex((this.index + offset + count) % count, focus);
-      }
-    }
-    setIndex(index, focus) {
-      if (!Number.isInteger(index) || index < 0 || index >= this.host.items.length) {
-        return;
-      }
-      if (this.index !== index) {
-        this.index = index;
-        this.changeImage();
-      }
-      const thumbnail = this.host.querySelector(`cms-dashboard-media-thumbnail[index="${index}"]`);
-      thumbnail?.scrollIntoView({ block: "nearest", inline: "center" });
-      if (focus) {
-        thumbnail?.focus();
-      }
-    }
-    changeImage() {
-      const status = this.query("[data-preview-status]");
-      status.textContent = "Loading image…";
-      status.hidden = false;
-      this.host.refresh();
-      this.images.refresh();
-    }
-    query(selector) {
-      return this.host.shadowRoot.querySelector(selector);
-    }
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/MediaField.ts
-  class DashboardMediaField extends l2 {
-    static observedAttributes = ["label", "count"];
-    preview;
-    pendingItems;
-    replaceIndex;
-    suppressClick = false;
-    drag = new MediaDragController(() => this, (from, to2) => this.move(from, to2), (value2) => {
-      this.suppressClick = value2;
-    });
-    constructor() {
-      super({ css: styles_default5 + field_default4, template: field_default5 });
-      this.preview = new MediaPreview(this);
-    }
-    connectedCallback() {
-      this.fileInput.addEventListener("change", this.onFiles);
-      this.addEventListener("click", this.onClick);
-      for (const [name, handler] of this.dragEvents) {
-        this.addEventListener(name, handler);
-      }
-      this.preview.connect();
-    }
-    disconnectedCallback() {
-      this.fileInput.removeEventListener("change", this.onFiles);
-      this.removeEventListener("click", this.onClick);
-      for (const [name, handler] of this.dragEvents) {
-        this.removeEventListener(name, handler);
-      }
-      this.preview.disconnect();
-    }
-    attributeChangedCallback(name) {
-      if (name === "label") {
-        this.shadowRoot.querySelector("[data-label]").textContent = this.getAttribute("label") ?? "";
-      } else {
-        this.preview.syncCount();
-      }
-    }
-    get items() {
-      if (this.pendingItems) {
-        return this.pendingItems;
-      }
-      return Array.from(this.querySelectorAll("[data-media-tile]")).map((tile) => ({
-        id: tile.dataset.mediaId ?? "",
-        url: tile.dataset.mediaUrl ?? "",
-        ...tile.dataset.mediaAlt ? { alt: tile.dataset.mediaAlt } : {},
-        ...tile.dataset.mediaName ? { name: tile.dataset.mediaName } : {},
-        ...tile.dataset.mediaThumbnail ? { thumbnailUrl: tile.dataset.mediaThumbnail } : {},
-        ...tile.hasAttribute("data-pending") ? { pending: true } : {}
-      }));
-    }
-    refresh() {
-      if (this.isConnected) {
-        bi(this.owner);
-      }
-    }
-    get owner() {
-      return this.closest("cms-dashboard-w-detail");
-    }
-    get fileInput() {
-      return this.shadowRoot.querySelector("[data-file]");
-    }
-    get dragEvents() {
-      return [
-        ["dragstart", this.drag.start],
-        ["dragover", this.drag.over],
-        ["drop", this.drag.drop],
-        ["dragend", this.drag.end]
-      ];
-    }
-    onClick = (event) => {
-      const path = event.composedPath();
-      const button = path.find((node) => node instanceof HTMLElement && node.hasAttribute("data-media-action"));
-      const tile = path.find((node) => node instanceof HTMLElement && node.hasAttribute("data-media-tile"));
-      const index = tile ? Number(tile.dataset.index) : undefined;
-      if (button?.dataset.mediaAction === "remove" && index !== undefined) {
-        const items = this.items;
-        const item = items[index];
-        if (item) {
-          this.changed("remove", items.filter((_2, current) => current !== index), { index, item });
-        }
-      } else if (button?.dataset.mediaAction === "upload") {
-        this.pick();
-      } else if (tile && index !== undefined && !this.suppressClick) {
-        this.pick(index);
-      }
-    };
-    pick(index) {
-      this.replaceIndex = index;
-      this.fileInput.value = "";
-      this.fileInput.accept = this.getAttribute("accept") ?? "image/*";
-      this.fileInput.multiple = index === undefined && this.hasAttribute("multiple");
-      this.fileInput.click();
-    }
-    onFiles = (event) => {
-      event.stopPropagation();
-      const files = Array.from(this.fileInput.files ?? []);
-      if (!files[0]) {
-        return;
-      }
-      const items = this.items;
-      if (this.replaceIndex !== undefined) {
-        const index = this.replaceIndex;
-        const previousItem = items[index];
-        if (!previousItem) {
-          return;
-        }
-        const item = { ...previousItem, ...mediaFiles(this.owner).create(files[0]), id: previousItem.id };
-        this.changed("replace", items.map((old, current) => current === index ? item : old), { index, previousItem, item, file: files[0] });
-      } else {
-        const selected2 = this.hasAttribute("multiple") ? files : [files[0]];
-        this.changed("upload", [...items, ...selected2.map((file) => mediaFiles(this.owner).create(file))], {
-          files: selected2
-        });
-      }
-    };
-    move(from, to2) {
-      const items = this.items;
-      if (from === to2 || to2 < 0 || to2 >= items.length) {
-        return;
-      }
-      const [item] = items.splice(from, 1);
-      if (item) {
-        items.splice(to2, 0, item);
-        this.changed("reorder", items, { from, to: to2, item });
-      }
-    }
-    changed(action, items, detail) {
-      const previousValue = this.items;
-      this.pendingItems = items;
-      try {
-        dispatchMediaChange(this, action, items, { ...detail, previousValue });
-      } finally {
-        this.pendingItems = undefined;
-      }
-    }
-  }
-  customElements.define("cms-dashboard-media-field", DashboardMediaField);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/tile.css
-  var tile_default = `:host {
-    align-items: center;
-    aspect-ratio: 1;
-    background: #f4f1ec;
-    border: 1px solid var(--border-default);
-    border-radius: 8px;
-    cursor: pointer;
-    display: grid;
-    justify-items: center;
-    min-height: 92px;
-    overflow: hidden;
-    position: relative;
-    transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
-    width: 100%;
-}
-:host(:hover), :host(:focus-visible) {
-    border-color: #0f6b53;
-    box-shadow: 0 0 0 2px rgb(15 107 83 / 12%);
-}
-:host(:active) { cursor: grabbing; }
-:host([data-dragging]) { opacity: 0.48; transform: scale(0.985); }
-:host([data-drop-target]) { border-color: #0f6b53; box-shadow: inset 0 0 0 2px rgb(15 107 83 / 24%); }
-::slotted(img) { height: 100%; object-fit: cover; width: 100%; }
-button {
-    align-items: center;
-    border: 1px solid var(--border-default);
-    border-radius: 6px;
-    cursor: pointer;
-    display: inline-flex;
-    font: inherit;
-    justify-content: center;
-}
-button[data-media-action="remove"] {
-    background: rgb(255 255 255 / 94%);
-    color: #c52635;
-    font-size: 14px;
-    font-weight: 760;
-    height: 24px;
-    opacity: 0;
-    padding: 0;
-    position: absolute;
-    right: 6px;
-    top: 6px;
-    transition: opacity 120ms ease, background 120ms ease;
-    width: 24px;
-}
-:host(:hover) button, :host(:focus-within) button { opacity: 1; }
-button:hover { background: #f6f8f7; }
-:host(cms-dashboard-media-add) { background: transparent; border: none; }
-:host(cms-dashboard-media-add:hover) { box-shadow: none; }
-button[data-media-action="upload"] {
-    background: transparent;
-    border: 1px dashed #aab6b2;
-    border-radius: 8px;
-    color: #394944;
-    font-size: 24px;
-    height: 100%;
-    min-height: 92px;
-    width: 100%;
-}
-button[data-media-action="upload"]:hover { background: #f6f8f7; border-color: #7d8d88; }
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/Tile.ts
-  class MediaTile extends l2 {
-    constructor() {
-      super({
-        css: tile_default,
-        template: '<slot></slot><button type="button" data-media-action="remove" aria-label="Remove media" title="Remove media">x</button>'
-      });
-    }
-  }
-  customElements.define("cms-dashboard-media-tile", MediaTile);
-
-  class MediaAddTile extends l2 {
-    constructor() {
-      super({ css: tile_default, template: '<button type="button" data-media-action="upload" aria-label="Add media">+</button>' });
-    }
-  }
-  customElements.define("cms-dashboard-media-add", MediaAddTile);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/thumbnail.css
-  var thumbnail_default = `:host { display: block; flex: 0 0 72px; height: 60px; width: 72px; }
-button {
-    align-items: center;
-    background: #202925;
-    border: 1px solid transparent;
-    border-radius: 7px;
-    cursor: pointer;
-    display: inline-flex;
-    font: inherit;
-    height: 100%;
-    justify-content: center;
-    opacity: 0.64;
-    overflow: hidden;
-    padding: 0;
-    width: 100%;
-}
-:host([selected]) button { border-color: #fff; box-shadow: 0 0 0 1px #fff; opacity: 1; }
-button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-::slotted(img) { height: 100%; object-fit: contain; width: 100%; }
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/Thumbnail.ts
-  class MediaThumbnail extends l2 {
-    static observedAttributes = ["index", "selected-index", "label"];
-    constructor() {
-      super({ css: thumbnail_default, template: '<button type="button"><slot></slot></button>' });
-    }
-    attributeChangedCallback() {
-      const selected2 = this.getAttribute("index") === this.getAttribute("selected-index");
-      this.toggleAttribute("selected", selected2);
-      const button = this.shadowRoot.querySelector("button");
-      button.setAttribute("aria-current", String(selected2));
-      button.setAttribute("aria-label", this.getAttribute("label") ?? "");
-      button.setAttribute("data-preview-index", this.getAttribute("index") ?? "");
-    }
-    focus() {
-      this.shadowRoot.querySelector("button").focus();
-    }
-  }
-  customElements.define("cms-dashboard-media-thumbnail", MediaThumbnail);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/composition.ts
-  function composeMedia(control, field2) {
-    const path = `detailMedia.${field2.id}`;
-    const declarations = document.createElement("template");
-    declarations.innerHTML = media_default;
-    const part = (kind) => declarations.content.querySelector(`[data-media="${kind}"]`).content.firstElementChild.cloneNode(true);
-    const tile = part("tile");
-    tile.setAttribute("cms-repeat", `${path}.items as media`);
-    const add = part("add");
-    add.setAttribute("cms-condition", `${path}.showAdd`);
-    const image = part("image");
-    image.setAttribute("cms-condition", `${path}.open`);
-    image.setAttribute("src", `{{ ${path}.preview.url }}`);
-    image.setAttribute("alt", `{{ ${path}.preview.previewAlt }}`);
-    const caption = part("caption");
-    caption.textContent = `{{ ${path}.preview.title }}`;
-    const counter = part("counter");
-    counter.textContent = `{{ ${path}.counter }}`;
-    const thumbnail = part("thumbnail");
-    thumbnail.setAttribute("cms-repeat", `${path}.items as media`);
-    thumbnail.setAttribute("selected-index", `{{ ${path}.index }}`);
-    control.setAttribute("count", `{{ ${path}.items.length }}`);
-    control.toggleAttribute("multiple", field2.multiple === true);
-    control.append(tile, add, image, caption, counter, thumbnail);
-  }
-
-  // src/static/admin/_content/sources/_runtime/detail/controls.html
-  var controls_default = `<template data-control="text"><p9r-input type="text"></p9r-input></template>
-<template data-control="number"><p9r-input type="number"></p9r-input></template>
-<template data-control="textarea"><p9r-textarea></p9r-textarea></template>
-<template data-control="select"><p9r-select></p9r-select></template>
-<template data-control="cms-user"><p9r-combobox></p9r-combobox></template>
-<template data-control="combobox"><p9r-combobox></p9r-combobox></template>
-<template data-control="tokens"><p9r-token-input></p9r-token-input></template>
-<template data-control="checkbox"><input type="checkbox" /></template>
-<template data-control="amount"><p9r-input type="text"></p9r-input></template>
-<template data-control="secret-ref"><cms-credential-select></cms-credential-select></template>
-<template data-control="page-link"><cms-editor-v2-page-link></cms-editor-v2-page-link></template>
-<template data-control="readonly">
-    <div>
-        <span data-display-text></span>
-        <span data-display-empty class="readonly-empty">None</span>
-        <ul class="readonly-list">
-            <li cms-condition="readonlyItem | dashboardTrimmedText">{{ readonlyItem | dashboardTrimmedText }}</li>
-        </ul>
-    </div>
-</template>
-<template data-control="date"><div><span></span></div></template>
-<template data-control="money"><div><span></span></div></template>
-<template data-control="badge"><div><span class="badge"></span></div></template>
-<template data-control="image"><div><span>No image</span><img class="detail-image" loading="lazy" /></div></template>
-<template data-control="media"><cms-dashboard-media-field></cms-dashboard-media-field></template>
-<template data-control="schema"><cms-dashboard-schema-field></cms-dashboard-schema-field></template>
-<template data-control="table"><cms-dashboard-table-field></cms-dashboard-table-field></template>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/readonly.ts
-  function composeReadonly(control, field2, root) {
-    const path = field2.path === "." ? root : `${root}.${field2.path}`;
-    if (field2.format === "image") {
-      const image = control.querySelector("img");
-      image.alt = field2.label;
-      image.setAttribute("cms-condition", `${path} | dashboardTrimmedText`);
-      image.setAttribute("data-cms-src", fieldBinding(root, field2.path, "dashboardTrimmedText"));
-      control.querySelector("span").setAttribute("cms-condition", `!${path} | dashboardTrimmedText`);
-    } else if (field2.format === "money") {
-      const sibling = field2.path.includes(".") ? `${path.slice(0, path.lastIndexOf("."))}.currency` : `${root}.currency`;
-      const value2 = control.querySelector("span");
-      value2.textContent = fieldBinding(root, field2.path, `dashboardMoney(${sibling})`);
-      if (sibling !== `${root}.currency`) {
-        value2.setAttribute("cms-condition", `${sibling} | dashboardDefined`);
-        const fallback = value2.cloneNode();
-        fallback.setAttribute("cms-condition", `!${sibling} | dashboardDefined`);
-        fallback.textContent = fieldBinding(root, field2.path, `dashboardMoney(${root}.currency)`);
-        control.append(fallback);
-      }
-    } else if (field2.format === "date" || field2.format === "badge") {
-      control.querySelector("span").textContent = fieldBinding(root, field2.path, field2.format === "date" ? "dashboardDate" : "dashboardBadge");
-    } else {
-      control.querySelector("[data-display-text]").setAttribute("cms-condition", `${path} | dashboardValueKind == 'scalar'`);
-      control.querySelector("[data-display-text]").textContent = fieldBinding(root, field2.path);
-      control.querySelector("[data-display-empty]").setAttribute("cms-condition", `${path} | dashboardValueKind == 'empty-list'`);
-      control.querySelector("ul").setAttribute("cms-condition", `${path} | dashboardValueKind == 'list'`);
-      control.querySelector("li").setAttribute("cms-repeat", `${path} as readonlyItem`);
-    }
-  }
-  function fieldBinding(root, path, filter) {
-    return `{{ ${path === "." ? root : `${root}.${path}`}${filter ? ` | ${filter}` : ""} }}`;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/fields.ts
-  function fieldElement(field2, root) {
-    const template3 = document.createElement("template");
-    template3.innerHTML = controls_default;
-    const kind = field2.type === "readonly" ? field2.format ?? "readonly" : field2.type === "money" ? "amount" : field2.type;
-    const control = template3.content.querySelector(`[data-control="${kind === "text" && field2.type === "readonly" ? "readonly" : kind}"]`).content.firstElementChild.cloneNode(true);
-    const wrapper = document.createElement("cms-dashboard-detail-field");
-    if (field2.visibleWhen) {
-      wrapper.setAttribute("cms-condition", `detailVisibility | dashboardVisibility(detailRules.${field2.id})`);
-    }
-    wrapper.setAttribute("label", field2.label);
-    wrapper.toggleAttribute("required", field2.required === true);
-    wrapper.toggleAttribute("internal-label", field2.type !== "readonly" && field2.type !== "checkbox" && field2.type !== "table");
-    if (field2.type === "readonly") {
-      composeReadonly(control, field2, root);
-      wrapper.append(...Array.from(control.childNodes));
-    } else {
-      control.setAttribute("label", field2.label);
-      control.setAttribute("data-field-control", field2.id);
-      if (field2.type === "checkbox") {
-        control.setAttribute("cms-bind-value", field2.path === "." ? root : `${root}.${field2.path}`);
-        control.setAttribute("aria-label", field2.label);
-      } else if (field2.type !== "media" && field2.type !== "schema" && field2.type !== "table") {
-        control.setAttribute("value", fieldBinding(root, field2.path, field2.type === "tokens" ? "dashboardTokens" : undefined));
-      }
-      control.toggleAttribute("required", field2.required === true);
-      if ("placeholder" in field2 && field2.placeholder) {
-        control.setAttribute("placeholder", field2.placeholder);
-      }
-      if (field2.type === "number") {
-        for (const key of ["min", "max", "step"]) {
-          if (field2[key] !== undefined) {
-            control.setAttribute(key, String(field2[key]));
-          }
-        }
-      }
-      if (field2.type === "money") {
-        control.setAttribute("value", `{{ detailAmounts.${field2.id}.value }}`);
-        control.setAttribute("inputmode", `{{ detailAmounts.${field2.id}.inputmode }}`);
-      }
-      if (field2.type === "textarea") {
-        control.setAttribute("rows", String(field2.rows ?? 4));
-      }
-      if (field2.type === "select" || field2.type === "combobox" || field2.type === "tokens") {
-        const options = field2.type === "select" ? field2.options : optionList(field2.options, []);
-        if (field2.type === "select" && !options.some((option3) => option3.value === "")) {
-          const placeholder = document.createElement("option");
-          placeholder.value = "";
-          placeholder.disabled = true;
-          placeholder.textContent = "Select an option";
-          placeholder.setAttribute("cms-condition", `!${root}.${field2.path}`);
-          control.append(placeholder);
-        }
-        for (const item of options) {
-          const option3 = document.createElement("option");
-          option3.value = item.value;
-          option3.textContent = item.label;
-          control.append(option3);
-        }
-        if (field2.type !== "select") {
-          control.toggleAttribute("creatable", field2.allowCustom === true);
-          control.setAttribute("placeholder", "");
-        }
-      }
-      if (field2.type === "cms-user") {
-        composeUserOptions(control, field2.id);
-      }
-      if (field2.type === "media") {
-        composeMedia(control, field2);
-      }
-      if (field2.type === "schema") {
-        composeSchema(control, field2);
-      }
-      if (field2.type === "secret-ref") {
-        control.setAttribute("api", route2("/api/secrets"));
-      }
-      if (field2.type === "page-link") {
-        control.setAttribute("allow-external", String(field2.allowExternal === true));
-        control.setAttribute("allow-media", String(field2.allowMedia === true));
-        control.setAttribute("published-only", String(field2.publishedOnly === true));
-      }
-      wrapper.append(field2.type === "table" ? composeTable(control, field2) : (field2.type === "combobox" || field2.type === "tokens") && field2.lookup ? composeLookup(control, field2) : control);
-    }
-    return wrapper;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/field.css
-  var field_default6 = `:host { display: block; min-width: 0; }
-dl { display: grid; gap: 7px; margin: 0; min-width: 0; }
-dt { color: #66736f; font-size: 11px; font-weight: 750; letter-spacing: 0; text-transform: uppercase; }
-dd { margin: 0; min-width: 0; }
-:host([internal-label]) dl { gap: 0; }
-:host([internal-label]) dt { display: none; }
-:host([required]:not([internal-label])) dt { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-:host([required]:not([internal-label])) dt::after { content: "* Required"; color: var(--text-muted, #94a3b8); flex-shrink: 0; font-size: 10px; font-weight: 650; text-transform: none; }
-:host([required]:not([internal-label]):has([invalid])) dt::after { color: var(--danger-base, #dc2626); }
-::slotted(*) { width: 100%; min-width: 0; }
-::slotted(input[type="checkbox"]) { width: auto; }
-::slotted(span) { color: #66736f; overflow-wrap: anywhere; }
-::slotted(.readonly-list) { display: grid; gap: 4px; padding: 0; margin: 0; list-style: none; color: #66736f; overflow-wrap: anywhere; word-break: break-word; }
-::slotted(.readonly-empty) { color: #8a9692; font-style: italic; }
-::slotted(.badge) { display: inline-flex; align-items: center; width: fit-content; border-radius: 999px; background: #edf7f0; color: #105d3e; font-size: 12px; font-weight: 750; padding: 3px 8px; }
-::slotted(.detail-image) { aspect-ratio: 1; background: #f4f1ec; border: 1px solid var(--border-default); border-radius: 10px; display: block; object-fit: cover; width: 100%; }
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/Field.ts
-  class DashboardDetailField extends l2 {
-    constructor() {
-      super({ css: field_default6, template: "<dl><dt></dt><dd><slot></slot></dd></dl>" });
-    }
-    static observedAttributes = ["label", "required", "internal-label"];
-    attributeChangedCallback() {
-      this.shadowRoot.querySelector("dt").textContent = this.getAttribute("label") ?? "";
-    }
-  }
-  customElements.define("cms-dashboard-detail-field", DashboardDetailField);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/composition.ts
-  var supported = new Set([
-    "table",
-    "schema",
-    "media",
-    "cms-user",
-    "text",
-    "number",
-    "textarea",
-    "select",
-    "secret-ref",
-    "page-link",
-    "readonly",
-    "combobox",
-    "tokens",
-    "checkbox",
-    "money"
-  ]);
-  function supportsBoundDetail(widget) {
-    return [...widget.main, ...widget.aside ?? []].every((section2) => ("widget" in section2) || section2.fields.every((field2) => supported.has(field2.type)));
-  }
-  function composeDetail(widget, navigation) {
-    const fragment = document.createDocumentFragment();
-    const root = "detailValues";
-    const title = document.createElement("span");
-    title.slot = "bound-title";
-    title.setAttribute("cms-condition", "detailReady");
-    if (widget.title?.path) {
-      const path = widget.title.path === "." ? root : `${root}.${widget.title.path}`;
-      const present = `${path} || ${path} == 0 || ${path} == false`;
-      const value2 = document.createElement("span");
-      value2.setAttribute("cms-condition", present);
-      value2.textContent = binding(root, widget.title.path);
-      const fallback = document.createElement("span");
-      fallback.setAttribute("cms-condition", `!${path} && ${path} != 0 && ${path} != false`);
-      fallback.textContent = widget.title.fallback ?? widget.id;
-      title.append(value2, fallback);
-    } else {
-      title.textContent = widget.title?.fallback ?? widget.id;
-    }
-    fragment.append(title);
-    fragment.append(composeActions());
-    for (const section2 of [...widget.main, ...widget.aside ?? []]) {
-      if (!("widget" in section2)) {
-        fragment.append(...section2.fields.filter((field2) => field2.type === "schema").map(schemaSource));
-      }
-    }
-    if ([...widget.main, ...widget.aside ?? []].some((section2) => !("widget" in section2) && section2.fields.some((field2) => field2.type === "cms-user"))) {
-      fragment.append(directoryElement());
-    }
-    for (const [slot, sections2] of [
-      ["bound-main", widget.main],
-      ["bound-aside", widget.aside ?? []]
-    ]) {
-      for (const section2 of sections2) {
-        if ("widget" in section2) {
-          if (!navigation) {
-            throw new Error("Detail navigation must be composed with its source context.");
-          }
-          const child = navigation(section2);
-          child.slot = slot;
-          child.setAttribute("data-detail-ready", "{{ detailReady }}");
-          fragment.append(child);
-        } else {
-          fragment.append(sectionElement(section2, slot, root));
-        }
-      }
-    }
-    return fragment;
-  }
-  function sectionElement(section2, slot, root) {
-    const element = document.createElement("cms-detail-section");
-    element.slot = slot;
-    element.setAttribute("heading", section2.title);
-    element.setAttribute("cms-condition", "detailReady");
-    if (section2.description) {
-      element.setAttribute("description", section2.description);
-    }
-    if (slot === "bound-aside") {
-      element.setAttribute("density", "compact");
-    }
-    const stack = document.createElement("p9r-stack");
-    stack.setAttribute("gap", "md");
-    stack.setAttribute("trim", "");
-    stack.append(...section2.fields.map((field2) => fieldElement(field2, root)));
-    element.append(stack);
-    return element;
-  }
-  function binding(root, path) {
-    return `{{ ${path === "." ? root : `${root}.${path}`} }}`;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-section/WSection.ts
-  class DashboardWSection extends CmsDetailSection {
-  }
-  if (!customElements.get("cms-dashboard-w-section")) {
-    customElements.define("cms-dashboard-w-section", DashboardWSection);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/shared.ts
-  var WIDGET_ROW_SELECT_EVENT = "cms-dashboard-widget:row-select";
-  var WIDGET_BACK_EVENT = "cms-dashboard-widget:back";
-  var WIDGET_ACTION_EVENT = "cms-dashboard-widget:action";
-  var WIDGET_FILTER_CHANGE_EVENT = "cms-dashboard-widget:filter-change";
-  var WIDGET_FIELD_CHANGE_EVENT = "cms-dashboard-widget:field-change";
-  var WIDGET_MEDIA_ACTION_EVENT = "cms-dashboard-widget:media-action";
-  function emitWidgetEvent(host, type, detail) {
-    host.dispatchEvent(new CustomEvent(type, { bubbles: true, composed: true, detail }));
-  }
-  function setText(root, selector, value2) {
-    const element = root.querySelector(selector);
-    if (element) {
-      element.textContent = value2;
-    }
-  }
-  function setP9rButtonLabel(button, label2) {
-    button.textContent = label2;
-    button.setAttribute("aria-label", label2);
-    const syncNativeButton = () => {
-      button.shadowRoot?.querySelector("button")?.setAttribute("aria-label", label2);
-    };
-    syncNativeButton();
-    if (!button.shadowRoot) {
-      customElements.whenDefined(button.localName).then(syncNativeButton);
-    }
-  }
-  function setP9rButtonTone(button, tone) {
-    button.removeAttribute("color");
-    button.removeAttribute("variant");
-    if (tone === "primary") {
-      button.setAttribute("color", "primary");
-      button.setAttribute("variant", "filled");
-      return;
-    }
-    if (tone === "danger") {
-      button.setAttribute("color", "danger");
-      button.setAttribute("variant", "ghost");
-      return;
-    }
-    button.setAttribute("variant", "outlined");
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/icons.ts
-  var SVG_NS3 = "http://www.w3.org/2000/svg";
-  var PATHS = {
-    archive: ["M3 7h18", "M5 7l1 14h12l1-14", "M9 11h6"],
-    download: ["M12 3v12", "m7 10 5 5 5-5", "M5 21h14"],
-    link: [
-      "M10 13a5 5 0 0 0 7.07 0l1.41-1.41a5 5 0 0 0-7.07-7.07l-.91.91",
-      "M14 11a5 5 0 0 0-7.07 0l-1.41 1.41a5 5 0 0 0 7.07 7.07l.91-.91"
-    ],
-    trash: ["M3 6h18", "M8 6V4h8v2", "M19 6l-1 14H6L5 6", "M10 11v6", "M14 11v6"]
-  };
-  function actionIcon(icon) {
-    if (!icon) {
-      return null;
-    }
-    const svg2 = document.createElementNS(SVG_NS3, "svg");
-    svg2.setAttribute("slot", "icon");
-    svg2.setAttribute("aria-hidden", "true");
-    svg2.setAttribute("viewBox", "0 0 24 24");
-    svg2.setAttribute("focusable", "false");
-    for (const data of PATHS[icon]) {
-      const path = document.createElementNS(SVG_NS3, "path");
-      path.setAttribute("d", data);
-      svg2.append(path);
-    }
-    return svg2;
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/actions.ts
-  function renderDetailActions(actions) {
-    const visible = actions.filter((action) => action.placement !== "more");
-    const overflow = [...visible.slice(3), ...actions.filter((action) => action.placement === "more")];
-    const result = visible.slice(0, 3).map(renderButton);
-    if (overflow.length) {
-      result.push(renderOverflowMenu(overflow));
-    }
-    return result;
-  }
-  function renderButton(action) {
-    const button = document.createElement("p9r-button");
-    button.setAttribute("type", "button");
-    setP9rButtonTone(button, action.tone);
-    button.dataset.action = action.action ?? action.label;
-    if (action.confirm) {
-      button.dataset.confirm = action.confirm;
-    }
-    setP9rButtonLabel(button, action.label);
-    return button;
-  }
-  function renderOverflowMenu(actions) {
-    const menu = document.createElement("p9r-action-menu");
-    menu.setAttribute("label", "More actions");
-    for (const [label2, sectionActions] of groupedSections(actions)) {
-      const section2 = document.createElement("p9r-action-menu-section");
-      section2.setAttribute("label", label2);
-      for (const action of sectionActions) {
-        section2.append(renderMenuItem(action));
-      }
-      menu.append(section2);
-    }
-    return menu;
-  }
-  function renderMenuItem(action) {
-    const item = document.createElement("p9r-action-menu-item");
-    if (action.tone === "danger") {
-      item.setAttribute("color", "danger");
-    }
-    item.dataset.action = action.action ?? action.label;
-    if (action.confirm) {
-      item.dataset.confirm = action.confirm;
-    }
-    const icon = actionIcon(action.icon);
-    if (icon) {
-      item.append(icon);
-    }
-    item.append(document.createTextNode(action.label));
-    return item;
-  }
-  function groupedSections(actions) {
-    const sections2 = new Map;
-    for (const action of actions) {
-      const label2 = action.section ?? "Other actions";
-      sections2.set(label2, [...sections2.get(label2) ?? [], action]);
-    }
-    return Array.from(sections2);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-media-field/legacy/template.html
-  var template_default11 = `<section class="media-field">
-    <div class="label-row">
-        <span data-label></span>
-        <button class="preview-trigger" data-preview-open type="button" hidden>
-            <svg aria-hidden="true" viewBox="0 0 24 24">
-                <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
-                <circle cx="12" cy="12" r="2.75"></circle>
-            </svg>
-            <span>Preview</span>
-        </button>
-    </div>
-    <div class="media-grid" data-grid></div>
-    <input data-file type="file" hidden>
-    <dialog class="media-preview" data-preview-dialog aria-labelledby="media-preview-title">
-        <div class="preview-shell">
-            <header class="preview-header">
-                <div>
-                    <p class="preview-title" id="media-preview-title">Image preview</p>
-                    <p class="preview-counter" data-preview-counter aria-live="polite"></p>
-                </div>
-                <button class="preview-close" data-preview-action="close" type="button">
-                    <span>Close</span>
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </header>
-            <div class="preview-stage">
-                <button
-                    class="preview-nav"
-                    data-preview-action="previous"
-                    type="button"
-                    aria-label="Previous image"
-                >&lsaquo;</button>
-                <figure class="preview-figure">
-                    <div class="preview-media">
-                        <img class="preview-image" data-preview-image decoding="async" alt="">
-                        <p class="preview-status" data-preview-status role="status" hidden></p>
-                    </div>
-                    <figcaption data-preview-caption></figcaption>
-                </figure>
-                <button
-                    class="preview-nav"
-                    data-preview-action="next"
-                    type="button"
-                    aria-label="Next image"
-                >&rsaquo;</button>
-            </div>
-            <div class="preview-strip" data-preview-strip role="group" aria-label="Choose an image"></div>
-        </div>
-    </dialog>
-</section>
-`;
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/controllers/previewView.ts
   function mediaPreviewElements(root) {
@@ -32121,7 +30793,7 @@ dd { margin: 0; min-width: 0; }
     }
     applyFeedbackMetadata(input, field2);
     applyRemoteLookupMetadata(input, field2);
-    input.replaceChildren(...(field2.options ?? []).map((option3) => optionElement(option3, String(field2.value))));
+    input.replaceChildren(...(field2.options ?? []).map((option2) => optionElement(option2, String(field2.value))));
     input.value = String(field2.value);
     bindFieldControl(input, field2);
     return input;
@@ -32137,7 +30809,7 @@ dd { margin: 0; min-width: 0; }
     if (field2.creatable) {
       input.setAttribute("creatable", "");
     }
-    input.replaceChildren(...(field2.options ?? []).map((option3) => optionElement(option3, "")));
+    input.replaceChildren(...(field2.options ?? []).map((option2) => optionElement(option2, "")));
     bindFieldControl(input, field2);
     return input;
   }
@@ -32284,13 +30956,13 @@ dd { margin: 0; min-width: 0; }
     const group = document.createElement("div");
     group.className = "chip-group";
     bindFieldControl(group, field2);
-    for (const option3 of field2.options ?? []) {
+    for (const option2 of field2.options ?? []) {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "chip";
-      button.dataset.value = option3.value;
-      button.setAttribute("aria-pressed", String(selected2.has(option3.value)));
-      button.textContent = option3.label;
+      button.dataset.value = option2.value;
+      button.setAttribute("aria-pressed", String(selected2.has(option2.value)));
+      button.textContent = option2.label;
       group.append(button);
     }
     return group;
@@ -32525,11 +31197,11 @@ dd { margin: 0; min-width: 0; }
       control2.setAttribute("aria-label", field2.label);
       const text6 = value2 === null || value2 === undefined ? "" : String(value2);
       control2.setAttribute("value", text6);
-      control2.replaceChildren(...(field2.options ?? []).map((option3) => {
+      control2.replaceChildren(...(field2.options ?? []).map((option2) => {
         const element = document.createElement("option");
-        element.value = option3.value;
-        element.textContent = option3.label;
-        element.selected = option3.value === text6;
+        element.value = option2.value;
+        element.textContent = option2.label;
+        element.selected = option2.value === text6;
         return element;
       }));
       if (field2.type === "combobox") {
@@ -33222,6 +31894,9 @@ dd { margin: 0; min-width: 0; }
     return field2.input === "media-list" || field2.input === "reorderable-list" || field2.input === "schema" || fieldUsesBasicInternalLabel(field2);
   }
   function readFieldControlValue(field2, control) {
+    if (field2.input === "reorderable-list" && control.localName === "cms-dashboard-reorderable-field") {
+      return control.items;
+    }
     if (field2.input === "media-list" && isMediaControl(control)) {
       return control.items;
     }
@@ -33240,6 +31915,9 @@ dd { margin: 0; min-width: 0; }
     return field2.input === "table" && control.localName === "cms-dashboard-table-field" ? readBoundTableRows(field2, control) : readFieldControlValue(field2, control);
   }
   function invalidFieldControl(field2, control) {
+    if (field2.input === "reorderable-list" && control.localName === "cms-dashboard-reorderable-field") {
+      return validateReorderable(control) ?? (control.hasAttribute("invalid") ? control : null);
+    }
     if (field2.input === "schema") {
       return validateSchemaControl(field2, control) ?? (control.hasAttribute("invalid") ? control : null);
     }
@@ -33344,14 +32022,14 @@ dd { margin: 0; min-width: 0; }
       return this.root.querySelector(selector);
     }
   }
-  function applyLookupOption(control, value2, option3) {
-    const existing = Array.from(control.querySelectorAll("option")).find((item) => item.value === option3.value);
+  function applyLookupOption(control, value2, option2) {
+    const existing = Array.from(control.querySelectorAll("option")).find((item) => item.value === option2.value);
     if (existing) {
-      existing.textContent = option3.label;
+      existing.textContent = option2.label;
     } else {
       const element = document.createElement("option");
-      element.value = option3.value;
-      element.textContent = option3.label;
+      element.value = option2.value;
+      element.textContent = option2.label;
       control.append(element);
     }
     const nextValue = Array.isArray(value2) ? value2.map(String).join(",") : String(value2 ?? "");
@@ -33537,6 +32215,9 @@ dd { margin: 0; min-width: 0; }
         return;
       }
       this.syncRequiredValidity(field2, control, readFieldControlValue(field2, control));
+      if (control.localName === "cms-dashboard-reorderable-field") {
+        validateReorderable(control, true);
+      }
     }
     control(fieldId) {
       return Array.from(this.root.querySelectorAll("[data-field-control]")).find((control) => control.dataset.fieldControl === fieldId) ?? null;
@@ -33817,7 +32498,7 @@ p9r-token-input {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/controls.css
-  var controls_default2 = `.detail-schema {
+  var controls_default = `.detail-schema {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px 12px;
@@ -34500,9 +33181,9 @@ p9r-token-input {
       this.timers.clear();
     }
     async loadPage(key, query6, offset, control, append) {
-      const binding2 = readDetailBinding(this.dataset);
+      const binding = readDetailBinding(this.dataset);
       const target2 = this.target(key);
-      if (!binding2?.sourceId || !target2) {
+      if (!binding?.sourceId || !target2) {
         control.removeAttribute("loading");
         return;
       }
@@ -34519,7 +33200,7 @@ p9r-token-input {
       });
       control.setAttribute("loading", "");
       control.removeAttribute("has-more");
-      const result = await loadDetailLookupOptions(binding2.sourceId, binding2.widget, binding2.resource, this.fields.currentFields(), {
+      const result = await loadDetailLookupOptions(binding.sourceId, binding.widget, binding.resource, this.fields.currentFields(), {
         targetKeys: new Set([key]),
         loadData: (sourceId, ref, vars) => this.requests.load(consumer, sourceId, ref, vars),
         vars: {
@@ -34545,8 +33226,8 @@ p9r-token-input {
       this.updateControl(control, options, this.hasMore(state));
     }
     target(key) {
-      const binding2 = readDetailBinding(this.dataset);
-      return binding2 ? detailLookupTargets(binding2.widget).find((item) => item.key === key) : undefined;
+      const binding = readDetailBinding(this.dataset);
+      return binding ? detailLookupTargets(binding.widget).find((item) => item.key === key) : undefined;
     }
     updateControl(control, options, hasMore) {
       control.removeAttribute("loading");
@@ -34555,11 +33236,11 @@ p9r-token-input {
         return;
       }
       const selected2 = "value" in control ? String(control.value ?? "") : "";
-      control.replaceChildren(...options.map((option3) => {
+      control.replaceChildren(...options.map((option2) => {
         const element = document.createElement("option");
-        element.value = option3.value;
-        element.textContent = option3.label;
-        element.selected = option3.value === selected2;
+        element.value = option2.value;
+        element.textContent = option2.label;
+        element.selected = option2.value === selected2;
         return element;
       }));
     }
@@ -34579,11 +33260,11 @@ p9r-token-input {
   }
   function dedupeOptions2(options) {
     const seen = new Set;
-    return options.filter((option3) => {
-      if (seen.has(option3.value)) {
+    return options.filter((option2) => {
+      if (seen.has(option2.value)) {
         return false;
       }
-      seen.add(option3.value);
+      seen.add(option2.value);
       return true;
     });
   }
@@ -34685,15 +33366,15 @@ p9r-token-input {
       }
     }
     schedule(changedFieldId) {
-      const binding2 = readDetailBinding(this.dataset);
-      if (!binding2) {
+      const binding = readDetailBinding(this.dataset);
+      if (!binding) {
         return;
       }
-      const targetKeys = lookupTargetKeysDependingOn(binding2.widget, changedFieldId);
+      const targetKeys = lookupTargetKeysDependingOn(binding.widget, changedFieldId);
       const fields = this.fields.currentFields();
-      for (const key of allLookupTargetKeys(binding2.widget)) {
-        const field2 = cmsUserTarget(binding2.widget, key);
-        if (field2 && !Object.hasOwn(this.currentOptions, key) && matchesDashboardVisibility(field2.visibleWhen, { fields, resource: binding2.resource })) {
+      for (const key of allLookupTargetKeys(binding.widget)) {
+        const field2 = cmsUserTarget(binding.widget, key);
+        if (field2 && !Object.hasOwn(this.currentOptions, key) && matchesDashboardVisibility(field2.visibleWhen, { fields, resource: binding.resource })) {
           targetKeys.add(key);
         }
       }
@@ -34711,15 +33392,15 @@ p9r-token-input {
       if (!this.cmsUserErrors.has(fieldId) || this.retryingCmsUserTargetKeys.has(fieldId)) {
         return;
       }
-      const binding2 = readDetailBinding(this.dataset);
-      const field2 = binding2 ? cmsUserTarget(binding2.widget, fieldId) : undefined;
+      const binding = readDetailBinding(this.dataset);
+      const field2 = binding ? cmsUserTarget(binding.widget, fieldId) : undefined;
       const fields = this.fields.currentFields();
-      if (!binding2?.sourceId || !field2 || !matchesDashboardVisibility(field2.visibleWhen, { fields, resource: binding2.resource })) {
+      if (!binding?.sourceId || !field2 || !matchesDashboardVisibility(field2.visibleWhen, { fields, resource: binding.resource })) {
         return;
       }
       const scopeGeneration = this.scopeGeneration;
       this.retryingCmsUserTargetKeys.add(fieldId);
-      this.load(binding2.widget, binding2.resource, binding2.rowKey, binding2.sourceId, fields, {
+      this.load(binding.widget, binding.resource, binding.rowKey, binding.sourceId, fields, {
         targetKeys: new Set([fieldId]),
         useLatestFields: true
       }).finally(() => {
@@ -34792,11 +33473,11 @@ p9r-token-input {
       this.reloadTimer = null;
       const targetKeys = new Set(this.pendingTargetKeys);
       this.pendingTargetKeys.clear();
-      const binding2 = readDetailBinding(this.dataset);
-      if (!binding2?.sourceId) {
+      const binding = readDetailBinding(this.dataset);
+      if (!binding?.sourceId) {
         return;
       }
-      this.load(binding2.widget, binding2.resource, binding2.rowKey, binding2.sourceId, this.fields.currentFields(), { targetKeys, useLatestFields: true });
+      this.load(binding.widget, binding.resource, binding.rowKey, binding.sourceId, this.fields.currentFields(), { targetKeys, useLatestFields: true });
     }
     invalidateTarget(key) {
       return this.targets.invalidate(key);
@@ -34814,7 +33495,7 @@ p9r-token-input {
   }
   function preserveCmsUserSelection(options, selected2) {
     const value2 = typeof selected2 === "string" ? selected2 : "";
-    if (!value2 || options.some((option3) => option3.value === value2)) {
+    if (!value2 || options.some((option2) => option2.value === value2)) {
       return options;
     }
     return [...options, { value: value2, label: `Unknown CMS user · ${value2}` }];
@@ -34873,11 +33554,11 @@ p9r-token-input {
       }
     }
     schedule(changedFieldId) {
-      const binding2 = readDetailBinding(this.dataset);
-      if (!binding2) {
+      const binding = readDetailBinding(this.dataset);
+      if (!binding) {
         return;
       }
-      const { widget, resource, rowKey, sourceId } = binding2;
+      const { widget, resource, rowKey, sourceId } = binding;
       const keys = schemaKeysDependingOn(widget, changedFieldId);
       if (keys.size === 0) {
         return;
@@ -35035,37 +33716,23 @@ p9r-token-input {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/index.ts
-  var styles = [base_default, controls_default2, style_default9].join(`
+  var styles = [base_default, controls_default, style_default9].join(`
 `);
 
   class DashboardWDetail extends l2 {
     configuration;
-    sourceUnavailable = false;
-    resource;
     configure(widget) {
       this.configuration = widget;
-      if (!this.hasAttribute("data-declarative") && supportsBoundDetail(widget)) {
+      if (!this.hasAttribute("data-declarative")) {
         this.setAttribute("data-declarative", "");
         bindDetailContext(this, widget, (resource) => this.runtime.fields.draftForResource(resource), () => this.runtime.fields.displayDraft);
       }
-    }
-    setBindingValue(value2) {
-      if (this.hasAttribute("data-declarative")) {
-        Md(this, value2);
-        return;
-      }
-      if (value2 === undefined || Object.is(value2, this.resource)) {
-        return;
-      }
-      this.resource = value2;
-      this.bindingRevision += 1;
-      this.scheduleBoundDataSync();
     }
     readBinding() {
       if (!this.configuration) {
         return readDetailBinding(this.dataset);
       }
-      const data = this.hasAttribute("data-declarative") ? Td(this) : this.resource;
+      const data = Td(this);
       const resource = this.configuration.source.itemPath ? valueAt(data, this.configuration.source.itemPath) : data;
       return resource === undefined || resource === null ? null : {
         widget: this.configuration,
@@ -35074,18 +33741,6 @@ p9r-token-input {
         sourceId: this.dataset.sourceId ?? ""
       };
     }
-    boundValue = (event) => {
-      const { kind, value: value2 } = event.detail;
-      if (kind === "detail-status" && event.target.closest("cms-dashboard-w-detail") === this) {
-        event.stopPropagation();
-        this.sourceUnavailable = Boolean(value2.loading || value2.error);
-        this.syncSourceAvailability();
-      }
-      if (kind === "detail" && event.target.closest("cms-dashboard-w-detail") === this) {
-        event.stopPropagation();
-        this.setBindingValue(value2);
-      }
-    };
     value = emptyDetailData();
     runtime;
     syncScheduler = new DetailSyncScheduler;
@@ -35096,8 +33751,8 @@ p9r-token-input {
       this.runtime = createDetailRuntime(this, this.shadowRoot, {
         readBinding: () => this.readBinding(),
         data: () => {
-          const binding2 = this.hasAttribute("data-declarative") ? this.readBinding() : null;
-          return binding2 ? mapDetailData(this.runtime, binding2.widget, binding2.resource, binding2.rowKey, this.runtime.fields.draft, binding2.sourceId, boundSchemas(this)) : this.value;
+          const binding = this.hasAttribute("data-declarative") ? this.readBinding() : null;
+          return binding ? mapDetailData(this.runtime, binding.widget, binding.resource, binding.rowKey, this.runtime.fields.draft, binding.sourceId, boundSchemas(this)) : this.value;
         },
         setData: (value2) => {
           this.value = value2;
@@ -35117,18 +33772,18 @@ p9r-token-input {
         this.render();
       }
     }
-    applyLookupCreate(fieldId, value2, option3) {
+    applyLookupCreate(fieldId, value2, option2) {
       const control = this.runtime.fields.control(fieldId);
       const field2 = control ? this.runtime.fields.find(fieldId) : undefined;
       if (control && field2) {
         const lookup = control.closest("cms-dashboard-lookup");
         if (lookup) {
           this.runtime.fields.record(fieldId, value2);
-          lookup.acceptCreatedOption(option3);
+          lookup.acceptCreatedOption(option2);
           bi(this);
           return;
         }
-        applyLookupOption(control, value2, option3);
+        applyLookupOption(control, value2, option2);
       }
     }
     acknowledgeSavedFields(fields) {
@@ -35137,6 +33792,13 @@ p9r-token-input {
     restoreField(field2, submitted, previous) {
       this.runtime.fields.restoreField(field2, submitted, previous);
       this.refreshConditionalFields();
+    }
+    applyFieldDraft(field2, value2) {
+      this.runtime.fields.record(field2, value2);
+      this.refreshConditionalFields();
+    }
+    currentFieldValues() {
+      return this.runtime.fields.currentFields();
     }
     static get observedAttributes() {
       return ["data-config-json", "data-source-json", "data-row-key", "data-source-id"];
@@ -35149,7 +33811,6 @@ p9r-token-input {
     connectedCallback() {
       this.syncScheduler.advanceLifecycle();
       this.runtime.events.bind();
-      this.addEventListener("dashboard:bound-value", this.boundValue);
       if (this.mode === "manual") {
         this.render();
       } else {
@@ -35160,7 +33821,6 @@ p9r-token-input {
       releaseMediaFiles(this);
       this.syncScheduler.advanceLifecycle();
       this.runtime.events.unbind();
-      this.removeEventListener("dashboard:bound-value", this.boundValue);
       this.resetState(true);
     }
     render() {
@@ -35168,12 +33828,6 @@ p9r-token-input {
         return;
       }
       this.runtime.view.render(this.value);
-      this.syncSourceAvailability();
-    }
-    syncSourceAvailability() {
-      for (const target2 of Array.from(this.shadowRoot.querySelectorAll("[data-actions], [data-main], [data-aside]"))) {
-        target2.toggleAttribute("inert", this.sourceUnavailable);
-      }
     }
     refreshConditionalFields() {
       if (this.hasAttribute("data-declarative")) {
@@ -35183,22 +33837,22 @@ p9r-token-input {
       if (this.mode !== "bound") {
         return;
       }
-      const binding2 = this.readBinding();
-      if (!binding2) {
+      const binding = this.readBinding();
+      if (!binding) {
         return;
       }
       const previous = this.value;
-      const next = mapDetailData(this.runtime, binding2.widget, binding2.resource, this.value.rowKey, this.runtime.fields.currentFields(), this.dataset.sourceId ?? "");
+      const next = mapDetailData(this.runtime, binding.widget, binding.resource, this.value.rowKey, this.runtime.fields.currentFields(), this.dataset.sourceId ?? "");
       this.value = next;
       this.runtime.view.refresh(previous, next);
     }
     syncBoundData() {
-      const binding2 = this.readBinding();
-      if (!binding2) {
+      const binding = this.readBinding();
+      if (!binding) {
         this.resetState();
         return;
       }
-      const { widget, resource, rowKey, sourceId } = binding2;
+      const { widget, resource, rowKey, sourceId } = binding;
       const scopeKey = JSON.stringify([sourceId, widget.id, rowKey, this.bindingRevision]);
       this.runtime.requests.syncScope(scopeKey);
       this.runtime.fields.syncScope(scopeKey);
@@ -35692,7 +34346,7 @@ slot {
   }
 
   // src/static/admin/_content/sources/_runtime/table.html
-  var table_default3 = `<template data-table-control="column"><span slot="columns" role="columnheader"></span></template>
+  var table_default2 = `<template data-table-control="column"><span slot="columns" role="columnheader"></span></template>
 <template data-table-control="action"><p9r-button slot="actions" type="button"></p9r-button></template>
 <template data-table-control="filters">
     <form slot="filters" data-filters>
@@ -35868,10 +34522,10 @@ slot { display: contents; }
           control.setAttribute("placeholder", filter.placeholder);
         }
         if (filter.type === "select") {
-          for (const option3 of filter.options ?? []) {
+          for (const option2 of filter.options ?? []) {
             const element = document.createElement("option");
-            element.value = option3.value;
-            element.textContent = option3.label;
+            element.value = option2.value;
+            element.textContent = option2.label;
             control.append(element);
           }
         }
@@ -35891,7 +34545,7 @@ slot { display: contents; }
   }
   function fragment(kind) {
     const template5 = document.createElement("template");
-    template5.innerHTML = table_default3;
+    template5.innerHTML = table_default2;
     return template5.content.querySelector(`[data-table-control="${kind}"]`).content.cloneNode(true);
   }
 
@@ -36497,6 +35151,59 @@ slot { display: contents; }
     return "";
   }
 
+  // src/components/admin/Resources/Dashboards/view/actions/nestedMedia.ts
+  function settleNestedMedia(context, key, media2, widget, item, failed = false) {
+    const bound = widget?.hasAttribute("data-declarative") ? widget : undefined;
+    const draft = { ...context.drafts.get(key) ?? {} };
+    const items = cloneItems2(bound?.currentFieldValues()[media2.field] ?? draft[media2.field]);
+    const parent = nestedMediaParent(items, media2);
+    const current = parent && media2.itemPath ? valueAt(parent, media2.itemPath) : undefined;
+    const expected = media2.value[0] ?? null;
+    if (parent && media2.itemPath && sameMedia(current, expected)) {
+      if (failed) {
+        const previous = media2.action === "replace" ? media2.previousItem : media2.action === "remove" ? media2.item : null;
+        setValueAt(parent, media2.itemPath, previous ?? null);
+      } else if (media2.action === "upload" || media2.action === "replace") {
+        const alt = current && typeof current === "object" && "alt" in current ? current.alt : undefined;
+        setValueAt(parent, media2.itemPath, item ? { ...item, ...typeof alt === "string" ? { alt } : {} } : null);
+      }
+    }
+    draft[media2.field] = items;
+    context.drafts.set(key, draft);
+    if (bound) {
+      bound.applyFieldDraft(media2.field, items);
+      return;
+    }
+    const control = Array.from(widget?.shadowRoot?.querySelectorAll("[data-field-control]") ?? []).find((node) => node.dataset.fieldControl === media2.field);
+    if (control?.data) {
+      control.data = { ...control.data, items: structuredClone(items) };
+    } else {
+      context.render();
+    }
+  }
+  function cloneItems2(value2) {
+    return Array.isArray(value2) ? structuredClone(value2.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item))) : [];
+  }
+  function nestedMediaParent(items, media2) {
+    if (media2.itemKeyPath && valueAt(media2.parentItem, media2.itemKeyPath) != null) {
+      return items.find((item) => String(valueAt(item, media2.itemKeyPath)) === media2.itemKey);
+    }
+    const pending = media2.value[0];
+    if (pending && media2.itemPath) {
+      const parent = items.find((item) => sameMedia(valueAt(item, media2.itemPath), pending));
+      if (parent) {
+        return parent;
+      }
+    }
+    return items[media2.itemIndex ?? -1];
+  }
+  function sameMedia(left, right) {
+    if (left == null || right === null) {
+      return left == null && right === null;
+    }
+    return typeof left === "object" && "id" in left && "url" in left && left.id === right.id && left.url === right.url;
+  }
+
   // src/components/admin/Resources/Dashboards/view/actions/media.ts
   async function runDashboardMediaAction(context, media2, widget) {
     const { group, dashboard } = context;
@@ -36515,11 +35222,8 @@ slot { display: contents; }
         if (result.handled && (media2.action === "upload" || media2.action === "replace") && !result.item) {
           throw new Error("The media endpoint returned no usable media item");
         }
-        const items = updateNestedDraft(context.drafts, key, media2, result.item);
+        settleNestedMedia(context, key, media2, widget, result.item);
         ah(`Media ${media2.action} completed`, { type: "success" });
-        if (!syncNestedMediaControl(widget, media2.field, items)) {
-          context.render();
-        }
         return;
       }
       removeDraftField(context.drafts, key, media2.field);
@@ -36531,10 +35235,7 @@ slot { display: contents; }
         return;
       }
       if (media2.itemField) {
-        const items = restoreNestedDraft(context.drafts, detailKey(detail.collection, detail.row), media2);
-        if (!syncNestedMediaControl(widget, media2.field, items)) {
-          context.render();
-        }
+        settleNestedMedia(context, key, media2, widget, undefined, true);
       } else if (media2.previousValue !== undefined) {
         const draft = context.drafts.get(key);
         if (draft && Object.hasOwn(draft, media2.field) && !Object.hasOwn(remainingDraft(draft, { [media2.field]: media2.value }), media2.field)) {
@@ -36544,61 +35245,6 @@ slot { display: contents; }
       }
       ah(error instanceof Error ? error.message : "Dashboard media action failed", { type: "error" });
     }
-  }
-  function updateNestedDraft(drafts, key, media2, item) {
-    const draft = { ...drafts.get(key) ?? {} };
-    const items = cloneItems2(draft[media2.field]);
-    const parent = nestedMediaParent(items, media2);
-    if (!parent || !media2.itemPath) {
-      throw new Error("The media choice no longer exists");
-    }
-    if (media2.action === "upload" || media2.action === "replace") {
-      const local = media2.value[0];
-      setValueAt(parent, media2.itemPath, item ? { ...item, ...local?.alt ? { alt: local.alt } : {} } : null);
-    }
-    draft[media2.field] = items;
-    drafts.set(key, draft);
-    return items;
-  }
-  function restoreNestedDraft(drafts, key, media2) {
-    const draft = { ...drafts.get(key) ?? {} };
-    const items = cloneItems2(draft[media2.field]);
-    const parent = nestedMediaParent(items, media2);
-    if (!parent || !media2.itemPath) {
-      return items;
-    }
-    const restored = media2.action === "replace" ? media2.previousItem : media2.action === "remove" ? media2.item : null;
-    setValueAt(parent, media2.itemPath, restored ?? null);
-    draft[media2.field] = items;
-    drafts.set(key, draft);
-    return items;
-  }
-  function syncNestedMediaControl(widget, field2, items) {
-    const control = Array.from(widget?.shadowRoot?.querySelectorAll("[data-field-control]") ?? []).find((candidate) => candidate.dataset.fieldControl === field2);
-    if (!control?.data) {
-      return false;
-    }
-    control.data = { ...control.data, items: structuredClone(items) };
-    return true;
-  }
-  function cloneItems2(value2) {
-    return Array.isArray(value2) ? structuredClone(value2.filter((item) => item !== null && typeof item === "object" && !Array.isArray(item))) : [];
-  }
-  function nestedMediaParent(items, media2) {
-    const pendingId = media2.value[0]?.id;
-    if (pendingId && media2.itemPath) {
-      const pending = items.find((item) => mediaItemId(valueAt(item, media2.itemPath)) === pendingId);
-      if (pending) {
-        return pending;
-      }
-    }
-    return items[media2.itemIndex ?? -1];
-  }
-  function mediaItemId(value2) {
-    if (!value2 || typeof value2 !== "object" || Array.isArray(value2)) {
-      return;
-    }
-    return typeof value2.id === "string" ? value2.id : undefined;
   }
   function removeDraftField(drafts, key, field2) {
     const draft = { ...drafts.get(key) ?? {} };
@@ -36702,6 +35348,1825 @@ slot { display: contents; }
     <p9r-alert type="error" cms-condition="$source.error">Unable to load dashboards. {{ $source.message }}</p9r-alert>
 </div>
 `;
+
+  // src/static/admin/_content/sources/_runtime/detail/users.html
+  var users_default = `<template data-users="source">
+    <cms-dashboard-directory cms-source="{{ detailUsersUrl }}" hidden>
+        <span cms-condition="$source.loading" hidden></span>
+        <span cms-condition="$source.error" hidden></span>
+    </cms-dashboard-directory>
+</template>
+<template data-users="option">
+    <option value="{{ cmsUserOption.value }}">{{ cmsUserOption.label }}</option>
+</template>
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/Directory.ts
+  var sequence = 0;
+
+  class DashboardDirectory extends HTMLElement {
+    failed = false;
+    queued = false;
+    connectedCallback() {
+      this.setAttribute("cms-reload-on", `dashboard:directory:${++sequence}`);
+      fd(this, (value2) => {
+        this.failed = Boolean(value2 && !Array.isArray(value2) && typeof value2 === "object" && "status" in value2);
+        this.refreshOwner();
+        return {};
+      });
+      this.refreshOwner();
+    }
+    retry() {
+      if (this.failed) {
+        this.failed = false;
+        this.ownerDocument.dispatchEvent(new Event(this.getAttribute("cms-reload-on")));
+      }
+    }
+    refreshOwner() {
+      if (this.queued) {
+        return;
+      }
+      this.queued = true;
+      queueMicrotask(() => {
+        this.queued = false;
+        const owner = this.closest("cms-dashboard-w-detail");
+        if (this.isConnected && owner) {
+          bi(owner);
+        }
+      });
+    }
+  }
+  customElements.define("cms-dashboard-directory", DashboardDirectory);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/users.ts
+  function directoryElement() {
+    return declaration("source");
+  }
+  function composeUserOptions(control, id2) {
+    const option2 = declaration("option");
+    option2.setAttribute("cms-repeat", `detailUsersOptions.${id2} as cmsUserOption`);
+    control.setAttribute("cms-bind-boolean-invalid", "detailUsersFailed");
+    control.setAttribute("hint", "{{ detailUsersHint }}");
+    control.setAttribute("hint-level", "error");
+    control.setAttribute("placeholder", "");
+    control.append(option2);
+  }
+  function declaration(kind) {
+    const host = document.createElement("template");
+    host.innerHTML = users_default;
+    return host.content.querySelector(`[data-users="${kind}"]`).content.firstElementChild.cloneNode(true);
+  }
+
+  // src/static/admin/_content/sources/_runtime/detail/schema.html
+  var schema_default = `<span data-schema-state="loading">Loading dynamic fields…</span>
+<span data-schema-state="error">Dynamic fields are temporarily unavailable. Existing values are preserved.</span>
+<span data-schema-state="empty">No dynamic fields are configured.</span>
+<div data-schema-state="ready">
+    <cms-dashboard-schema-row data-schema-row>
+        <p9r-input cms-condition="schemaRow.text" type="{{ schemaRow.inputType }}"
+            data-schema-key="{{ schemaRow.id }}" label="{{ schemaRow.label }}" value="{{ schemaRow.value }}"
+            cms-bind-boolean-required="schemaRow.required"></p9r-input>
+        <p9r-select cms-condition="schemaRow.select" data-schema-key="{{ schemaRow.id }}"
+            label="{{ schemaRow.label }}" value="{{ schemaRow.value }}" cms-bind-boolean-required="schemaRow.required">
+            <option cms-condition="schemaRow.placeholder" value="" disabled>Select an option</option>
+            <option cms-repeat="schemaRow.options as schemaOption" value="{{ schemaOption.value }}">{{ schemaOption.label }}</option>
+        </p9r-select>
+        <label cms-condition="schemaRow.checkbox" cms-bind-boolean-data-required="schemaRow.required">
+            <input type="checkbox" data-schema-key="{{ schemaRow.id }}" cms-bind-value="schemaRow.checked"
+                aria-label="{{ schemaRow.label }}" aria-required="{{ schemaRow.required }}">
+            <span>{{ schemaRow.label }}</span>
+        </label>
+        <span cms-condition="schemaRow.unit" data-schema-unit>{{ schemaRow.unit }}</span>
+    </cms-dashboard-schema-row>
+</div>
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/Source.ts
+  class DashboardSchemaSource extends HTMLElement {
+    static observedAttributes = ["request-base"];
+    status = "loading";
+    timer;
+    queued = false;
+    connectedCallback() {
+      fd(this, (value2) => {
+        this.status = value2 === undefined ? "loading" : Object.is(value2, Td(this)) ? "ready" : "error";
+        this.refreshOwner();
+        return {};
+      });
+      this.updateUrl(false);
+    }
+    disconnectedCallback() {
+      clearTimeout(this.timer);
+    }
+    attributeChangedCallback(_name, before, after) {
+      if (before !== after && this.isConnected) {
+        this.updateUrl(Boolean(before && !before.includes("{{")));
+      }
+    }
+    updateUrl(debounce) {
+      clearTimeout(this.timer);
+      const url = this.getAttribute("request-base");
+      this.setAttribute("cms-source", "");
+      if (!url || url.includes("{{")) {
+        this.status = "ready";
+        Md(this, []);
+        this.refreshOwner();
+        return;
+      }
+      this.status = "loading";
+      this.refreshOwner();
+      const activate = () => {
+        this.setAttribute("cms-source", `${url} as schemaPayload`);
+      };
+      if (debounce) {
+        this.timer = setTimeout(activate, 250);
+      } else {
+        activate();
+      }
+    }
+    refreshOwner() {
+      if (this.queued) {
+        return;
+      }
+      this.queued = true;
+      queueMicrotask(() => {
+        this.queued = false;
+        const owner = this.closest("cms-dashboard-w-detail");
+        if (this.isConnected && owner) {
+          bi(owner);
+        }
+      });
+    }
+  }
+  customElements.define("cms-dashboard-schema-source", DashboardSchemaSource);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/field.css
+  var field_default2 = `:host { display: block; min-width: 0; }
+:host(cms-dashboard-schema-row) { display: grid; }
+slot { display: contents; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.grid ::slotted([data-schema-state="ready"]) { display: contents; }
+.grid ::slotted([data-schema-state]) { color: #66736f; font-size: 12px; }
+.grid ::slotted([data-schema-state="error"]) { color: #8a1f12; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }
+.row ::slotted(p9r-input), .row ::slotted(p9r-select) { width: 100%; }
+.row ::slotted([data-schema-unit]) {
+    align-items: center; background: #f3f7f5; border: 1px solid #cfd8d4;
+    border-radius: 7px; color: #66736f; display: inline-flex; font-size: 12px;
+    font-weight: 750; justify-content: center; min-height: 36px; min-width: 44px; padding: 0 10px 9px;
+}
+.row ::slotted(label) {
+    align-items: center; color: #16231f; display: flex; font-size: 13px;
+    font-weight: 650; gap: 8px; min-height: 36px;
+}
+.row ::slotted(label[data-required])::after {
+    color: var(--text-muted, #94a3b8); content: "* Required";
+    flex-shrink: 0; font-size: 10px; font-weight: 650; letter-spacing: 0; margin-inline-start: auto;
+}
+.row ::slotted(label[data-required]:has([invalid]))::after { color: var(--danger-base, #dc2626); }
+@media (max-width: 720px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/Field.ts
+  class SchemaField extends l2 {
+    constructor() {
+      super({ css: field_default2, template: '<div class="grid"><slot></slot></div>' });
+    }
+  }
+
+  class SchemaRow extends l2 {
+    constructor() {
+      super({ css: field_default2, template: '<div class="row"><slot></slot></div>' });
+    }
+  }
+  customElements.define("cms-dashboard-schema-field", SchemaField);
+  customElements.define("cms-dashboard-schema-row", SchemaRow);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/schema/binding/composition.ts
+  function schemaSource(field2) {
+    const source2 = document.createElement("cms-dashboard-schema-source");
+    source2.hidden = true;
+    source2.setAttribute("cms-source", "");
+    source2.setAttribute("field-id", field2.id);
+    source2.setAttribute("request-base", `{{ detailSchemaUrls.${field2.id} }}`);
+    if (field2.schema.itemsPath) {
+      source2.setAttribute("items-path", field2.schema.itemsPath);
+    }
+    return source2;
+  }
+  function composeSchema(control, field2) {
+    const template5 = document.createElement("template");
+    template5.innerHTML = schema_default;
+    const root = `detailSchemas.${field2.id}`;
+    for (const state of ["loading", "error", "empty", "ready"]) {
+      const element = template5.content.querySelector(`[data-schema-state="${state}"]`);
+      element.setAttribute("cms-condition", state === "empty" ? `${root}.status == 'ready' && ${root}.empty` : `${root}.status == '${state}'`);
+    }
+    template5.content.querySelector("[data-schema-row]").setAttribute("cms-repeat", `${root}.rows as schemaRow`);
+    control.append(template5.content);
+  }
+
+  // src/static/admin/_content/sources/_runtime/detail/table.html
+  var table_default3 = `<template data-table-template="head"><cms-dashboard-table-row data-table-head></cms-dashboard-table-row></template>
+<template data-table-template="row"><cms-dashboard-table-row data-table-row data-table-index="{{ tableRow.index }}"></cms-dashboard-table-row></template>
+<template data-table-template="cell"><span></span></template>
+<template data-table-template="text"><p9r-input></p9r-input></template>
+<template data-table-template="select"><p9r-select></p9r-select></template>
+<template data-table-template="combobox"><p9r-combobox></p9r-combobox></template>
+<template data-table-template="tokens"><p9r-token-input creatable></p9r-token-input></template>
+<template data-table-template="option"><option value="{{ tableOption.value }}">{{ tableOption.label }}</option></template>
+<template data-table-template="add"><button type="button" data-table-add>Add row</button></template>
+<template data-table-template="remove"><button type="button" data-table-remove>Remove</button></template>
+`;
+
+  // src/static/admin/_content/sources/_runtime/detail/lookup.html
+  var lookup_default = `<template data-lookup="states">
+    <span hidden cms-condition="$source.loading"></span>
+    <span hidden cms-condition="$source.error"></span>
+</template>
+<template data-lookup="options">
+    <option cms-repeat="lookupOptions as lookupOption" value="{{ lookupOption.value }}">{{ lookupOption.label }}</option>
+</template>
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/options.ts
+  function lookupPage(host, payload) {
+    const lookup = {
+      endpoint: "",
+      valuePath: host.getAttribute("value-path") ?? "id",
+      labelPath: host.getAttribute("label-path") ?? "name",
+      itemsPath: host.getAttribute("items-path") || undefined
+    };
+    const items = itemsFrom(payload, lookup);
+    const options2 = items.flatMap((item) => option2(item, lookup));
+    const totalPath = host.getAttribute("total-path");
+    const totalValue = totalPath ? valueAt(payload, totalPath) : undefined;
+    const parsedTotal = Number(totalValue);
+    const total = Number.isFinite(parsedTotal) && parsedTotal >= 0 ? parsedTotal : undefined;
+    return { options: options2, received: items.length, total };
+  }
+  function selectedLookupOptions(host) {
+    const parent = host.closest("cms-dashboard-w-detail");
+    const data = parent ? Td(parent) : undefined;
+    const resourcePath = host.getAttribute("resource-path");
+    const resource = resourcePath ? valueAt(data, resourcePath) : data;
+    const expression = host.getAttribute("selected-expression");
+    if (!expression || !isSafeDashboardExpression(expression, ["resource"], true)) {
+      return [];
+    }
+    const items = resolveExpression(expression, { resource });
+    const selected2 = new Set((host.getAttribute("selected-value") ?? "").split(","));
+    const lookup = {
+      valuePath: host.getAttribute("value-path") ?? "id",
+      labelPath: host.getAttribute("label-path") ?? "name"
+    };
+    return (Array.isArray(items) ? items : [items]).flatMap((item) => option2(item, lookup, false).filter((entry) => selected2.has(entry.value)));
+  }
+  function distinctOptions(options2) {
+    const seen = new Set;
+    return options2.filter((option2) => {
+      if (seen.has(option2.value)) {
+        return false;
+      }
+      seen.add(option2.value);
+      return true;
+    });
+  }
+  function option2(item, lookup, fallback = true) {
+    const value2 = textAt(item, lookup.valuePath);
+    const label2 = textAt(item, lookup.labelPath, fallback ? value2 : "");
+    return value2 && label2 ? [{ value: value2, label: label2 }] : [];
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/Lookup.ts
+  var sequence2 = 0;
+
+  class DashboardLookup extends HTMLElement {
+    static observedAttributes = ["request-base", "selected-value"];
+    timer;
+    query = "";
+    queued = false;
+    sharedContext = {};
+    offset = 0;
+    received = 0;
+    acceptedOffset = 0;
+    pending = false;
+    hasMore = false;
+    previous;
+    options = [];
+    created = [];
+    declared = [];
+    connectedCallback() {
+      this.declared = Array.from(this.querySelectorAll(":scope > [data-static-options] option")).map((option3) => ({ value: option3.value, label: option3.textContent ?? option3.value }));
+      this.setAttribute("cms-reload-on", `dashboard:lookup:${++sequence2}`);
+      fd(this, (value2) => this.context(value2));
+      this.addEventListener("combobox-search", this.onSearch);
+      this.addEventListener("combobox-load-more", this.onMore);
+      this.updateUrl();
+      if (!this.getAttribute("cms-source")) {
+        Md(this, {});
+      }
+    }
+    disconnectedCallback() {
+      clearTimeout(this.timer);
+      this.removeEventListener("combobox-search", this.onSearch);
+      this.removeEventListener("combobox-load-more", this.onMore);
+    }
+    attributeChangedCallback(name, before, after) {
+      if (before === after || !this.isConnected) {
+        return;
+      }
+      if (name === "request-base") {
+        clearTimeout(this.timer);
+        this.query = "";
+        this.offset = 0;
+        this.updateUrl();
+      } else {
+        bi(this);
+      }
+    }
+    acceptCreatedOption(option3) {
+      this.created = distinctOptions([...this.created, option3]);
+      bi(this);
+    }
+    context(rendered) {
+      if (rendered !== undefined) {
+        this.pending = false;
+      }
+      const payload = Td(this);
+      if (payload !== undefined && !Object.is(payload, this.previous)) {
+        this.previous = payload;
+        this.acceptedOffset = this.offset;
+        const page = lookupPage(this, payload);
+        this.options = distinctOptions(this.offset ? [...this.options, ...page.options] : page.options);
+        this.received = page.received;
+        this.hasMore = Boolean(this.getAttribute("offset-params")) && (page.total === undefined ? page.received >= 25 : this.offset + page.received < page.total);
+      }
+      const context = {
+        lookupValue: this.getAttribute("selected-value") ?? "",
+        lookupOptions: distinctOptions([
+          ...this.declared,
+          ...this.options,
+          ...this.created,
+          ...selectedLookupOptions(this)
+        ]),
+        lookupHasMore: this.hasMore,
+        lookupLoading: this.pending
+      };
+      const name = this.getAttribute("context-name");
+      if (name) {
+        this.sharedContext = context;
+        this.refreshOwner();
+      }
+      return context;
+    }
+    updateUrl(retry = false) {
+      const base = this.getAttribute("request-base");
+      if (!base || base.includes("{{")) {
+        this.offset = 0;
+        this.setAttribute("cms-source", "");
+        Md(this, {});
+        return;
+      }
+      const url = new URL(base, this.ownerDocument.location.href);
+      for (const [attribute, value2] of [
+        ["search-params", this.query],
+        ["offset-params", String(this.offset)]
+      ]) {
+        for (const key of (this.getAttribute(attribute) ?? "").split(" ").filter(Boolean)) {
+          if (attribute === "search-params" && value2 === "") {
+            url.searchParams.delete(key);
+          } else {
+            url.searchParams.set(key, value2);
+          }
+        }
+      }
+      const source2 = `${url.pathname}${url.search} as lookupData`;
+      if (this.getAttribute("cms-source") !== source2) {
+        this.pending = true;
+        this.setAttribute("cms-source", source2);
+      } else if (retry) {
+        this.pending = true;
+        this.ownerDocument.dispatchEvent(new Event(this.getAttribute("cms-reload-on")));
+      }
+    }
+    onSearch = (event) => {
+      if (!this.ownsControl(event) || !this.getAttribute("search-params")) {
+        return;
+      }
+      event.stopPropagation();
+      const query6 = event.detail?.query;
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => {
+        this.query = typeof query6 === "string" ? query6.slice(0, 200) : "";
+        this.offset = 0;
+        this.updateUrl(true);
+      }, 250);
+    };
+    onMore = (event) => {
+      if (!this.ownsControl(event)) {
+        return;
+      }
+      event.stopPropagation();
+      if (this.hasMore && !this.pending) {
+        this.offset = this.acceptedOffset + this.received;
+        this.updateUrl(true);
+      }
+    };
+    ownsControl(event) {
+      return !this.hasAttribute("context-name") || event.target === this;
+    }
+    refreshOwner() {
+      if (this.queued) {
+        return;
+      }
+      this.queued = true;
+      queueMicrotask(() => {
+        this.queued = false;
+        const owner = this.closest("cms-dashboard-w-detail");
+        if (this.isConnected && owner) {
+          bi(owner);
+        }
+      });
+    }
+  }
+  customElements.define("cms-dashboard-lookup", DashboardLookup);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/composition.ts
+  function composeLookup(control, field2) {
+    const lookup = field2.lookup;
+    const host = lookupSource(lookup, field2.id);
+    host.setAttribute("selected-value", control.getAttribute("value") ?? "");
+    const declared = document.createElement("span");
+    declared.hidden = true;
+    declared.setAttribute("data-static-options", "");
+    declared.append(...Array.from(control.children));
+    host.append(declared);
+    control.setAttribute("value", "{{ lookupValue }}");
+    if (field2.type === "combobox") {
+      control.toggleAttribute("remote-search", Boolean(host.getAttribute("search-params")));
+      control.setAttribute("loading", "{{ $source.loading }}");
+      control.setAttribute("has-more", "{{ lookupHasMore }}");
+    }
+    control.toggleAttribute("creatable", Boolean(field2.allowCustom || lookup.create?.mode === "inline"));
+    const template5 = document.createElement("template");
+    template5.innerHTML = lookup_default;
+    control.append(template5.content.querySelector('[data-lookup="options"]').content.cloneNode(true));
+    host.append(control, template5.content.querySelector('[data-lookup="states"]').content.cloneNode(true));
+    return host;
+  }
+  function lookupSource(lookup, path, root = "detailLookupUrls") {
+    const host = document.createElement("cms-dashboard-lookup");
+    host.setAttribute("cms-source", "");
+    host.setAttribute("request-base", `{{ ${root}.${path} }}`);
+    host.setAttribute("resource-path", "{{ detailResourcePath }}");
+    for (const [attribute, value2] of Object.entries({
+      "items-path": lookup.itemsPath,
+      "value-path": lookup.valuePath,
+      "label-path": lookup.labelPath,
+      "total-path": lookup.totalPath,
+      "selected-expression": lookup.selected
+    })) {
+      if (typeof value2 === "string") {
+        host.setAttribute(attribute, value2);
+      }
+    }
+    for (const [attribute, expression] of [
+      ["search-params", "$search"],
+      ["offset-params", "$offset"]
+    ]) {
+      host.setAttribute(attribute, Object.entries(lookup.params ?? {}).filter(([, value2]) => value2 === expression).map(([key]) => key).join(" "));
+    }
+    if (!lookupUsesOffsetPagination(lookup)) {
+      host.removeAttribute("offset-params");
+    }
+    return host;
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/field.css
+  var field_default3 = `:host { display: block; min-width: 0; }
+.table { display: grid; gap: 6px; max-width: 100%; min-width: 0; overflow-x: auto; padding-bottom: 2px; }
+.row { display: grid; grid-template-columns: var(--detail-table-columns); gap: 8px; align-items: start; width: 100%; min-width: 0; min-height: 34px; }
+:host([data-table-head]) { color: #66736f; font-size: 11px; font-weight: 750; text-transform: uppercase; }
+:host([data-table-row][data-readonly]) { color: #16231f; font-size: 13px; }
+::slotted(*) { min-width: 0; }
+::slotted(p9r-input), ::slotted(p9r-select), ::slotted(p9r-combobox), ::slotted(p9r-token-input) { width: 100%; }
+::slotted(p9r-input) { --_field-min-height: 34px; --_field-padding-y: 5px; --_field-padding-x: 9px; --_field-font-size: 13px; }
+::slotted(button) { min-height: 30px; border: 1px solid #cfd8d4; border-radius: 6px; background: #fff; color: #0f1f1a; cursor: pointer; font: inherit; font-weight: 700; padding: 4px 8px; font-size: 12px; }
+::slotted(button:hover) { background: #f3f7f5; }
+::slotted([data-table-add]) { width: fit-content; }
+::slotted([data-table-remove]) { color: #8a1f12; }
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/Field.ts
+  class TableField extends l2 {
+    constructor() {
+      super({ css: field_default3, template: '<div class="table"><slot></slot></div>' });
+      for (const type of ["combobox-search", "combobox-load-more"]) {
+        this.addEventListener(type, (event) => {
+          const control = event.composedPath().find((node) => node instanceof HTMLElement && node.hasAttribute("data-table-column"));
+          if (!control) {
+            return;
+          }
+          const source2 = Array.from(this.querySelectorAll("cms-dashboard-lookup[table-column]")).find((node) => node.getAttribute("table-column") === control.dataset.tableColumn);
+          if (source2) {
+            event.stopPropagation();
+            source2.dispatchEvent(new CustomEvent(type, { detail: event.detail }));
+          }
+        });
+      }
+    }
+  }
+
+  class TableRow extends l2 {
+    constructor() {
+      super({ css: field_default3, template: '<div class="row"><slot></slot></div>' });
+    }
+  }
+  customElements.define("cms-dashboard-table-field", TableField);
+  customElements.define("cms-dashboard-table-row", TableRow);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/composition.ts
+  function composeTable(control, field2) {
+    const template5 = document.createElement("template");
+    template5.innerHTML = table_default3;
+    const clone = (name) => template5.content.querySelector(`[data-table-template="${name}"]`).content.firstElementChild.cloneNode(true);
+    control.setAttribute("data-table-editable", String(field2.editable === true));
+    control.style.setProperty("--detail-table-columns", [
+      ...field2.columns.map((column) => column.width ?? "minmax(8rem, 1fr)"),
+      ...field2.editable ? ["72px"] : []
+    ].join(" "));
+    const head = clone("head");
+    const row = clone("row");
+    row.setAttribute("cms-repeat", `detailTables.${field2.id} as tableRow`);
+    row.toggleAttribute("data-readonly", !field2.editable);
+    for (const [index, column] of field2.columns.entries()) {
+      const heading = clone("cell");
+      heading.textContent = column.label;
+      head.append(heading);
+      if (field2.editable && column.editable) {
+        const editor = clone(column.type ?? "text");
+        editor.setAttribute("data-table-column", column.id);
+        editor.setAttribute("aria-label", column.label);
+        editor.setAttribute("value", `{{ tableRow.cells.${column.id} }}`);
+        if (column.type === "select" || column.type === "combobox") {
+          for (const item of column.options ?? []) {
+            const option3 = document.createElement("option");
+            option3.value = item.value;
+            option3.textContent = item.label;
+            editor.append(option3);
+          }
+        }
+        if (column.type === "combobox" && column.lookup) {
+          const source2 = lookupSource(column.lookup, `${field2.id}.${column.id}`, "detailTableLookupUrls");
+          const scope = `tableLookup_${field2.id}_${index}`;
+          source2.setAttribute("context-name", scope);
+          source2.setAttribute("table-column", column.id);
+          const declared = document.createElement("span");
+          declared.hidden = true;
+          declared.setAttribute("data-static-options", "");
+          declared.append(...Array.from(editor.children));
+          source2.hidden = true;
+          source2.append(declared);
+          control.append(source2);
+          const option3 = clone("option");
+          option3.setAttribute("cms-repeat", `${scope}.lookupOptions as tableOption`);
+          editor.append(option3);
+          editor.toggleAttribute("remote-search", Boolean(source2.getAttribute("search-params")));
+          editor.setAttribute("loading", `{{ ${scope}.lookupLoading }}`);
+          editor.setAttribute("has-more", `{{ ${scope}.lookupHasMore }}`);
+        }
+        row.append(editor);
+      } else {
+        const cell = clone("cell");
+        cell.textContent = `{{ tableRow.cells.${column.id} }}`;
+        row.append(cell);
+      }
+    }
+    if (field2.editable) {
+      head.append(clone("cell"));
+      row.append(clone("remove"));
+    }
+    control.append(head, row);
+    if (field2.editable) {
+      const add = clone("add");
+      add.textContent = field2.addLabel ?? "Add row";
+      control.append(add);
+    }
+    return control;
+  }
+
+  // src/static/admin/_content/sources/_runtime/detail/reorderable.html
+  var reorderable_default = `<template data-reorderable="row"><cms-dashboard-reorderable-row class="row" slot="row" data-index="{{ choice.index }}" data-item-key="{{ choice.identity }}"></cms-dashboard-reorderable-row></template>
+<template data-reorderable="cell"><cms-dashboard-reorderable-cell></cms-dashboard-reorderable-cell></template>
+<template data-reorderable="toolbar"><cms-dashboard-reorderable-toolbar><span class="handle" draggable="true" title="Drag to reorder" aria-label="Drag to reorder">⠿</span><span class="identity">{{ choice.title }}</span></cms-dashboard-reorderable-toolbar></template>
+<template data-reorderable="handle"><span class="handle" draggable="true" title="Drag to reorder" aria-label="Drag to reorder">⠿</span></template>
+<template data-reorderable="remove"><button class="remove" type="button" data-remove="{{ choice.index }}" title="Remove item" aria-label="Remove item">×</button></template>
+<template data-reorderable="add"><button class="add" type="button" data-add slot="add"></button></template>
+<template data-reorderable="settings"><cms-dashboard-reorderable-settings></cms-dashboard-reorderable-settings></template>
+<template data-reorderable="option"><option value="{{ choiceOption.value }}">{{ choiceOption.label }}</option></template>
+`;
+
+  // src/static/admin/_content/sources/_runtime/detail/media.html
+  var media_default = `<template data-media="tile">
+    <cms-dashboard-media-tile slot="tile" data-media-tile draggable="true" tabindex="0" aria-label="Replace media"
+        data-index="{{ media.index }}" data-media-id="{{ media.id }}" data-media-url="{{ media.url }}"
+        data-media-thumbnail="{{ media.thumbnailUrl }}" data-media-alt="{{ media.alt }}" data-media-name="{{ media.name }}"
+        cms-bind-boolean-data-pending="media.pending">
+        <img src="{{ media.thumbnail }}" alt="{{ media.alt }}">
+    </cms-dashboard-media-tile>
+</template>
+<template data-media="add"><cms-dashboard-media-add slot="tile"></cms-dashboard-media-add></template>
+<template data-media="image"><img slot="image" data-preview-image decoding="async"></template>
+<template data-media="caption"><span slot="caption"></span></template>
+<template data-media="counter"><span slot="counter"></span></template>
+<template data-media="thumbnail">
+    <cms-dashboard-media-thumbnail slot="thumbnail" index="{{ media.index }}" label="{{ media.title }}">
+        <img src="{{ media.thumbnail }}" alt="" loading="lazy" decoding="async">
+    </cms-dashboard-media-thumbnail>
+</template>
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/field.css
+  var field_default4 = `slot { display: contents; }
+.media-grid ::slotted(*) { max-width: var(--media-grid-item-max); width: 100%; }
+.media-grid ::slotted(cms-dashboard-media-tile:first-child) {
+    grid-column: span 2;
+    grid-row: span 2;
+    max-width: var(--media-grid-featured-item-max);
+}
+::slotted([slot="image"]) {
+    grid-area: 1 / 1;
+    height: 100%;
+    min-height: 0;
+    object-fit: contain;
+    transition: opacity 120ms ease;
+    width: 100%;
+}
+::slotted([slot="image"][data-state="loading"]), ::slotted([slot="image"][data-state="error"]) { opacity: 0.12; }
+:host([layout="card"]) .media-grid ::slotted(*) { aspect-ratio: 4 / 3; max-width: none; }
+:host([layout="card"]) .media-grid ::slotted(cms-dashboard-media-tile:first-child) { grid-column: auto; grid-row: auto; }
+@media (max-width: 720px) {
+    .media-grid ::slotted(*) { max-width: var(--media-grid-item-max-mobile); }
+    .media-grid ::slotted(cms-dashboard-media-tile:first-child) {
+        grid-column: span 1;
+        grid-row: span 1;
+        max-width: var(--media-grid-item-max-mobile);
+    }
+}
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/field.html
+  var field_default5 = `<section class="media-field">
+    <div class="label-row">
+        <span data-label></span>
+        <button class="preview-trigger" data-preview-open type="button" hidden>
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path>
+                <circle cx="12" cy="12" r="2.75"></circle>
+            </svg>
+            <span>Preview</span>
+        </button>
+    </div>
+    <div class="media-grid" data-grid><slot name="tile"></slot></div>
+    <input data-file type="file" hidden>
+    <dialog class="media-preview" data-preview-dialog aria-labelledby="media-preview-title">
+        <div class="preview-shell">
+            <header class="preview-header">
+                <div>
+                    <p class="preview-title" id="media-preview-title">Image preview</p>
+                    <p class="preview-counter" data-preview-counter aria-live="polite"><slot name="counter"></slot></p>
+                </div>
+                <button class="preview-close" data-preview-action="close" type="button">
+                    <span>Close</span>
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </header>
+            <div class="preview-stage">
+                <button
+                    class="preview-nav"
+                    data-preview-action="previous"
+                    type="button"
+                    aria-label="Previous image"
+                >&lsaquo;</button>
+                <figure class="preview-figure">
+                    <div class="preview-media">
+                        <slot name="image"></slot>
+                        <p class="preview-status" data-preview-status role="status" hidden></p>
+                    </div>
+                    <figcaption data-preview-caption><slot name="caption"></slot></figcaption>
+                </figure>
+                <button
+                    class="preview-nav"
+                    data-preview-action="next"
+                    type="button"
+                    aria-label="Next image"
+                >&rsaquo;</button>
+            </div>
+            <div class="preview-strip" data-preview-strip role="group" aria-label="Choose an image"><slot name="thumbnail"></slot></div>
+        </div>
+    </dialog>
+</section>
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/ImageState.ts
+  class PreviewImageState {
+    host;
+    status;
+    observer = new MutationObserver(() => this.refresh());
+    image = null;
+    url = "";
+    constructor(host, status) {
+      this.host = host;
+      this.status = status;
+    }
+    connect() {
+      this.observer.observe(this.host, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["src"]
+      });
+      this.host.addEventListener("load", this.onLoad, true);
+      this.host.addEventListener("error", this.onError, true);
+    }
+    disconnect() {
+      this.observer.disconnect();
+      this.host.removeEventListener("load", this.onLoad, true);
+      this.host.removeEventListener("error", this.onError, true);
+    }
+    refresh() {
+      const image2 = this.host.querySelector("[data-preview-image]");
+      const url = image2?.getAttribute("src") ?? "";
+      if (image2 === this.image && url === this.url) {
+        return;
+      }
+      this.image = image2;
+      this.url = url;
+      if (!image2 || !url) {
+        return;
+      }
+      const ready = image2.complete && image2.naturalWidth > 0;
+      image2.dataset.state = ready ? "ready" : "loading";
+      this.status.textContent = "Loading image…";
+      this.status.hidden = ready;
+    }
+    onLoad = (event) => this.settled(event, false);
+    onError = (event) => this.settled(event, true);
+    settled(event, failed) {
+      const image2 = event.target;
+      if (!(image2 instanceof HTMLImageElement) || !image2.hasAttribute("data-preview-image")) {
+        return;
+      }
+      this.image = image2;
+      this.url = image2.getAttribute("src") ?? "";
+      image2.dataset.state = failed ? "error" : "ready";
+      this.status.hidden = !failed;
+      if (failed) {
+        this.status.textContent = "Unable to load this image.";
+      }
+    }
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/Preview.ts
+  class MediaPreview {
+    host;
+    index = 0;
+    opened = false;
+    restoreFocus = null;
+    dialog;
+    images;
+    constructor(host) {
+      this.host = host;
+      this.dialog = this.query("[data-preview-dialog]");
+      this.images = new PreviewImageState(host, this.query("[data-preview-status]"));
+    }
+    connect() {
+      this.host.addEventListener("click", this.onClick);
+      this.dialog.addEventListener("keydown", this.onKeyDown);
+      this.dialog.addEventListener("close", this.onClose);
+      this.images.connect();
+      this.syncCount();
+    }
+    disconnect() {
+      this.host.removeEventListener("click", this.onClick);
+      this.dialog.removeEventListener("keydown", this.onKeyDown);
+      this.dialog.removeEventListener("close", this.onClose);
+      this.images.disconnect();
+      if (this.dialog.open) {
+        this.dialog.close();
+      }
+    }
+    syncCount() {
+      const count = Number(this.host.getAttribute("count")) || 0;
+      this.query("[data-preview-open]").hidden = count === 0;
+      for (const selector of [
+        "[data-preview-action='previous']",
+        "[data-preview-action='next']",
+        "[data-preview-strip]"
+      ]) {
+        this.query(selector).hidden = count < 2;
+      }
+      if (this.opened && count === 0) {
+        this.dialog.close();
+      }
+      this.index = Math.min(this.index, Math.max(0, count - 1));
+    }
+    onClick = (event) => {
+      const path = event.composedPath();
+      const target2 = path.find((node) => node instanceof HTMLElement && node.matches("[data-preview-open], [data-preview-action], [data-preview-index]"));
+      if (target2?.hasAttribute("data-preview-open")) {
+        if (this.opened || this.host.items.length === 0) {
+          return;
+        }
+        this.restoreFocus = target2;
+        this.index = 0;
+        this.opened = true;
+        this.changeImage();
+        this.dialog.showModal();
+        this.query("[data-preview-action='close']").focus();
+      } else if (target2?.hasAttribute("data-preview-index")) {
+        this.setIndex(Number(target2.dataset.previewIndex), true);
+      } else if (target2?.dataset.previewAction === "close" || path[0] === this.dialog) {
+        this.dialog.close();
+      } else if (target2?.dataset.previewAction === "previous") {
+        this.move(-1);
+      } else if (target2?.dataset.previewAction === "next") {
+        this.move(1);
+      }
+    };
+    onKeyDown = (event) => {
+      const focusThumbnail = Array.from(this.host.querySelectorAll("cms-dashboard-media-thumbnail")).some((node) => Boolean(node.shadowRoot?.activeElement));
+      if (event.key === "Escape") {
+        event.preventDefault();
+        this.dialog.close();
+      } else if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        this.move(-1, focusThumbnail);
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        this.move(1, focusThumbnail);
+      } else if (event.key === "Home") {
+        event.preventDefault();
+        this.setIndex(0, focusThumbnail);
+      } else if (event.key === "End") {
+        event.preventDefault();
+        this.setIndex(this.host.items.length - 1, focusThumbnail);
+      }
+    };
+    onClose = () => {
+      this.opened = false;
+      this.host.refresh();
+      this.query("[data-preview-status]").hidden = true;
+      this.restoreFocus?.focus();
+      this.restoreFocus = null;
+    };
+    move(offset, focus = false) {
+      const count = this.host.items.length;
+      if (count > 1) {
+        this.setIndex((this.index + offset + count) % count, focus);
+      }
+    }
+    setIndex(index, focus) {
+      if (!Number.isInteger(index) || index < 0 || index >= this.host.items.length) {
+        return;
+      }
+      if (this.index !== index) {
+        this.index = index;
+        this.changeImage();
+      }
+      const thumbnail = this.host.querySelector(`cms-dashboard-media-thumbnail[index="${index}"]`);
+      thumbnail?.scrollIntoView({ block: "nearest", inline: "center" });
+      if (focus) {
+        thumbnail?.focus();
+      }
+    }
+    changeImage() {
+      const status = this.query("[data-preview-status]");
+      status.textContent = "Loading image…";
+      status.hidden = false;
+      this.host.refresh();
+      this.images.refresh();
+    }
+    query(selector) {
+      return this.host.shadowRoot.querySelector(selector);
+    }
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/MediaField.ts
+  class DashboardMediaField extends l2 {
+    static observedAttributes = ["label", "count"];
+    preview;
+    pendingItems;
+    replaceIndex;
+    suppressClick = false;
+    drag = new MediaDragController(() => this, (from, to2) => this.move(from, to2), (value2) => {
+      this.suppressClick = value2;
+    });
+    constructor() {
+      super({ css: styles_default5 + field_default4, template: field_default5 });
+      this.preview = new MediaPreview(this);
+    }
+    connectedCallback() {
+      this.fileInput.addEventListener("change", this.onFiles);
+      this.addEventListener("click", this.onClick);
+      for (const [name, handler] of this.dragEvents) {
+        this.addEventListener(name, handler);
+      }
+      this.preview.connect();
+    }
+    disconnectedCallback() {
+      this.fileInput.removeEventListener("change", this.onFiles);
+      this.removeEventListener("click", this.onClick);
+      for (const [name, handler] of this.dragEvents) {
+        this.removeEventListener(name, handler);
+      }
+      this.preview.disconnect();
+    }
+    attributeChangedCallback(name) {
+      if (name === "label") {
+        this.shadowRoot.querySelector("[data-label]").textContent = this.getAttribute("label") ?? "";
+      } else {
+        this.preview.syncCount();
+      }
+    }
+    get items() {
+      if (this.pendingItems) {
+        return this.pendingItems;
+      }
+      return Array.from(this.querySelectorAll("[data-media-tile]")).map((tile) => ({
+        id: tile.dataset.mediaId ?? "",
+        url: tile.dataset.mediaUrl ?? "",
+        ...tile.dataset.mediaAlt ? { alt: tile.dataset.mediaAlt } : {},
+        ...tile.dataset.mediaName ? { name: tile.dataset.mediaName } : {},
+        ...tile.dataset.mediaThumbnail ? { thumbnailUrl: tile.dataset.mediaThumbnail } : {},
+        ...tile.hasAttribute("data-pending") ? { pending: true } : {}
+      }));
+    }
+    refresh() {
+      if (this.isConnected) {
+        bi(this.owner);
+      }
+    }
+    get owner() {
+      return this.closest("cms-dashboard-w-detail");
+    }
+    get fileInput() {
+      return this.shadowRoot.querySelector("[data-file]");
+    }
+    get dragEvents() {
+      return [
+        ["dragstart", this.drag.start],
+        ["dragover", this.drag.over],
+        ["drop", this.drag.drop],
+        ["dragend", this.drag.end]
+      ];
+    }
+    onClick = (event) => {
+      const path = event.composedPath();
+      const button = path.find((node) => node instanceof HTMLElement && node.hasAttribute("data-media-action"));
+      const tile = path.find((node) => node instanceof HTMLElement && node.hasAttribute("data-media-tile"));
+      const index = tile ? Number(tile.dataset.index) : undefined;
+      if (button?.dataset.mediaAction === "remove" && index !== undefined) {
+        const items = this.items;
+        const item = items[index];
+        if (item) {
+          this.changed("remove", items.filter((_2, current) => current !== index), { index, item });
+        }
+      } else if (button?.dataset.mediaAction === "upload") {
+        this.pick();
+      } else if (tile && index !== undefined && !this.suppressClick) {
+        this.pick(index);
+      }
+    };
+    pick(index) {
+      this.replaceIndex = index;
+      this.fileInput.value = "";
+      this.fileInput.accept = this.getAttribute("accept") ?? "image/*";
+      this.fileInput.multiple = index === undefined && this.hasAttribute("multiple");
+      this.fileInput.click();
+    }
+    onFiles = (event) => {
+      event.stopPropagation();
+      const files = Array.from(this.fileInput.files ?? []);
+      if (!files[0]) {
+        return;
+      }
+      const items = this.items;
+      if (this.replaceIndex !== undefined) {
+        const index = this.replaceIndex;
+        const previousItem = items[index];
+        if (!previousItem) {
+          return;
+        }
+        const item = { ...previousItem, ...mediaFiles(this.owner).create(files[0]), id: previousItem.id };
+        this.changed("replace", items.map((old, current) => current === index ? item : old), { index, previousItem, item, file: files[0] });
+      } else {
+        const selected2 = this.hasAttribute("multiple") ? files : [files[0]];
+        this.changed("upload", [...items, ...selected2.map((file) => mediaFiles(this.owner).create(file))], {
+          files: selected2
+        });
+      }
+    };
+    move(from, to2) {
+      const items = this.items;
+      if (from === to2 || to2 < 0 || to2 >= items.length) {
+        return;
+      }
+      const [item] = items.splice(from, 1);
+      if (item) {
+        items.splice(to2, 0, item);
+        this.changed("reorder", items, { from, to: to2, item });
+      }
+    }
+    changed(action, items, detail) {
+      const previousValue = this.items;
+      this.pendingItems = items;
+      try {
+        dispatchMediaChange(this, action, items, { ...detail, previousValue });
+      } finally {
+        this.pendingItems = undefined;
+      }
+    }
+  }
+  customElements.define("cms-dashboard-media-field", DashboardMediaField);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/tile.css
+  var tile_default = `:host {
+    align-items: center;
+    aspect-ratio: 1;
+    background: #f4f1ec;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+    cursor: pointer;
+    display: grid;
+    justify-items: center;
+    min-height: 92px;
+    overflow: hidden;
+    position: relative;
+    transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+    width: 100%;
+}
+:host(:hover), :host(:focus-visible) {
+    border-color: #0f6b53;
+    box-shadow: 0 0 0 2px rgb(15 107 83 / 12%);
+}
+:host(:active) { cursor: grabbing; }
+:host([data-dragging]) { opacity: 0.48; transform: scale(0.985); }
+:host([data-drop-target]) { border-color: #0f6b53; box-shadow: inset 0 0 0 2px rgb(15 107 83 / 24%); }
+::slotted(img) { height: 100%; object-fit: cover; width: 100%; }
+button {
+    align-items: center;
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    justify-content: center;
+}
+button[data-media-action="remove"] {
+    background: rgb(255 255 255 / 94%);
+    color: #c52635;
+    font-size: 14px;
+    font-weight: 760;
+    height: 24px;
+    opacity: 0;
+    padding: 0;
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    transition: opacity 120ms ease, background 120ms ease;
+    width: 24px;
+}
+:host(:hover) button, :host(:focus-within) button { opacity: 1; }
+button:hover { background: #f6f8f7; }
+:host(cms-dashboard-media-add) { background: transparent; border: none; }
+:host(cms-dashboard-media-add:hover) { box-shadow: none; }
+button[data-media-action="upload"] {
+    background: transparent;
+    border: 1px dashed #aab6b2;
+    border-radius: 8px;
+    color: #394944;
+    font-size: 24px;
+    height: 100%;
+    min-height: 92px;
+    width: 100%;
+}
+button[data-media-action="upload"]:hover { background: #f6f8f7; border-color: #7d8d88; }
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/Tile.ts
+  class MediaTile extends l2 {
+    constructor() {
+      super({
+        css: tile_default,
+        template: '<slot></slot><button type="button" data-media-action="remove" aria-label="Remove media" title="Remove media">x</button>'
+      });
+    }
+  }
+  customElements.define("cms-dashboard-media-tile", MediaTile);
+
+  class MediaAddTile extends l2 {
+    constructor() {
+      super({ css: tile_default, template: '<button type="button" data-media-action="upload" aria-label="Add media">+</button>' });
+    }
+  }
+  customElements.define("cms-dashboard-media-add", MediaAddTile);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/thumbnail.css
+  var thumbnail_default = `:host { display: block; flex: 0 0 72px; height: 60px; width: 72px; }
+button {
+    align-items: center;
+    background: #202925;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    height: 100%;
+    justify-content: center;
+    opacity: 0.64;
+    overflow: hidden;
+    padding: 0;
+    width: 100%;
+}
+:host([selected]) button { border-color: #fff; box-shadow: 0 0 0 1px #fff; opacity: 1; }
+button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+::slotted(img) { height: 100%; object-fit: contain; width: 100%; }
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/Thumbnail.ts
+  class MediaThumbnail extends l2 {
+    static observedAttributes = ["index", "selected-index", "label"];
+    constructor() {
+      super({ css: thumbnail_default, template: '<button type="button"><slot></slot></button>' });
+    }
+    attributeChangedCallback() {
+      const selected2 = this.getAttribute("index") === this.getAttribute("selected-index");
+      this.toggleAttribute("selected", selected2);
+      const button = this.shadowRoot.querySelector("button");
+      button.setAttribute("aria-current", String(selected2));
+      button.setAttribute("aria-label", this.getAttribute("label") ?? "");
+      button.setAttribute("data-preview-index", this.getAttribute("index") ?? "");
+    }
+    focus() {
+      this.shadowRoot.querySelector("button").focus();
+    }
+  }
+  customElements.define("cms-dashboard-media-thumbnail", MediaThumbnail);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/composition.ts
+  function composeMedia(control, field2, path = `detailMedia.${field2.id}`) {
+    const declarations = document.createElement("template");
+    declarations.innerHTML = media_default;
+    const part = (kind) => declarations.content.querySelector(`[data-media="${kind}"]`).content.firstElementChild.cloneNode(true);
+    const tile = part("tile");
+    tile.setAttribute("cms-repeat", `${path}.items as media`);
+    const add = part("add");
+    add.setAttribute("cms-condition", `${path}.showAdd`);
+    const image2 = part("image");
+    image2.setAttribute("cms-condition", `${path}.open`);
+    image2.setAttribute("src", `{{ ${path}.preview.url }}`);
+    image2.setAttribute("alt", `{{ ${path}.preview.previewAlt }}`);
+    const caption = part("caption");
+    caption.textContent = `{{ ${path}.preview.title }}`;
+    const counter = part("counter");
+    counter.textContent = `{{ ${path}.counter }}`;
+    const thumbnail = part("thumbnail");
+    thumbnail.setAttribute("cms-repeat", `${path}.items as media`);
+    thumbnail.setAttribute("selected-index", `{{ ${path}.index }}`);
+    control.setAttribute("count", `{{ ${path}.items.length }}`);
+    control.toggleAttribute("multiple", field2.multiple === true);
+    control.append(tile, add, image2, caption, counter, thumbnail);
+  }
+
+  // src/static/admin/_content/sources/_runtime/detail/controls.html
+  var controls_default2 = `<template data-control="text"><p9r-input type="text"></p9r-input></template>
+<template data-control="number"><p9r-input type="number"></p9r-input></template>
+<template data-control="textarea"><p9r-textarea></p9r-textarea></template>
+<template data-control="select"><p9r-select></p9r-select></template>
+<template data-control="cms-user"><p9r-combobox></p9r-combobox></template>
+<template data-control="combobox"><p9r-combobox></p9r-combobox></template>
+<template data-control="tokens"><p9r-token-input></p9r-token-input></template>
+<template data-control="checkbox"><input type="checkbox" /></template>
+<template data-control="amount"><p9r-input type="text"></p9r-input></template>
+<template data-control="secret-ref"><cms-credential-select></cms-credential-select></template>
+<template data-control="page-link"><cms-editor-v2-page-link></cms-editor-v2-page-link></template>
+<template data-control="readonly">
+    <div>
+        <span data-display-text></span>
+        <span data-display-empty class="readonly-empty">None</span>
+        <ul class="readonly-list">
+            <li cms-condition="readonlyItem | dashboardTrimmedText">{{ readonlyItem | dashboardTrimmedText }}</li>
+        </ul>
+    </div>
+</template>
+<template data-control="date"><div><span></span></div></template>
+<template data-control="money"><div><span></span></div></template>
+<template data-control="badge"><div><span class="badge"></span></div></template>
+<template data-control="image"><div><span>No image</span><img class="detail-image" loading="lazy" /></div></template>
+<template data-control="media"><cms-dashboard-media-field></cms-dashboard-media-field></template>
+<template data-control="schema"><cms-dashboard-schema-field></cms-dashboard-schema-field></template>
+<template data-control="table"><cms-dashboard-table-field></cms-dashboard-table-field></template>
+<template data-control="reorderable-list"><cms-dashboard-reorderable-field></cms-dashboard-reorderable-field></template>
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/editors.ts
+  function composeChoiceEditor(parent, definition, field2, index, optionTemplate) {
+    const template5 = document.createElement("template");
+    template5.innerHTML = controls_default2;
+    const editor = template5.content.querySelector(`[data-control="${field2.type ?? "text"}"]`).content.firstElementChild.cloneNode(true);
+    editor.setAttribute("data-item-index", "{{ choice.index }}");
+    editor.setAttribute("data-item-field", field2.id);
+    editor.setAttribute("data-item-path", field2.path);
+    editor.setAttribute("aria-label", field2.label);
+    editor.toggleAttribute("required", field2.required === true);
+    if (field2.placeholder) {
+      editor.setAttribute("placeholder", field2.placeholder);
+    }
+    if (field2.type === "checkbox") {
+      editor.setAttribute("cms-bind-value", `choice.cells.${field2.id}`);
+    } else if (field2.type !== "media") {
+      editor.setAttribute("value", `{{ choice.cells.${field2.id} }}`);
+    }
+    if (field2.type === "media") {
+      editor.setAttribute("label", field2.label);
+      editor.setAttribute("layout", "card");
+      editor.setAttribute("accept", "image/*");
+      composeMedia(editor, field2, `choice.media.${field2.id}`);
+    }
+    if (field2.type === "secret-ref") {
+      editor.setAttribute("label", field2.label);
+      editor.setAttribute("api", route2("/api/secrets"));
+    }
+    if (field2.type === "page-link") {
+      editor.setAttribute("label", field2.label);
+      for (const [attribute, value2] of [
+        ["allow-external", field2.allowExternal],
+        ["allow-media", field2.allowMedia],
+        ["published-only", field2.publishedOnly]
+      ]) {
+        editor.setAttribute(attribute, String(value2 === true));
+      }
+    }
+    for (const option3 of field2.options ?? []) {
+      const element = document.createElement("option");
+      element.value = option3.value;
+      element.textContent = option3.label;
+      editor.append(element);
+    }
+    if (field2.type === "combobox" && field2.lookup) {
+      const source2 = lookupSource(field2.lookup, `${definition.id}.${field2.id}`, "detailChoiceLookupUrls");
+      const scope = `choiceLookup_${definition.id}_${index}`;
+      source2.setAttribute("context-name", scope);
+      source2.setAttribute("item-field", field2.id);
+      const declared = document.createElement("span");
+      declared.hidden = true;
+      declared.setAttribute("data-static-options", "");
+      declared.append(...Array.from(editor.children));
+      source2.hidden = true;
+      source2.append(declared);
+      parent.append(source2);
+      const option3 = optionTemplate();
+      option3.setAttribute("cms-repeat", `${scope}.lookupOptions as choiceOption`);
+      editor.append(option3);
+      editor.toggleAttribute("remote-search", Boolean(source2.getAttribute("search-params")));
+      editor.toggleAttribute("remote-pagination", Boolean(source2.getAttribute("offset-params")));
+      editor.setAttribute("loading", `{{ ${scope}.lookupLoading }}`);
+      editor.setAttribute("has-more", `{{ ${scope}.lookupHasMore }}`);
+    }
+    return editor;
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/interactions.ts
+  class ReorderableInteractions {
+    host;
+    pending;
+    dragging;
+    constructor(host) {
+      this.host = host;
+    }
+    connect() {
+      for (const [name, handler] of this.handlers) {
+        this.host.addEventListener(name, handler);
+      }
+    }
+    disconnect() {
+      for (const [name, handler] of this.handlers) {
+        this.host.removeEventListener(name, handler);
+      }
+      this.clearDrag();
+    }
+    get handlers() {
+      return [
+        ["click", this.click],
+        ["dragstart", this.start],
+        ["dragover", this.over],
+        ["drop", this.drop],
+        ["dragend", this.end],
+        ["combobox-search", this.lookup],
+        ["combobox-load-more", this.lookup],
+        [W_MEDIA_FIELD_ACTION_EVENT, this.media]
+      ];
+    }
+    click = (event) => {
+      const target2 = event.target;
+      const add = target2?.closest("[data-add]");
+      const remove = target2?.closest("[data-remove]");
+      if (!add && !remove) {
+        return;
+      }
+      const items = this.host.items;
+      const max = this.host.getAttribute("max-items");
+      const min = this.host.getAttribute("min-items");
+      if (add && (max === null || items.length < Number(max))) {
+        this.commit([...items, {}]);
+      }
+      if (remove && (min === null || items.length > Number(min))) {
+        const index = Number(remove.dataset.remove);
+        if (Number.isInteger(index) && index >= 0 && index < items.length) {
+          items.splice(index, 1);
+          this.commit(items);
+        }
+      }
+    };
+    start = (event) => {
+      const handle = event.target?.closest(".handle");
+      const row = handle?.closest("cms-dashboard-reorderable-row");
+      if (!row) {
+        return;
+      }
+      this.dragging = Number(row.dataset.index);
+      row.dataset.dragging = "";
+      const transfer = event.dataTransfer;
+      transfer?.setData("text/plain", String(this.dragging));
+      if (transfer) {
+        transfer.effectAllowed = "move";
+      }
+    };
+    over = (event) => {
+      const row = event.target?.closest("cms-dashboard-reorderable-row");
+      if (!row || this.dragging === undefined) {
+        return;
+      }
+      event.preventDefault();
+      for (const item of this.rows) {
+        item.toggleAttribute("data-drop-target", item === row);
+      }
+      const transfer = event.dataTransfer;
+      if (transfer) {
+        transfer.dropEffect = "move";
+      }
+    };
+    drop = (event) => {
+      const row = event.target?.closest("cms-dashboard-reorderable-row");
+      if (!row || this.dragging === undefined) {
+        return;
+      }
+      event.preventDefault();
+      const to2 = Number(row.dataset.index);
+      const items = this.host.items;
+      if (to2 !== this.dragging && to2 >= 0 && to2 < items.length) {
+        const [item] = items.splice(this.dragging, 1);
+        if (item) {
+          items.splice(to2, 0, item);
+          this.commit(items);
+        }
+      }
+      this.clearDrag();
+    };
+    end = () => this.clearDrag();
+    lookup = (event) => {
+      const editor = event.target?.closest("[data-item-field]");
+      const source2 = Array.from(this.host.querySelectorAll("cms-dashboard-lookup[item-field]")).find((node) => node.getAttribute("item-field") === editor?.dataset.itemField);
+      if (source2) {
+        event.stopPropagation();
+        source2.dispatchEvent(new CustomEvent(event.type, { detail: event.detail }));
+      }
+    };
+    media = (event) => {
+      if (event.target === this.host) {
+        return;
+      }
+      const editor = event.target?.closest("[data-item-field]");
+      if (!editor?.dataset.itemPath) {
+        return;
+      }
+      event.stopPropagation();
+      const detail = event.detail;
+      const items = this.host.items;
+      const index = Number(editor.dataset.itemIndex);
+      const parent = items[index];
+      if (!parent) {
+        return;
+      }
+      setValueAt(parent, editor.dataset.itemPath, detail.value[0] ?? null);
+      const scoped = {
+        ...detail,
+        itemIndex: index,
+        itemKey: String(valueAt(parent, this.host.getAttribute("item-key") ?? "") ?? index),
+        itemKeyPath: this.host.getAttribute("item-key") ?? "",
+        itemField: editor.dataset.itemField,
+        itemPath: editor.dataset.itemPath,
+        parentItem: structuredClone(parent)
+      };
+      this.commit(items);
+      this.host.dispatchEvent(new CustomEvent(W_MEDIA_FIELD_ACTION_EVENT, { bubbles: true, composed: true, detail: scoped }));
+    };
+    commit(items) {
+      for (const [index, item] of items.entries()) {
+        setValueAt(item, this.host.getAttribute("position-path") ?? "position", index);
+      }
+      this.pending = items;
+      try {
+        this.host.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+      } finally {
+        this.pending = undefined;
+      }
+    }
+    get rows() {
+      return Array.from(this.host.querySelectorAll("cms-dashboard-reorderable-row"));
+    }
+    clearDrag() {
+      this.dragging = undefined;
+      for (const row of this.rows) {
+        row.removeAttribute("data-dragging");
+        row.removeAttribute("data-drop-target");
+      }
+    }
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/field.css
+  var field_default6 = `:host { display: block; }
+slot { display: contents; }
+.reorderable-list { display: grid; gap: 8px; }
+.rows { display: grid; gap: 6px; }
+.header { align-items: center; color: var(--text-muted); display: grid; font-size: 11px; font-weight: 750; gap: 8px; grid-template-columns: var(--reorderable-columns); padding: 0 8px; text-transform: uppercase; }
+:host([layout="cards"]) .header { display: none; }
+:host([layout="cards"]) .rows { grid-template-columns: repeat(auto-fill, minmax(min(17rem, 100%), 1fr)); gap: 12px; }
+:host(cms-dashboard-reorderable-row) { align-items: end; background: #fff; border: 1px solid var(--border-default); border-radius: 8px; display: grid; gap: 8px; grid-template-columns: var(--reorderable-columns); padding: 8px; }
+:host(cms-dashboard-reorderable-row[layout="cards"]) { align-content: start; align-items: stretch; gap: 12px; grid-template-columns: minmax(0, 1fr); padding: 10px; }
+:host([data-dragging]) { opacity: .48; }
+:host([data-drop-target]) { border-color: #0f6b53; box-shadow: 0 0 0 2px rgb(15 107 83 / 14%); }
+:host([layout="cards"][data-drop-target]) { transform: translateY(-2px); }
+::slotted(.handle), ::slotted(.remove), ::slotted(.add) { align-items: center; background: transparent; border: 0; border-radius: 6px; color: #60706b; cursor: pointer; display: inline-flex; font: inherit; justify-content: center; min-height: 32px; }
+::slotted(.handle) { cursor: grab; font-size: 19px; letter-spacing: -3px; padding: 0 4px 4px 0; }
+::slotted(.handle:active) { cursor: grabbing; }
+::slotted(.remove:hover) { background: #fff0f0; color: #bd2533; }
+::slotted(.add:hover) { background: #eef6f2; color: #0f6b53; }
+::slotted(.add) { border: 1px dashed #aab6b2; justify-self: start; padding: 0 12px; }
+:host([layout="cards"]) ::slotted(.add) { min-height: 42px; width: 100%; }
+:host(cms-dashboard-reorderable-cell) { display: grid; min-width: 0; }
+:host(cms-dashboard-reorderable-cell) ::slotted(p9r-input), :host(cms-dashboard-reorderable-cell) ::slotted(p9r-select), :host(cms-dashboard-reorderable-cell) ::slotted(p9r-combobox) { min-width: 0; width: 100%; }
+::slotted(input[type="checkbox"]) { accent-color: var(--primary-base); height: 18px; margin: 0; width: 18px; }
+::slotted(input[type="checkbox"]:focus-visible) { outline: 2px solid var(--primary-muted); outline-offset: 2px; }
+.field-label { color: var(--text-muted); font-size: 11px; font-weight: 750; margin-bottom: 5px; text-transform: uppercase; }
+:host(:not([label])) .field-label { display: none; }
+:host(cms-dashboard-reorderable-toolbar) { align-items: center; display: grid; grid-template-columns: 28px minmax(0, 1fr) 32px; }
+::slotted(.identity) { color: var(--text-muted); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-details { border-top: 1px solid var(--border-default); display: grid; gap: 10px; padding-top: 9px; }
+.card-details summary { color: #42514c; cursor: pointer; font-size: 12px; font-weight: 700; list-style-position: inside; }
+.card-details[open] summary { margin-bottom: 2px; }
+@media (max-width: 720px) {
+    .header { display: none; }
+    :host(cms-dashboard-reorderable-row:not([layout="cards"])) { align-items: center; grid-template-columns: 24px minmax(0, 1fr) 32px; }
+    :host(cms-dashboard-reorderable-row:not([layout="cards"])) ::slotted(cms-dashboard-reorderable-cell) { grid-column: 2 / -1; }
+}
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/Field.ts
+  class ReorderableField extends l2 {
+    interactions = new ReorderableInteractions(this);
+    constructor() {
+      super({
+        css: field_default6,
+        template: '<section class="reorderable-list"><div class="header"><slot name="heading"></slot></div><div class="rows"><slot name="row"></slot></div><slot name="add"></slot></section>'
+      });
+    }
+    get items() {
+      return this.interactions.pending ?? readReorderableItems(this);
+    }
+    connectedCallback() {
+      this.interactions.connect();
+    }
+    disconnectedCallback() {
+      this.interactions.disconnect();
+    }
+  }
+
+  class ReorderableRow extends l2 {
+    constructor() {
+      super({ css: field_default6, template: "<slot></slot>" });
+    }
+  }
+
+  class ReorderableCell extends l2 {
+    static observedAttributes = ["label"];
+    constructor() {
+      super({ css: field_default6, template: '<span class="field-label"></span><slot></slot>' });
+    }
+    attributeChangedCallback() {
+      this.shadowRoot.querySelector(".field-label").textContent = this.getAttribute("label") ?? "";
+    }
+  }
+
+  class ReorderableSettings extends l2 {
+    constructor() {
+      super({
+        css: field_default6,
+        template: '<details class="card-details"><summary>Choice settings</summary><slot></slot></details>'
+      });
+    }
+  }
+
+  class ReorderableToolbar extends l2 {
+    constructor() {
+      super({ css: field_default6, template: "<slot></slot>" });
+    }
+  }
+  customElements.define("cms-dashboard-reorderable-field", ReorderableField);
+  customElements.define("cms-dashboard-reorderable-row", ReorderableRow);
+  customElements.define("cms-dashboard-reorderable-cell", ReorderableCell);
+  customElements.define("cms-dashboard-reorderable-settings", ReorderableSettings);
+  customElements.define("cms-dashboard-reorderable-toolbar", ReorderableToolbar);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-reorderable-list/binding/composition.ts
+  function composeReorderable(control, field2) {
+    const declarations = document.createElement("template");
+    declarations.innerHTML = reorderable_default;
+    const part = (name) => declarations.content.querySelector(`[data-reorderable="${name}"]`).content.firstElementChild.cloneNode(true);
+    const cards = field2.layout === "cards";
+    const scope = `detailChoices.${field2.id}`;
+    control.setAttribute("layout", field2.layout ?? "rows");
+    control.setAttribute("item-key", field2.itemKey);
+    control.setAttribute("position-path", field2.positionPath ?? "position");
+    for (const key of ["minItems", "maxItems"]) {
+      if (field2[key] !== undefined) {
+        control.setAttribute(key === "minItems" ? "min-items" : "max-items", String(field2[key]));
+      }
+    }
+    control.style.setProperty("--reorderable-columns", ["24px", ...field2.fields.map(() => "minmax(0, 1fr)"), "32px"].join(" "));
+    for (const label2 of ["", ...field2.fields.map((item) => item.label), ""]) {
+      const heading = document.createElement("span");
+      heading.slot = "heading";
+      heading.textContent = label2;
+      control.append(heading);
+    }
+    const row = part("row");
+    row.setAttribute("layout", field2.layout ?? "rows");
+    row.setAttribute("cms-repeat", `${scope}.rows as choice`);
+    const remove = part("remove");
+    remove.setAttribute("cms-bind-boolean-disabled", `${scope}.removeDisabled`);
+    const toolbar = cards ? part("toolbar") : undefined;
+    if (toolbar) {
+      toolbar.append(remove);
+    }
+    row.append(toolbar ?? part("handle"));
+    const secondary = cards && field2.fields.some((item) => item.secondary) ? part("settings") : undefined;
+    for (const [index, item] of field2.fields.entries()) {
+      const cell = part("cell");
+      cell.className = `field field-${item.type ?? "text"}`;
+      if (cards && item.type !== "media") {
+        cell.setAttribute("label", item.label);
+      }
+      cell.append(composeChoiceEditor(control, field2, item, index, () => part("option")));
+      (item.secondary && secondary ? secondary : row).append(cell);
+    }
+    if (secondary) {
+      row.append(secondary);
+    }
+    if (!cards) {
+      row.append(remove);
+    }
+    const add = part("add");
+    add.textContent = field2.addLabel ?? "Add item";
+    add.setAttribute("cms-bind-boolean-disabled", `${scope}.addDisabled`);
+    control.append(row, add);
+    return control;
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/readonly.ts
+  function composeReadonly(control, field2, root) {
+    const path = field2.path === "." ? root : `${root}.${field2.path}`;
+    if (field2.format === "image") {
+      const image2 = control.querySelector("img");
+      image2.alt = field2.label;
+      image2.setAttribute("cms-condition", `${path} | dashboardTrimmedText`);
+      image2.setAttribute("data-cms-src", fieldBinding(root, field2.path, "dashboardTrimmedText"));
+      control.querySelector("span").setAttribute("cms-condition", `!${path} | dashboardTrimmedText`);
+    } else if (field2.format === "money") {
+      const sibling = field2.path.includes(".") ? `${path.slice(0, path.lastIndexOf("."))}.currency` : `${root}.currency`;
+      const value2 = control.querySelector("span");
+      value2.textContent = fieldBinding(root, field2.path, `dashboardMoney(${sibling})`);
+      if (sibling !== `${root}.currency`) {
+        value2.setAttribute("cms-condition", `${sibling} | dashboardDefined`);
+        const fallback = value2.cloneNode();
+        fallback.setAttribute("cms-condition", `!${sibling} | dashboardDefined`);
+        fallback.textContent = fieldBinding(root, field2.path, `dashboardMoney(${root}.currency)`);
+        control.append(fallback);
+      }
+    } else if (field2.format === "date" || field2.format === "badge") {
+      control.querySelector("span").textContent = fieldBinding(root, field2.path, field2.format === "date" ? "dashboardDate" : "dashboardBadge");
+    } else {
+      control.querySelector("[data-display-text]").setAttribute("cms-condition", `${path} | dashboardValueKind == 'scalar'`);
+      control.querySelector("[data-display-text]").textContent = fieldBinding(root, field2.path);
+      control.querySelector("[data-display-empty]").setAttribute("cms-condition", `${path} | dashboardValueKind == 'empty-list'`);
+      control.querySelector("ul").setAttribute("cms-condition", `${path} | dashboardValueKind == 'list'`);
+      control.querySelector("li").setAttribute("cms-repeat", `${path} as readonlyItem`);
+    }
+  }
+  function fieldBinding(root, path, filter) {
+    return `{{ ${path === "." ? root : `${root}.${path}`}${filter ? ` | ${filter}` : ""} }}`;
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/fields.ts
+  function fieldElement(field2, root) {
+    const template5 = document.createElement("template");
+    template5.innerHTML = controls_default2;
+    const kind = field2.type === "readonly" ? field2.format ?? "readonly" : field2.type === "money" ? "amount" : field2.type ?? "text";
+    const control = template5.content.querySelector(`[data-control="${kind === "text" && field2.type === "readonly" ? "readonly" : kind}"]`).content.firstElementChild.cloneNode(true);
+    const wrapper = document.createElement("cms-dashboard-detail-field");
+    if (field2.visibleWhen) {
+      wrapper.setAttribute("cms-condition", `detailVisibility | dashboardVisibility(detailRules.${field2.id})`);
+    }
+    wrapper.setAttribute("label", field2.label);
+    wrapper.toggleAttribute("required", field2.required === true);
+    wrapper.toggleAttribute("internal-label", field2.type !== "readonly" && field2.type !== "checkbox" && field2.type !== "table");
+    if (field2.type === "readonly") {
+      composeReadonly(control, field2, root);
+      wrapper.append(...Array.from(control.childNodes));
+    } else {
+      control.setAttribute("label", field2.label);
+      control.setAttribute("data-field-control", field2.id);
+      if (field2.type === "checkbox") {
+        control.setAttribute("cms-bind-value", field2.path === "." ? root : `${root}.${field2.path}`);
+        control.setAttribute("aria-label", field2.label);
+      } else if (field2.type !== "media" && field2.type !== "schema" && field2.type !== "table" && field2.type !== "reorderable-list") {
+        control.setAttribute("value", fieldBinding(root, field2.path, field2.type === "tokens" ? "dashboardTokens" : undefined));
+      }
+      control.toggleAttribute("required", field2.required === true);
+      if ("placeholder" in field2 && field2.placeholder) {
+        control.setAttribute("placeholder", field2.placeholder);
+      }
+      if (field2.type === "number") {
+        for (const key of ["min", "max", "step"]) {
+          if (field2[key] !== undefined) {
+            control.setAttribute(key, String(field2[key]));
+          }
+        }
+      }
+      if (field2.type === "money") {
+        control.setAttribute("value", `{{ detailAmounts.${field2.id}.value }}`);
+        control.setAttribute("inputmode", `{{ detailAmounts.${field2.id}.inputmode }}`);
+      }
+      if (field2.type === "textarea") {
+        control.setAttribute("rows", String(field2.rows ?? 4));
+      }
+      if (field2.type === "select" || field2.type === "combobox" || field2.type === "tokens") {
+        const options2 = field2.type === "select" ? field2.options : optionList(field2.options, []);
+        if (field2.type === "select" && !options2.some((option3) => option3.value === "")) {
+          const placeholder = document.createElement("option");
+          placeholder.value = "";
+          placeholder.disabled = true;
+          placeholder.textContent = "Select an option";
+          placeholder.setAttribute("cms-condition", `!${root}.${field2.path}`);
+          control.append(placeholder);
+        }
+        for (const item of options2) {
+          const option3 = document.createElement("option");
+          option3.value = item.value;
+          option3.textContent = item.label;
+          control.append(option3);
+        }
+        if (field2.type !== "select") {
+          control.toggleAttribute("creatable", field2.allowCustom === true);
+          control.setAttribute("placeholder", "");
+        }
+      }
+      if (field2.type === "cms-user") {
+        composeUserOptions(control, field2.id);
+      }
+      if (field2.type === "media") {
+        composeMedia(control, field2);
+      }
+      if (field2.type === "schema") {
+        composeSchema(control, field2);
+      }
+      if (field2.type === "secret-ref") {
+        control.setAttribute("api", route2("/api/secrets"));
+      }
+      if (field2.type === "page-link") {
+        control.setAttribute("allow-external", String(field2.allowExternal === true));
+        control.setAttribute("allow-media", String(field2.allowMedia === true));
+        control.setAttribute("published-only", String(field2.publishedOnly === true));
+      }
+      wrapper.append(field2.type === "table" ? composeTable(control, field2) : field2.type === "reorderable-list" ? composeReorderable(control, field2) : (field2.type === "combobox" || field2.type === "tokens") && field2.lookup ? composeLookup(control, field2) : control);
+    }
+    return wrapper;
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/field.css
+  var field_default7 = `:host { display: block; min-width: 0; }
+dl { display: grid; gap: 7px; margin: 0; min-width: 0; }
+dt { color: #66736f; font-size: 11px; font-weight: 750; letter-spacing: 0; text-transform: uppercase; }
+dd { margin: 0; min-width: 0; }
+:host([internal-label]) dl { gap: 0; }
+:host([internal-label]) dt { display: none; }
+:host([required]:not([internal-label])) dt { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+:host([required]:not([internal-label])) dt::after { content: "* Required"; color: var(--text-muted, #94a3b8); flex-shrink: 0; font-size: 10px; font-weight: 650; text-transform: none; }
+:host([required]:not([internal-label]):has([invalid])) dt::after { color: var(--danger-base, #dc2626); }
+::slotted(*) { width: 100%; min-width: 0; }
+::slotted(input[type="checkbox"]) { width: auto; }
+::slotted(span) { color: #66736f; overflow-wrap: anywhere; }
+::slotted(.readonly-list) { display: grid; gap: 4px; padding: 0; margin: 0; list-style: none; color: #66736f; overflow-wrap: anywhere; word-break: break-word; }
+::slotted(.readonly-empty) { color: #8a9692; font-style: italic; }
+::slotted(.badge) { display: inline-flex; align-items: center; width: fit-content; border-radius: 999px; background: #edf7f0; color: #105d3e; font-size: 12px; font-weight: 750; padding: 3px 8px; }
+::slotted(.detail-image) { aspect-ratio: 1; background: #f4f1ec; border: 1px solid var(--border-default); border-radius: 10px; display: block; object-fit: cover; width: 100%; }
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/Field.ts
+  class DashboardDetailField extends l2 {
+    constructor() {
+      super({ css: field_default7, template: "<dl><dt></dt><dd><slot></slot></dd></dl>" });
+    }
+    static observedAttributes = ["label", "required", "internal-label"];
+    attributeChangedCallback() {
+      this.shadowRoot.querySelector("dt").textContent = this.getAttribute("label") ?? "";
+    }
+  }
+  customElements.define("cms-dashboard-detail-field", DashboardDetailField);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/composition.ts
+  function composeDetail(widget, navigation) {
+    const fragment2 = document.createDocumentFragment();
+    const root = "detailValues";
+    const title = document.createElement("span");
+    title.slot = "bound-title";
+    title.setAttribute("cms-condition", "detailReady");
+    if (widget.title?.path) {
+      const path = widget.title.path === "." ? root : `${root}.${widget.title.path}`;
+      const present = `${path} || ${path} == 0 || ${path} == false`;
+      const value2 = document.createElement("span");
+      value2.setAttribute("cms-condition", present);
+      value2.textContent = binding(root, widget.title.path);
+      const fallback = document.createElement("span");
+      fallback.setAttribute("cms-condition", `!${path} && ${path} != 0 && ${path} != false`);
+      fallback.textContent = widget.title.fallback ?? widget.id;
+      title.append(value2, fallback);
+    } else {
+      title.textContent = widget.title?.fallback ?? widget.id;
+    }
+    fragment2.append(title);
+    fragment2.append(composeActions());
+    for (const section2 of [...widget.main, ...widget.aside ?? []]) {
+      if (!("widget" in section2)) {
+        fragment2.append(...section2.fields.filter((field2) => field2.type === "schema").map(schemaSource));
+      }
+    }
+    if ([...widget.main, ...widget.aside ?? []].some((section2) => !("widget" in section2) && section2.fields.some((field2) => field2.type === "cms-user"))) {
+      fragment2.append(directoryElement());
+    }
+    for (const [slot, sections2] of [
+      ["bound-main", widget.main],
+      ["bound-aside", widget.aside ?? []]
+    ]) {
+      for (const section2 of sections2) {
+        if ("widget" in section2) {
+          if (!navigation) {
+            throw new Error("Detail navigation must be composed with its source context.");
+          }
+          const child = navigation(section2);
+          child.slot = slot;
+          child.setAttribute("data-detail-ready", "{{ detailReady }}");
+          fragment2.append(child);
+        } else {
+          fragment2.append(sectionElement(section2, slot, root));
+        }
+      }
+    }
+    return fragment2;
+  }
+  function sectionElement(section2, slot, root) {
+    const element = document.createElement("cms-detail-section");
+    element.slot = slot;
+    element.setAttribute("heading", section2.title);
+    element.setAttribute("cms-condition", "detailReady");
+    if (section2.description) {
+      element.setAttribute("description", section2.description);
+    }
+    if (slot === "bound-aside") {
+      element.setAttribute("density", "compact");
+    }
+    const stack = document.createElement("p9r-stack");
+    stack.setAttribute("gap", "md");
+    stack.setAttribute("trim", "");
+    stack.append(...section2.fields.map((field2) => fieldElement(field2, root)));
+    element.append(stack);
+    return element;
+  }
+  function binding(root, path) {
+    return `{{ ${path === "." ? root : `${root}.${path}`} }}`;
+  }
 
   // src/components/admin/Resources/Dashboards/runtime/mounting/table.ts
   function tableWithSource(widget, source2, filters = {}) {
@@ -37131,17 +37596,13 @@ slot { display: contents; }
     if (rowKey === "__new__") {
       const element2 = detailContent(widget, context, rowKey);
       publishDetailResource(element2, widget, {});
-      if (element2.hasAttribute("data-declarative")) {
-        attachDetailSource(element2, widget, context, rowKey);
-      }
+      attachDetailSource(element2, widget, context, rowKey);
       return element2;
     }
     const directResource = matchingDetailResource(widget, context, rowKey);
     if (directResource) {
       const element2 = detailContent(widget, context, rowKey, directResource);
-      if (element2.hasAttribute("data-declarative")) {
-        attachDetailSource(element2, widget, context, rowKey);
-      }
+      attachDetailSource(element2, widget, context, rowKey);
       return element2;
     }
     const element = detailContent(widget, context, rowKey);
@@ -37151,50 +37612,24 @@ slot { display: contents; }
   function attachDetailSource(element, widget, context, rowKey) {
     const wrapper = sourceWrapper(context.dashboard.source, widget.source, { selection: { id: rowKey } }, "dashboardData", requiredSourceParams(context, widget.source));
     wrapper.setAttribute("cms-reload-on", detailReloadEvent(context.dashboard.source, context.dashboard.id, widget.id, rowKey));
-    if (element.hasAttribute("data-declarative")) {
-      for (const child of Array.from(wrapper.children)) {
-        child.setAttribute("slot", "source-status");
-      }
-      element.append(...Array.from(wrapper.childNodes));
-      element.setAttribute("cms-source", wrapper.getAttribute("cms-source") ?? "");
-      element.setAttribute("cms-reload-on", wrapper.getAttribute("cms-reload-on"));
-      return;
+    for (const child of Array.from(wrapper.children)) {
+      child.setAttribute("slot", "source-status");
     }
-    const input = document.createElement("cms-dashboard-input");
-    input.setAttribute("kind", "detail");
-    input.setAttribute("cms-bind-value", "dashboardData");
-    input.setAttribute("cms-condition", "$source.loaded || $source.empty");
-    input.hidden = true;
-    wrapper.setAttribute("slot", "source-status");
-    const status = document.createElement("cms-dashboard-input");
-    status.setAttribute("kind", "detail-status");
-    status.setAttribute("cms-bind-value", "$source");
-    status.hidden = true;
-    wrapper.append(status, input);
-    element.append(wrapper);
+    element.append(...Array.from(wrapper.childNodes));
+    element.setAttribute("cms-source", wrapper.getAttribute("cms-source") ?? "");
+    element.setAttribute("cms-reload-on", wrapper.getAttribute("cms-reload-on"));
   }
   function detailContent(widget, context, rowKey, directResource = null) {
     const element = new DashboardWDetail;
-    const config = directResource === null || supportsBoundDetail(widget) ? widget : {
-      ...widget,
-      source: { ...widget.source, itemPath: undefined }
-    };
     element.dataset.widgetId = widget.id;
-    element.configure(config);
+    element.configure(widget);
     const selection = { collection: widget.id, row: rowKey };
-    if (element.hasAttribute("data-declarative")) {
-      element.append(composeDetail(widget, (child) => navigationListElement(child, context, selection)));
-    }
+    element.append(composeDetail(widget, (child) => navigationListElement(child, context, selection)));
     if (directResource !== null) {
       publishDetailResource(element, widget, directResource.resource);
     }
     element.setAttribute("data-row-key", rowKey);
     element.setAttribute("data-source-id", context.dashboard.source);
-    for (const [index, mainItem] of widget.main.entries()) {
-      if ("widget" in mainItem && !element.hasAttribute("data-declarative")) {
-        element.append(navigationListElement(mainItem, context, selection, `main-widget-${index}`));
-      }
-    }
     for (const relationWidget of widget.relationWidgets ?? []) {
       element.append(relationDetailSectionElement(relationWidget));
     }
@@ -37205,10 +37640,6 @@ slot { display: contents; }
     return resource && resource.resource !== null && resource.resource !== undefined && resource.sourceId === context.dashboard.source && resource.dashboardId === context.dashboard.id && resource.collection === widget.id && resource.row === row ? resource : null;
   }
   function publishDetailResource(element, widget, resource) {
-    if (!element.hasAttribute("data-declarative")) {
-      element.setBindingValue(resource);
-      return;
-    }
     if (widget.source.itemPath) {
       const data = {};
       setValueAt(data, widget.source.itemPath, resource);
@@ -37253,23 +37684,13 @@ slot { display: contents; }
           const target2 = Array.from(root.querySelectorAll("cms-dashboard-w-detail")).find((node) => node.dataset.widgetId === widget.id);
           const resource = context.detailResource;
           if (!resource || resource.collection !== widget.id || resource.row !== (detail?.row ?? "") || resource.sourceId !== context.dashboard.source || resource.dashboardId !== context.dashboard.id || resource.resource == null) {
-            if (target2?.hasAttribute("data-declarative") && previousResource?.collection === widget.id && previousResource.resource != null) {
+            if (target2 && previousResource?.collection === widget.id && previousResource.resource != null) {
               target2.ownerDocument.dispatchEvent(new Event(target2.getAttribute("cms-reload-on")));
             }
-            if (target2 && !target2.hasAttribute("data-declarative") && detail?.row !== "__new__" && !target2.querySelector('[slot="source-status"]')) {
-              target2.configure(widget);
-              attachDetailSource(target2, widget, context, detail?.row ?? "");
-            }
-            continue;
-          }
-          if (target2?.hasAttribute("data-declarative")) {
-            publishDetailResource(target2, widget, resource.resource);
             continue;
           }
           if (target2) {
-            target2.querySelector('[slot="source-status"]')?.remove();
-            target2.configure({ ...widget, source: { ...widget.source, itemPath: undefined } });
-            target2.setBindingValue(resource.resource);
+            publishDetailResource(target2, widget, resource.resource);
           }
         }
       }

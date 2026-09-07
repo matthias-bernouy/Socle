@@ -1,6 +1,6 @@
 import type { DashboardField } from "@bernouy/cms-dashboards";
 import type { Page } from "playwright";
-import { installReadonlyRoutes } from "../../fixture";
+import { installReadonlyRoutes } from "../../../fixture";
 
 type Choice = {
     id: string;
