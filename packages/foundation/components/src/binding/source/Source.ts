@@ -21,6 +21,7 @@ export type { SourceStatusValue } from "./presentation/sourceStatus";
 type SourceOptions = SourceStatusOptions & {
     sourceStateForce?: SourceState;
     afterSourceRender?: (source: Element) => void;
+    read?: typeof runFetch;
 };
 
 export class Source {
@@ -164,8 +165,13 @@ export class Source {
             return;
         }
 
-        const outcome = await runFetch(url, ac.signal);
+        const outcome = await (this.options.read ?? runFetch)(url, ac.signal);
         if (ac.signal.aborted || outcome.kind === "aborted") {
+            return;
+        }
+        const current = parseSourceSpec(this.el.getAttribute(SOURCE_ATTR) ?? "");
+        if (resolveReactiveUrl(current.url, this.el.ownerDocument) !== url) {
+            void this.run({ onlyIfUrlChanged: true });
             return;
         }
         this.abort = null;

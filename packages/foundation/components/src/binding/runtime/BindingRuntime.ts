@@ -35,7 +35,7 @@ export class BindingRuntime {
     }
 
     stop(): void {
-        this.teardown();
+        this.teardown({ beforeSourceDispose: (source) => source.renderTemplate() });
     }
 
     deactivate(): void {

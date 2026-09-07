@@ -29,6 +29,13 @@ describe("<cms-binding-core> — teardown on disconnect", () => {
         core.remove(); // disconnectedCallback → runtime.stop()
         document.dispatchEvent(new Event("go"));
         await settle();
-        expect(text(p())).toBe("2"); // frozen — disposed, no reload
+        expect(n).toBe(2);
+        expect(text(p())).toBe("{{ n }}");
+
+        document.body.append(core);
+        await waitFor(() => text(p()) === "3");
+        document.dispatchEvent(new Event("go"));
+        await waitFor(() => text(p()) === "4");
+        expect(n).toBe(4);
     });
 });

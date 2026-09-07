@@ -8,19 +8,23 @@ import type { SourceStatusValue } from "../source/presentation/sourceStatus";
 import { hasLocalSourceData } from "../source/values";
 import { sourceUrl } from "../source/runtime/sourceSpec";
 import { sourceStatusScope } from "./sourceStatusScope";
+import { ReadRequests } from "../source/runtime/readRequests";
 
 export class BindingRegistry {
     private readonly sources = new Map<Element, Source>();
     private readonly sourceStatuses = new Map<Element, SourceStatusValue>();
     private readonly paramSyncs = new Map<Element, ParamSync>();
     private readonly pageStateSyncs = new Map<Element, PageStateSync>();
+    private readonly reads: ReadRequests;
 
     constructor(
         private readonly root: Element,
         private readonly filters: FilterMap,
         private readonly options: { sourceStateForce?: SourceState },
         private readonly afterSourceRender: (source: Element) => void,
-    ) {}
+    ) {
+        this.reads = new ReadRequests(root.ownerDocument);
+    }
 
     get sourceCount(): number {
         return this.sources.size;
@@ -64,6 +68,7 @@ export class BindingRegistry {
         }
         const source = new Source(element, this.filters, {
             ...this.options,
+            read: this.reads.read,
             setSourceStatus: (current, status) => this.sourceStatuses.set(current, status),
             sourceStatusesFor: (current, status) => sourceStatusScope(this.root, this.sourceStatuses, current, status),
             afterSourceRender: this.afterSourceRender,
@@ -76,6 +81,9 @@ export class BindingRegistry {
         const source = this.sources.get(element);
         if (!source) {
             return;
+        }
+        if (!element.isConnected) {
+            source.renderTemplate();
         }
         source.dispose();
         this.sources.delete(element);

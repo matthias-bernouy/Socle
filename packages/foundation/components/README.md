@@ -52,6 +52,19 @@ it before the editor snapshot is cloned. Components that replace authored Light
 DOM at runtime must therefore restore that content synchronously from their
 `disconnectedCallback`.
 
+Stopping a binding core restores each source's authored declarations before
+disposing it. Remounting the core therefore performs a fresh read and binds the
+original expressions, rather than treating an earlier response as its template.
+Detached individual sources restore their declarations when the runtime removes
+them from its registry.
+
+Automatic GET sources inside one core share concurrent reads of equivalent URLs.
+Each consumer receives its own data snapshot and can cancel independently; the
+network request is aborted when its last consumer leaves. Completed responses
+are not cached, separate cores do not share requests, and form submissions are
+never combined. A response for a URL that changed before mutation delivery is
+discarded and the current URL is read instead.
+
 ## Components
 
 Two tag prefixes are currently in use across the library: `p9r-` (majority) and `w13c-` (subset). New components default to `p9r-` unless otherwise specified.
