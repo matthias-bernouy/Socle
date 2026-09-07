@@ -46,7 +46,14 @@ test("integration connection fields preserve their presentation, canonical saves
                 if (mode === "before") {
                     geometry.set(width, positions);
                 } else if (baseline) {
-                    expect(positions).toEqual(geometry.get(width)!);
+                    // Feedback now reserves a line so the first save does not move the editor.
+                    const feedbackSpace = await page.locator("[data-management-status]").evaluate((node) => {
+                        const style = getComputedStyle(node);
+                        return Number.parseFloat(style.lineHeight) + Number.parseFloat(style.marginBottom);
+                    });
+                    expect(positions).toEqual(
+                        geometry.get(width)!.map(([x, y, width, height]) => [x!, y! + feedbackSpace, width!, height!]),
+                    );
                 }
                 if (captures) {
                     await page.screenshot({ path: `${captures}/${mode}-${width}.png`, animations: "disabled" });

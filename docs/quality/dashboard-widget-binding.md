@@ -1557,3 +1557,55 @@ an advisory file-size warning. Its operation guards and panel lifecycle remain
 together until the pending shell/Health migration removes those branches;
 splitting this temporary controller only to cross the threshold would obscure
 that work. This warning is retained deliberately.
+
+### Health observations use page binding; action refreshes supersede stale reads
+
+Health now mounts declarations from `sources/_management/health.html` once. The
+page source owns GETs, loading/error/empty states and repeated checks, actions
+and operation steps. `healthContext` projects labels and retains positional
+objects; the visual check component only encapsulates row styles and slots its
+bound content. The manual response renderer and `readHealth` helper are gone.
+The management request helper now handles explicit POST operations only.
+
+Review reproduced two defects and this checkpoint fixes both:
+
+- A Health read started during a repair could return an old observation after
+  the repair succeeded. The post-action refresh now supersedes that read;
+  duplicate manual refresh clicks remain coalesced. The browser regression
+  asserts one repair, three total reads and the applied configuration after
+  the previously pending responses settle.
+- Inserting the first action status shifted the button between double-clicks,
+  moving the second click into empty content and losing focus. The existing
+  feedback paragraph now reserves one line. Recovery asserts unchanged button
+  geometry and focus, one operation, failure/retry and retained action nodes.
+
+This is an intentional visual correction: the initially empty feedback area
+adds 31.5 pixels at both tested widths (one line plus the formerly collapsed
+margin). Comparative tests account explicitly for that offset and otherwise
+require identical positions, sizes and labels. The screenshots are not claimed
+pixel-identical to the old empty-feedback layout.
+
+Evidence from the review/fix is under `/tmp/cmscore-health-fix-*`:
+
+- `recovery.log`: three browser tests pass, 21 assertions. Covers failed repair,
+  retry, initial read failure/empty retry and navigation during a read.
+- `concurrency.log`: the new race regression passes, five assertions. The
+  pre-fix reproduction is `/tmp/cmscore-review-health-race.log`.
+- `refresh.log`: desktop/mobile long-list refresh passes, 32 assertions,
+  including five-frame focus/geometry/composed-ancestor-scroll retention,
+  coalesced refreshes, GET failure, retained observation and retry.
+- `visual.log`: eight before/after Health pairs pass, 100 assertions, at 1440
+  and 390 pixels, across stale/fresh/absent/unsupported observations.
+- `connection-visual.log`: desktop/mobile fields retain geometry after the
+  explicit feedback offset, 36 assertions; six initial requests in each version.
+  Connection stability and recovery files also pass in isolated Bun processes.
+- `admin.log`: all 284 Control admin tests pass, 1259 assertions in 89 files.
+- `captures/`, `connection-captures/` and `refresh-captures/` contain comparable
+  screenshots. Desktop/mobile Health screenshots were visually inspected.
+
+All browser writes in this checkpoint are intercepted fixtures, not real
+provider or local database persistence. Initial quality failed only on the
+leftover diagnostic line's formatting; that diagnostic is removed. No UI
+contract exemption was added. Remaining work still includes definition and
+navigation relays, the management shell/installation/collection branches,
+actual local persistence and the complete operator/provider coverage matrix.

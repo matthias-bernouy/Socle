@@ -1,7 +1,9 @@
+import "../../dashboards/detail/boundDetail";
+import { waitForDetail } from "../../dashboards/detail/detailTestHelpers";
 import { setSourceData } from "@bernouy/components";
 import { afterEach, expect, test } from "bun:test";
 import type { IntegrationHealthEnvelope } from "@bernouy/cms-integrations";
-import { renderHealth } from "cms-control/components/admin/Resources/Integrations/management/presentation/health";
+import { mountHealth } from "cms-control/components/admin/Resources/Integrations/management/presentation/health";
 import { mountSettings } from "cms-control/components/admin/Resources/Integrations/management/settings";
 import { managementRequest } from "cms-control/components/admin/Resources/Integrations/management/api";
 import { executeEndpointAction } from "cms-control/components/admin/Resources/Dashboards/runtime/actions/endpoint";
@@ -16,7 +18,7 @@ afterEach(() => {
     document.head.replaceChildren();
 });
 
-test("health distinguishes stale ready observations and exposes registered recovery actions only", () => {
+test("health distinguishes stale ready observations and exposes registered recovery actions only", async () => {
     const root = document.createElement("div");
     const calls: string[] = [];
     const health: IntegrationHealthEnvelope = {
@@ -41,23 +43,24 @@ test("health distinguishes stale ready observations and exposes registered recov
             operation: { id: "apply-2", status: "running", steps: [{ id: "webhooks", status: "pending" }] },
         },
     };
-    renderHealth(
+    const view = mountHealth(
         root,
-        health,
+        "stripe",
         {
             schemaVersion: 1,
             settings: { readFunctionId: "read", saveFunctionId: "save", applyFunctionId: "apply", fields: [] },
         },
         (id) => calls.push(id),
     );
+    await mountHealthSource(root, view.element, health);
     expect(root.textContent).toContain("Last observed service: ready");
     expect(root.textContent).toContain("unreachable · stale");
     expect(root.textContent).toContain("waiting to be applied");
     expect(root.textContent).toContain("apply-2: running");
-    expect(root.querySelectorAll("button")).toHaveLength(1);
-    root.querySelector("button")!.click();
+    expect(root.querySelectorAll("[data-health-action]")).toHaveLength(1);
+    root.querySelector<HTMLButtonElement>("[data-health-action]")!.click();
     expect(calls).toEqual(["apply-settings"]);
-    renderHealth(root, { ...health, freshness: "unavailable", report: null }, { schemaVersion: 1 }, () => {});
+    setSourceData(view.element, { ...health, freshness: "unavailable", report: null });
     expect(root.textContent).not.toContain("ready");
     expect(root.textContent).toContain("No valid service observation");
 });
@@ -149,7 +152,7 @@ test("source-less extension settings are listed under the real parent source", (
     );
 });
 
-test("health does not equate absent revisions with applied configuration and explains observation failures", () => {
+test("health does not equate absent revisions with applied configuration and explains observation failures", async () => {
     const root = document.createElement("div");
     const health: IntegrationHealthEnvelope = {
         schemaVersion: 1,
@@ -168,15 +171,29 @@ test("health does not equate absent revisions with applied configuration and exp
             checks: [],
         },
     };
-    renderHealth(root, health, { schemaVersion: 1 }, () => {});
+    const view = mountHealth(root, "service", { schemaVersion: 1 }, () => {});
+    await mountHealthSource(root, view.element, health);
     expect(root.textContent).toContain("No saved configuration revision was reported");
     expect(root.textContent).not.toContain("configuration is applied");
     expect(root.textContent).toContain("Observation issue: forbidden (HTTP 403)");
     expect(root.textContent).toContain("Observed version: 1.0.0");
     health.report!.configuration = { savedRevision: "r1", appliedRevision: "r1" };
-    renderHealth(root, health, { schemaVersion: 1 }, () => {});
+    setSourceData(view.element, health);
     expect(root.textContent).toContain("was applied at the last observation");
     health.freshness = "fresh";
-    renderHealth(root, health, { schemaVersion: 1 }, () => {});
+    setSourceData(view.element, health);
     expect(root.textContent).toContain("The saved configuration is applied");
 });
+
+async function mountHealthSource(
+    root: HTMLElement,
+    source: HTMLElement,
+    health: IntegrationHealthEnvelope,
+): Promise<void> {
+    source.setAttribute("cms-source", "");
+    setSourceData(source, health);
+    const core = document.createElement("cms-binding-core");
+    core.append(root);
+    document.body.append(core);
+    await waitForDetail(() => source.hasAttribute("cms-ready"));
+}

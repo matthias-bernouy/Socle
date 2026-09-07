@@ -1,0 +1,16 @@
+<span cms-condition="$source.loading &amp;&amp; !healthView.available">Loading…</span>
+<p cms-condition="$source.error" role="alert">Unable to load health. {{ $source.message }}</p>
+<button type="button" data-health-refresh aria-disabled="{{ $source.loading }}" cms-condition="healthView.available || $source.error || $source.empty">Refresh health</button>
+<p cms-condition="healthView.available">{{ healthView.observation }}</p>
+<p cms-condition="healthView.issue">{{ healthView.issue }}</p>
+<p cms-condition="healthView.version">Observed version: {{ healthView.version }}</p>
+<p cms-condition="healthView.available &amp;&amp; !healthView.hasReport || $source.empty">No valid service observation is available.</p>
+<h3 cms-condition="healthView.hasReport">{{ healthView.service }}</h3>
+<p cms-condition="healthView.hasReport">{{ healthView.checked }}</p>
+<p cms-condition="healthView.hasReport">{{ healthView.configuration }}</p>
+<cms-integration-health-check cms-repeat="healthView.checks as check" data-check-id="{{ check.id }}">
+    <strong>{{ check.summary }}</strong>
+    <button type="button" cms-repeat="check.actions as action" data-health-action="{{ action.id }}" aria-disabled="{{ $source.loading }}">{{ action.label }}</button>
+</cms-integration-health-check>
+<h3 cms-condition="healthView.operation">{{ healthView.operation }}</h3>
+<p cms-repeat="healthView.steps as step">{{ step.id }}: {{ step.status }}</p>

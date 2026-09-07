@@ -3,9 +3,9 @@ import type { DashboardWDetail } from "../../Dashboards/widgets/w-detail/WDetail
 import type { IntegrationManagement, IntegrationSettingsResponse } from "@bernouy/cms-integrations";
 import { getIntegrationInstallation } from "../api";
 import type { IntegrationInstallationDetail } from "../model";
-import { managementRequest, readHealth } from "./api";
+import { managementRequest } from "./api";
 import { renderCollectionSettings } from "./collections";
-import { renderHealth } from "./presentation/health";
+import { mountHealth } from "./presentation/health";
 import { settingsDashboard } from "./dashboard";
 import { mountSettings } from "./settings";
 import { renderManagementShell } from "./presentation/shell";
@@ -15,6 +15,7 @@ export class IntegrationManagementView extends HTMLElement {
     private installation?: IntegrationInstallationDetail;
     private management?: IntegrationManagement;
     private busy = false;
+    private health?: ReturnType<typeof mountHealth>;
     private revision = 0;
     private feedback?: ReturnType<typeof managementFeedback>;
     private panel = new URL(window.location.href).searchParams.get("panel") === "health" ? "health" : "connection";
@@ -69,23 +70,20 @@ export class IntegrationManagementView extends HTMLElement {
         });
         this.feedback?.refresh();
     }
-    private async showPanel(refresh = false): Promise<void> {
+    private async showPanel(): Promise<void> {
+        this.health = undefined;
         const revision = ++this.revision;
         const root = this.querySelector<HTMLElement>("[data-management-content]")!;
         const installation = this.installation!;
         root.textContent = "Loading…";
         try {
             if (this.panel === "health") {
-                const health = await readHealth(installation.id, refresh);
-                if (revision !== this.revision || !this.isConnected) {
-                    return;
-                }
-                renderHealth(root, health, this.management ?? { schemaVersion: 1 }, (id) => void this.runAction(id));
-                const button = document.createElement("button");
-                button.type = "button";
-                button.textContent = "Refresh health";
-                button.addEventListener("click", () => void this.showPanel(true));
-                root.prepend(button);
+                this.health = mountHealth(
+                    root,
+                    installation.id,
+                    this.management ?? { schemaVersion: 1 },
+                    (id) => void this.runAction(id),
+                );
             } else if (installation.integrationType === "collection") {
                 renderCollectionSettings(root, installation, (message) => this.status(message));
             } else if (this.management?.settings?.dashboardId) {
@@ -159,11 +157,15 @@ export class IntegrationManagementView extends HTMLElement {
                     : undefined;
             if (reload) {
                 this.ownerDocument.dispatchEvent(new Event(reload));
+            } else if (this.health) {
+                this.health.refresh();
             } else {
-                await this.showPanel(true);
+                await this.showPanel();
             }
         } catch (error) {
-            this.status(error instanceof Error ? error.message : "Action failed.");
+            if (this.isConnected) {
+                this.status(error instanceof Error ? error.message : "Action failed.");
+            }
         } finally {
             this.setBusy(false);
         }
@@ -175,7 +177,11 @@ export class IntegrationManagementView extends HTMLElement {
         )) {
             action.toggleAttribute("disabled", busy);
         }
-        this.toggleAttribute("aria-busy", busy);
+        if (busy) {
+            this.setAttribute("aria-busy", "true");
+        } else {
+            this.removeAttribute("aria-busy");
+        }
     }
     private status(message: string): void {
         this.feedback?.set(message);

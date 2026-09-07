@@ -1,87 +1,56 @@
 import type { IntegrationHealthEnvelope, IntegrationManagement } from "@bernouy/cms-integrations";
+import { readSourceData, setSourceContext } from "@bernouy/components";
+import { route } from "../../api";
+import { healthContext } from "./healthContext";
+import markup from "cms-control/static/admin/_content/sources/_management/health.html" with { type: "text" };
+import "./HealthCheck";
 
-export function renderHealth(
+/** Compose once from an integration contract; no response data enters this function. */
+export function mountHealth(
     root: HTMLElement,
-    health: IntegrationHealthEnvelope,
+    id: string,
     management: IntegrationManagement,
     run: (id: string) => void,
-): void {
-    root.replaceChildren();
-    const report = health.report;
-    appendText(
-        root,
-        "p",
-        `Observation: ${label(health.observation)} · ${label(health.freshness)} · ${date(health.observedAt)}`,
-    );
-    if (health.reason) {
-        appendText(
-            root,
-            "p",
-            `Observation issue: ${label(health.reason)}${health.httpStatus ? ` (HTTP ${health.httpStatus})` : ""}`,
+) {
+    const host = document.createElement("div");
+    host.dataset.integrationHealth = "";
+    const url = `${route("/api/integrations/management/health")}?id=${encodeURIComponent(id)}`;
+    const reload = `integration:${encodeURIComponent(id)}:health:reload`;
+    host.setAttribute("cms-source", `${url} as health`);
+    host.setAttribute("cms-reload-on", reload);
+    const template = document.createElement("template");
+    template.innerHTML = markup as unknown as string;
+    host.append(template.content.cloneNode(true));
+    let loading = true;
+    const project = healthContext(management);
+    setSourceContext(host, (data) => {
+        loading = data === undefined;
+        const value = readSourceData(host) as IntegrationHealthEnvelope | null | undefined;
+        return project(value ?? undefined);
+    });
+    const refresh = () => {
+        // A completed action must supersede any observation started before it completed.
+        if (!host.isConnected) {
+            return;
+        }
+        loading = true;
+        const next = `${url}&refresh=true as health`;
+        if (host.getAttribute("cms-source") !== next) {
+            host.setAttribute("cms-source", next);
+        } else {
+            host.ownerDocument.dispatchEvent(new Event(reload));
+        }
+    };
+    host.addEventListener("click", (event) => {
+        const target = (event.target as Element | null)?.closest<HTMLElement>(
+            "[data-health-refresh], [data-health-action]",
         );
-    }
-    if (health.reportDefinitionVersion) {
-        appendText(root, "p", `Observed version: ${health.reportDefinitionVersion}`);
-    }
-    if (!report) {
-        appendText(root, "p", "No valid service observation is available.");
-        return;
-    }
-    appendText(
-        root,
-        "h3",
-        `${health.freshness === "fresh" ? "Service" : "Last observed service"}: ${label(report.status)}`,
-    );
-    appendText(root, "p", `Checked ${date(report.checkedAt)}`);
-    appendText(root, "p", configurationStatus(health));
-    for (const check of report.checks) {
-        const row = document.createElement("article");
-        row.className = "management-check";
-        row.dataset.checkId = check.id;
-        appendText(row, "strong", `${label(check.status)} · ${check.message || check.code || check.id}`);
-        for (const id of check.actionIds ?? []) {
-            const action = management.actions?.find((candidate) => candidate.id === id);
-            if (action || (id === "apply-settings" && management.settings?.applyFunctionId)) {
-                const button = document.createElement("button");
-                button.type = "button";
-                button.textContent = action?.label ?? "Apply configuration";
-                button.addEventListener("click", () => run(id));
-                row.append(button);
-            }
+        if (!loading && target?.hasAttribute("data-health-refresh")) {
+            refresh();
+        } else if (!loading && target?.dataset.healthAction) {
+            run(target.dataset.healthAction);
         }
-        root.append(row);
-    }
-    if (report.operation) {
-        appendText(root, "h3", `Operation ${report.operation.id}: ${label(report.operation.status)}`);
-        for (const step of report.operation.steps) {
-            appendText(root, "p", `${step.id}: ${label(step.status)}`);
-        }
-    }
-}
-function appendText(root: HTMLElement, tag: string, text: string): void {
-    const node = document.createElement(tag);
-    node.textContent = text;
-    root.append(node);
-}
-function date(value: string): string {
-    const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString();
-}
-function label(value: string): string {
-    return value.replaceAll("_", " ");
-}
-
-function configurationStatus(health: IntegrationHealthEnvelope): string {
-    const { savedRevision, appliedRevision } = health.report!.configuration;
-    if (savedRevision === null) {
-        return "No saved configuration revision was reported.";
-    }
-    if (savedRevision !== appliedRevision) {
-        return health.freshness === "fresh"
-            ? "Saved changes are waiting to be applied."
-            : "Saved changes were waiting to be applied at the last observation.";
-    }
-    return health.freshness === "fresh"
-        ? "The saved configuration is applied."
-        : "The saved configuration was applied at the last observation.";
+    });
+    root.replaceChildren(host);
+    return { element: host, refresh };
 }

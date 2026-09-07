@@ -33581,9 +33581,9 @@ slot { display: contents; }
   }
 
   // src/components/admin/Resources/Integrations/management/api.ts
-  async function managementRequest(id2, operation, body, refresh = false) {
-    const url = `${route(`/api/integrations/management/${operation}`)}?id=${encodeURIComponent(id2)}${refresh ? "&refresh=true" : ""}`;
-    const response = await fetch(url, body === undefined ? undefined : {
+  async function managementRequest(id2, operation, body) {
+    const url = `${route(`/api/integrations/management/${operation}`)}?id=${encodeURIComponent(id2)}`;
+    const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
@@ -33594,7 +33594,6 @@ slot { display: contents; }
     }
     return response.json();
   }
-  var readHealth = (id2, refresh = false) => managementRequest(id2, "health", undefined, refresh);
 
   // src/components/admin/Resources/Dashboards/runtime/actions/endpoint.ts
   async function executeEndpointAction(group, groups, action, vars) {
@@ -41968,52 +41967,48 @@ details[open] > summary > .chevron {
     root.replaceChildren(hint, selection, button2);
   }
 
-  // src/components/admin/Resources/Integrations/management/presentation/health.ts
-  function renderHealth(root, health, management, run) {
-    root.replaceChildren();
-    const report = health.report;
-    appendText(root, "p", `Observation: ${label3(health.observation)} · ${label3(health.freshness)} · ${date(health.observedAt)}`);
-    if (health.reason) {
-      appendText(root, "p", `Observation issue: ${label3(health.reason)}${health.httpStatus ? ` (HTTP ${health.httpStatus})` : ""}`);
+  // src/components/admin/Resources/Integrations/management/presentation/healthContext.ts
+  function healthContext(management) {
+    const actions = new Map((management.actions ?? []).map((action) => [action.id, { id: action.id, label: action.label }]));
+    if (management.settings?.applyFunctionId && !actions.has("apply-settings")) {
+      actions.set("apply-settings", { id: "apply-settings", label: "Apply configuration" });
     }
-    if (health.reportDefinitionVersion) {
-      appendText(root, "p", `Observed version: ${health.reportDefinitionVersion}`);
-    }
-    if (!report) {
-      appendText(root, "p", "No valid service observation is available.");
-      return;
-    }
-    appendText(root, "h3", `${health.freshness === "fresh" ? "Service" : "Last observed service"}: ${label3(report.status)}`);
-    appendText(root, "p", `Checked ${date(report.checkedAt)}`);
-    appendText(root, "p", configurationStatus(health));
-    for (const check of report.checks) {
-      const row = document.createElement("article");
-      row.className = "management-check";
-      row.dataset.checkId = check.id;
-      appendText(row, "strong", `${label3(check.status)} · ${check.message || check.code || check.id}`);
-      for (const id2 of check.actionIds ?? []) {
-        const action = management.actions?.find((candidate) => candidate.id === id2);
-        if (action || id2 === "apply-settings" && management.settings?.applyFunctionId) {
-          const button2 = document.createElement("button");
-          button2.type = "button";
-          button2.textContent = action?.label ?? "Apply configuration";
-          button2.addEventListener("click", () => run(id2));
-          row.append(button2);
+    let checks = [];
+    let steps = [];
+    return (health) => {
+      const report = health?.report;
+      checks = (report?.checks ?? []).map((check, index) => {
+        const previous = checks[index];
+        const row = previous?.id === check.id ? previous : { id: check.id, summary: "", actions: [] };
+        row.summary = `${label3(check.status)} · ${check.message || check.code || check.id}`;
+        row.actions = (check.actionIds ?? []).flatMap((id2) => {
+          const action = actions.get(id2);
+          return action ? [action] : [];
+        });
+        return row;
+      });
+      steps = (report?.operation?.steps ?? []).map((step, index) => {
+        const previous = steps[index];
+        const row = previous?.id === step.id ? previous : { id: step.id, status: "" };
+        row.status = label3(step.status);
+        return row;
+      });
+      return {
+        healthView: {
+          available: Boolean(health),
+          hasReport: Boolean(report),
+          checks,
+          steps,
+          observation: health ? `Observation: ${label3(health.observation)} · ${label3(health.freshness)} · ${date(health.observedAt)}` : "",
+          issue: health?.reason ? `Observation issue: ${label3(health.reason)}${health.httpStatus ? ` (HTTP ${health.httpStatus})` : ""}` : "",
+          version: health?.reportDefinitionVersion ?? "",
+          service: report ? `${health.freshness === "fresh" ? "Service" : "Last observed service"}: ${label3(report.status)}` : "",
+          checked: report ? `Checked ${date(report.checkedAt)}` : "",
+          configuration: report ? configurationStatus(health) : "",
+          operation: report?.operation ? `Operation ${report.operation.id}: ${label3(report.operation.status)}` : ""
         }
-      }
-      root.append(row);
-    }
-    if (report.operation) {
-      appendText(root, "h3", `Operation ${report.operation.id}: ${label3(report.operation.status)}`);
-      for (const step of report.operation.steps) {
-        appendText(root, "p", `${step.id}: ${label3(step.status)}`);
-      }
-    }
-  }
-  function appendText(root, tag, text5) {
-    const node = document.createElement(tag);
-    node.textContent = text5;
-    root.append(node);
+      };
+    };
   }
   function date(value3) {
     const parsed = new Date(value3);
@@ -42031,6 +42026,86 @@ details[open] > summary > .chevron {
       return health.freshness === "fresh" ? "Saved changes are waiting to be applied." : "Saved changes were waiting to be applied at the last observation.";
     }
     return health.freshness === "fresh" ? "The saved configuration is applied." : "The saved configuration was applied at the last observation.";
+  }
+
+  // src/static/admin/_content/sources/_management/health.html
+  var health_default2 = `<span cms-condition="$source.loading &amp;&amp; !healthView.available">Loading…</span>
+<p cms-condition="$source.error" role="alert">Unable to load health. {{ $source.message }}</p>
+<button type="button" data-health-refresh aria-disabled="{{ $source.loading }}" cms-condition="healthView.available || $source.error || $source.empty">Refresh health</button>
+<p cms-condition="healthView.available">{{ healthView.observation }}</p>
+<p cms-condition="healthView.issue">{{ healthView.issue }}</p>
+<p cms-condition="healthView.version">Observed version: {{ healthView.version }}</p>
+<p cms-condition="healthView.available &amp;&amp; !healthView.hasReport || $source.empty">No valid service observation is available.</p>
+<h3 cms-condition="healthView.hasReport">{{ healthView.service }}</h3>
+<p cms-condition="healthView.hasReport">{{ healthView.checked }}</p>
+<p cms-condition="healthView.hasReport">{{ healthView.configuration }}</p>
+<cms-integration-health-check cms-repeat="healthView.checks as check" data-check-id="{{ check.id }}">
+    <strong>{{ check.summary }}</strong>
+    <button type="button" cms-repeat="check.actions as action" data-health-action="{{ action.id }}" aria-disabled="{{ $source.loading }}">{{ action.label }}</button>
+</cms-integration-health-check>
+<h3 cms-condition="healthView.operation">{{ healthView.operation }}</h3>
+<p cms-repeat="healthView.steps as step">{{ step.id }}: {{ step.status }}</p>
+`;
+
+  // src/components/admin/Resources/Integrations/management/presentation/healthCheck.css
+  var healthCheck_default = `:host {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding: .75rem 0;
+    border-bottom: 1px solid var(--border-default);
+}
+`;
+
+  // src/components/admin/Resources/Integrations/management/presentation/HealthCheck.ts
+  class HealthCheck extends l2 {
+    constructor() {
+      super({ css: healthCheck_default, template: "<slot></slot>" });
+    }
+  }
+  customElements.define("cms-integration-health-check", HealthCheck);
+
+  // src/components/admin/Resources/Integrations/management/presentation/health.ts
+  function mountHealth(root, id2, management, run) {
+    const host = document.createElement("div");
+    host.dataset.integrationHealth = "";
+    const url = `${route("/api/integrations/management/health")}?id=${encodeURIComponent(id2)}`;
+    const reload = `integration:${encodeURIComponent(id2)}:health:reload`;
+    host.setAttribute("cms-source", `${url} as health`);
+    host.setAttribute("cms-reload-on", reload);
+    const template6 = document.createElement("template");
+    template6.innerHTML = health_default2;
+    host.append(template6.content.cloneNode(true));
+    let loading = true;
+    const project = healthContext(management);
+    gd(host, (data) => {
+      loading = data === undefined;
+      const value3 = Md(host);
+      return project(value3 ?? undefined);
+    });
+    const refresh = () => {
+      if (!host.isConnected) {
+        return;
+      }
+      loading = true;
+      const next = `${url}&refresh=true as health`;
+      if (host.getAttribute("cms-source") !== next) {
+        host.setAttribute("cms-source", next);
+      } else {
+        host.ownerDocument.dispatchEvent(new Event(reload));
+      }
+    };
+    host.addEventListener("click", (event) => {
+      const target2 = event.target?.closest("[data-health-refresh], [data-health-action]");
+      if (!loading && target2?.hasAttribute("data-health-refresh")) {
+        refresh();
+      } else if (!loading && target2?.dataset.healthAction) {
+        run(target2.dataset.healthAction);
+      }
+    });
+    root.replaceChildren(host);
+    return { element: host, refresh };
   }
 
   // src/components/admin/Resources/Integrations/management/dashboard.ts
@@ -42109,8 +42184,7 @@ details[open] > summary > .chevron {
 .management-tabs { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; }
 .management-tabs button { padding: .5rem .8rem; border: 1px solid var(--border-default); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
 .management-tabs button[aria-pressed="true"] { font-weight: 700; border-color: currentColor; }
-.management-check { display: flex; gap: 1rem; justify-content: space-between; flex-wrap: wrap; padding: .75rem 0; border-bottom: 1px solid var(--border-default); }
-.management-status { margin: .75rem 0; }
+.management-status { margin: .75rem 0; min-block-size: 1lh; }
 `;
 
   // src/components/admin/Resources/Integrations/management/presentation/shell.ts
@@ -42170,6 +42244,7 @@ details[open] > summary > .chevron {
     installation;
     management;
     busy = false;
+    health;
     revision = 0;
     feedback;
     panel = new URL(window.location.href).searchParams.get("panel") === "health" ? "health" : "connection";
@@ -42219,23 +42294,15 @@ details[open] > summary > .chevron {
       });
       this.feedback?.refresh();
     }
-    async showPanel(refresh = false) {
+    async showPanel() {
+      this.health = undefined;
       const revision = ++this.revision;
       const root = this.querySelector("[data-management-content]");
       const installation = this.installation;
       root.textContent = "Loading…";
       try {
         if (this.panel === "health") {
-          const health = await readHealth(installation.id, refresh);
-          if (revision !== this.revision || !this.isConnected) {
-            return;
-          }
-          renderHealth(root, health, this.management ?? { schemaVersion: 1 }, (id2) => void this.runAction(id2));
-          const button2 = document.createElement("button");
-          button2.type = "button";
-          button2.textContent = "Refresh health";
-          button2.addEventListener("click", () => void this.showPanel(true));
-          root.prepend(button2);
+          this.health = mountHealth(root, installation.id, this.management ?? { schemaVersion: 1 }, (id2) => void this.runAction(id2));
         } else if (installation.integrationType === "collection") {
           renderCollectionSettings(root, installation, (message) => this.status(message));
         } else if (this.management?.settings?.dashboardId) {
@@ -42295,11 +42362,15 @@ details[open] > summary > .chevron {
         const reload = this.panel === "connection" ? this.querySelector("cms-dashboard-w-detail")?.getAttribute("cms-reload-on") : undefined;
         if (reload) {
           this.ownerDocument.dispatchEvent(new Event(reload));
+        } else if (this.health) {
+          this.health.refresh();
         } else {
-          await this.showPanel(true);
+          await this.showPanel();
         }
       } catch (error) {
-        this.status(error instanceof Error ? error.message : "Action failed.");
+        if (this.isConnected) {
+          this.status(error instanceof Error ? error.message : "Action failed.");
+        }
       } finally {
         this.setBusy(false);
       }
@@ -42309,7 +42380,11 @@ details[open] > summary > .chevron {
       for (const action of Array.from(this.querySelectorAll("[data-action], [data-management-action]"))) {
         action.toggleAttribute("disabled", busy);
       }
-      this.toggleAttribute("aria-busy", busy);
+      if (busy) {
+        this.setAttribute("aria-busy", "true");
+      } else {
+        this.removeAttribute("aria-busy");
+      }
     }
     status(message) {
       this.feedback?.set(message);
