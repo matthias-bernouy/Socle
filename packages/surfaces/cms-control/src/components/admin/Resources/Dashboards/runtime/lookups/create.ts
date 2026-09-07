@@ -9,7 +9,7 @@ import type { DetailSelection } from "../../domain";
 import type { DashboardSourceGroup } from "../../types";
 import { valueAt } from "../expressions";
 import { fieldValues } from "../mapping";
-import { fetchSourceJson, itemFrom, sendSourceJson } from "../source";
+import { requireDetailResource, sendSourceJson } from "../source";
 
 type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
 type LookupField = Extract<DashboardField, { type: "combobox" | "tokens" }>;
@@ -23,6 +23,7 @@ export async function executeLookupCreate(
     previousDraft: Record<string, unknown>,
     nextDraft: Record<string, unknown>,
     groups: DashboardSourceGroup[] = [group],
+    currentResource?: unknown,
 ): Promise<LookupCreateResult | undefined> {
     const widget = findDetailWidget(dashboard.views, detail.collection);
     const field = widget ? lookupField(widget, fieldId) : null;
@@ -31,8 +32,7 @@ export async function executeLookupCreate(
         return undefined;
     }
 
-    const data = await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } });
-    const resource = itemFrom(data, widget.source);
+    const resource = requireDetailResource(currentResource);
     const baseFields = fieldValues(widget, resource);
     const previousValue = (previousDraft[fieldId] ?? baseFields[fieldId]) as unknown;
     const nextValue = nextDraft[fieldId];

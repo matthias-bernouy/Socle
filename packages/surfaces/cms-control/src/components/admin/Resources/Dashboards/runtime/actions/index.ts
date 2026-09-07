@@ -4,11 +4,12 @@ import type { DashboardSourceGroup } from "../../types";
 import type { WidgetMediaActionDetail } from "../../widgets/shared";
 import type { DashboardMediaItem } from "../../widgets/w-media-field/types";
 import { matchesDashboardVisibility } from "../expressions";
+import { requireDetailResource } from "../source";
 import { fieldValues } from "../mapping";
 import { mediaValue } from "../media";
-import { fetchSourceJson, itemFrom, sendSourceForm, sendSourceJson } from "../source";
+import { sendSourceForm, sendSourceJson } from "../source";
 import { endpointMethod, executeEndpointAction, type DashboardActionResult } from "./endpoint";
-import { findCollectionAction, findDetailWidget, findMediaField, type DetailWidget } from "./widgets";
+import { findCollectionAction, findDetailWidget, findMediaField } from "./widgets";
 
 export type DashboardMediaActionResult = {
     handled: boolean;
@@ -25,7 +26,7 @@ export async function executeDashboardAction(
     detail: DetailSelection,
     actionId: string,
     draft: Record<string, unknown>,
-    currentResource?: unknown,
+    currentResource: unknown,
     groups: DashboardSourceGroup[] = [group],
 ): Promise<DashboardActionResult> {
     const widget = findDetailWidget(dashboard.views, detail.collection);
@@ -39,7 +40,7 @@ export async function executeDashboardAction(
     if (!action.endpoint && !action.management) {
         throw new Error(`Dashboard action "${actionId}" does not declare an endpoint`);
     }
-    const resource = currentResource ?? (await fetchActionResource(dashboard.source, widget, detail.row));
+    const resource = requireDetailResource(currentResource);
     const fields = { ...fieldValues(widget, resource), ...draft };
     if (!matchesDashboardVisibility(action.visibleWhen, { resource, fields })) {
         throw new Error(`Dashboard action "${actionId}" is not available in the current state`);
@@ -100,13 +101,7 @@ export async function executeDashboardMediaAction(
     if (!target || !ref) {
         return { handled: false, nested: Boolean(target?.parent), results: [] };
     }
-    const resource =
-        media.resource !== undefined
-            ? media.resource
-            : itemFrom(
-                  await fetchSourceJson(dashboard.source, widget.source, { selection: { id: detail.row } }),
-                  widget.source,
-              );
+    const resource = requireDetailResource(media.resource);
     const fields = { ...fieldValues(widget, resource), ...draft, ...(media.fields ?? {}) };
     const mediaVars = mediaActionVars(media);
     const files = media.files ?? (media.file ? [media.file] : []);
@@ -141,11 +136,6 @@ function resultMediaItem(value: unknown, field: Parameters<typeof mediaValue>[1]
             ? (value as Record<string, unknown>).media
             : value;
     return mediaValue(candidate, field, sourceId)[0];
-}
-
-async function fetchActionResource(sourceId: string, widget: DetailWidget, row: string): Promise<unknown> {
-    const data = await fetchSourceJson(sourceId, widget.source, { selection: { id: row } });
-    return itemFrom(data, widget.source);
 }
 
 function mediaActionVars(media: WidgetMediaActionDetail): Record<string, unknown> {

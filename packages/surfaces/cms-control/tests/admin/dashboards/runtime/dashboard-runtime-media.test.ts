@@ -35,6 +35,7 @@ describe("dashboard nested media actions", () => {
             { collection: "questionDetail", row: "question-ref" },
             {
                 action: "upload",
+                resource: { ref: "question-ref", options: [] },
                 field: "imageOptions",
                 rowKey: "question-ref",
                 itemField: "image",
@@ -50,9 +51,9 @@ describe("dashboard nested media actions", () => {
 
         expect(result).toMatchObject({ handled: true, nested: true, item: { id: "101" } });
         expect(result.item?.url).toContain("/.cms/sources/forms/choiceImage?id=101");
-        expect(requests.map((request) => request.method)).toEqual(["GET", "POST"]);
-        expect(requests[1]?.url).toContain("uploadChoiceImage?ref=question-ref");
-        expect((await requests[1]!.formData()).get("file")).toBeInstanceOf(File);
+        expect(requests.map((request) => request.method)).toEqual(["POST"]);
+        expect(requests[0]?.url).toContain("uploadChoiceImage?ref=question-ref");
+        expect((await requests[0]!.formData()).get("file")).toBeInstanceOf(File);
     });
 
     test("patches a nested media card without discarding other unsaved fields", async () => {
@@ -99,6 +100,7 @@ describe("dashboard nested media actions", () => {
             },
             {
                 action: "upload",
+                resource: { ref: "question-ref", options: [] },
                 field: "imageOptions",
                 rowKey: "question-ref",
                 itemField: "image",

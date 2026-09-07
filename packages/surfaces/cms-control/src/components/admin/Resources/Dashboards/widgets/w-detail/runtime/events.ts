@@ -167,7 +167,7 @@ export class DetailEvents {
             rowKey: this.readData().rowKey,
             field: field.id,
             value,
-            ...(created ? { created } : {}),
+            ...(created ? { created, resource: this.fields.currentResource() } : {}),
         });
     };
 

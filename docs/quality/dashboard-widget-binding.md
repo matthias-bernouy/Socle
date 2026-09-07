@@ -1667,3 +1667,56 @@ Courtside local was restarted on this checkout. Browser login succeeds, the
 check, and the public homepage responds 200. Local captures are in
 `/tmp/cmscore-navigation-local/`. This is navigation/read smoke coverage, not
 validation of every source action or real configuration persistence.
+
+## 2026-09-07 — Move the three remaining dashboard read helpers to binding
+
+This checkpoint covers definitions, detail reads before mutations, and operator
+session/runtime reads. It does not complete the broader dashboard migration or
+remove the remaining mutation and binary-download network helpers.
+
+- Admin definitions and embedded integration settings use the existing static
+  `cms-source` declaration. Action-owned definition reloads await its completion;
+  disconnects and failures settle waiting actions. The last `cms-dashboard-input`
+  definition relay and the imperative definitions/user GET helpers were removed.
+  Embedded settings retain loading feedback and report a missing dashboard instead
+  of falling back to another source's dashboard.
+- Actions, uploads and inline lookup creation use the already bound detail
+  resource. Missing resources reject without another GET. A delayed lookup
+  creation cannot overwrite a newer field selection or unrelated edits.
+- Operator session and runtime declarations live in `static/dashboards/sources.html`.
+  The existing page core owns requests, cancellation, reloads and errors. Successful
+  session/runtime HTTP responses explicitly use `Cache-Control: private, no-store`.
+- `observeSource` exposes source status after presentation for definition-driven
+  composition and completion coordination; it adds no binding syntax or second
+  fetching engine. Resource values continue to render through binding. Its contract
+  is documented in `docs/blocs/data-bindings.md`.
+- An unused legacy lookup loader still depended on the deleted detail reader.
+  Its tests were moved to the actual lookup projections and URL composition;
+  browser tests cover option reads, dependencies, search, pagination and recovery.
+
+Validation in the same master workspace, starting at `79f3ea5ee`:
+
+- Initial and final `check:all`: 8 passed, 0 failed. UI contracts changed from
+  0 errors / 77 warnings / 11 information to 0 / 74 / 11. No exemptions were added.
+  Directory fanout remains free of blocking errors. The cohesive `Source` lifecycle
+  file remains above the advisory size threshold (215 lines, previously 198).
+- Workspace build passed. Admin tests: 285 passed. Foundation binding tests:
+  262 passed. Operator HTTP access tests: 6 passed, including cache headers.
+- Browser regression runner: 17 passed across 15 files. Additional final tests
+  cover delayed creation, embedded settings and visual comparisons. Scenarios
+  include stale failures, read cancellation, recovery, access denial, profile
+  fallback, disconnect, saves, media upload, navigation, retained drafts and
+  missing embedded definitions. No external provider credentials were exercised.
+- Ten desktop/mobile screenshot pairs are pixel-identical against the captured
+  pre-change bundle: conditional actions, lookup fields and operator layout.
+  Representative fixture initial-load times remain below 400 ms; tests use a
+  5-second ceiling, not a performance guarantee for a deployed system.
+- Courtside local was restarted with the built workspace. Real admin login,
+  navigation through all 12 sources, desktop/mobile captures and public homepage
+  HTTP 200 passed, with no JavaScript errors or failed HTTP reads. This local smoke
+  test did not write business records or contact production.
+
+Evidence: `/tmp/cmscore-three-reads-{start,check-final,build,admin-final,binding-final,access}.log`,
+`/tmp/cmscore-three-reads-browser/`, `/tmp/cmscore-three-reads-{visual,lookup-visual}/`,
+`/tmp/cmscore-three-reads-pixels.log`, and `/tmp/cmscore-three-reads-local.log`.
+The pre-change bundle is `/tmp/cmscore-three-reads-before-bundle.js`.

@@ -23,19 +23,16 @@ describe("dashboard deep links", () => {
             document.body.append(component);
             expect(selectionOf(component)).toBe(selectedDashboard);
 
-            if (component instanceof DashboardNav) {
-                const core = document.createElement("cms-binding-core");
-                component.remove();
-                core.append(component);
-                document.body.append(core);
-                component.setAttribute("cms-source", "");
-                setSourceData(component, groups);
-            } else {
-                const target = component.querySelector<HTMLElement & { setBindingValue(value: unknown): void }>(
-                    "cms-dashboard-input[kind=groups]",
-                )!;
-                target.setBindingValue(groups);
-            }
+            const core = document.createElement("cms-binding-core");
+            component.remove();
+            core.append(component);
+            document.body.append(core);
+            const source =
+                component instanceof DashboardNav
+                    ? component
+                    : component.querySelector<HTMLElement>("[data-dashboard-list-source]")!;
+            source.setAttribute("cms-source", "");
+            setSourceData(source, groups);
             await new Promise((resolve) => setTimeout(resolve, 0));
 
             expect(selectionOf(component)).toBe(selectedDashboard);

@@ -29,11 +29,16 @@ export async function runDashboardLookupCreate(
             previousDraft,
             nextDraft,
             context.groups ?? [group],
+            change.resource,
         );
         if (result === undefined) {
             return;
         }
-        context.drafts.set(key, { ...nextDraft, [change.field]: result.value });
+        const currentDraft = context.drafts.get(key);
+        if (!currentDraft || currentDraft[change.field] !== nextDraft[change.field]) {
+            return;
+        }
+        context.drafts.set(key, { ...currentDraft, [change.field]: result.value });
         applyLookupCreate(target, change.field, result.value, result.option);
         showToast("Item created", { type: "success" });
     } catch (error) {

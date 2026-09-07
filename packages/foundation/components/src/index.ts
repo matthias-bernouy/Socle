@@ -142,3 +142,5 @@ export {
     refreshSourceContext,
     type SourceContext,
 } from "./binding/source/presentation/sourceContext";
+
+export { observeSource, type SourceObservation } from "./binding/source/runtime/observation";

@@ -41,6 +41,25 @@ describe("dashboard detail visibility", () => {
         expect(control(detail, "localNote").value).toBe("Keep this draft");
     });
 
+    test("refuses an action without a bound detail instead of fetching another resource", async () => {
+        let requests = 0;
+        globalThis.fetch = (async () => {
+            requests++;
+            return Response.json({});
+        }) as unknown as typeof fetch;
+        await expect(
+            executeDashboardAction(
+                group(),
+                dashboard(),
+                { collection: "settingsDetail", row: "default" },
+                "saveAdvanced",
+                { mode: "advanced" },
+                undefined,
+            ),
+        ).rejects.toThrow("The detail is not loaded");
+        expect(requests).toBe(0);
+    });
+
     test("does not execute an action when its resource condition is false", async () => {
         let requests = 0;
         globalThis.fetch = (async () => {

@@ -1,6 +1,6 @@
 import { Component } from "@bernouy/components/base";
 import type { DashboardDto } from "@bernouy/cms-dashboards";
-import { defaultDashboardSource, fetchDashboards, replaceSelectionUrl, type DashboardSelection } from "../../api";
+import { replaceSelectionUrl, type DashboardSelection } from "../../api";
 import { DetailResourceState, type DetailSelection, validDetailSelection } from "../../domain";
 import { isDashboardExampleMode } from "../../navigation/mode";
 import type { DashboardSourceGroup } from "../../types";
@@ -14,7 +14,6 @@ export abstract class DashboardStateController extends Component {
     protected readonly drafts = new Map<string, Record<string, unknown>>();
     protected readonly detailResource = new DetailResourceState();
     private readonly dashboardFilterState = new Map<string, Map<string, Record<string, string>>>();
-    private definitionsReloadGeneration = 0;
 
     constructor(css: string, template: string) {
         super({ css, template });
@@ -23,7 +22,6 @@ export abstract class DashboardStateController extends Component {
     protected abstract renderDashboard(): void;
 
     protected disconnectState(): void {
-        this.definitionsReloadGeneration += 1;
         this.detailResource.clear();
         this.dashboardFilterState.clear();
     }
@@ -141,22 +139,6 @@ export abstract class DashboardStateController extends Component {
             replaceSelectionUrl(this.selection());
         }
         this.renderDashboard();
-    }
-
-    protected async reloadDefinitions(): Promise<void> {
-        if (this.hasAttribute("external") && !this.hasAttribute("embedded")) {
-            window.dispatchEvent(new CustomEvent("cms-dashboard-workspace:reload"));
-            return;
-        }
-        const generation = ++this.definitionsReloadGeneration;
-        const groups = await fetchDashboards();
-        if (generation !== this.definitionsReloadGeneration) {
-            return;
-        }
-        this.detailResource.clearResource();
-        this.groups = groups;
-        this.selectedSource ||= defaultDashboardSource(this.groups);
-        this.ensureDashboardSelection(false);
     }
 
     protected setDetailResource(collection: string, row: string, resource: unknown): void {

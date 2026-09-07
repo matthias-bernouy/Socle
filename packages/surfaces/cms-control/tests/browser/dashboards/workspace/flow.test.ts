@@ -4,10 +4,10 @@ import { resolve } from "node:path";
 import { chromium, type Locator, type Page } from "playwright";
 import { installDashboardRoutes } from "./fixture";
 
-const bundlePath = resolve(import.meta.dir, "../../../src/static/assets/control-components.js");
-const adminPath = resolve(import.meta.dir, "../../../src/static/admin/_access/_workspaces/dashboards.html");
-const operatorPath = resolve(import.meta.dir, "../../../src/static/dashboards/index.html");
-const profilePath = resolve(import.meta.dir, "../../../src/static/dashboards/profile.html");
+const bundlePath = resolve(import.meta.dir, "../../../../src/static/assets/control-components.js");
+const adminPath = resolve(import.meta.dir, "../../../../src/static/admin/_access/_workspaces/dashboards.html");
+const operatorPath = resolve(import.meta.dir, "../../../../src/static/dashboards/index.html");
+const profilePath = resolve(import.meta.dir, "../../../../src/static/dashboards/profile.html");
 
 test("dashboard configuration uses binding while the operator runtime remains isolated", async () => {
     const browser = await chromium.launch({ headless: true });

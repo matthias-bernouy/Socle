@@ -1,5 +1,6 @@
 /** Fetches one `cms-source`, owns reload hooks, and updates its body reactively. */
 
+import { disposeSourceObservation, publishSourceObservation } from "./runtime/observation";
 import { runFetch } from "./fetcher";
 import { type FilterMap } from "../core/interpolate";
 import { READY_ATTR, SOURCE_ATTR, type SourceState } from "../core/attrs";
@@ -9,7 +10,7 @@ import { parseSourceSpec } from "./runtime/sourceSpec";
 import { resolveReactiveUrl } from "./runtime/reactiveUrl";
 import { SourceRenderer } from "./presentation/sourceRenderer";
 import { SourcePresenter } from "./presentation/sourcePresenter";
-import { type SourceStatusOptions } from "./presentation/sourceStatus";
+import { type SourceStatusOptions, type SourceStatusValue } from "./presentation/sourceStatus";
 import { ownerForm, SourceSubmission } from "./submission";
 import { connectSourceData, disconnectSourceData, rememberSourceData } from "./values";
 import { connectSourceContext } from "./presentation/sourceContext";
@@ -31,6 +32,12 @@ export class Source {
     private stopListeners: (() => void) | null = null;
     private stopContext: (() => void) | null = null;
     private lastUrl: string | null = null;
+    private status: SourceStatusValue = {
+        loading: false,
+        loaded: false,
+        empty: false,
+        error: false,
+    };
     private readonly formOwned: boolean;
     private readonly submission: SourceSubmission | null;
 
@@ -73,7 +80,13 @@ export class Source {
         this.submission = this.formOwned ? new SourceSubmission(el, filters) : null;
         const captured = this.formOwned ? cloneSourceContent(el) : captureSourceContent(el);
         this.renderer = new SourceRenderer(el, captured, this.filters, { inPlace: this.formOwned });
-        this.presenter = new SourcePresenter(el, captured, this.renderer, this.options);
+        this.presenter = new SourcePresenter(el, captured, this.renderer, {
+            ...this.options,
+            setSourceStatus: (source, status) => {
+                this.status = status;
+                this.options.setSourceStatus?.(source, status);
+            },
+        });
     }
 
     start(): void {
@@ -109,6 +122,7 @@ export class Source {
         this.stopContext?.();
         this.stopContext = null;
         disconnectSourceData(this.el);
+        disposeSourceObservation(this.el);
         this.abort?.abort();
         this.abort = null;
         this.stopListeners?.();
@@ -196,5 +210,6 @@ export class Source {
 
     private afterRender(): void {
         this.options.afterSourceRender?.(this.el);
+        publishSourceObservation(this.el, this.status);
     }
 }

@@ -1,6 +1,7 @@
 import { Component } from "@bernouy/components/base";
 import type { DashboardDefinition } from "@bernouy/cms-dashboards";
-import { loadDashboardRuntime, loadDashboardSession } from "../api";
+import type { SourceObservation } from "@bernouy/components";
+import { WorkspaceSources } from "./sources";
 import { dispatchDashboardNavigation } from "../events";
 import type { DashboardRuntimeModel, DashboardSessionModel } from "../types";
 import baseCss from "./styles/base.css" with { type: "text" };
@@ -12,42 +13,53 @@ export abstract class DashboardWorkspaceController extends Component {
     protected dashboard: DashboardDefinition | null = null;
     protected runtime: DashboardRuntimeModel | null = null;
     private session: DashboardSessionModel | null = null;
-    private generation = 0;
+    private readonly sources = new WorkspaceSources();
 
     constructor() {
         super({ css: `${baseCss}${navigationCss}`, template: template as unknown as string });
     }
 
     protected disconnectWorkspace(): void {
-        this.generation += 1;
+        this.sources.disconnect();
         delete document.documentElement.dataset.dashboardScope;
     }
 
-    protected async loadModel(): Promise<void> {
-        const generation = ++this.generation;
+    protected loadModel(): void {
         this.message("Loading dashboards…");
-        try {
-            this.session = await loadDashboardSession();
-            if (generation !== this.generation) {
-                return;
-            }
-            const requested = new URL(window.location.href).searchParams.get("id") || "";
-            const target = this.allDashboards().some((dashboard) => dashboard.id === requested)
-                ? requested
-                : (this.allDashboards()[0]?.id ?? "");
-            await this.loadDashboard(target);
-        } catch (error) {
-            this.publishNavigation(null, "");
-            this.message(errorMessage(error), true);
-        }
+        this.sources.connect(this, this.sessionChanged, this.runtimeChanged);
     }
 
-    protected async loadDashboard(id: string): Promise<void> {
-        const generation = ++this.generation;
+    private readonly sessionChanged = (state: SourceObservation): void => {
+        if (!this.isConnected || state.disposed || state.loading) {
+            return;
+        }
+        if (state.error) {
+            this.sources.select(null);
+            this.session = null;
+            this.runtime = null;
+            this.dashboard = null;
+            delete document.documentElement.dataset.dashboardScope;
+            this.publishNavigation(null, "");
+            this.message(String(state.message ?? "Dashboard request failed"), true);
+            return;
+        }
+        if (!state.loaded && !state.empty) {
+            return;
+        }
+        this.session = state.data as DashboardSessionModel | null;
+        const requested = new URL(window.location.href).searchParams.get("id") || "";
+        const target = this.allDashboards().some((dashboard) => dashboard.id === requested)
+            ? requested
+            : (this.allDashboards()[0]?.id ?? "");
+        this.loadDashboard(target);
+    };
+
+    protected loadDashboard(id: string): void {
         delete document.documentElement.dataset.dashboardScope;
         this.dashboard = this.allDashboards().find((dashboard) => dashboard.id === id) ?? null;
         this.runtime = null;
         if (!this.dashboard) {
+            this.sources.select(null);
             if (this.isProfilePage()) {
                 this.renderWorkspace();
                 return;
@@ -56,23 +68,35 @@ export abstract class DashboardWorkspaceController extends Component {
             this.publishNavigation(null, "");
             return;
         }
-        this.message("Loading dashboard…");
-        try {
-            this.runtime = this.dashboard.status === "published" ? await loadDashboardRuntime(this.dashboard.id) : null;
-            if (generation !== this.generation) {
-                return;
-            }
+        if (this.dashboard.status !== "published") {
+            this.sources.select(null);
             this.renderWorkspace();
-        } catch (error) {
-            if (this.isProfilePage()) {
-                this.runtime = null;
-                this.renderWorkspace();
-                return;
-            }
-            this.publishNavigation(null, "");
-            this.message(errorMessage(error), true);
+            return;
         }
+        this.message("Loading dashboard…");
+        this.sources.select(this.dashboard.id);
     }
+
+    private readonly runtimeChanged = (state: SourceObservation): void => {
+        if (!this.isConnected || state.disposed || !this.dashboard || this.dashboard.status !== "published") {
+            return;
+        }
+        if (state.loading) {
+            delete document.documentElement.dataset.dashboardScope;
+            this.message("Loading dashboard…");
+        } else if (state.error) {
+            this.runtime = null;
+            if (this.isProfilePage()) {
+                this.renderWorkspace();
+            } else {
+                this.publishNavigation(null, "");
+                this.message(String(state.message ?? "Dashboard request failed"), true);
+            }
+        } else if (state.loaded || state.empty) {
+            this.runtime = state.data as DashboardRuntimeModel | null;
+            this.renderWorkspace();
+        }
+    };
 
     protected selectView(requested: string): void {
         if (!this.dashboard || !this.runtime) {
@@ -149,8 +173,4 @@ export abstract class DashboardWorkspaceController extends Component {
             logoutUrl: this.session?.logoutUrl ?? "",
         });
     }
-}
-
-export function errorMessage(error: unknown): string {
-    return error instanceof Error ? error.message : "Dashboard request failed";
 }

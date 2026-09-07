@@ -45,12 +45,14 @@ describe("dashboard operator access", () => {
         const fixture = await mounted("user", true);
         const response = await fixture.request("GET", "/api/dashboard-session");
         expect(response.status).toBe(200);
+        expect(response.headers.get("Cache-Control")).toBe("private, no-store");
         const body = await response.json();
         expect(body.dashboards.map((dashboard: { id: string }) => dashboard.id)).toEqual(["support"]);
         expect(body.logoutUrl).toBe("/__dev/logout?returnTo=%2Fdashboards");
         expect(JSON.stringify(body)).not.toContain("allowedCalls");
         const detail = await fixture.request("GET", "/api/dashboard-session/dashboard?id=support");
         expect(detail.status).toBe(200);
+        expect(detail.headers.get("Cache-Control")).toBe("private, no-store");
         const detailBody = await detail.json();
         expect(detailBody.groups[0].endpoints[0]).toMatchObject({ endpointId: "listOrders", targetUrl: "" });
         expect(detailBody.groups[0].endpoints[0]).not.toHaveProperty("headers");

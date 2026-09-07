@@ -1,4 +1,3 @@
-import { requestBindingData } from "@bernouy/components";
 import type { DashboardOption } from "@bernouy/cms-dashboards";
 import type { DashboardListResponse } from "./types";
 
@@ -92,14 +91,6 @@ export function dispatchDashboardSelection(selection: DashboardSelection): void 
     window.dispatchEvent(new CustomEvent<DashboardSelection>(DASHBOARD_SELECTION_EVENT, { detail: selection }));
 }
 
-export async function fetchDashboards(): Promise<DashboardListResponse> {
-    return getJson<DashboardListResponse>(route("/api/dashboards"));
-}
-
-export async function fetchDashboardUsers(): Promise<DashboardUserOption[]> {
-    return getJson<DashboardUserOption[]>(route("/api/users"));
-}
-
 export function dashboardUserOptions(users: DashboardUserOption[]): DashboardOption[] {
     return users.flatMap((user) => {
         const sub = typeof user.sub === "string" ? user.sub : "";
@@ -114,14 +105,6 @@ export function dashboardUserOptions(users: DashboardUserOption[]): DashboardOpt
         const metadata = [role, sub].filter((value) => value && value !== humanLabel).join(" · ");
         return [{ value: sub, label: metadata ? `${humanLabel} · ${metadata}` : humanLabel }];
     });
-}
-
-async function getJson<T>(url: string): Promise<T> {
-    const response = await requestBindingData(url, { headers: { Accept: "application/json" } });
-    if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-    }
-    return response.body as T;
 }
 
 function cleanText(value: unknown): string {

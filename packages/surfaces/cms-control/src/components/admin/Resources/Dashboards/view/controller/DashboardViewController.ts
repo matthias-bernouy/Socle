@@ -1,6 +1,5 @@
-import definitions from "cms-control/static/admin/_content/sources/_runtime/definitions.html" with { type: "text" };
-import "../../runtime/mounting/input";
-import { defaultDashboardSource, route, type DashboardSelection } from "../../api";
+import { DashboardDefinitions } from "./definitions";
+import { defaultDashboardSource, type DashboardSelection } from "../../api";
 import { detailReloadEvent, reloadCollection } from "../../runtime/reload";
 import type { DashboardSourceGroup } from "../../types";
 import type { DashboardViewActionContext } from "../actions";
@@ -9,40 +8,43 @@ import { DashboardStateController } from "./DashboardStateController";
 import type { DashboardWDetail } from "../../widgets/w-detail/WDetail";
 
 export class DashboardViewController extends DashboardStateController {
-    private readonly boundValue = (event: Event): void => {
-        const { kind, value } = (event as CustomEvent).detail;
-        if (kind !== "groups" || !Array.isArray(value)) {
-            return;
-        }
-        this.groups = value;
-        this.selectedSource ||= defaultDashboardSource(this.groups);
-        this.ensureDashboardSelection();
-        this.renderDashboard();
-    };
+    private readonly definitions = new DashboardDefinitions();
 
     protected startBoundSource(): void {
-        this.addEventListener("dashboard:bound-value", this.boundValue);
-        if (this.isExampleMode()) {
+        if (this.isExampleMode() || this.hasAttribute("external")) {
             this.renderDashboard();
             return;
         }
-        if (this.hasAttribute("external")) {
-            this.renderDashboard();
-            return;
-        }
-        if (!this.querySelector("[data-dashboard-list-source]")) {
-            const template = document.createElement("template");
-            template.innerHTML = definitions as unknown as string;
-            template.content
-                .querySelector("[cms-source]")!
-                .setAttribute("cms-source", `${route("/api/dashboards")} as dashboards`);
-            this.append(template.content.cloneNode(true));
-        }
+        this.definitions.connect(this, (groups, render) => {
+            this.groups = groups;
+            const embeddedDashboard = this.getAttribute("dashboard-id");
+            if (embeddedDashboard) {
+                this.selectedSource =
+                    groups.find((group) => group.dashboards.some((dashboard) => dashboard.id === embeddedDashboard))
+                        ?.source.id ?? "";
+                this.selectedDashboard = embeddedDashboard;
+            } else {
+                this.selectedSource ||= defaultDashboardSource(groups);
+            }
+            this.detailResource.clearResource();
+            this.ensureDashboardSelection(render);
+            if (render) {
+                this.renderDashboard();
+            }
+        });
     }
 
     protected disconnectBoundSource(): void {
-        this.removeEventListener("dashboard:bound-value", this.boundValue);
+        this.definitions.disconnect();
         this.disconnectState();
+    }
+
+    protected async reloadDefinitions(): Promise<void> {
+        if (this.hasAttribute("external")) {
+            window.dispatchEvent(new CustomEvent("cms-dashboard-workspace:reload"));
+            return;
+        }
+        await this.definitions.reload(this);
     }
 
     protected renderDashboard(): void {

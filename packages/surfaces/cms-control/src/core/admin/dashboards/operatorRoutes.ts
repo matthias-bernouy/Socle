@@ -18,15 +18,18 @@ export function mountDashboardOperatorRoutes(cms: ControlCms, guard: Middleware)
             if (!dashboards.length) {
                 return new Response("Forbidden", { status: 403 });
             }
-            return Response.json({
-                subject: {
-                    id: subject.identifier,
-                    role: subject.role,
-                    ...(subject.email ? { email: subject.email } : {}),
+            return Response.json(
+                {
+                    subject: {
+                        id: subject.identifier,
+                        role: subject.role,
+                        ...(subject.email ? { email: subject.email } : {}),
+                    },
+                    logoutUrl: cms.auth.buildLogoutUrl(`${cms.basePath}/dashboards`),
+                    dashboards: dashboards.map(({ executionPlan: _plan, ...dashboard }) => dashboard),
                 },
-                logoutUrl: cms.auth.buildLogoutUrl(`${cms.basePath}/dashboards`),
-                dashboards: dashboards.map(({ executionPlan: _plan, ...dashboard }) => dashboard),
-            });
+                { headers: { "Cache-Control": "private, no-store" } },
+            );
         },
         [guard],
     );
@@ -49,7 +52,10 @@ export function mountDashboardOperatorRoutes(cms: ControlCms, guard: Middleware)
                 return Response.json({ errors: ["Dashboard execution plan unavailable"] }, { status: 409 });
             }
             const { executionPlan: _plan, ...safeDashboard } = resolved.dashboard;
-            return Response.json({ dashboard: safeDashboard, groups: await operatorSourceGroups(cms, plan) });
+            return Response.json(
+                { dashboard: safeDashboard, groups: await operatorSourceGroups(cms, plan) },
+                { headers: { "Cache-Control": "private, no-store" } },
+            );
         },
         [guard],
     );

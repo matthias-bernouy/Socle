@@ -3,17 +3,12 @@ import type { DashboardDataRef, DashboardEndpointRef } from "@bernouy/cms-dashbo
 import { route } from "../api";
 import { arrayAt, resolveBody, resolveParams, valueAt, type RuntimeVars } from "./expressions";
 
-export async function fetchSourceJson(
-    sourceId: string,
-    ref: DashboardDataRef,
-    vars: RuntimeVars,
-    options: { signal?: AbortSignal } = {},
-): Promise<unknown> {
-    const response = await requestBindingData(sourceUrl(sourceId, ref, vars).href, {
-        headers: { Accept: "application/json" },
-        signal: options.signal,
-    });
-    return responseJson(response);
+/** Mutations must use the resource already presented by the bound detail. */
+export function requireDetailResource(resource: unknown): unknown {
+    if (resource === undefined || resource === null) {
+        throw new Error("The detail is not loaded. Wait for it to load before trying again.");
+    }
+    return resource;
 }
 
 export async function sendSourceJson(

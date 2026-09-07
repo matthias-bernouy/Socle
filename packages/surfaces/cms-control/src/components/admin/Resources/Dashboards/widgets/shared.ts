@@ -45,6 +45,7 @@ export type WidgetFieldChangeDetail = {
     field: string;
     value: WidgetFieldValue;
     created?: boolean;
+    resource?: unknown;
 };
 
 export type WidgetMediaActionDetail = DashboardMediaActionDetail & {

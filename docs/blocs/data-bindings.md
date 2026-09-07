@@ -134,6 +134,19 @@ alternative HTML renderer or a reason to add hidden object-relay elements.
 
 ## Local source context
 
+`observeSource(element, listener)` observes the lifecycle of an existing bound
+source after its presentation. It returns an unsubscribe function and immediately
+replays the current observation when one exists. Observations expose the source
+status, `disposed`, and `data` (the last successful automatic read, also available
+through `readSourceData`). Loading and errors retain that successful snapshot;
+consumers must inspect status before accepting new data. Empty successful reads
+have `empty: true`. Disposal clears the snapshot. Form submission results remain
+in the form binding scope, not in this read-data API.
+
+Use this hook to coordinate definition-driven composition or action completion.
+It does not start requests, introduce a nested core, serialize data into attributes,
+or replace declarative rendering of resource values. Unsubscribe on disconnect.
+
 `setSourceContext(element, project)` and `refreshSourceContext(element)` are
 exported by `@bernouy/components` and `@bernouy/components/binding`. They let a
 source's authored conditions and interpolations depend on local editing state.

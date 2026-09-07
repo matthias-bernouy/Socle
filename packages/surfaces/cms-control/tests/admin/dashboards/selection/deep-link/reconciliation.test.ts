@@ -1,3 +1,4 @@
+import "../../detail/boundDetail";
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import {
     actionDefinitionGroups,
@@ -42,9 +43,10 @@ describe("dashboard deep links", () => {
             new Promise<Response>((resolve) => responses.push(resolve))) as unknown as typeof fetch;
         const component = dashboardViewInternals();
 
+        await mountDefinitions(component);
         const first = component.reloadDefinitions();
         const second = component.reloadDefinitions();
-        responses[1]!(Response.json(groupsWithFirstDashboard("new-dashboard")));
+        responses.at(-1)!(Response.json(groupsWithFirstDashboard("new-dashboard")));
         await second;
         responses[0]!(Response.json(groupsWithFirstDashboard("stale-dashboard")));
         await first;
@@ -66,7 +68,7 @@ describe("dashboard deep links", () => {
 
     test("removes a detail deep link when refreshed definitions drop its widget", async () => {
         const component = dashboardViewInternals();
-        component.detailSelection = { collection: "removedDetail", row: "removed-1" };
+
         window.history.replaceState(
             null,
             "",
@@ -80,6 +82,8 @@ describe("dashboard deep links", () => {
                 })),
             )) as unknown as typeof fetch;
 
+        await mountDefinitions(component);
+        component.detailSelection = { collection: "removedDetail", row: "removed-1" };
         await component.reloadDefinitions();
 
         expect(component.detailSelection).toBeNull();
@@ -91,9 +95,12 @@ describe("dashboard deep links", () => {
         const component = dashboardViewInternals();
         component.groups = actionDefinitionGroups(true);
         component.detailSelection = { collection: "createForm", row: "__new__" };
-        const finish = component.detailResource.beginAction();
+
         globalThis.fetch = (async () => Response.json(actionDefinitionGroups(false))) as unknown as typeof fetch;
 
+        await mountDefinitions(component);
+        component.detailSelection = { collection: "createForm", row: "__new__" };
+        const finish = component.detailResource.beginAction();
         await component.reloadDefinitions();
 
         expect(component.detailSelection).toBeNull();
@@ -102,3 +109,10 @@ describe("dashboard deep links", () => {
         expect(component.detailSelection).toEqual({ collection: "createdDetail", row: "created-1" });
     });
 });
+
+async function mountDefinitions(view: DashboardViewInternals): Promise<void> {
+    const core = document.createElement("cms-binding-core");
+    core.append(view as unknown as HTMLElement);
+    document.body.append(core);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+}

@@ -280,7 +280,7 @@ function dashboard(
     };
 }
 
-function runtime(id: string) {
+export function runtime(id: string) {
     const views =
         id === "commerce"
             ? [
