@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { commerceDefinitionWithDeferredDashboards } from "./support/deferredDashboards";
+import { commerceDefinitionWithDeferredDashboards } from "../support/deferredDashboards";
 
 type Field = {
     id: string;
@@ -87,7 +87,7 @@ describe("commerce taxonomy dashboard definition", () => {
         const dashboard = definition.artifacts.find((artifact: any) => artifact.view?.id === "commerce-taxonomy").view;
         const detail = dashboard.views.find((view: any) => view.id === "categoryDetail");
 
-        expect(endpoint.body.properties.parentId).toEqual({ type: "string" });
+        expect(endpoint.body.properties.parentId).toEqual({ type: "number", nullable: true });
         expect(endpoint.body.required ?? []).not.toContain("parentId");
         expect(detail.main[0].fields.find((field: any) => field.id === "parentId").required).not.toBeTrue();
     });
@@ -97,8 +97,8 @@ describe("commerce taxonomy dashboard definition", () => {
         const source = definition.artifacts.find((artifact: any) => artifact.type === "source").source;
         const endpoint = source.endpoints.find((candidate: any) => candidate.endpointId === "upsertProduct");
 
-        expect(endpoint.body.properties.brandId).toEqual({ type: "string" });
-        expect(endpoint.body.properties.primaryCategoryId).toEqual({ type: "string" });
+        expect(endpoint.body.properties.brandId).toEqual({ type: "number", nullable: true });
+        expect(endpoint.body.properties.primaryCategoryId).toEqual({ type: "number", nullable: true });
     });
 
     test("uses reorderable navigation lists and keeps state in detail asides", async () => {
@@ -112,7 +112,9 @@ describe("commerce taxonomy dashboard definition", () => {
         expect(brands.reorderable).toEqual({ action: "reorderBrands" });
         expect(categories.reorderable).toEqual({ action: "reorderCategories" });
         expect(details.every((detail: any) => detail.aside[0].fields[0].id === "status")).toBeTrue();
-        expect(categories.actions[1].endpoint.body).toEqual({ ids: "$value" });
+        expect(categories.actions.find((action: any) => action.id === "reorderCategories").endpoint.body).toEqual({
+            ids: "$value",
+        });
         expect(
             details.find((detail: any) => detail.id === "categoryDetail").main[0].fields.map((field: any) => field.id),
         ).not.toContain("position");
@@ -151,17 +153,23 @@ describe("commerce taxonomy dashboard definition", () => {
                 }),
             ]),
         );
-        for (const [detail, actionId] of [
+        for (const [detail, endpoint] of [
             [brand, "deleteBrand"],
             [category, "deleteCategory"],
-            [customField, "deleteCustomField"],
         ] as const) {
-            expect(detail.actions.find((action: any) => action.id === actionId)).toMatchObject({
-                tone: "danger",
-                placement: "more",
-                icon: "trash",
+            expect(detail.delete).toMatchObject({ endpoint, tone: "danger", confirm: expect.any(String) });
+            expect(detail.delete.hiddenFields).toContainEqual({
+                name: "id",
+                value: "$resource.id",
+                type: "number",
+                empty: "omit",
             });
         }
+        expect(customField.actions.find((action: any) => action.id === "deleteCustomField")).toMatchObject({
+            tone: "danger",
+            placement: "more",
+            icon: "trash",
+        });
         expect(customField.aside[0].id).toBe("customFieldAccess");
     });
 
@@ -171,7 +179,7 @@ describe("commerce taxonomy dashboard definition", () => {
         const taxonomy = definition.artifacts.find((artifact: any) => artifact.view?.id === "commerce-taxonomy").view;
         const detail = taxonomy.views.find((view: any) => view.id === "categoryDetail");
         const field = detail.main[0].fields.find((candidate: any) => candidate.id === "categoryFields");
-        const save = detail.actions.find((action: any) => action.id === "saveCategory");
+        const save = detail.save;
 
         expect(source.endpoints.map((endpoint: any) => endpoint.endpointId)).toContain("categoryProductFields");
         expect(field).toMatchObject({ type: "reorderable-list", itemKey: "fieldKey", positionPath: "position" });
@@ -193,6 +201,8 @@ describe("commerce taxonomy dashboard definition", () => {
             },
         });
         expect(field.fields.find((item: any) => item.id === "fieldKey").lookup.create).toBeUndefined();
-        expect(save.endpoint.body.categoryFields).toBe("$field.categoryFields");
+        expect(save.endpoint).toBe("upsertCategory");
+        expect(save).not.toHaveProperty("body");
+        expect(save.hiddenFields.some((hidden: any) => hidden.name === "categoryFields")).toBe(false);
     });
 });

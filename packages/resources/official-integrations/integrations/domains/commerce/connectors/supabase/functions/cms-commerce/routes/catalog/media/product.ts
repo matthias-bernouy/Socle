@@ -1,3 +1,4 @@
+import { sessionId, uploadOwner } from "./staging/session.ts";
 import { HttpError } from "../../../core/errors.ts";
 import { corsHeaders, json } from "../../../core/http.ts";
 import { camelize, isRecord } from "../../../core/records.ts";
@@ -39,8 +40,10 @@ export async function reorderProductImages(request: Request): Promise<Response> 
 
 export async function getProductImageFile(request: Request): Promise<Response> {
     const mediaId = requiredQueryId(request, "id", "mediaId");
+    const session = sessionId(new URL(request.url).searchParams.get("sessionId"));
     const context = await rpcRecord("get_product_media_download_context", {
         p_media_id: mediaId,
+        ...(session ? { p_session_id: session, p_owner_id: uploadOwner(request) } : {}),
     });
     const media = context.state === "ok" && isRecord(context.media) ? context.media : null;
     if (!media || media.storage_bucket !== productMediaBucket || typeof media.storage_path !== "string") {

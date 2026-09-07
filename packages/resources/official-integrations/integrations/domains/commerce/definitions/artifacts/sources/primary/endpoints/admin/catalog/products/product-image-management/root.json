@@ -117,5 +117,11 @@
                 }
             }
         ]
+    },
+    {
+        "$include": "stage-product-image.json"
+    },
+    {
+        "$include": "discard-staged-product-images.json"
     }
 ]

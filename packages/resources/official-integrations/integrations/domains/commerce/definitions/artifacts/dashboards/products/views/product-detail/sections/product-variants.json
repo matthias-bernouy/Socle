@@ -8,6 +8,7 @@
             "path": "variantAxes",
             "type": "table",
             "editable": true,
+            "rowKey": "key",
             "addLabel": "Add axis",
             "columns": [
                 {

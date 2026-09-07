@@ -50,7 +50,16 @@
                             "type": "object"
                         },
                         "version": {
-                            "type": "number"
+                            "type": "number",
+                            "nullable": true
+                        },
+                        "createdAt": {
+                            "type": "string",
+                            "nullable": true
+                        },
+                        "updatedAt": {
+                            "type": "string",
+                            "nullable": true
                         }
                     }
                 }
@@ -71,8 +80,7 @@
             {
                 "name": "id",
                 "in": "query",
-                "type": "number",
-                "required": true
+                "type": "number"
             }
         ],
         "headers": [
@@ -104,6 +112,17 @@
                     ]
                 }
             }
-        ]
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "id"
+            ]
+        }
     }
 ]

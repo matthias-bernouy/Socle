@@ -43,10 +43,10 @@ describe("commerce product upsert contracts", () => {
         });
     });
 
-    test("treats __new__ as creation and does not require an expected version", async () => {
+    test("treats an absent id as creation and does not require an expected version", async () => {
         useProductResponder({ brandId: null });
 
-        const response = await requestCommerce("/admin/product?id=__new__", {
+        const response = await requestCommerce("/admin/product", {
             body: { slug: "racket-pro", title: "Racket Pro" },
         });
 
@@ -54,7 +54,7 @@ describe("commerce product upsert contracts", () => {
         const rpc = expectRpc("upsert_product_read_model");
         expect(rpc.body).toEqual({
             p_product_id: null,
-            p_payload: { slug: "racket-pro", title: "Racket Pro" },
+            p_payload: { slug: "racket-pro", title: "Racket Pro", status: "draft", visibility: "hidden" },
         });
         expect(rpc.body).not.toHaveProperty("p_expected_version");
         expect(capturedFetches()).toHaveLength(1);

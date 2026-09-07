@@ -24,6 +24,13 @@
                 "from": "computed",
                 "ref": "userID"
             }
+        },
+        {
+            "name": "x-cms-user-role",
+            "source": {
+                "from": "computed",
+                "ref": "userRole"
+            }
         }
     ],
     "body": {
@@ -39,13 +46,16 @@
                 "type": "string"
             },
             "description": {
-                "type": "string"
+                "type": "string",
+                "nullable": true
             },
             "brandId": {
-                "type": "string"
+                "type": "number",
+                "nullable": true
             },
             "primaryCategoryId": {
-                "type": "string"
+                "type": "number",
+                "nullable": true
             },
             "variantAxes": {
                 "type": "array",
@@ -61,6 +71,21 @@
             },
             "metadata": {
                 "type": "object"
+            },
+            "id": {
+                "type": "number"
+            },
+            "mediaIds": {
+                "type": "array",
+                "items": {
+                    "type": "number"
+                }
+            },
+            "creationToken": {
+                "type": "string"
+            },
+            "uploadSessionId": {
+                "type": "string"
             }
         }
     },

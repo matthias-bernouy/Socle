@@ -43,3 +43,11 @@ commit;
 \ir concurrency/races.sql
 \ir concurrency/direct-setup.sql
 \ir concurrency/direct-contracts.sql
+
+\ir lifecycle/sessions/media-save.sql
+\ir lifecycle/sessions/media-cleanup.sql
+\ir lifecycle/metadata-patch.sql
+\ir lifecycle/sessions/media-races.sql
+\ir validation/form-identities.sql
+\ir validation/form-classification.sql
+\ir lifecycle/sessions/creation.sql

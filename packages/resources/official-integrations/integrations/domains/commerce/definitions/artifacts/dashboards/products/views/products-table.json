@@ -91,19 +91,14 @@
                 "format": "date"
             }
         ],
-        "actions": [
-            {
-                "id": "createProduct",
-                "label": "Create product",
-                "tone": "primary",
-                "placement": "primary",
-                "selection": {
-                    "opens": "productDetail"
-                }
-            }
-        ],
         "selection": {
             "opens": "productDetail"
+        },
+        "create": {
+            "viewId": "productDetail",
+            "presentation": "page",
+            "label": "Create product",
+            "title": "New product"
         }
     }
 ]

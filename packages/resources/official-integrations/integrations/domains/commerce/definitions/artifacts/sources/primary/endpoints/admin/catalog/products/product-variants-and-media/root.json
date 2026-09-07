@@ -77,8 +77,12 @@
             {
                 "name": "id",
                 "in": "query",
-                "type": "string",
-                "required": true
+                "type": "string"
+            },
+            {
+                "name": "sessionId",
+                "in": "query",
+                "type": "string"
             }
         ],
         "headers": [
@@ -88,6 +92,20 @@
                     "from": "secret",
                     "ref": "{{secrets.cmsApiKey}}",
                     "prefix": "Bearer "
+                }
+            },
+            {
+                "name": "x-cms-user-id",
+                "source": {
+                    "from": "computed",
+                    "ref": "userID"
+                }
+            },
+            {
+                "name": "x-cms-user-role",
+                "source": {
+                    "from": "computed",
+                    "ref": "userRole"
                 }
             }
         ],

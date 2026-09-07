@@ -27,15 +27,6 @@
         },
         "actions": [
             {
-                "id": "createBrand",
-                "label": "Create brand",
-                "tone": "primary",
-                "placement": "primary",
-                "selection": {
-                    "opens": "brandDetail"
-                }
-            },
-            {
                 "id": "reorderBrands",
                 "label": "Reorder brands",
                 "endpoint": {
@@ -48,6 +39,12 @@
         ],
         "selection": {
             "opens": "brandDetail"
+        },
+        "create": {
+            "viewId": "brandDetail",
+            "presentation": "page",
+            "label": "Create brand",
+            "title": "New brand"
         }
     },
     {
@@ -78,15 +75,6 @@
         },
         "actions": [
             {
-                "id": "createCategory",
-                "label": "Create category",
-                "tone": "primary",
-                "placement": "primary",
-                "selection": {
-                    "opens": "categoryDetail"
-                }
-            },
-            {
                 "id": "reorderCategories",
                 "label": "Reorder categories",
                 "endpoint": {
@@ -99,6 +87,12 @@
         ],
         "selection": {
             "opens": "categoryDetail"
+        },
+        "create": {
+            "viewId": "categoryDetail",
+            "presentation": "page",
+            "label": "Create category",
+            "title": "New category"
         }
     },
     {

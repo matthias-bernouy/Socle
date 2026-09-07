@@ -112,13 +112,16 @@
                         }
                     },
                     "version": {
-                        "type": "number"
+                        "type": "number",
+                        "nullable": true
                     },
                     "createdAt": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     },
                     "updatedAt": {
-                        "type": "string"
+                        "type": "string",
+                        "nullable": true
                     }
                 }
             }

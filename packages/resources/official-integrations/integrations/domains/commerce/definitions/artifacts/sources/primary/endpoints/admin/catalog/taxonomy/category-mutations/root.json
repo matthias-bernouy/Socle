@@ -13,8 +13,7 @@
             {
                 "name": "id",
                 "in": "query",
-                "type": "number",
-                "required": true
+                "type": "number"
             }
         ],
         "headers": [
@@ -46,7 +45,18 @@
                     ]
                 }
             }
-        ]
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "id"
+            ]
+        }
     },
     {
         "endpointId": "reorderCategories",

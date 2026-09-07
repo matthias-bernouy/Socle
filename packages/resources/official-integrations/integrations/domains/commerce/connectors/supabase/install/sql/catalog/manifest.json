@@ -57,6 +57,27 @@
             "file": "products/sync-product-variant-matrix.sql"
         },
         {
+            "file": "products/editing/stage-media.sql"
+        },
+        {
+            "file": "products/editing/save-media.sql"
+        },
+        {
+            "file": "products/editing/cleanup-media.sql"
+        },
+        {
+            "file": "products/editing/metadata-patch.sql"
+        },
+        {
+            "file": "products/editing/variant-identities.sql"
+        },
+        {
+            "file": "products/editing/metadata-selection.sql"
+        },
+        {
+            "file": "products/editing/access.sql"
+        },
+        {
             "file": "products/upsert-product.sql"
         },
         {

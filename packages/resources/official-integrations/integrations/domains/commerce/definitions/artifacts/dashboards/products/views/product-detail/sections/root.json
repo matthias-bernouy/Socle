@@ -7,8 +7,7 @@
                 "id": "slug",
                 "label": "Slug",
                 "path": "slug",
-                "type": "text",
-                "required": true
+                "type": "text"
             },
             {
                 "id": "title",
@@ -63,38 +62,19 @@
                 "item": {
                     "idPath": "media.id",
                     "urlPath": "media.url",
-                    "altPath": "media.alt"
+                    "altPath": "media.alt",
+                    "endpoint": "productImage"
                 },
                 "actions": {
                     "upload": {
-                        "endpoint": "uploadProductImage",
-                        "params": {
-                            "productId": "$resource.id"
-                        }
-                    },
-                    "replace": {
-                        "endpoint": "replaceProductImage",
-                        "params": {
-                            "productId": "$resource.id",
-                            "mediaId": "$media.previousItem.id"
-                        }
-                    },
-                    "remove": {
-                        "endpoint": "removeProductImage",
-                        "params": {
-                            "productId": "$resource.id",
-                            "mediaId": "$media.item.id"
-                        }
-                    },
-                    "reorder": {
-                        "endpoint": "reorderProductImages",
-                        "params": {
-                            "productId": "$resource.id"
-                        },
-                        "body": {
-                            "mediaIds": "$media.valueIds"
-                        }
+                        "endpoint": "stageProductImage"
                     }
+                },
+                "name": "mediaIds",
+                "persist": "save",
+                "valueType": "number",
+                "staging": {
+                    "sessionField": "uploadSessionId"
                 }
             }
         ]

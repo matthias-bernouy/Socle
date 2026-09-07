@@ -150,14 +150,18 @@ export const newProduct = {
     brandId: null,
     primaryCategoryId: null,
     status: "draft",
-    visibility: "public",
+    visibility: "hidden",
     metadata: {},
     media: [],
     mainImageMediaId: null,
     variantAxes: [],
     variants: [],
     variantMatrix: [],
-    version: 1,
+    version: null,
+    brand: null,
+    primaryCategory: null,
+    createdAt: null,
+    updatedAt: null,
 };
 
 function productProjection(metadata: Record<string, unknown>) {

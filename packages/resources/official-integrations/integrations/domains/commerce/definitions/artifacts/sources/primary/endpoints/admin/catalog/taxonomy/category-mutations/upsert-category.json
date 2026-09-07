@@ -26,7 +26,8 @@
                 "type": "number"
             },
             "parentId": {
-                "type": "string"
+                "type": "number",
+                "nullable": true
             },
             "slug": {
                 "type": "string"
@@ -51,6 +52,9 @@
                 "items": {
                     "type": "object"
                 }
+            },
+            "id": {
+                "type": "number"
             }
         }
     },

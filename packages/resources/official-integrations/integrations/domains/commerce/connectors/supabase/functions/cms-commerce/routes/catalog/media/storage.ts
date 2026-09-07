@@ -37,6 +37,13 @@ export async function downloadStorageImage(bucket: string, path: string): Promis
     return response;
 }
 
+export async function deleteStorageImage(bucket: string, path: string): Promise<void> {
+    const response = await storageObject(bucket, path, { method: "DELETE" });
+    if (!response.ok && response.status !== 404) {
+        throw await storageError(response);
+    }
+}
+
 export async function deleteStorageImageBestEffort(bucket: string, path: string): Promise<void> {
     try {
         const response = await storageObject(bucket, path, { method: "DELETE" });

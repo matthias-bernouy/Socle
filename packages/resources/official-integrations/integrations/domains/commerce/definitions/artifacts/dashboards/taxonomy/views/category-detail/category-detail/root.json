@@ -14,47 +14,6 @@
     "status": {
         "path": "status"
     },
-    "actions": [
-        {
-            "id": "saveCategory",
-            "label": "Save category",
-            "tone": "primary",
-            "placement": "primary",
-            "endpoint": {
-                "endpoint": "upsertCategory",
-                "params": {
-                    "id": "$resource.id"
-                },
-                "body": {
-                    "expectedVersion": "$resource.version",
-                    "parentId": "$field.parentId",
-                    "slug": "$field.slug",
-                    "label": "$field.label",
-                    "description": "$field.description",
-                    "categoryFields": "$field.categoryFields",
-                    "status": "$field.status"
-                }
-            }
-        },
-        {
-            "id": "deleteCategory",
-            "label": "Delete category",
-            "icon": "trash",
-            "tone": "danger",
-            "placement": "more",
-            "confirm": "Delete this category?",
-            "visibleWhen": {
-                "value": "$field.id",
-                "notEquals": ""
-            },
-            "endpoint": {
-                "endpoint": "deleteCategory",
-                "params": {
-                    "id": "$resource.id"
-                }
-            }
-        }
-    ],
     "main": {
         "$include": "main.json"
     },
@@ -88,5 +47,41 @@
                 }
             ]
         }
-    ]
+    ],
+    "create": {
+        "label": "Create category",
+        "title": "New category"
+    },
+    "save": {
+        "endpoint": "upsertCategory",
+        "label": "Save category",
+        "hiddenFields": [
+            {
+                "name": "id",
+                "value": "$resource.id",
+                "type": "number",
+                "empty": "omit"
+            },
+            {
+                "name": "expectedVersion",
+                "value": "$resource.version",
+                "type": "number",
+                "empty": "omit"
+            }
+        ]
+    },
+    "delete": {
+        "endpoint": "deleteCategory",
+        "label": "Delete category",
+        "tone": "danger",
+        "confirm": "Delete this category?",
+        "hiddenFields": [
+            {
+                "name": "id",
+                "value": "$resource.id",
+                "type": "number",
+                "empty": "omit"
+            }
+        ]
+    }
 }

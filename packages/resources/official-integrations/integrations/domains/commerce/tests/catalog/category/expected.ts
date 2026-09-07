@@ -146,6 +146,7 @@ export const publicSourceCategory = { ...category, parent };
 export const newCategory = {
     id: null,
     parentId: null,
+    parent: null,
     slug: "",
     fullSlug: "",
     label: "",
@@ -154,5 +155,7 @@ export const newCategory = {
     position: 0,
     metadata: {},
     categoryFields: [],
-    version: 1,
+    version: null,
+    createdAt: null,
+    updatedAt: null,
 };

@@ -1,5 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { expectRpc, installCommerceTestEnvironment, jsonResponse, requestCommerce, setRestResponder } from "../harness";
+import {
+    expectRpc,
+    installCommerceTestEnvironment,
+    jsonResponse,
+    requestCommerce,
+    setRestResponder,
+} from "../../harness";
 
 installCommerceTestEnvironment();
 

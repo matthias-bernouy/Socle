@@ -19,11 +19,11 @@ describe("commerce Product post-action parity", () => {
         },
         {
             name: "new Product",
-            id: "__new__",
+            id: "",
             body: { slug: "racket-pro", title: "Racket Pro" },
             mutationBody: {
                 p_product_id: null,
-                p_payload: { slug: "racket-pro", title: "Racket Pro" },
+                p_payload: { slug: "racket-pro", title: "Racket Pro", status: "draft", visibility: "hidden" },
             },
         },
     ] as const) {

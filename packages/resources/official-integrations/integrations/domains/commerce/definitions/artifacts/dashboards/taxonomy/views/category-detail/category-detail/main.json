@@ -40,7 +40,9 @@
                     "labelPath": "label",
                     "subtitlePath": "fullSlug",
                     "selected": "$resource.parent"
-                }
+                },
+                "valueType": "number",
+                "empty": "null"
             },
             {
                 "id": "categoryFields",

@@ -77,13 +77,16 @@
         "type": "object"
     },
     "version": {
-        "type": "number"
+        "type": "number",
+        "nullable": true
     },
     "createdAt": {
-        "type": "string"
+        "type": "string",
+        "nullable": true
     },
     "updatedAt": {
-        "type": "string"
+        "type": "string",
+        "nullable": true
     },
     "media": {
         "$include": "media.json"
@@ -124,5 +127,8 @@
     },
     "variantMatrix": {
         "$include": "variant-matrix.json"
+    },
+    "creationToken": {
+        "type": "string"
     }
 }

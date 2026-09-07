@@ -14,48 +14,6 @@
     "status": {
         "path": "status"
     },
-    "actions": [
-        {
-            "id": "saveBrand",
-            "label": "Save brand",
-            "tone": "primary",
-            "placement": "primary",
-            "endpoint": {
-                "endpoint": "upsertBrand",
-                "params": {
-                    "id": "$resource.id"
-                },
-                "body": {
-                    "expectedVersion": "$resource.version",
-                    "slug": "$field.slug",
-                    "name": "$field.name",
-                    "description": "$field.description",
-                    "status": "$field.status"
-                }
-            },
-            "after": {
-                "resource": "$result"
-            }
-        },
-        {
-            "id": "deleteBrand",
-            "label": "Delete brand",
-            "icon": "trash",
-            "tone": "danger",
-            "placement": "more",
-            "confirm": "Delete this brand?",
-            "visibleWhen": {
-                "value": "$field.id",
-                "notEquals": ""
-            },
-            "endpoint": {
-                "endpoint": "deleteBrand",
-                "params": {
-                    "id": "$resource.id"
-                }
-            }
-        }
-    ],
     "main": [
         {
             "id": "brandDetails",
@@ -115,5 +73,41 @@
                 }
             ]
         }
-    ]
+    ],
+    "create": {
+        "label": "Create brand",
+        "title": "New brand"
+    },
+    "save": {
+        "endpoint": "upsertBrand",
+        "label": "Save brand",
+        "hiddenFields": [
+            {
+                "name": "id",
+                "value": "$resource.id",
+                "type": "number",
+                "empty": "omit"
+            },
+            {
+                "name": "expectedVersion",
+                "value": "$resource.version",
+                "type": "number",
+                "empty": "omit"
+            }
+        ]
+    },
+    "delete": {
+        "endpoint": "deleteBrand",
+        "label": "Delete brand",
+        "tone": "danger",
+        "confirm": "Delete this brand?",
+        "hiddenFields": [
+            {
+                "name": "id",
+                "value": "$resource.id",
+                "type": "number",
+                "empty": "omit"
+            }
+        ]
+    }
 }

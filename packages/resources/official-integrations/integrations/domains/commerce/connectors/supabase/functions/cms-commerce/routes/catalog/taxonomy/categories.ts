@@ -36,10 +36,11 @@ export async function listCategories(request: Request, admin: boolean): Promise<
 
 export async function getCategory(request: Request, admin: boolean): Promise<Response> {
     const url = new URL(request.url);
-    if (admin && url.searchParams.get("id") === "__new__") {
+    if (admin && !url.searchParams.get("id") && !url.searchParams.get("fullSlug")) {
         return json({
             id: null,
             parentId: null,
+            parent: null,
             slug: "",
             fullSlug: "",
             label: "",
@@ -48,7 +49,9 @@ export async function getCategory(request: Request, admin: boolean): Promise<Res
             position: 0,
             metadata: {},
             categoryFields: [],
-            version: 1,
+            version: null,
+            createdAt: null,
+            updatedAt: null,
         });
     }
     const id = optionalId(url.searchParams.get("id"));
@@ -70,7 +73,12 @@ export async function getCategory(request: Request, admin: boolean): Promise<Res
 export async function upsertCategory(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const body = await readJsonObject(request);
-    const requestedCategoryId = optionalId(url.searchParams.get("id"));
+    const queryId = optionalId(url.searchParams.get("id"));
+    const bodyId = integer(body.id, "id");
+    if (queryId !== null && bodyId !== undefined && queryId !== bodyId) {
+        throw new HttpError(400, "body.id and query id disagree");
+    }
+    const requestedCategoryId = bodyId ?? queryId;
     const result = await rpc("upsert_category", {
         p_category_id: requestedCategoryId,
         p_payload: body,
@@ -94,7 +102,13 @@ export async function upsertCategory(request: Request): Promise<Response> {
 }
 
 export async function deleteCategory(request: Request): Promise<Response> {
-    const id = optionalId(new URL(request.url).searchParams.get("id"));
+    const body = request.body ? await readJsonObject(request) : {};
+    const queryId = optionalId(new URL(request.url).searchParams.get("id"));
+    const bodyId = integer(body.id, "id");
+    if (queryId !== null && bodyId !== undefined && queryId !== bodyId) {
+        throw new HttpError(400, "body.id and query id disagree");
+    }
+    const id = bodyId ?? queryId;
     if (id === null) {
         throw new HttpError(400, "id is required");
     }
@@ -149,7 +163,7 @@ function addSearch(params: URLSearchParams, value: string | null): void {
 }
 
 function optionalId(value: string | null): number | null {
-    if (!value || value === "__new__") {
+    if (!value) {
         return null;
     }
     return integer(value, "id", true)!;

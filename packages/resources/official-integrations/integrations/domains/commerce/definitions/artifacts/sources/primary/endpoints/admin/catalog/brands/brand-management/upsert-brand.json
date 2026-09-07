@@ -39,6 +39,9 @@
             },
             "metadata": {
                 "type": "object"
+            },
+            "id": {
+                "type": "number"
             }
         }
     },

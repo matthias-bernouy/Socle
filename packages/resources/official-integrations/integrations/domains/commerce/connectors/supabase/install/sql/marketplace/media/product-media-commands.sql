@@ -55,7 +55,9 @@ end;
 $$;
 
 create or replace function commerce.get_product_media_download_context(
-    p_media_id bigint
+    p_media_id bigint,
+    p_session_id uuid default null,
+    p_owner_id text default null
 )
 returns jsonb
 language sql
@@ -78,16 +80,21 @@ as $$
         from commerce.media media
         where media.id = p_media_id
           and media.detached_at is null
-          and exists (
+          and (exists (
               select 1 from commerce.product_media link
               where link.media_id = media.id
-          )
+          ) or exists (
+              select 1 from commerce.product_media_uploads pending
+              join commerce.product_upload_sessions session on session.id = pending.session_id
+              where session.id = p_session_id and session.owner_id = p_owner_id and session.expires_at > now()
+                  and pending.media_id = media.id and pending.state = 'ready' and pending.expires_at > now()
+          ))
     ), jsonb_build_object('state', 'not_found'));
 $$;
 
-revoke execute on function commerce.get_product_media_download_context(bigint)
+revoke execute on function commerce.get_product_media_download_context(bigint, uuid, text)
 from public, anon, authenticated;
-grant execute on function commerce.get_product_media_download_context(bigint)
+grant execute on function commerce.get_product_media_download_context(bigint, uuid, text)
 to service_role;
 
 create or replace function commerce.reorder_product_media(

@@ -14,35 +14,6 @@
     "status": {
         "path": "status"
     },
-    "actions": [
-        {
-            "id": "saveProduct",
-            "label": "Save product",
-            "tone": "primary",
-            "placement": "primary",
-            "endpoint": {
-                "endpoint": "upsertProduct",
-                "params": {
-                    "id": "$resource.id"
-                },
-                "body": {
-                    "expectedVersion": "$resource.version",
-                    "slug": "$field.slug",
-                    "title": "$field.title",
-                    "description": "$field.description",
-                    "brandId": "$field.brandId",
-                    "primaryCategoryId": "$field.primaryCategoryId",
-                    "metadata": "$field.metadata",
-                    "variantAxes": "$field.variantAxes",
-                    "status": "$field.status",
-                    "visibility": "$field.visibility"
-                }
-            },
-            "after": {
-                "resource": "$result"
-            }
-        }
-    ],
     "main": {
         "$include": "product-detail/sections/root.json"
     },
@@ -110,8 +81,28 @@
                         "valuePath": "id",
                         "labelPath": "name",
                         "subtitlePath": "slug",
-                        "selected": "$resource.brand"
-                    }
+                        "selected": "$resource.brand",
+                        "create": {
+                            "dashboardId": "commerce-taxonomy",
+                            "viewId": "brandDetail",
+                            "presentation": "modal",
+                            "valuePath": "id",
+                            "labelPath": "name",
+                            "label": "Create brand",
+                            "title": "Create brand"
+                        },
+                        "edit": {
+                            "dashboardId": "commerce-taxonomy",
+                            "viewId": "brandDetail",
+                            "presentation": "modal",
+                            "valuePath": "id",
+                            "labelPath": "name",
+                            "label": "Edit brand",
+                            "title": "Edit brand"
+                        }
+                    },
+                    "empty": "null",
+                    "valueType": "number"
                 },
                 {
                     "id": "primaryCategoryId",
@@ -129,9 +120,39 @@
                         "labelPath": "label",
                         "subtitlePath": "fullSlug",
                         "selected": "$resource.primaryCategory"
-                    }
+                    },
+                    "empty": "null",
+                    "valueType": "number"
                 }
             ]
         }
-    ]
+    ],
+    "save": {
+        "endpoint": "upsertProduct",
+        "label": "Save product",
+        "hiddenFields": [
+            {
+                "name": "id",
+                "value": "$resource.id",
+                "type": "number",
+                "empty": "omit"
+            },
+            {
+                "name": "expectedVersion",
+                "value": "$resource.version",
+                "type": "number",
+                "empty": "omit"
+            },
+            {
+                "name": "creationToken",
+                "value": "$resource.creationToken",
+                "type": "string",
+                "empty": "omit"
+            }
+        ]
+    },
+    "create": {
+        "label": "Create product",
+        "title": "New product"
+    }
 }

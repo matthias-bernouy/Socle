@@ -1,3 +1,4 @@
+import { stageProductImage, discardStagedProductImages } from "../routes/catalog/media/staging/routes.ts";
 import { json, methodNotAllowed } from "../core/http.ts";
 import {
     getProduct,
@@ -115,6 +116,12 @@ export async function handleCatalogRoute(route: string, request: Request): Promi
     }
     if (route === "/admin/product/variant") {
         return request.method === "GET" ? await getProductVariant(request) : methodNotAllowed("GET");
+    }
+    if (route === "/admin/product/image/stage") {
+        return request.method === "POST" ? await stageProductImage(request) : methodNotAllowed("POST");
+    }
+    if (route === "/admin/product/images/discard") {
+        return request.method === "POST" ? await discardStagedProductImages(request) : methodNotAllowed("POST");
     }
     if (route === "/admin/product/image") {
         if (request.method === "GET") {

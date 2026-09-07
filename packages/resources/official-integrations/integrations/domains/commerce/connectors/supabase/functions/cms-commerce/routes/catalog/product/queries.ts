@@ -1,3 +1,4 @@
+import { sessionId, uploadOwner } from "../media/staging/session.ts";
 import { HttpError } from "../../../core/errors.ts";
 import { json } from "../../../core/http.ts";
 import { camelize, integer, publicMetadata, readJsonObject, text } from "../../../core/records.ts";
@@ -34,8 +35,10 @@ export async function listProducts(request: Request, admin: boolean): Promise<Re
 
 export async function getProduct(request: Request, admin: boolean): Promise<Response> {
     const url = new URL(request.url);
-    if (admin && url.searchParams.get("id") === "__new__") {
-        return json(newProduct());
+    if (admin && !url.searchParams.get("id") && !url.searchParams.get("slug")) {
+        const response = json(newProduct());
+        response.headers.set("cache-control", "private, no-store");
+        return response;
     }
     const selector = productSelector(url);
     const bundle = await getProductReadModel(admin ? "admin" : "public", selector.id, selector.slug);
@@ -48,7 +51,41 @@ export async function getProduct(request: Request, admin: boolean): Promise<Resp
 export async function upsertProduct(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const body = withVariantMatrix(await readJsonObject(request));
-    const productId = optionalId(url.searchParams.get("id"));
+    delete body.internalCmsUserId;
+    if (body.uploadSessionId || body.creationToken) {
+        body.internalCmsUserId = uploadOwner(request);
+        if (body.uploadSessionId) {
+            body.uploadSessionId = sessionId(body.uploadSessionId);
+        }
+        if (body.creationToken) {
+            body.creationToken = sessionId(body.creationToken);
+        }
+    }
+    const bodyId = body.id === undefined || body.id === null || body.id === "" ? null : integer(body.id, "id", true)!;
+    const queryId = optionalId(url.searchParams.get("id"));
+    if (bodyId !== null && queryId !== null && bodyId !== queryId) {
+        throw new HttpError(400, "body.id and query id must identify the same product");
+    }
+    const productId = bodyId ?? queryId;
+    if (productId === null) {
+        const title = text(body.title);
+        if (!title) {
+            throw new HttpError(422, "title is required");
+        }
+        body.title = title;
+        body.slug ||= `${
+            title
+                .normalize("NFKD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/^-+|-+$/g, "")
+                .slice(0, 110)
+                .replace(/-+$/g, "") || "product"
+        }-${body.creationToken ?? crypto.randomUUID()}`;
+        body.status ??= "draft";
+        body.visibility ??= "hidden";
+    }
     const expectedVersion = integer(body.expectedVersion, "expectedVersion", productId !== null);
     const bundle = await upsertProductReadModel(productId, body, expectedVersion);
     return json(productData(bundle, false));
@@ -80,14 +117,19 @@ function newProduct(): JsonRecord {
         brandId: null,
         primaryCategoryId: null,
         status: "draft",
-        visibility: "public",
+        visibility: "hidden",
         metadata: {},
         media: [],
         mainImageMediaId: null,
         variantAxes: [],
         variants: [],
         variantMatrix: [],
-        version: 1,
+        version: null,
+        brand: null,
+        primaryCategory: null,
+        createdAt: null,
+        updatedAt: null,
+        creationToken: crypto.randomUUID(),
     };
 }
 
@@ -111,7 +153,7 @@ function addSearch(params: URLSearchParams, value: string | null, columns: strin
 }
 
 function optionalId(value: string | null): number | null {
-    if (!value || value === "__new__") {
+    if (!value) {
         return null;
     }
     return integer(value, "id", true)!;

@@ -13,7 +13,7 @@ installCommerceTestEnvironment();
 
 describe("commerce category detail boundaries", () => {
     test("returns the local administrator template without database work", async () => {
-        const response = await requestCommerce("/admin/category?id=__new__", { userRole: null });
+        const response = await requestCommerce("/admin/category", { userRole: null });
 
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual(newCategory);
@@ -34,19 +34,19 @@ describe("commerce category detail boundaries", () => {
     });
 
     test("does not treat the public new-category selector as a template", async () => {
-        const response = await requestCommerce("/category?id=__new__");
+        const response = await requestCommerce("/category");
 
         expect(response.status).toBe(400);
         expect(await response.json()).toEqual({ error: "id or fullSlug is required" });
         expect(capturedFetches()).toEqual([]);
     });
 
-    test("uses fullSlug for the public __new__ sentinel but keeps the admin template local", async () => {
+    test("uses fullSlug for the absent public id but keeps the admin template local", async () => {
         useCategoryResponder();
 
-        const publicResponse = await requestCommerce("/category?id=__new__&fullSlug=sports%2Ftennis");
+        const publicResponse = await requestCommerce("/category?fullSlug=sports%2Ftennis");
         const publicCalls = capturedFetches();
-        const admin = await requestCommerce("/admin/category?id=__new__&fullSlug=sports%2Ftennis", { userRole: null });
+        const admin = await requestCommerce("/admin/category", { userRole: null });
 
         expect(publicResponse.status).toBe(200);
         expect(publicCalls[0]!.body).toEqual({
@@ -107,7 +107,7 @@ describe("commerce category detail boundaries", () => {
     });
 
     test("rejects an invalid CMS key before templates, selectors, or reads", async () => {
-        const response = await requestCommerce("/admin/category?id=__new__", {
+        const response = await requestCommerce("/admin/category", {
             authenticated: false,
             userRole: null,
         });

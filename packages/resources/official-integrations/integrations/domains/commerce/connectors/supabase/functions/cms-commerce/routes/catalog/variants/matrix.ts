@@ -8,7 +8,9 @@ type Choice = { axisKey: string; valueKey: string; fieldKey?: string; axisLabel:
 
 export function withVariantMatrix(body: JsonRecord): JsonRecord {
     const safeBody = Object.fromEntries(
-        Object.entries(body).filter(([key]) => key !== "variants" && key !== "variantMatrix"),
+        Object.entries(body).filter(
+            ([key]) => key !== "variants" && key !== "variantMatrix" && key !== "variantAxesFromFields",
+        ),
     );
     if (!("variantAxes" in body)) {
         return safeBody;
@@ -20,6 +22,10 @@ export function withVariantMatrix(body: JsonRecord): JsonRecord {
     }
     return {
         ...safeBody,
+        ...(Array.isArray(body.variantAxes) &&
+        body.variantAxes.every((axis) => isRecord(axis) && !axis.label && (axis.fieldKey || axis.key))
+            ? { variantAxesFromFields: true }
+            : {}),
         variantAxes: axes,
         variantMatrix: combinations.map((choices, position) => ({
             key: choices.map((choice) => `${choice.axisKey}:${choice.valueKey}`).join("|"),
@@ -52,7 +58,7 @@ function normalizeAxis(value: unknown, position: number): Axis {
         throw new HttpError(422, `variantAxes[${position}] must be an object`);
     }
     const fieldKey = metadataKey(value.fieldKey, `variantAxes[${position}].fieldKey`);
-    const label = requiredLabel(value.label ?? fieldKey, `variantAxes[${position}].label`, 120);
+    const label = requiredLabel(value.label ?? fieldKey ?? value.key, `variantAxes[${position}].label`, 120);
     const key = stableKey(value.key, fieldKey ?? label, 48, true);
     const labels = stringList(value.values);
     if (!labels.length || labels.length > 20) {

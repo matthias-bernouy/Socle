@@ -13,10 +13,10 @@ installCommerceTestEnvironment();
 
 describe("commerce product detail boundaries", () => {
     test("returns the local administrator template without database work", async () => {
-        const response = await requestCommerce("/admin/product?id=__new__", { userRole: null });
+        const response = await requestCommerce("/admin/product", { userRole: null });
 
         expect(response.status).toBe(200);
-        expect(await response.json()).toEqual(newProduct);
+        expect(await response.json()).toEqual({ ...newProduct, creationToken: expect.any(String) });
         expect(capturedFetches()).toEqual([]);
     });
 
@@ -32,7 +32,7 @@ describe("commerce product detail boundaries", () => {
     });
 
     test("does not treat the public new-product selector as a template", async () => {
-        const response = await requestCommerce("/product?id=__new__");
+        const response = await requestCommerce("/product");
 
         expect(response.status).toBe(400);
         expect(await response.json()).toEqual({ error: "id or slug is required" });
@@ -77,7 +77,7 @@ describe("commerce product detail boundaries", () => {
     });
 
     test("rejects an invalid CMS key before templates, selectors, or reads", async () => {
-        const response = await requestCommerce("/admin/product?id=__new__", {
+        const response = await requestCommerce("/admin/product", {
             authenticated: false,
             userRole: null,
         });
