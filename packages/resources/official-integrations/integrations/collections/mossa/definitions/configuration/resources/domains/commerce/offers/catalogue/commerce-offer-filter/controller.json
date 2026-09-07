@@ -1,7 +1,7 @@
 {
-    "id": "mossa/blocs/commerce-offer-filter",
+    "id": "mossa/blocs/commerce-offer-filter-controller",
     "type": "bloc",
-    "artifact": "mossa-commerce-offer-filter",
+    "artifact": "mossa-commerce-offer-filter-controller",
     "category": "commerce",
     "endpoints": [
         {
@@ -16,6 +16,11 @@
             }
         }
     ],
+    "requires": {
+        "resources": [
+            "mossa/blocs/commerce-offer-filter"
+        ]
+    },
     "defaultActive": false,
     "theme": {
         "contract": "ulvia-theme@3",

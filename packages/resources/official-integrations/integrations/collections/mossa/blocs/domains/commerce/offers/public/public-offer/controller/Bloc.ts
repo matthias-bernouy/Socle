@@ -3,8 +3,6 @@ import {
     clearResponsiveSourceImageElement,
     syncResponsiveSourceImageElement,
 } from "@bernouy/cms-source-images/browser";
-import template from "./template.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
 import { displayValue, metadataSpecifications, sourceSpecifications, variantSpecifications } from "./specifications";
 
 type RecordValue = Record<string, any>;
@@ -35,48 +33,114 @@ export class PublicOffer extends Component {
     private offer: RecordValue | null = null;
     private product: RecordValue | null = null;
     private productSchema: RecordValue | null = null;
+    private requestedSlug = "";
 
     constructor() {
-        super({ css, template: template as unknown as string });
+        super({ css: ":host { display: contents; }", template: "<slot></slot>" });
     }
 
     override connectedCallback(): void {
+        super.connectedCallback();
         this.detail.addEventListener("click", this.onThumbnailClick);
+        this.addEventListener("cms-source:success", this.onSourceSuccess as EventListener);
+        this.addEventListener("cms-source:failed", this.onSourceFailed as EventListener);
         this.syncText();
-        this.load().catch((error) => this.fail(error));
+        this.load();
     }
 
     disconnectedCallback(): void {
-        this.detail.removeEventListener("click", this.onThumbnailClick);
+        this.querySelector<HTMLElement>("[data-detail]")?.removeEventListener("click", this.onThumbnailClick);
+        this.removeEventListener("cms-source:success", this.onSourceSuccess as EventListener);
+        this.removeEventListener("cms-source:failed", this.onSourceFailed as EventListener);
     }
 
-    attributeChangedCallback(): void {
+    attributeChangedCallback(name: string): void {
         if (!this.isConnected) {
             return;
         }
         this.syncText();
+        if (name === "slug-param") {
+            this.load();
+        }
     }
 
-    private async load(): Promise<void> {
+    private load(): void {
         this.show("loading");
         if (!this.slug) {
-            throw new Error(this.text("error-message", "This offer is no longer available or does not exist."));
+            this.fail();
+            return;
         }
-        this.offer = await this.request(`/.cms/sources/commerce/offer?slug=${encodeURIComponent(this.slug)}`);
-        this.product = this.offer.productId
-            ? await this.request(
-                  `/.cms/sources/commerce/product?id=${encodeURIComponent(String(this.offer.productId))}`,
-              ).catch(() => null)
-            : null;
-        this.product ??= this.offer.product ?? null;
-        const category = this.product?.primaryCategory?.fullSlug;
-        this.productSchema = category
-            ? await this.request(
-                  `/.cms/sources/commerce/offerFilterSchema?category=${encodeURIComponent(category)}`,
-              ).catch(() => null)
-            : null;
-        this.renderOffer(this.offer);
-        this.show("content");
+        this.requestedSlug = this.slug;
+        this.offer = null;
+        this.product = null;
+        this.productSchema = null;
+        setValue(this.querySelector("[data-offer-slug]"), this.requestedSlug);
+        this.submit(this.offerSource);
+    }
+
+    private onSourceSuccess = (event: CustomEvent<{ body?: unknown }>): void => {
+        const body = record(event.detail?.body);
+        if (event.target === this.offerSource) {
+            if (!body) {
+                this.fail();
+                return;
+            }
+            this.offer = body;
+            this.product = record(body.product);
+            this.renderOffer(body);
+            this.show("content");
+            const productId = body.productId;
+            if (productId != null) {
+                setValue(this.querySelector("[data-product-id]"), String(productId));
+                this.submit(this.productSource);
+            } else {
+                this.loadSchema();
+            }
+            if (this.slug !== this.requestedSlug) {
+                this.load();
+            }
+            return;
+        }
+        if (event.target === this.productSource) {
+            this.product = body ?? this.product;
+            this.renderCurrentOffer();
+            this.loadSchema();
+            return;
+        }
+        if (event.target === this.schemaSource) {
+            this.productSchema = body;
+            this.renderCurrentOffer();
+        }
+    };
+
+    private onSourceFailed = (event: Event): void => {
+        if (event.target === this.offerSource) {
+            this.fail();
+        } else if (event.target === this.productSource) {
+            this.renderCurrentOffer();
+            this.loadSchema();
+        } else if (event.target === this.schemaSource) {
+            this.renderCurrentOffer();
+        }
+    };
+
+    private loadSchema(): void {
+        const category = String(this.product?.primaryCategory?.fullSlug ?? "").trim();
+        if (!category) {
+            return;
+        }
+        setValue(this.querySelector("[data-schema-category]"), category);
+        this.submit(this.schemaSource);
+    }
+
+    private renderCurrentOffer(): void {
+        if (this.offer) {
+            this.renderOffer(this.offer);
+        }
+    }
+
+    private submit(source: HTMLFormElement): void {
+        queueMicrotask(() => source.isConnected && source.requestSubmit());
     }
 
     private renderOffer(offer: RecordValue): void {
@@ -125,7 +189,6 @@ export class PublicOffer extends Component {
     }
 
     private renderMedia(items: RecordValue[], title: string): void {
-        this.detail.querySelectorAll('[slot="thumbnails"]').forEach((item) => item.remove());
         const sorted = [...items].sort((left, right) => Number(left.sortOrder) - Number(right.sortOrder));
         const main = sorted.find((item) => item.isMain) || sorted[0];
         if (!main?.media?.id) {
@@ -134,21 +197,18 @@ export class PublicOffer extends Component {
             return;
         }
         this.setMainImage(main.media, main.media.alt || title);
-        for (const [index, item] of sorted.entries()) {
-            if (!item.media?.id) {
+        for (const [index, image] of [
+            ...this.detail.querySelectorAll<HTMLImageElement>('[slot="thumbnails"]'),
+        ].entries()) {
+            const mediaId = image.dataset.mediaId;
+            if (!mediaId) {
+                image.hidden = true;
                 continue;
             }
-            const image = document.createElement("img");
-            image.slot = "thumbnails";
-            image.loading = "lazy";
-            image.decoding = "async";
-            bindPublicSourceImage(image, this.imageUrl(item.media.id), item.media.width, item.media.height);
-            image.alt = item.media.alt || `${title} — photo ${index + 1}`;
-            image.dataset.mediaId = String(item.media.id);
-            if (item.media.id === main.media.id) {
-                image.setAttribute("data-active", "");
-            }
-            this.detail.append(image);
+            image.hidden = false;
+            bindPublicSourceImage(image, this.imageUrl(mediaId), image.dataset.sourceWidth, image.dataset.sourceHeight);
+            image.alt ||= `${title} — photo ${index + 1}`;
+            image.toggleAttribute("data-active", mediaId === String(main.media.id));
         }
     }
 
@@ -187,11 +247,11 @@ export class PublicOffer extends Component {
                 continue;
             }
             seen.add(label);
-            const row = document.createElement("mossa-specification");
-            const labelElement = document.createElement("span");
+            const row = this.ownerDocument.createElement("mossa-specification");
+            const labelElement = this.ownerDocument.createElement("span");
             labelElement.slot = "label";
             labelElement.textContent = label;
-            const valueElement = document.createElement("span");
+            const valueElement = this.ownerDocument.createElement("span");
             valueElement.slot = "value";
             valueElement.textContent = displayValue(value, unit);
             row.append(labelElement, valueElement);
@@ -241,7 +301,7 @@ export class PublicOffer extends Component {
             ["buyer-protection-label", "Buyer protection"],
             ["tracked-delivery-label", "Tracked delivery"],
         ]) {
-            this.shadowRoot!.querySelector(`[data-${attribute}]`)!.textContent = this.text(attribute!, fallback!);
+            this.querySelector(`[data-${attribute}]`)!.textContent = this.text(attribute!, fallback!);
         }
         if (this.offer) {
             this.renderSpecifications(this.offer);
@@ -249,7 +309,7 @@ export class PublicOffer extends Component {
         this.mainImage.style.objectFit = this.getAttribute("image-fit") || "contain";
     }
 
-    private fail(_error: unknown): void {
+    private fail(): void {
         this.errorMessage.textContent = this.text(
             "error-message",
             "This offer is no longer available or does not exist.",
@@ -261,20 +321,6 @@ export class PublicOffer extends Component {
         this.content.hidden = state !== "content";
         this.error.hidden = state !== "error";
     }
-    private async request(path: string): Promise<RecordValue> {
-        const response = await fetch(path, {
-            credentials: "include",
-            headers: { accept: "application/json" },
-        });
-        const body = await response.json().catch(() => null);
-        if (!response.ok) {
-            throw new Error(`The request failed (${response.status}).`);
-        }
-        if (!body || typeof body !== "object" || Array.isArray(body)) {
-            throw new Error("The service returned an invalid response.");
-        }
-        return body;
-    }
     private url(pattern: string, offer: RecordValue): string {
         return pattern
             .replaceAll("{id}", encodeURIComponent(String(offer.id || "")))
@@ -284,7 +330,8 @@ export class PublicOffer extends Component {
         return this.getAttribute(name)?.trim() || fallback;
     }
     private get slug(): string {
-        return new URL(location.href).searchParams.get(this.getAttribute("slug-param") || "slug") || "";
+        const href = this.ownerDocument.defaultView?.location.href || "http://localhost/";
+        return new URL(href).searchParams.get(this.getAttribute("slug-param") || "slug") || "";
     }
     private get locale(): string {
         return this.getAttribute("locale") || "en-US";
@@ -293,52 +340,52 @@ export class PublicOffer extends Component {
         return (this.getAttribute("valuation-currency")?.trim() || "USD").toUpperCase();
     }
     private get loading() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-loading]")!;
+        return this.querySelector<HTMLElement>("[data-loading]")!;
     }
     private get content() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-content]")!;
+        return this.querySelector<HTMLElement>("[data-content]")!;
     }
     private get error() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-error]")!;
+        return this.querySelector<HTMLElement>("[data-error]")!;
     }
     private get detail() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-detail]")!;
+        return this.querySelector<HTMLElement>("[data-detail]")!;
     }
     private get mainImage() {
-        return this.shadowRoot!.querySelector<HTMLImageElement>("[data-main-image]")!;
+        return this.querySelector<HTMLImageElement>("[data-main-image]")!;
     }
     private get titleElement() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-title]")!;
+        return this.querySelector<HTMLElement>("[data-title]")!;
     }
     private get metaElement() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-meta]")!;
+        return this.querySelector<HTMLElement>("[data-meta]")!;
     }
     private get conditionBadge() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-condition]")!;
+        return this.querySelector<HTMLElement>("[data-condition]")!;
     }
     private get descriptionElement() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-description]")!;
+        return this.querySelector<HTMLElement>("[data-description]")!;
     }
     private get valuation() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-valuation]")!;
+        return this.querySelector<HTMLElement>("[data-valuation]")!;
     }
     private get valuationLabel() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-valuation-label]")!;
+        return this.querySelector<HTMLElement>("[data-valuation-label]")!;
     }
     private get valuationValue() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-valuation-value]")!;
+        return this.querySelector<HTMLElement>("[data-valuation-value]")!;
     }
     private get priceLabel() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-price-label]")!;
+        return this.querySelector<HTMLElement>("[data-price-label]")!;
     }
     private get priceElement() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-price]")!;
+        return this.querySelector<HTMLElement>("[data-price]")!;
     }
     private get specifications() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-specifications]")!;
+        return this.querySelector<HTMLElement>("[data-specifications]")!;
     }
     private get shippingMessage() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-shipping-message]")!;
+        return this.querySelector<HTMLElement>("[data-shipping-message]")!;
     }
     private get buyButton() {
         return this.querySelector<HTMLAnchorElement>("[data-buy]")!;
@@ -347,13 +394,33 @@ export class PublicOffer extends Component {
         return this.querySelector<HTMLAnchorElement>("[data-negotiate]")!;
     }
     private get errorTitle() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-error-title]")!;
+        return this.querySelector<HTMLElement>("[data-error-title]")!;
     }
     private get errorMessage() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-error-message]")!;
+        return this.querySelector<HTMLElement>("[data-error-message]")!;
     }
     private get backButton() {
         return this.querySelector<HTMLAnchorElement>("[data-back]")!;
+    }
+    private get offerSource(): HTMLFormElement {
+        return this.querySelector<HTMLFormElement>("[data-offer-source]")!;
+    }
+    private get productSource(): HTMLFormElement {
+        return this.querySelector<HTMLFormElement>("[data-product-source]")!;
+    }
+    private get schemaSource(): HTMLFormElement {
+        return this.querySelector<HTMLFormElement>("[data-schema-source]")!;
+    }
+}
+
+function record(value: unknown): RecordValue | null {
+    return value && typeof value === "object" && !Array.isArray(value) ? (value as RecordValue) : null;
+}
+
+function setValue(element: Element | null, value: string): void {
+    const input = element as HTMLInputElement | null;
+    if (input) {
+        input.value = value;
     }
 }
 

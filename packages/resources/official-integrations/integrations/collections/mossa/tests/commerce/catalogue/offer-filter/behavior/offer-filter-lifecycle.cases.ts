@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { primarySchema } from "../support/offer-filter-panel.fixtures";
-import { defineFilter, filterTag, settleLifecycle } from "../support/offer-filter-panel.harness";
+import { createFilter, defineFilter, filterTag, settleLifecycle } from "../support/offer-filter-panel.harness";
 
 const originalUrl = `${location.pathname}${location.search}${location.hash}`;
 
@@ -25,7 +25,7 @@ describe("Commerce offer filter editor lifecycle", () => {
         };
         history.replaceState(history.state, "", `${location.pathname}?category=catalog%2Feditor-lifecycle`);
 
-        const panel = document.createElement(filterTag);
+        const panel = createFilter();
         panel.setAttribute("source-prefix", "/editor-lifecycle-sources");
         const authored = document.createElement("p");
         authored.setAttribute("data-authored-filter-content", "");

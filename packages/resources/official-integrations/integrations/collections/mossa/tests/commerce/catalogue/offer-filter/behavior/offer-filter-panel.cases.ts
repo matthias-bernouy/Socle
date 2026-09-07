@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { primarySchema, secondarySchema } from "../support/offer-filter-panel.fixtures";
-import { defineFilter, filterTag, settleLifecycle } from "../support/offer-filter-panel.harness";
+import { createFilter, defineFilter, filterTag, settleLifecycle } from "../support/offer-filter-panel.harness";
 import { exerciseNumericRange } from "../support/offer-filter-range.assertions";
 
 const originalUrl = `${location.pathname}${location.search}${location.hash}`;
@@ -32,7 +32,7 @@ describe("Commerce schema-driven offer filters", () => {
             `${location.pathname}?category=catalog%2Fprimary&filter_choice_attribute=beta&brand=brand-a`,
         );
 
-        const panel = document.createElement(filterTag) as HTMLElement & { managedParams(): string[] };
+        const panel = createFilter();
         panel.setAttribute("schema-driven", "");
         panel.setAttribute("source-prefix", "/panel-options-sources");
         try {
@@ -86,7 +86,7 @@ describe("Commerce schema-driven offer filters", () => {
         }
     });
 
-    test("shares an initial schema read when the renderer reconnects the panel", async () => {
+    test("starts a fresh schema read when the renderer reconnects the panel", async () => {
         await defineFilter();
         const realFetch = globalThis.fetch;
         const requests: URL[] = [];
@@ -99,10 +99,10 @@ describe("Commerce schema-driven offer filters", () => {
         };
         history.replaceState(history.state, "", `${location.pathname}?category=catalog%2Freconnect`);
 
-        const first = document.createElement(filterTag);
+        const first = createFilter();
         first.setAttribute("schema-driven", "");
         first.setAttribute("source-prefix", "/reconnect-sources");
-        const second = document.createElement(filterTag);
+        const second = createFilter();
         second.setAttribute("schema-driven", "");
         second.setAttribute("source-prefix", "/reconnect-sources");
         try {
@@ -113,7 +113,7 @@ describe("Commerce schema-driven offer filters", () => {
             first.remove();
             document.body.append(second);
             await settleLifecycle();
-            expect(requests).toHaveLength(1);
+            expect(requests).toHaveLength(2);
 
             completeRequest?.(
                 new Response(JSON.stringify(primarySchema), {
@@ -124,7 +124,7 @@ describe("Commerce schema-driven offer filters", () => {
             await settleLifecycle();
 
             expect(second.querySelector('[field="choice_attribute"]')).not.toBeNull();
-            expect(requests).toHaveLength(1);
+            expect(requests).toHaveLength(2);
         } finally {
             first.remove();
             second.remove();

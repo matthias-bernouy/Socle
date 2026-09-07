@@ -24,7 +24,7 @@ test("public offers render product metadata with category labels, units and comp
             ["Balance distribution", "Head light"],
             ["Tolerance", "0 g"],
         ]);
-        expect(host.shadowRoot!.querySelector("[data-valuation-value]")!.textContent).toBe("€40 – €100");
+        expect(host.querySelector("[data-valuation-value]")!.textContent).toBe("€40 – €100");
         host.setAttribute("model-label", "Product model");
         expect(specificationRows(host)).toEqual([["Product model", rows[0]![1]!], ...rows.slice(1)]);
         expect(requests).toHaveLength(3);
@@ -54,7 +54,7 @@ test("embedded product details remain available when the optional product lookup
     const { host, dispose } = await mountOffer({ productUnavailable: true });
     try {
         expect(specificationRows(host)).toContainEqual(["Head size", "645 cm²"]);
-        expect(host.shadowRoot!.querySelector<HTMLElement>("[data-error]")!.hidden).toBe(true);
+        expect(host.querySelector<HTMLElement>("[data-error]")!.hidden).toBe(true);
         expect(host.querySelector("[data-buy]")!.getAttribute("href")).toBe("/checkout?offerId=7");
     } finally {
         dispose();
@@ -69,7 +69,7 @@ test("explicit offer specifications remain visible when the optional schema look
             ["Grip size", "L2"],
             ["Weight", "280 g"],
         ]);
-        expect(host.shadowRoot!.querySelector<HTMLElement>("[data-error]")!.hidden).toBe(true);
+        expect(host.querySelector<HTMLElement>("[data-error]")!.hidden).toBe(true);
     } finally {
         dispose();
     }

@@ -7,10 +7,10 @@ export function safeHttpUrl(value) {
     }
 }
 
-export function safeCmsLabelUrl(value) {
+export function safeCmsLabelUrl(value, origin = location.origin) {
     try {
-        const url = new URL(String(value || ""), location.origin);
-        return url.origin === location.origin && url.pathname.startsWith("/.cms/sources/") ? url.toString() : "";
+        const url = new URL(String(value || ""), origin);
+        return url.origin === origin && url.pathname.startsWith("/.cms/sources/") ? url.toString() : "";
     } catch {
         return "";
     }
@@ -77,10 +77,6 @@ export function publicEventLabel(value, status, text = (_name, fallback) => fall
 
 export function isRecord(value) {
     return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-export function headers(value) {
-    return value ? Object.fromEntries(new Headers(value).entries()) : {};
 }
 
 export const fulfillmentCopy: Record<string, string> = {

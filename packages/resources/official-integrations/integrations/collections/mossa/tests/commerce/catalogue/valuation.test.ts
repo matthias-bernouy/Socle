@@ -1,18 +1,21 @@
 import { describe, expect, test } from "bun:test";
 import { resolve } from "node:path";
-import { Bloc as ValuationBloc } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/commerce/offers/catalogue/valuation/Bloc.ts";
+import {
+    productValuation,
+    readProducts,
+    valuationMoney,
+} from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/commerce/offers/catalogue/valuation/presentation.ts";
+import { Bloc as SearchInput } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/foundation/forms/fields/search-input/Bloc.ts";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 
-const TAG = "mossa-valuation-regression-test";
-
 describe("Commerce catalogue valuation", () => {
-    test("keeps every static and state message in authored slots", async () => {
+    test("keeps editable copy in authored slots and transport in one declarative source", async () => {
         const root = resolve(
             OFFICIAL_INTEGRATIONS_ROOT,
             "collections/mossa/blocs/domains/commerce/offers/catalogue/valuation",
         );
-        const [source, template, defaultContent, editor] = await Promise.all([
-            Bun.file(resolve(root, "Bloc.ts")).text(),
+        const [controller, template, defaultContent, editor] = await Promise.all([
+            Bun.file(resolve(root, "controller/Bloc.ts")).text(),
             Bun.file(resolve(root, "template.html")).text(),
             Bun.file(resolve(root, "default.html")).text(),
             Bun.file(resolve(root, "BlocEditor.ts")).text(),
@@ -23,39 +26,47 @@ describe("Commerce catalogue valuation", () => {
             expect(defaultContent).toContain(`slot="${slot}"`);
             expect(editor).toContain(`"${slot}"`);
         }
-        expect(source).not.toContain("valuationCopy");
-        expect(source).not.toContain('getAttribute("locale")');
+        expect(template.match(/cms-source=/g)).toHaveLength(1);
+        expect(template).toContain('cms-repeat="items as product"');
+        expect(template).toContain('name="q"');
+        expect(controller).not.toContain("fetch(");
+        expect(controller).not.toContain('getAttribute("locale")');
     });
 
-    test("reveals the result selected from the catalogue instead of the outer shell", () => {
-        if (!customElements.get(TAG)) {
-            customElements.define(TAG, ValuationBloc);
-        }
-        const valuation = document.createElement(TAG) as ValuationBloc;
-        document.body.append(valuation);
-        const input = document.createElement("input");
-        const selectable = valuation as unknown as {
-            input: HTMLInputElement;
-            selectProduct(product: {
-                id: number;
-                title: string;
-                description: string;
-                metadata: Record<string, number>;
-            }): void;
-        };
-        selectable.input = input;
-
-        selectable.selectProduct({
-            id: 1,
+    test("derives the selected catalogue valuation from configurable metadata fields", () => {
+        const [product] = readProducts({
+            items: [
+                {
+                    id: 1,
+                    title: "Generic product",
+                    description: "Reusable catalogue product",
+                    metadata: { estimateFloor: 120, estimateCeiling: 155 },
+                },
+            ],
+        });
+        expect(product).toEqual({
+            id: "1",
             title: "Generic product",
             description: "Reusable catalogue product",
-            metadata: { valuationMinimum: 120, valuationMaximum: 155 },
+            metadata: { estimateFloor: 120, estimateCeiling: 155 },
         });
+        expect(productValuation(product?.metadata, "estimateFloor", "estimateCeiling")).toEqual({
+            minimum: 120,
+            maximum: 155,
+        });
+        expect(valuationMoney(120, "EUR", "en-US")).toContain("120");
+    });
 
-        const result = valuation.shadowRoot?.querySelector<HTMLElement>("[data-valuation-result]");
-        expect(result?.hidden).toBe(false);
-        expect(valuation.shadowRoot?.querySelector("[data-estimate]")?.textContent).toContain("120");
-        expect(valuation.shadowRoot?.querySelector("[data-estimate]")?.textContent).toContain("155");
-        expect(valuation.shadowRoot?.querySelector(".initial-state")?.hasAttribute("hidden")).toBe(true);
+    test("uses the generic search field through its public value contract", () => {
+        const tag = "test-mossa-valuation-search-input";
+        if (!customElements.get(tag)) {
+            customElements.define(tag, class extends SearchInput {});
+        }
+        const search = document.createElement(tag) as SearchInput;
+        document.body.append(search);
+        search.value = "Sample model";
+        expect(search.value).toBe("Sample model");
+        expect(search.shadowRoot?.querySelector("input")?.value).toBe("Sample model");
+        search.remove();
     });
 });

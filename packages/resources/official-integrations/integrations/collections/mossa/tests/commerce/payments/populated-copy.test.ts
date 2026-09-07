@@ -1,5 +1,7 @@
 import { afterEach, beforeAll, expect, test } from "bun:test";
-import { OrderDetail } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/account/orders/order/Bloc.ts";
+import { resolve } from "node:path";
+import { OrderDetail } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/account/orders/order/controller/Bloc.ts";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { readWithdrawalCopy } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/commerce/checkout/service-withdrawal/copy.ts";
 import {
     receiptStatus,
@@ -8,8 +10,15 @@ import {
 
 const originalFetch = globalThis.fetch;
 const settled = () => new Promise((resolve) => setTimeout(resolve, 0));
-beforeAll(() => {
+let orderMarkup = "";
+beforeAll(async () => {
     customElements.define("test-populated-order-copy", class extends OrderDetail {});
+    const source = await Bun.file(
+        resolve(OFFICIAL_INTEGRATIONS_ROOT, "collections/mossa/blocs/domains/account/orders/order/template.html"),
+    ).text();
+    const template = document.createElement("template");
+    template.innerHTML = source;
+    orderMarkup = template.content.firstElementChild?.innerHTML ?? "";
 });
 afterEach(() => {
     document.body.replaceChildren();
@@ -27,44 +36,51 @@ function mount(tag: string, attrs: Record<string, string>, content = ""): HTMLEl
 test("populated order copy updates without refetching or changing payment and delivery state", async () => {
     location.href = "http://localhost/order?orderId=7";
     let requests = 0;
-    globalThis.fetch = (async (url: string) => {
-        requests++;
-        if (url.includes("myOrder")) {
-            return Response.json({
-                id: 7,
-                publicId: "ABC",
-                status: "active",
-                createdAt: "2026-01-01",
-                currency: "EUR",
-                subtotalAmount: 5000,
-                lines: [{ title: "Racket", offerSnapshot: { conditionCode: "good" } }],
-            });
-        }
-        if (url.includes("getPayment")) {
-            return Response.json({ payment: { paymentStatus: "succeeded" } });
-        }
-        if (url.includes("getShipment")) {
-            return Response.json({ shipments: [{ status: "in_transit", expeditionNumber: "ZX123" }] });
-        }
-        return Response.json({});
-    }) as typeof fetch;
-    const host = mount(
-        "test-populated-order-copy",
-        {
-            "state-in-delivery": "On the way",
-            "order-date-label": "Created: {date}",
-            "tracking-number-label": "Tracking {number}",
-            "amount-pending-label": "Pending quote",
-            "condition-good-label": "Great",
-            "condition-label": "Grade {condition}",
-        },
-        '<div slot="resume-action" data-resume-payment-action><a data-resume-payment></a></div><div slot="tracking-action" data-tracking-action><a data-tracking-link></a></div>',
-    );
-    await settled();
-    const root = host.shadowRoot!;
+    const host = document.createElement("test-populated-order-copy");
+    for (const [key, value] of Object.entries({
+        "state-in-delivery": "On the way",
+        "order-date-label": "Created: {date}",
+        "tracking-number-label": "Tracking {number}",
+        "amount-pending-label": "Pending quote",
+        "condition-good-label": "Great",
+        "condition-label": "Grade {condition}",
+    })) {
+        host.setAttribute(key, value);
+    }
+    host.innerHTML = `${orderMarkup}<div slot="resume-action" data-resume-payment-action><a data-resume-payment></a></div><div slot="tracking-action" data-tracking-action><a data-tracking-link></a></div>`;
+    for (const form of host.querySelectorAll<HTMLFormElement>("form[cms-source]")) {
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            requests++;
+            let body: unknown = {};
+            if (form.matches("[data-order-source]")) {
+                body = {
+                    id: 7,
+                    publicId: "ABC",
+                    status: "active",
+                    createdAt: "2026-01-01",
+                    currency: "EUR",
+                    subtotalAmount: 5000,
+                    lines: [{ title: "Racket", offerSnapshot: { conditionCode: "good" } }],
+                };
+            } else if (form.matches("[data-payment-source]")) {
+                body = { payment: { paymentStatus: "succeeded" } };
+            } else if (form.matches("[data-shipment-source]")) {
+                body = { shipments: [{ status: "in_transit", expeditionNumber: "ZX123" }] };
+            }
+            queueMicrotask(() =>
+                form.dispatchEvent(new CustomEvent("cms-source:success", { bubbles: true, detail: { body } })),
+            );
+        });
+    }
+    document.body.append(host);
+    while (host.querySelector<HTMLElement>("[data-content]")?.hidden) {
+        await settled();
+    }
+    const root = host;
     expect(root.querySelector<HTMLElement>("[data-content]")!.hidden).toBe(false);
     expect(root.querySelector("[data-order-status]")!.textContent).toBe("On the way");
-    expect(root.querySelector<HTMLElement>("[data-order-status]")!.dataset.tone).toBe("progress");
+    expect(root.querySelector<HTMLElement>("[data-order-status]")!.getAttribute("tone")).toBe("primary");
     expect(root.querySelector("[data-order-date]")!.textContent).toStartWith("Created:");
     expect(root.querySelector("[data-tracking-number]")!.textContent).toBe("Tracking ZX123");
     expect(root.querySelector("[data-shipping]")!.textContent).toBe("Pending quote");

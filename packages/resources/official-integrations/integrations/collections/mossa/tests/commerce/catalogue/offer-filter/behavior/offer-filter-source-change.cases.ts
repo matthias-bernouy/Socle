@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { primarySchema, secondarySchema } from "../support/offer-filter-panel.fixtures";
-import { defineFilter, filterTag, settleLifecycle } from "../support/offer-filter-panel.harness";
+import { createFilter, defineFilter, filterTag, settleLifecycle } from "../support/offer-filter-panel.harness";
 
 const originalUrl = `${location.pathname}${location.search}${location.hash}`;
 
@@ -23,7 +23,7 @@ describe("Commerce offer filter source changes", () => {
             });
         history.replaceState(history.state, "", `${location.pathname}?category=catalog%2Fsource-change`);
 
-        const panel = document.createElement(filterTag);
+        const panel = createFilter();
         panel.setAttribute("schema-driven", "");
 
         try {
@@ -35,13 +35,15 @@ describe("Commerce offer filter source changes", () => {
             history.replaceState(history.state, "", `${location.pathname}?category=catalog%2Fsecond-source`);
             window.dispatchEvent(new PopStateEvent("popstate"));
             await settleLifecycle();
+            expect(requests).toHaveLength(1);
+
+            requests[0]!.resolve(response(primarySchema));
+            await settleLifecycle();
             expect(requests.map(({ url }) => url.pathname)).toEqual([
                 "/.cms/sources/commerce/offerFilterSchema",
                 "/.cms/sources/commerce/offerFilterSchema",
             ]);
             expect(requests[1]?.url.searchParams.get("category")).toBe("catalog/second-source");
-
-            requests[0]!.resolve(response(primarySchema));
             requests[1]!.resolve(response(secondarySchema));
             await settleLifecycle();
 
@@ -60,9 +62,9 @@ describe("Commerce offer filter source changes", () => {
         globalThis.fetch = () => Promise.resolve(response(++requests === 1 ? primarySchema : secondarySchema));
         history.replaceState(history.state, "", `${location.pathname}?category=catalog%2Ffresh-schema`);
 
-        const first = document.createElement(filterTag);
+        const first = createFilter();
         first.setAttribute("schema-driven", "");
-        const second = document.createElement(filterTag);
+        const second = createFilter();
         second.setAttribute("schema-driven", "");
 
         try {
@@ -80,6 +82,44 @@ describe("Commerce offer filter source changes", () => {
         } finally {
             first.remove();
             second.remove();
+            globalThis.fetch = realFetch;
+        }
+    });
+
+    test("keeps the latest category when schema mode is toggled during a request", async () => {
+        await defineFilter();
+        const realFetch = globalThis.fetch;
+        const requests: Array<{ url: URL; resolve: (response: Response) => void }> = [];
+        globalThis.fetch = (input) =>
+            new Promise<Response>((resolve) => {
+                requests.push({ url: new URL(String(input), location.origin), resolve });
+            });
+        history.replaceState(history.state, "", `${location.pathname}?category=catalog%2Fprimary`);
+        const panel = createFilter();
+        panel.setAttribute("schema-driven", "");
+
+        try {
+            document.body.append(panel);
+            await settleLifecycle();
+            expect(requests).toHaveLength(1);
+
+            panel.setAttribute("schema-driven", "false");
+            history.replaceState(history.state, "", `${location.pathname}?category=catalog%2Fsecondary`);
+            panel.setAttribute("schema-driven", "true");
+            await settleLifecycle();
+            expect(requests).toHaveLength(1);
+
+            requests[0]!.resolve(response(primarySchema));
+            await settleLifecycle();
+            expect(requests).toHaveLength(2);
+            expect(requests[1]?.url.searchParams.get("category")).toBe("catalog/secondary");
+
+            requests[1]!.resolve(response(secondarySchema));
+            await settleLifecycle();
+            expect(panel.querySelector('[field="alternate_attribute"]')).not.toBeNull();
+            expect(panel.querySelector('[field="choice_attribute"]')).toBeNull();
+        } finally {
+            panel.remove();
             globalThis.fetch = realFetch;
         }
     });

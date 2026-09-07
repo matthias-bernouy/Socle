@@ -1,14 +1,11 @@
-import { readFile, readdir } from "node:fs/promises";
-import { resolve } from "node:path";
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
+import { expandCompositions } from "@bernouy/cms-content";
 import { Component } from "@bernouy/components/base";
+import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs";
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
+import { resolve } from "node:path";
 
-const blocDirectory = resolve(
-    OFFICIAL_INTEGRATIONS_ROOT,
-    "collections/mossa/blocs/domains/commerce/fulfillment/commerce-mondial-relay-sale-fulfillment",
-);
-const tag = "test-mossa-commerce-mondial-relay-sale-fulfillment";
+let composition = "";
 let defaultContent = "";
 
 export type RequestCall = {
@@ -18,10 +15,7 @@ export type RequestCall = {
 };
 
 export type TestFulfillmentBloc = HTMLElement & {
-    createShipment(): Promise<void>;
-    declareHandoff(): Promise<void>;
-    load(): Promise<void>;
-    request(path: string, init?: RequestInit): Promise<Record<string, unknown>>;
+    load(): void;
     syncPresentation(): void;
 };
 
@@ -49,31 +43,45 @@ export const shipment = {
 export async function createBloc(
     responder: (call: RequestCall) => Record<string, unknown> | Promise<Record<string, unknown>>,
 ): Promise<{ bloc: TestFulfillmentBloc; calls: RequestCall[] }> {
-    await defineBloc();
+    await loadRuntime();
     const calls: RequestCall[] = [];
-    const bloc = document.createElement(tag) as TestFulfillmentBloc;
-    bloc.innerHTML = defaultContent;
+    const container = document.createElement("div");
+    container.innerHTML = defaultContent;
+    expandCompositions(container, [
+        { id: "mossa-commerce-mondial-relay-sale-fulfillment", compositionHTML: composition },
+    ]);
+    const bloc = container.firstElementChild as TestFulfillmentBloc;
     bloc.setAttribute("order-id", String(order.orderId));
-    bloc.request = async (path, init = {}) => {
-        const call = {
-            path,
-            method: String(init.method ?? "GET"),
-            body: init.body ? JSON.parse(String(init.body)) : undefined,
-        };
-        calls.push(call);
-        return await responder(call);
-    };
-    bloc.syncPresentation();
+
+    for (const form of bloc.querySelectorAll<HTMLFormElement>("form[cms-source]")) {
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const method = form.getAttribute("cms-source-method") || "GET";
+            const data = Object.fromEntries(
+                [...form.querySelectorAll<HTMLInputElement>("[name]")].map((input) => [input.name, input.value]),
+            );
+            const params = new URLSearchParams(data);
+            const source = form.getAttribute("cms-source")!;
+            const call = {
+                path: method === "GET" && params.size ? `${source}?${params}` : source,
+                method,
+                body: method === "GET" ? undefined : data,
+            };
+            calls.push(call);
+            Promise.resolve()
+                .then(() => responder(call))
+                .then(
+                    (body) => succeed(form, body),
+                    (error) => fail(form, error),
+                );
+        });
+    }
     return { bloc, calls };
 }
 
 export function snapshot(bloc: TestFulfillmentBloc) {
-    const root = bloc.shadowRoot;
-    if (!root) {
-        throw new Error("expected fulfillment shadow root");
-    }
-    const text = (selector: string) => root.querySelector(selector)?.textContent ?? "";
-    const hidden = (selector: string) => (root.querySelector(selector) as HTMLElement | null)?.hidden;
+    const text = (selector: string) => bloc.querySelector(selector)?.textContent ?? "";
+    const hidden = (selector: string) => bloc.querySelector<HTMLElement>(selector)?.hidden;
     return {
         orderNumber: text("[data-order-number]"),
         status: text("[data-status]"),
@@ -84,37 +92,65 @@ export function snapshot(bloc: TestFulfillmentBloc) {
         createHidden: hidden("[data-create]"),
         handoffHidden: hidden("[data-handoff]"),
         labelHidden: hidden("[data-label]"),
-        trackingHidden: (bloc.querySelector("[data-tracking-link]") as HTMLElement | null)?.hidden,
+        trackingHidden: hidden("[data-tracking-link]"),
         trackingUrl: bloc.querySelector("[data-tracking-link]")?.getAttribute("href"),
     };
 }
 
-async function defineBloc(): Promise<void> {
-    if (customElements.get(tag)) {
+async function loadRuntime(): Promise<void> {
+    if (composition && customElements.get("mossa-commerce-mondial-relay-sale-fulfillment-controller")) {
         return;
     }
-    Object.assign(((window as Window & { p9r?: Record<string, unknown> }).p9r ??= {}), { Component });
-    const files = await readdir(blocDirectory);
-    const view = await readFile(resolve(blocDirectory, "Bloc.ts"), "utf8");
-    const editor = await readFile(resolve(blocDirectory, "BlocEditor.ts"), "utf8");
-    const source: Record<string, string> = {};
-    for (const file of files.filter((name) => !["Bloc.ts", "BlocEditor.ts"].includes(name))) {
-        const content = await readFile(resolve(blocDirectory, file));
-        source[file] = Buffer.from(content).toString("base64");
-        if (file === "default.html") {
-            const template = document.createElement("template");
-            template.innerHTML = content.toString();
-            defaultContent = template.content.firstElementChild?.innerHTML ?? "";
-        }
-    }
-    const compiled = await prepare_bloc(
-        new File([view], "Bloc.ts", { type: "text/typescript" }),
-        new File([editor], "BlocEditor.ts", { type: "text/typescript" }),
-        tag,
-        "Commerce Mondial Relay fulfillment",
-        "",
-        tag,
-        source,
+    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("mossa");
+    const artifacts = (definition?.artifacts ?? []).filter(
+        (item): item is Extract<typeof item, { type: "bloc" }> => item.type === "bloc",
     );
-    new Function(compiled.viewJS)();
+    const publicArtifact = artifacts.find(({ bloc }) => bloc.tag === "mossa-commerce-mondial-relay-sale-fulfillment");
+    const controller = artifacts.find(
+        ({ bloc }) => bloc.tag === "mossa-commerce-mondial-relay-sale-fulfillment-controller",
+    );
+    if (!publicArtifact?.bloc.compositionHTML || !controller?.bloc.viewJS) {
+        throw new Error("Fulfillment composition sources not found");
+    }
+    composition = publicArtifact.bloc.compositionHTML;
+    defaultContent = await Bun.file(
+        resolve(
+            OFFICIAL_INTEGRATIONS_ROOT,
+            "collections/mossa/blocs/domains/commerce/fulfillment/commerce-mondial-relay-sale-fulfillment/default.html",
+        ),
+    ).text();
+    if (customElements.get(controller.bloc.tag)) {
+        return;
+    }
+    const previousP9r = (window as typeof window & { p9r?: unknown }).p9r;
+    (window as typeof window & { p9r?: unknown }).p9r = { Component };
+    try {
+        const compiled = await prepare_bloc(
+            new File([controller.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
+            null,
+            controller.bloc.name,
+            controller.bloc.group ?? "Commerce",
+            controller.bloc.description ?? "",
+            controller.bloc.tag,
+            controller.bloc.source,
+            undefined,
+            { viewPath: controller.bloc.view ?? "controller/Bloc.ts" },
+        );
+        new Function(compiled.viewJS)();
+    } finally {
+        (window as typeof window & { p9r?: unknown }).p9r = previousP9r;
+    }
+}
+
+function succeed(form: HTMLFormElement, body: unknown): void {
+    form.dispatchEvent(new CustomEvent("cms-source:success", { bubbles: true, detail: { body } }));
+}
+
+function fail(form: HTMLFormElement, error: unknown): void {
+    form.dispatchEvent(
+        new CustomEvent("cms-source:failed", {
+            bubbles: true,
+            detail: { message: error instanceof Error ? error.message : "Unavailable" },
+        }),
+    );
 }

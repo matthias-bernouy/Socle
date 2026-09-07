@@ -22,11 +22,6 @@ const defaultFilterLabels = {
     superseded: "Superseded",
     canceled: "Cancelled",
 };
-const endpointPaths = {
-    myProposals: "/.cms/sources/commerce-negotiation/myProposals",
-    respondToProposal: "/.cms/sources/commerce-negotiation/respondToProposal",
-    withdrawMyProposal: "/.cms/sources/commerce-negotiation/withdrawMyProposal",
-};
 const reloadAttributes = new Set(["page-size", "initial-role"]);
 
 export class CommerceNegotiationList extends Component {
@@ -99,10 +94,13 @@ export class CommerceNegotiationList extends Component {
         this.page = 1;
         this.total = 0;
         this.items = [];
-        this.controller = null;
         this.loadScheduled = false;
-        this.inFlight = null;
+        this.listLoading = false;
+        this.reloadAfterCurrent = false;
+        this.currentListSilent = false;
+        this.submittedListKey = "";
         this.lastLoadedKey = "";
+        this.pendingActions = new Map();
     }
 
     connectedCallback() {
@@ -111,6 +109,8 @@ export class CommerceNegotiationList extends Component {
         this.addEventListener("change", this.onFilterChange);
         this.addEventListener("mossa-pagination:change", this.onPageChange);
         this.addEventListener("click", this.onActionClick);
+        this.addEventListener("cms-source:success", this.onSourceSuccess);
+        this.addEventListener("cms-source:failed", this.onSourceFailed);
         this.readUrlState();
         this.syncPresentation();
         if (isFramed()) {
@@ -124,10 +124,12 @@ export class CommerceNegotiationList extends Component {
         this.removeEventListener("change", this.onFilterChange);
         this.removeEventListener("mossa-pagination:change", this.onPageChange);
         this.removeEventListener("click", this.onActionClick);
-        this.controller?.abort();
-        this.controller = null;
-        this.inFlight = null;
+        this.removeEventListener("cms-source:success", this.onSourceSuccess);
+        this.removeEventListener("cms-source:failed", this.onSourceFailed);
         this.loadScheduled = false;
+        this.listLoading = false;
+        this.reloadAfterCurrent = false;
+        this.pendingActions.clear();
     }
 
     attributeChangedCallback(name) {
@@ -167,24 +169,20 @@ export class CommerceNegotiationList extends Component {
         const request = this.listRequest();
         if (!force && request.key === this.lastLoadedKey) {
             this.renderItems();
-            return Promise.resolve();
+            return;
         }
-        if (this.inFlight?.key === request.key) {
-            return this.inFlight.promise;
+        if (this.listLoading) {
+            this.reloadAfterCurrent = this.reloadAfterCurrent || force || request.key !== this.submittedListKey;
+            return;
         }
-        this.controller?.abort();
-        const controller = new AbortController();
-        this.controller = controller;
         if (!silent) {
             this.showLoading();
         }
-        const promise = this.executeLoad(request, controller, silent);
-        this.inFlight = { key: request.key, promise };
-        return promise.finally(() => {
-            if (this.inFlight?.promise === promise) {
-                this.inFlight = null;
-            }
-        });
+        this.listLoading = true;
+        this.currentListSilent = silent;
+        this.submittedListKey = request.key;
+        this.setListInputs(request.query);
+        this.submit(this.source("proposals"));
     }
 
     listRequest() {
@@ -195,40 +193,14 @@ export class CommerceNegotiationList extends Component {
             limit: pageSize,
             offset: (this.page - 1) * pageSize,
         };
-        const url = new URL(this.sourceUrl("myProposals"), this.ownerDocument.baseURI);
+        const url = new URL(
+            this.source("proposals")?.getAttribute("cms-source") || "/.cms/sources/commerce-negotiation/myProposals",
+            this.ownerDocument.baseURI,
+        );
         for (const [name, value] of Object.entries(query)) {
             url.searchParams.set(name, String(value));
         }
         return { key: url.href, query };
-    }
-
-    async executeLoad(request, controller, silent) {
-        try {
-            const result = await this.requestSource("myProposals", {
-                query: request.query,
-                signal: controller.signal,
-            });
-            if (controller.signal.aborted) {
-                return;
-            }
-            this.items = Array.isArray(result.items) ? result.items.filter(isProposal) : [];
-            this.total = nonNegativeInteger(result.total, this.items.length);
-            this.lastLoadedKey = request.key;
-            this.renderItems();
-        } catch (error) {
-            if (controller.signal.aborted) {
-                return;
-            }
-            if (!silent) {
-                this.items = [];
-                this.total = 0;
-                this.renderItems();
-            }
-            this.showToast(
-                errorMessage(error, this.getAttribute("error-message") || "Proposals could not be loaded."),
-                true,
-            );
-        }
     }
 
     showPreview() {
@@ -511,95 +483,141 @@ export class CommerceNegotiationList extends Component {
         if (!this.confirmAction(button.dataset.action, proposal)) {
             return;
         }
-        void this.performAction(proposal, button.dataset.action, card);
+        this.performAction(proposal, button.dataset.action, card);
     };
 
-    async performAction(proposal, action, card) {
+    performAction(proposal, action, card) {
         if (!["accept", "reject", "withdraw"].includes(action)) {
+            return;
+        }
+        const source = this.source(action === "withdraw" ? "withdraw" : "respond");
+        if (!source || this.pendingActions.has(source)) {
             return;
         }
         const buttons = Array.from(card.querySelectorAll("[data-action]"));
         for (const button of buttons) {
             button.disabled = true;
         }
-        try {
-            const updated =
-                action === "withdraw"
-                    ? await this.requestSource("withdrawMyProposal", {
-                          method: "POST",
-                          body: { id: proposal.id, expectedVersion: proposal.version },
-                      })
-                    : await this.requestSource("respondToProposal", {
-                          method: "POST",
-                          body: { id: proposal.id, expectedVersion: proposal.version, action },
-                      });
-            const index = this.items.findIndex((item) => item.id === proposal.id);
-            if (index >= 0 && isProposal(updated)) {
-                this.items[index] = updated;
+        this.setActionInputs(source, proposal, action);
+        this.pendingActions.set(source, { proposal, action, buttons });
+        this.submit(source);
+    }
+
+    onSourceSuccess = (event) => {
+        if (event.target === this.source("proposals")) {
+            this.completeList(event.detail?.body);
+            return;
+        }
+        const pending = this.pendingActions.get(event.target);
+        if (pending) {
+            this.completeAction(event.target, pending, event.detail?.body);
+        }
+    };
+
+    onSourceFailed = (event) => {
+        if (event.target === this.source("proposals")) {
+            const silent = this.currentListSilent;
+            this.finishListRequest();
+            if (!silent) {
+                this.items = [];
+                this.total = 0;
+                this.renderItems();
             }
-            this.renderItems();
-            const message =
-                action === "accept"
-                    ? this.getAttribute("success-accept-message") || "The proposal was accepted."
-                    : action === "reject"
-                      ? this.getAttribute("success-reject-message") || "The proposal was rejected."
-                      : this.getAttribute("success-withdraw-message") || "Your proposal was withdrawn.";
-            this.showToast(message, false);
-            const eventName = action === "accept" ? "accepted" : action === "reject" ? "rejected" : "withdrawn";
-            this.dispatchEvent(
-                new CustomEvent(`commerce-negotiation:${eventName}`, {
-                    bubbles: true,
-                    composed: true,
-                    detail: updated,
-                }),
-            );
-            if (!isFramed()) {
-                this.scheduleLoad({ silent: true, force: true });
-            }
-        } catch (error) {
-            for (const button of buttons) {
-                button.disabled = false;
-            }
-            this.showToast(
-                errorMessage(error, this.getAttribute("error-message") || "The proposal could not be updated."),
-                true,
-            );
+            this.showToast(this.getAttribute("error-message") || "Proposals could not be loaded.", true);
+            return;
+        }
+        const pending = this.pendingActions.get(event.target);
+        if (!pending) {
+            return;
+        }
+        this.pendingActions.delete(event.target);
+        for (const button of pending.buttons) {
+            button.disabled = false;
+        }
+        this.showToast(this.getAttribute("error-message") || "The proposal could not be updated.", true);
+    };
+
+    completeList(result) {
+        const valid = result && typeof result === "object" && !Array.isArray(result);
+        if (!valid) {
+            this.onSourceFailed({ target: this.source("proposals") });
+            return;
+        }
+        this.items = Array.isArray(result.items) ? result.items.filter(isProposal) : [];
+        this.total = nonNegativeInteger(result.total, this.items.length);
+        this.lastLoadedKey = this.submittedListKey;
+        this.renderItems();
+        this.finishListRequest();
+    }
+
+    finishListRequest() {
+        const completedKey = this.submittedListKey;
+        this.listLoading = false;
+        const reload = this.reloadAfterCurrent || this.listRequest().key !== completedKey;
+        this.reloadAfterCurrent = false;
+        if (reload) {
+            this.scheduleLoad();
         }
     }
 
-    async requestSource(endpoint, options = {}) {
-        const url = new URL(this.sourceUrl(endpoint), this.ownerDocument.baseURI);
-        for (const [name, value] of Object.entries(options.query || {})) {
-            url.searchParams.set(name, String(value));
+    completeAction(source, pending, updated) {
+        this.pendingActions.delete(source);
+        const index = this.items.findIndex((item) => item.id === pending.proposal.id);
+        if (index >= 0 && isProposal(updated)) {
+            this.items[index] = updated;
         }
-        const response = await fetch(url, {
-            credentials: "include",
-            method: options.method || "GET",
-            signal: options.signal,
-            headers: {
-                accept: "application/json",
-                ...(options.body ? { "content-type": "application/json" } : {}),
-            },
-            ...(options.body ? { body: JSON.stringify(options.body) } : {}),
-        });
-        const body = await response.json().catch(() => null);
-        if (!response.ok) {
-            throw new Error(
-                body && typeof body.error === "string" ? body.error : `${response.status} ${response.statusText}`,
-            );
+        this.renderItems();
+        const message =
+            pending.action === "accept"
+                ? this.getAttribute("success-accept-message") || "The proposal was accepted."
+                : pending.action === "reject"
+                  ? this.getAttribute("success-reject-message") || "The proposal was rejected."
+                  : this.getAttribute("success-withdraw-message") || "Your proposal was withdrawn.";
+        this.showToast(message, false);
+        const eventName =
+            pending.action === "accept" ? "accepted" : pending.action === "reject" ? "rejected" : "withdrawn";
+        this.dispatchEvent(
+            new CustomEvent(`commerce-negotiation:${eventName}`, {
+                bubbles: true,
+                composed: true,
+                detail: updated,
+            }),
+        );
+        if (!isFramed()) {
+            this.scheduleLoad({ silent: true, force: true });
         }
-        if (!body || typeof body !== "object" || Array.isArray(body)) {
-            throw new Error("Invalid service response.");
-        }
-        return body;
     }
 
-    sourceUrl(endpoint) {
-        const path = endpointPaths[endpoint];
-        if (!path) {
-            throw new Error(`Undeclared negotiation endpoint: ${endpoint}`);
+    setListInputs(query) {
+        this.setInput("[data-proposals-role]", query.role, query.role === undefined);
+        this.setInput("[data-proposals-status]", query.status, query.status === undefined);
+        this.setInput("[data-proposals-limit]", query.limit);
+        this.setInput("[data-proposals-offset]", query.offset);
+    }
+
+    setActionInputs(source, proposal, action) {
+        setInputValue(source.querySelector("[data-action-id]"), proposal.id);
+        setInputValue(source.querySelector("[data-action-version]"), proposal.version);
+        setInputValue(source.querySelector("[data-action-name]"), action);
+    }
+
+    setInput(selector, value, disabled = false) {
+        const input = this.querySelector(selector);
+        if (!input) {
+            return;
         }
-        return path;
+        input.disabled = disabled;
+        setInputValue(input, value);
+    }
+
+    submit(source) {
+        if (source) {
+            queueMicrotask(() => source.isConnected && source.requestSubmit());
+        }
+    }
+
+    source(name) {
+        return this.querySelector(`[data-${name}-source]`);
     }
 
     statusLabel(status) {
@@ -885,9 +903,10 @@ function setHidden(element, hidden) {
     }
 }
 
-function errorMessage(error, fallback) {
-    console.error(error);
-    return fallback;
+function setInputValue(input, value) {
+    if (input) {
+        input.value = value === undefined || value === null ? "" : String(value);
+    }
 }
 
 function isFramed() {

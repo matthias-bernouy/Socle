@@ -132,5 +132,46 @@
             </mossa-button>
         </mossa-surface-card>
     </template>
+
+    <form
+        data-proposals-source
+        cms-source="/.cms/sources/commerce-negotiation/myProposals"
+        cms-source-trigger="submit"
+        cms-source-method="GET"
+        cms-source-inherit-query="false"
+        hidden
+    >
+        <input data-proposals-role name="role" type="hidden">
+        <input data-proposals-status name="status" type="hidden">
+        <input data-proposals-limit name="limit" type="hidden">
+        <input data-proposals-offset name="offset" type="hidden">
+    </form>
+    <form
+        data-respond-source
+        cms-source="/.cms/sources/commerce-negotiation/respondToProposal"
+        cms-source-trigger="submit"
+        cms-source-method="POST"
+        cms-source-inherit-query="false"
+        cms-source-serialization="typed-json"
+        cms-source-success-reset="false"
+        hidden
+    >
+        <input data-action-id name="id" type="hidden" cms-form-value-type="number">
+        <input data-action-version name="expectedVersion" type="hidden" cms-form-value-type="number">
+        <input data-action-name name="action" type="hidden">
+    </form>
+    <form
+        data-withdraw-source
+        cms-source="/.cms/sources/commerce-negotiation/withdrawMyProposal"
+        cms-source-trigger="submit"
+        cms-source-method="POST"
+        cms-source-inherit-query="false"
+        cms-source-serialization="typed-json"
+        cms-source-success-reset="false"
+        hidden
+    >
+        <input data-action-id name="id" type="hidden" cms-form-value-type="number">
+        <input data-action-version name="expectedVersion" type="hidden" cms-form-value-type="number">
+    </form>
 </mossa-stack>
 </mossa-commerce-negotiation-list-controller>

@@ -1,5 +1,5 @@
-import { NumericRangeFilters } from "./range/range-controller";
-import { SchemaOfferFilters } from "./schema/schema";
+import { NumericRangeFilters } from "../range/range-controller";
+import { SchemaOfferFilters } from "../schema/schema";
 
 export class CommerceOfferFilter extends HTMLElement {
     static observedAttributes = [
@@ -21,6 +21,9 @@ export class CommerceOfferFilter extends HTMLElement {
     }
 
     connectedCallback() {
+        if (this.schemaSource) {
+            this.append(this.schemaSource);
+        }
         this.setAttribute("data-commerce-offer-filter", "");
         if (this.hasAttribute("data-numeric-range")) {
             this.style.display = "grid";
@@ -58,6 +61,7 @@ export class CommerceOfferFilter extends HTMLElement {
     }
 
     activateSchemaMode() {
+        const source = this.schemaSource;
         if (!this.schemaModeActive) {
             this.authoredTemplate =
                 [...this.children].find(
@@ -65,8 +69,8 @@ export class CommerceOfferFilter extends HTMLElement {
                 ) || this.ownerDocument.createElement("template");
             if (!this.authoredTemplate.hasAttribute("data-authored-filter-content")) {
                 this.authoredTemplate.setAttribute("data-authored-filter-content", "");
-                this.authoredTemplate.content.append(...this.childNodes);
-                this.append(this.authoredTemplate);
+                this.authoredTemplate.content.append(...[...this.childNodes].filter((node) => node !== source));
+                this.insertBefore(this.authoredTemplate, source);
             }
             this.schemaModeActive = true;
         }
@@ -82,11 +86,8 @@ export class CommerceOfferFilter extends HTMLElement {
         this.removeAttribute("data-schema-status");
         if (this.schemaModeActive) {
             const authoredContent = this.authoredTemplate?.content;
-            if (authoredContent) {
-                this.replaceChildren(authoredContent);
-            } else {
-                this.replaceChildren();
-            }
+            const source = this.schemaSource;
+            this.replaceChildren(...(authoredContent ? [authoredContent] : []), ...(source ? [source] : []));
             this.authoredTemplate = null;
             this.schemaModeActive = false;
         }
@@ -95,6 +96,10 @@ export class CommerceOfferFilter extends HTMLElement {
 
     managedParams() {
         return this.schemaFilters?.managedParams() ?? [];
+    }
+
+    get schemaSource() {
+        return [...this.children].find((child) => child.hasAttribute("data-offer-filter-schema-source")) || null;
     }
 
     get schemaDriven() {

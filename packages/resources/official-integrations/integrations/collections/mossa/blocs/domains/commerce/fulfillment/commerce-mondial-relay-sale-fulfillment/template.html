@@ -1,4 +1,4 @@
-<section>
+<mossa-commerce-mondial-relay-sale-fulfillment-controller data-p9r-composition-controller>
     <div data-loading>
         <mossa-skeleton height="16rem" animation="wave" label="Loading shipment"></mossa-skeleton>
     </div>
@@ -11,18 +11,45 @@
     <mossa-surface-card data-content hidden appearance="outlined" density="spacious">
         <strong slot="title" data-title></strong>
         <span slot="description" data-copy></span>
-        <div class="summary">
-            <div><span data-fulfillment-copy="order-label">Order</span><strong data-order-number></strong></div>
-            <div><span data-fulfillment-copy="status-label">Status</span><strong class="status" data-status></strong></div>
-            <div><span data-fulfillment-copy="expedition-label">Shipment number</span><strong data-expedition></strong></div>
+
+        <mossa-stack gap="md">
+            <mossa-info-row>
+                <span slot="icon" aria-hidden="true">#</span>
+                <span slot="label" data-fulfillment-copy="order-label">Order</span>
+                <strong data-order-number></strong>
+            </mossa-info-row>
+            <mossa-info-row>
+                <span slot="icon" aria-hidden="true">•</span>
+                <span slot="label" data-fulfillment-copy="status-label">Status</span>
+                <mossa-badge data-status></mossa-badge>
+            </mossa-info-row>
+            <mossa-info-row variant="mono">
+                <span slot="icon" aria-hidden="true">↗</span>
+                <span slot="label" data-fulfillment-copy="expedition-label">Shipment number</span>
+                <strong data-expedition></strong>
+            </mossa-info-row>
             <p data-latest></p>
-        </div>
-        <div slot="actions" class="actions">
-            <mossa-button><button data-create type="button"></button></mossa-button>
-            <mossa-button><button data-handoff type="button" hidden></button></mossa-button>
-            <mossa-button appearance="outlined"><button data-label type="button" hidden></button></mossa-button>
+        </mossa-stack>
+
+        <mossa-stack slot="actions" gap="sm">
+            <form data-create-source cms-source="/.cms/sources/system-functions/createShipmentForMySale" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false">
+                <input data-order-id-input name="orderId" type="hidden">
+                <mossa-button><button data-create type="submit"></button></mossa-button>
+            </form>
+            <form data-handoff-source cms-source="/.cms/sources/system-functions/declareShipmentHandoffForMySale" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false">
+                <input data-order-id-input name="orderId" type="hidden">
+                <mossa-button><button data-handoff type="submit" hidden></button></mossa-button>
+            </form>
+            <form data-label-source cms-source="/.cms/sources/system-functions/requestShipmentLabelForMySale" cms-source-trigger="submit" cms-source-method="POST" cms-source-success-reset="false">
+                <input data-order-id-input name="orderId" type="hidden">
+                <mossa-button appearance="outlined"><button data-label type="submit" hidden></button></mossa-button>
+            </form>
             <slot name="tracking-action"></slot>
-        </div>
-        <p slot="footer" class="message" data-message aria-live="polite"></p>
+        </mossa-stack>
+        <p slot="footer" data-message aria-live="polite"></p>
     </mossa-surface-card>
-</section>
+
+    <form data-shipment-source cms-source="/.cms/sources/system-functions/getShipmentForMySale" cms-source-trigger="submit" cms-source-method="GET" hidden>
+        <input data-order-id-input name="orderId" type="hidden">
+    </form>
+</mossa-commerce-mondial-relay-sale-fulfillment-controller>

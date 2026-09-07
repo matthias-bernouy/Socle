@@ -19,11 +19,13 @@
         "resources/domains/commerce/accounts/commerce-account-sales.json",
         "resources/domains/commerce/accounts/commerce-account-sales-controller.json",
         "resources/domains/commerce/fulfillment/commerce-mondial-relay-sale-fulfillment.json",
+        "resources/domains/commerce/fulfillment/commerce-mondial-relay-sale-fulfillment-controller.json",
         "resources/domains/commerce/negotiation/commerce-negotiation-form.json",
         "resources/domains/commerce/negotiation/commerce-negotiation-form-controller.json",
         "resources/domains/commerce/negotiation/commerce-negotiation-list.json",
         "resources/domains/commerce/negotiation/commerce-negotiation-list-controller.json",
-        "resources/domains/commerce/offers/catalogue/commerce-offer-filter.json",
+        "resources/domains/commerce/offers/catalogue/commerce-offer-filter/offer-filter.json",
+        "resources/domains/commerce/offers/catalogue/commerce-offer-filter/controller.json",
         "resources/domains/commerce/offers/catalogue/commerce-offer-list.json",
         "resources/domains/commerce/offers/catalogue/commerce-offer-preview.json",
         "resources/domains/commerce/offers/pricing/commerce-offer-price-form.json",
@@ -58,6 +60,7 @@
         "resources/domains/commerce/offers/details/offer-details.json",
         "resources/foundation/forms/choices/option.json",
         "resources/domains/account/orders/order.json",
+        "resources/domains/account/orders/order-controller.json",
         "resources/domains/account/orders/purchases-controller.json",
         "resources/foundation/layout/headers/page-header.json",
         "resources/foundation/layout/page/page-shell.json",
@@ -97,7 +100,8 @@
         "resources/domains/account/profile/user-account-form.json",
         "resources/domains/account/profile/user-account-form-controller.json",
         "resources/foundation/navigation/menus/user-menu.json",
-        "resources/domains/commerce/offers/catalogue/valuation.json",
+        "resources/domains/commerce/offers/catalogue/valuation/controller.json",
+        "resources/domains/commerce/offers/catalogue/valuation/valuation.json",
         "resources/foundation/layout/page/footer.json"
     ]
 }

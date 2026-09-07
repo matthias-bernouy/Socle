@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { primarySchema, secondarySchema } from "../support/offer-filter-panel.fixtures";
 import {
     captureSourceWrites,
+    createFilter,
     defineFilter,
     defineList,
     filterTag,
@@ -34,7 +35,7 @@ describe("Commerce dynamic brand filter integration", () => {
         const category = document.createElement("input");
         category.setAttribute("data-commerce-param", "category");
         category.setAttribute("data-url-param", "category");
-        const panel = document.createElement(filterTag);
+        const panel = createFilter();
         panel.setAttribute("schema-driven", "");
         panel.setAttribute("source-prefix", "/brand-bookmark-sources");
         list.append(category, panel);
@@ -73,7 +74,7 @@ describe("Commerce dynamic brand filter integration", () => {
         const category = document.createElement("input");
         category.setAttribute("data-commerce-param", "category");
         category.setAttribute("data-url-param", "category");
-        const panel = document.createElement(filterTag);
+        const panel = createFilter();
         panel.setAttribute("schema-driven", "");
         panel.setAttribute("source-prefix", "/brand-category-sources");
         list.append(category, panel);

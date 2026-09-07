@@ -6,6 +6,6 @@
         "group": "Account",
         "description": "Private order view with trusted payment, shipment progress, and Mondial Relay tracking.",
         "path": "blocs/domains/account/orders/order",
-        "view": "Bloc.ts"
+        "composition": "template.html"
     }
 }

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { primarySchema } from "../support/offer-filter-panel.fixtures";
-import { defineFilter, filterTag, settleLifecycle } from "../support/offer-filter-panel.harness";
+import { createFilter, defineFilter, filterTag, settleLifecycle } from "../support/offer-filter-panel.harness";
 
 test("schema filters keep authored copy through loading, category switches, clearing, and errors", async () => {
     await defineFilter();
@@ -11,7 +11,7 @@ test("schema filters keep authored copy through loading, category switches, clea
     globalThis.fetch = (input) =>
         new Promise<Response>((resolve) => requests.push({ url: new URL(String(input)), resolve }));
     console.error = () => {};
-    const panel = document.createElement(filterTag);
+    const panel = createFilter();
     panel.setAttribute("schema-driven", "true");
     const copy = {
         "all-label": "Any",

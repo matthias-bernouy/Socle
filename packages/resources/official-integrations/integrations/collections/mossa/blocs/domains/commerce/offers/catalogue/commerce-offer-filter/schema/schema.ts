@@ -1,5 +1,4 @@
 import { filterControls, filterableFields } from "./schema-helpers";
-import { loadSchema, schemaSourceUrl } from "./schema-loader";
 import { prepareSchemaFilterParams } from "./schema-params";
 import { renderSchema, renderSchemaState } from "./render-schema";
 
@@ -8,10 +7,10 @@ export class SchemaOfferFilters {
         this.host = host;
         this.category = "";
         this.schema = null;
-        this.controller = null;
         this.scheduled = false;
-        this.inFlight = null;
+        this.inFlightCategory = "";
         this.connected = false;
+        this.sourceListenersConnected = false;
         this.scheduleTimer = null;
     }
 
@@ -26,6 +25,11 @@ export class SchemaOfferFilters {
         }
         this.host.ownerDocument.addEventListener("cms-params:change", this.schedule);
         this.host.ownerDocument.defaultView?.addEventListener("popstate", this.schedule);
+        if (!this.sourceListenersConnected && this.source) {
+            this.sourceListenersConnected = true;
+            this.source.addEventListener("cms-source:success", this.onSourceSuccess);
+            this.source.addEventListener("cms-source:failed", this.onSourceFailed);
+        }
         this.schedule();
     }
 
@@ -36,9 +40,6 @@ export class SchemaOfferFilters {
         this.connected = false;
         this.host.ownerDocument.removeEventListener("cms-params:change", this.schedule);
         this.host.ownerDocument.defaultView?.removeEventListener("popstate", this.schedule);
-        this.controller?.abort();
-        this.controller = null;
-        this.inFlight = null;
         this.scheduled = false;
         if (this.scheduleTimer) {
             clearTimeout(this.scheduleTimer);
@@ -47,8 +48,6 @@ export class SchemaOfferFilters {
     }
 
     invalidate() {
-        this.controller?.abort();
-        this.inFlight = null;
         this.category = "";
         this.schema = null;
         this.host.setAttribute("data-schema-status", "pending");
@@ -81,13 +80,12 @@ export class SchemaOfferFilters {
         }, 0);
     };
 
-    async sync() {
+    sync() {
         const category = this.currentCategory();
         if (!category) {
             if (this.category) {
                 this.clearManagedParams();
             }
-            this.controller?.abort();
             this.category = "";
             this.schema = null;
             this.host.removeAttribute("data-schema-category");
@@ -101,22 +99,11 @@ export class SchemaOfferFilters {
             this.clearManagedParams();
         }
         this.category = category;
-        if (this.inFlight?.category === category) {
-            return this.inFlight.promise;
+        if (this.inFlightCategory) {
+            return;
         }
-        this.controller?.abort();
-        const controller = new AbortController();
-        this.controller = controller;
         renderSchemaState(this.host, "loading");
-        const promise = this.load(category, controller);
-        this.inFlight = { category, promise };
-        try {
-            await promise;
-        } finally {
-            if (this.inFlight?.promise === promise) {
-                this.inFlight = null;
-            }
-        }
+        this.load(category);
     }
 
     managedParams() {
@@ -127,29 +114,62 @@ export class SchemaOfferFilters {
         ];
     }
 
-    async load(category, controller) {
-        try {
-            const url = new URL(schemaSourceUrl(this.host), this.host.ownerDocument.baseURI);
-            url.searchParams.set("category", category);
-            const body = await loadSchema(url);
-            if (controller.signal.aborted || !this.host.isConnected || category !== this.category) {
-                return;
-            }
-            prepareSchemaFilterParams(this.host, body);
-            this.schema = body;
-            renderSchema(this.host, body);
-        } catch (error) {
-            if (controller.signal.aborted) {
-                return;
-            }
-            console.error(error);
-            this.schema = null;
-            renderSchemaState(
-                this.host,
-                "error",
-                this.host.getAttribute("error-label") || "Filters for this category could not be loaded.",
-            );
+    load(category) {
+        const source = this.source;
+        const input = source?.querySelector("[data-schema-category-input]");
+        if (!source || !input) {
+            this.fail();
+            return;
         }
+        input.value = category;
+        this.inFlightCategory = category;
+        queueMicrotask(() => source.isConnected && source.requestSubmit());
+    }
+
+    onSourceSuccess = (event) => {
+        if (event.target !== this.source) {
+            return;
+        }
+        const category = this.inFlightCategory;
+        this.inFlightCategory = "";
+        if (!this.connected || !category || category !== this.currentCategory()) {
+            this.schedule();
+            return;
+        }
+        const body = event.detail?.body;
+        if (!body || typeof body !== "object" || Array.isArray(body)) {
+            this.fail();
+            return;
+        }
+        prepareSchemaFilterParams(this.host, body);
+        this.schema = body;
+        renderSchema(this.host, body);
+    };
+
+    onSourceFailed = (event) => {
+        if (event.target !== this.source) {
+            return;
+        }
+        const category = this.inFlightCategory;
+        this.inFlightCategory = "";
+        if (category && category !== this.currentCategory()) {
+            this.schedule();
+            return;
+        }
+        this.fail();
+    };
+
+    fail() {
+        this.schema = null;
+        renderSchemaState(
+            this.host,
+            "error",
+            this.host.getAttribute("error-label") || "Filters for this category could not be loaded.",
+        );
+    }
+
+    get source() {
+        return this.host.schemaSource;
     }
 
     clearManagedParams() {

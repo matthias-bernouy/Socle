@@ -51,18 +51,14 @@
     ],
     "requires": {
         "resources": [
-            "mossa/blocs/button"
+            "mossa/blocs/badge",
+            "mossa/blocs/button",
+            "mossa/blocs/commerce-mondial-relay-sale-fulfillment-controller",
+            "mossa/blocs/info-row",
+            "mossa/blocs/skeleton",
+            "mossa/blocs/stack",
+            "mossa/blocs/surface-card"
         ]
     },
-    "defaultActive": false,
-    "theme": {
-        "contract": "ulvia-theme@3",
-        "required": [
-            "body-text",
-            "danger-base",
-            "secondary-base",
-            "surface-border",
-            "surface-muted-text"
-        ]
-    }
+    "defaultActive": false
 }

@@ -30,6 +30,18 @@ export class Bloc extends Component {
         placeholderSlot?.removeEventListener("slotchange", this._onPlaceholderChange);
     }
 
+    get value(): string {
+        return (this.shadowRoot?.querySelector("input") as HTMLInputElement | null)?.value ?? "";
+    }
+
+    set value(value: string) {
+        const input = this.shadowRoot?.querySelector("input") as HTMLInputElement | null;
+        if (input) {
+            input.value = String(value ?? "");
+            this._syncEmpty();
+        }
+    }
+
     private _onPlaceholderChange = () => this._syncPlaceholder();
 
     private _syncPlaceholder() {
@@ -53,7 +65,7 @@ export class Bloc extends Component {
         if (!input) {
             return;
         }
-        input.value = "";
+        this.value = "";
         input.focus();
         input.dispatchEvent(new Event("input", { bubbles: true }));
         this._syncEmpty();

@@ -69,7 +69,8 @@ function replaceSchemaContent(host, content) {
     const authored = [...host.children].find(
         (child) => child.localName === "template" && child.hasAttribute("data-authored-filter-content"),
     );
-    host.replaceChildren(...(authored ? [authored] : []), content);
+    const source = [...host.children].find((child) => child.hasAttribute("data-offer-filter-schema-source"));
+    host.replaceChildren(...(authored ? [authored] : []), content, ...(source ? [source] : []));
 }
 
 function publishSchemaState(host, state) {

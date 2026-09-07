@@ -5,6 +5,7 @@
         "name": "Commerce offer filter",
         "group": "Commerce",
         "description": "Maps a URL-synchronized control to a contextual product field.",
-        "path": "blocs/domains/commerce/offers/catalogue/commerce-offer-filter"
+        "path": "blocs/domains/commerce/offers/catalogue/commerce-offer-filter",
+        "composition": "template.html"
     }
 }

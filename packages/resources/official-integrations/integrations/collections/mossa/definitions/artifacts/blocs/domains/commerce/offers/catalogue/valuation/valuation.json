@@ -6,6 +6,6 @@
         "group": "Commerce",
         "description": "Estimateur automatique fondé sur le catalogue et l'historique de prix Commerce.",
         "path": "blocs/domains/commerce/offers/catalogue/valuation",
-        "view": "Bloc.ts"
+        "composition": "template.html"
     }
 }

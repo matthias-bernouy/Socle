@@ -1,6 +1,6 @@
 {
     "default-tag": "mossa-commerce-mondial-relay-sale-fulfillment",
-    "bloc": "./Bloc.ts",
+    "composition": "./template.html",
     "editor": "./BlocEditor.ts",
     "defaultContent": "./default.html",
     "meta": {

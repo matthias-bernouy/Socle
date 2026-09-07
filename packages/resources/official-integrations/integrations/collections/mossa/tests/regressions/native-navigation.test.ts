@@ -116,7 +116,7 @@ describe("Mossa native navigation", () => {
         expect(sources.map(show).sort()).toEqual([
             "blocs/domains/commerce/checkout/commerce-stripe-payment/legal-consent.ts",
             "blocs/domains/commerce/checkout/service-withdrawal/controller/receipt.ts",
-            "blocs/domains/commerce/fulfillment/commerce-mondial-relay-sale-fulfillment/Bloc.ts",
+            "blocs/domains/commerce/fulfillment/commerce-mondial-relay-sale-fulfillment/controller/Bloc.ts",
             "blocs/domains/commerce/offers/pricing/commerce-offer-price-form/controller/Bloc.ts",
         ]);
     });

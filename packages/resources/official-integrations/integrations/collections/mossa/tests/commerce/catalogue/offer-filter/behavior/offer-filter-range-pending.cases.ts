@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { primarySchema } from "../support/offer-filter-panel.fixtures";
 import {
     createBindingCore,
+    createFilter,
     defineFilter,
     filterTag,
     settleLifecycle,
@@ -15,7 +16,7 @@ test("a local numeric edit wins over a pending URL reflection after another filt
     globalThis.fetch = () => Promise.resolve(Response.json(primarySchema));
     history.replaceState(null, "", `${location.pathname}?category=catalog/primary`);
     const core = createBindingCore();
-    const panel = document.createElement(filterTag);
+    const panel = createFilter();
     panel.setAttribute("schema-driven", "true");
     core.append(panel);
     try {

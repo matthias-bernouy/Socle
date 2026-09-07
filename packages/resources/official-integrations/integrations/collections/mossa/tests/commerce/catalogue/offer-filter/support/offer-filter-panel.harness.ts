@@ -18,11 +18,30 @@ export function createBindingCore(disabled = false): BindingCore {
 }
 
 export async function defineFilter(): Promise<void> {
-    await defineCommerceBloc(filterTag, "mossa-commerce-offer-filter");
+    installFilterSourceTransport();
+    await defineCommerceBloc(filterTag, "mossa-commerce-offer-filter-controller");
 }
 
 export async function defineList(): Promise<void> {
     await defineCommerceBloc(listTag, "mossa-commerce-offer-list");
+}
+
+export function createFilter(): HTMLElement & { managedParams(): string[] } {
+    const filter = document.createElement(filterTag) as HTMLElement & { managedParams(): string[] };
+    const source = document.createElement("form");
+    source.hidden = true;
+    source.setAttribute("data-offer-filter-schema-source", "");
+    source.setAttribute("cms-source", "/.cms/sources/commerce/offerFilterSchema");
+    source.setAttribute("cms-source-trigger", "submit");
+    source.setAttribute("cms-source-method", "GET");
+    source.setAttribute("cms-source-inherit-query", "false");
+    const category = document.createElement("input");
+    category.type = "hidden";
+    category.name = "category";
+    category.setAttribute("data-schema-category-input", "");
+    source.append(category);
+    filter.append(source);
+    return filter;
 }
 
 async function defineCommerceBloc(tag: string, artifactTag: string): Promise<void> {
@@ -44,8 +63,53 @@ async function defineCommerceBloc(tag: string, artifactTag: string): Promise<voi
         artifact.bloc.description ?? "",
         tag,
         artifact.bloc.source,
+        undefined,
+        { viewPath: artifact.bloc.view ?? "Bloc.ts" },
     );
     new Function(compiled.viewJS)();
+}
+
+let filterSourceTransportInstalled = false;
+
+function installFilterSourceTransport(): void {
+    if (filterSourceTransportInstalled) {
+        return;
+    }
+    filterSourceTransportInstalled = true;
+    document.addEventListener(
+        "submit",
+        (event) => {
+            const form = event.target;
+            if (!(form instanceof HTMLFormElement) || !form.hasAttribute("data-offer-filter-schema-source")) {
+                return;
+            }
+            event.preventDefault();
+            event.stopPropagation();
+            void submitFilterSource(form);
+        },
+        true,
+    );
+}
+
+async function submitFilterSource(form: HTMLFormElement): Promise<void> {
+    const url = new URL(form.getAttribute("cms-source")!, document.baseURI);
+    for (const input of form.querySelectorAll<HTMLInputElement>("input[name]")) {
+        if (!input.disabled) {
+            url.searchParams.append(input.name, input.value);
+        }
+    }
+    try {
+        const response = await globalThis.fetch(url, { method: "GET" });
+        const body = await response.json().catch(() => null);
+        form.dispatchEvent(
+            new CustomEvent(response.ok ? "cms-source:success" : "cms-source:failed", {
+                bubbles: true,
+                detail: { body, status: response.status },
+            }),
+        );
+    } catch (error) {
+        form.dispatchEvent(new CustomEvent("cms-source:failed", { bubbles: true, detail: { error } }));
+    }
 }
 
 export async function settleLifecycle(): Promise<void> {

@@ -1,4 +1,5 @@
 import { prepare_bloc } from "@bernouy/cms-bloc-compile";
+import { expandCompositions } from "@bernouy/cms-content";
 import { Component } from "@bernouy/components/base";
 import {
     clearResponsiveSourceImageElement,
@@ -8,98 +9,126 @@ import { FsIntegrationDefinitionRepository } from "@bernouy/cms-integrations/fs"
 import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
 import { offer, product, schema } from "./fixtures";
 
-const tag = "test-public-offer-product-specifications";
+let composition = "";
 
 export async function mountOffer(
     options: { unavailable?: boolean; productUnavailable?: boolean; schemaUnavailable?: boolean } = {},
 ) {
-    const originalFetch = globalThis.fetch;
+    await loadRuntime();
     const originalUrl = location.href;
-    const originalP9r = (window as typeof window & { p9r?: unknown }).p9r;
+    const requests: string[] = [];
+    history.replaceState({}, "", "?slug=sample-offer");
+
+    const container = document.createElement("div");
+    container.innerHTML = `<mossa-public-offer buy-url="/checkout?offerId={id}" negotiate-url="/negotiate?offerId={id}" valuation-minimum-field="estimate_floor" valuation-maximum-field="estimate_ceiling" valuation-currency="EUR"></mossa-public-offer>`;
+    expandCompositions(container, [{ id: "mossa-public-offer", compositionHTML: composition }]);
+    const host = container.firstElementChild as HTMLElement;
+
+    for (const form of host.querySelectorAll<HTMLFormElement>("form[cms-source]")) {
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            const source = form.getAttribute("cms-source")!;
+            const params = new URLSearchParams();
+            for (const input of form.querySelectorAll<HTMLInputElement>("[name]")) {
+                params.append(input.name, input.value);
+            }
+            requests.push(params.size ? `${source}?${params}` : source);
+            queueMicrotask(() => respond(form, options));
+        });
+    }
+    document.body.append(host);
+    await waitFor(() => host.querySelector<HTMLElement>("[data-content]")?.hidden === false);
+
+    return {
+        host,
+        requests,
+        dispose: () => {
+            host.remove();
+            history.replaceState({}, "", originalUrl);
+        },
+    };
+}
+
+async function loadRuntime(): Promise<void> {
+    if (composition && customElements.get("mossa-public-offer-controller")) {
+        return;
+    }
+    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("mossa");
+    const artifacts = (definition?.artifacts ?? []).filter(
+        (item): item is Extract<typeof item, { type: "bloc" }> => item.type === "bloc",
+    );
+    const offerArtifact = artifacts.find(({ bloc }) => bloc.tag === "mossa-public-offer");
+    const controller = artifacts.find(({ bloc }) => bloc.tag === "mossa-public-offer-controller");
+    if (!offerArtifact?.bloc.compositionHTML || !controller?.bloc.viewJS) {
+        throw new Error("Public offer composition sources not found");
+    }
+    composition = offerArtifact.bloc.compositionHTML;
+    if (customElements.get(controller.bloc.tag)) {
+        return;
+    }
+    const previousP9r = (window as typeof window & { p9r?: unknown }).p9r;
     (window as typeof window & { p9r?: unknown }).p9r = {
         Component,
         clearResponsiveSourceImageElement,
         syncResponsiveSourceImageElement,
     };
-    const requests: string[] = [];
-    globalThis.fetch = (async (input: RequestInfo | URL) => {
-        const path = String(input);
-        requests.push(path);
-        if (path.startsWith("/.cms/sources/commerce/offer?")) {
-            return Response.json({
-                ...offer,
-                availability: options.unavailable ? "sold_out" : "available",
-                ...(options.schemaUnavailable ? { specifications: [{ label: "Weight", value: 280, unit: "g" }] } : {}),
-                ...(options.productUnavailable ? { product } : {}),
-            });
-        }
-        if (path.startsWith("/.cms/sources/commerce/product?")) {
-            return options.productUnavailable ? Response.json({}, { status: 404 }) : Response.json(product);
-        }
-        if (path.startsWith("/.cms/sources/commerce/offerFilterSchema?")) {
-            return options.schemaUnavailable ? Response.json({}, { status: 503 }) : Response.json(schema);
-        }
-        throw new Error(`Unexpected Source request: ${path}`);
-    }) as typeof fetch;
-    let host: HTMLElement | undefined;
-    const dispose = () => {
-        host?.remove();
-        globalThis.fetch = originalFetch;
-        history.replaceState({}, "", originalUrl);
-        (window as typeof window & { p9r?: unknown }).p9r = originalP9r;
-    };
     try {
-        await defineController();
-        history.replaceState({}, "", "?slug=sample-offer");
-        host = document.createElement(tag);
-        host.innerHTML = "<a data-back></a><a data-buy></a><a data-negotiate></a>";
-        host.setAttribute("buy-url", "/checkout?offerId={id}");
-        host.setAttribute("negotiate-url", "/negotiate?offerId={id}");
-        host.setAttribute("valuation-minimum-field", "estimate_floor");
-        host.setAttribute("valuation-maximum-field", "estimate_ceiling");
-        host.setAttribute("valuation-currency", "EUR");
-        document.body.append(host);
-        const deadline = performance.now() + 1000;
-        while (host.shadowRoot?.querySelector<HTMLElement>("[data-content]")?.hidden) {
-            if (performance.now() > deadline) {
-                throw new Error("The public offer did not finish loading");
-            }
-            await new Promise((resolve) => setTimeout(resolve, 0));
-        }
-        return { host, requests, dispose };
-    } catch (error) {
-        dispose();
-        throw error;
+        const compiled = await prepare_bloc(
+            new File([controller.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
+            null,
+            controller.bloc.name,
+            controller.bloc.group ?? "Commerce",
+            controller.bloc.description ?? "",
+            controller.bloc.tag,
+            controller.bloc.source,
+            undefined,
+            { viewPath: controller.bloc.view ?? "controller/Bloc.ts" },
+        );
+        new Function(compiled.viewJS)();
+    } finally {
+        (window as typeof window & { p9r?: unknown }).p9r = previousP9r;
     }
 }
 
-async function defineController(): Promise<void> {
-    if (customElements.get(tag)) {
-        return;
+function respond(
+    form: HTMLFormElement,
+    options: { unavailable?: boolean; productUnavailable?: boolean; schemaUnavailable?: boolean },
+): void {
+    if (form.matches("[data-offer-source]")) {
+        succeed(form, {
+            ...offer,
+            availability: options.unavailable ? "sold_out" : "available",
+            ...(options.schemaUnavailable ? { specifications: [{ label: "Weight", value: 280, unit: "g" }] } : {}),
+            ...(options.productUnavailable ? { product } : {}),
+        });
+    } else if (form.matches("[data-product-source]")) {
+        options.productUnavailable ? fail(form) : succeed(form, product);
+    } else if (form.matches("[data-schema-source]")) {
+        options.schemaUnavailable ? fail(form) : succeed(form, schema);
     }
-    const definition = await new FsIntegrationDefinitionRepository(OFFICIAL_INTEGRATIONS_ROOT).get("mossa");
-    const artifact = definition?.artifacts?.find(
-        (item) => item.type === "bloc" && item.bloc.tag === "mossa-public-offer-controller",
-    );
-    if (!artifact || artifact.type !== "bloc" || !artifact.bloc.viewJS) {
-        throw new Error("Public offer controller source not found");
+}
+
+function succeed(form: HTMLFormElement, body: unknown): void {
+    form.dispatchEvent(new CustomEvent("cms-source:success", { bubbles: true, detail: { body } }));
+}
+
+function fail(form: HTMLFormElement): void {
+    form.dispatchEvent(new CustomEvent("cms-source:failed", { bubbles: true, detail: { message: "Unavailable" } }));
+}
+
+async function waitFor(predicate: () => boolean): Promise<void> {
+    const deadline = performance.now() + 1000;
+    while (!predicate()) {
+        if (performance.now() > deadline) {
+            throw new Error("The public offer did not finish loading");
+        }
+        await new Promise((resolve) => setTimeout(resolve, 0));
     }
-    const compiled = await prepare_bloc(
-        new File([artifact.bloc.viewJS], "Bloc.ts", { type: "text/typescript" }),
-        null,
-        artifact.bloc.name,
-        artifact.bloc.group ?? "Commerce",
-        artifact.bloc.description ?? "",
-        tag,
-        artifact.bloc.source,
-        undefined,
-        { viewPath: artifact.bloc.view ?? "Bloc.ts" },
-    );
-    new Function(compiled.viewJS)();
+    await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 export function specificationRows(host: HTMLElement): string[][] {
-    return [...host.shadowRoot!.querySelectorAll("[data-specifications] mossa-specification")].map((row) => [
+    return [...host.querySelectorAll("[data-specifications] mossa-specification")].map((row) => [
         row.querySelector('[slot="label"]')!.textContent!,
         row.querySelector('[slot="value"]')!.textContent!,
     ]);

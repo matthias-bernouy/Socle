@@ -101,6 +101,12 @@ describe("Mossa Commerce negotiation blocks", () => {
         expect(listViewSource).toContain('proposal.viewerRole === "buyer"');
         expect(listViewSource).toContain('toast.setAttribute("tone", error ? "danger" : "success")');
         expect(listViewSource).toContain('toast.setAttribute("appearance", "filled")');
+        expect(listRuntime).toContain('cms-source="/.cms/sources/commerce-negotiation/myProposals"');
+        expect(listRuntime).toContain('cms-source="/.cms/sources/commerce-negotiation/respondToProposal"');
+        expect(listRuntime).toContain('cms-source="/.cms/sources/commerce-negotiation/withdrawMyProposal"');
+        expect(listRuntime).toContain('cms-source-serialization="typed-json"');
+        expect(listRuntime).toContain('cms-form-value-type="number"');
+        expect(listViewSource).not.toContain("fetch(");
         expect(listViewSource).not.toContain('"toast-error-background-color"');
         expect(listRuntime).not.toContain("location.reload");
         expect(listEditorSource).toContain('attribute: "initial-role"');

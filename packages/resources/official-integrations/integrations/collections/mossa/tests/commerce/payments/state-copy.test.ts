@@ -1,7 +1,9 @@
 import { afterEach, beforeAll, describe, expect, test } from "bun:test";
 import { CheckoutFlow } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/commerce/checkout/checkout/Bloc.ts";
-import { OrderDetail } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/account/orders/order/Bloc.ts";
+import { OrderDetail } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/account/orders/order/controller/Bloc.ts";
 import { readWithdrawalCopy } from "@bernouy/cms-official-integrations/integrations/mossa/blocs/domains/commerce/checkout/service-withdrawal/copy.ts";
+import { OFFICIAL_INTEGRATIONS_ROOT } from "@bernouy/cms-official-integrations";
+import { resolve } from "node:path";
 
 const originalFetch = globalThis.fetch;
 const tags = {
@@ -9,10 +11,17 @@ const tags = {
     order: "mossa-order-copy-test",
     withdrawal: "mossa-withdrawal-copy-test",
 };
+let orderMarkup = "";
 
-beforeAll(() => {
+beforeAll(async () => {
     customElements.define(tags.checkout, CheckoutFlow);
     customElements.define(tags.order, OrderDetail);
+    const source = await Bun.file(
+        resolve(OFFICIAL_INTEGRATIONS_ROOT, "collections/mossa/blocs/domains/account/orders/order/template.html"),
+    ).text();
+    const template = document.createElement("template");
+    template.innerHTML = source;
+    orderMarkup = template.content.firstElementChild?.innerHTML ?? "";
 });
 afterEach(() => {
     document.body.replaceChildren();
@@ -31,7 +40,12 @@ function mount(tag: string, attributes: Record<string, string>, content = ""): H
     return element;
 }
 function errorText(element: HTMLElement): string {
-    const error = element.shadowRoot!.querySelector<HTMLElement>("[data-error]")!;
+    const error =
+        element.querySelector<HTMLElement>("[data-error]") ??
+        element.shadowRoot?.querySelector<HTMLElement>("[data-error]");
+    if (!error) {
+        throw new Error("Expected an error presentation");
+    }
     expect(error.hidden).toBe(false);
     return error.textContent || "";
 }
@@ -59,10 +73,14 @@ describe("Checkout and order state copy", () => {
 
     test("renders configured order errors and retains the default when no copy is authored", async () => {
         location.href = "http://localhost/order";
-        const order = mount(tags.order, {
-            "error-title": "Your order is unavailable",
-            "missing-order-message": "Choose an order from your purchases.",
-        });
+        const order = mount(
+            tags.order,
+            {
+                "error-title": "Your order is unavailable",
+                "missing-order-message": "Choose an order from your purchases.",
+            },
+            orderMarkup,
+        );
         await settled();
         expect(errorText(order)).toContain("Your order is unavailable");
         expect(errorText(order)).toContain("Choose an order from your purchases.");

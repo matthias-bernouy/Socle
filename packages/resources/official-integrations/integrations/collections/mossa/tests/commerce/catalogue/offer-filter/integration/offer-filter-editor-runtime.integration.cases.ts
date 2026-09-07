@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { primarySchema } from "../support/offer-filter-panel.fixtures";
 import {
     createBindingCore,
+    createFilter,
     defineFilter,
     defineList,
     filterTag,
@@ -39,7 +40,7 @@ describe("Commerce filter editor and Source runtime integration", () => {
         const category = document.createElement("input");
         category.setAttribute("data-commerce-param", "category");
         category.setAttribute("data-url-param", "category");
-        const panel = document.createElement(filterTag);
+        const panel = createFilter();
         panel.setAttribute("schema-driven", "");
         panel.setAttribute("source-prefix", "/editor-runtime-sources");
         const authored = document.createElement("p");
@@ -59,7 +60,7 @@ describe("Commerce filter editor and Source runtime integration", () => {
             if (!runtime) {
                 throw new Error("Binding runtime did not start");
             }
-            await settleUntil(() => runtime.size === 1);
+            await settleUntil(() => runtime.size === 2);
 
             runtime.deactivate();
             const restoredPanel = list.querySelector(`${filterTag}[schema-driven]`);

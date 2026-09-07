@@ -3,9 +3,7 @@ import {
     clearResponsiveSourceImageElement,
     syncResponsiveSourceImageElement,
 } from "@bernouy/cms-source-images/browser";
-import { orderCopy, readOrderCopy } from "./copy";
-import template from "./template.html" with { type: "text" };
-import css from "./style.css" with { type: "text" };
+import { orderCopy, readOrderCopy } from "../copy";
 
 type RecordValue = Record<string, any>;
 type PaymentState =
@@ -23,8 +21,6 @@ type PaymentState =
     | "unknown";
 
 class PublicMessageError extends Error {}
-class RemoteRequestError extends Error {}
-
 export class OrderDetail extends Component {
     static observedAttributes = [
         ...Object.keys(orderCopy),
@@ -39,14 +35,28 @@ export class OrderDetail extends Component {
     private renderedOrder:
         | [RecordValue, RecordValue | null, RecordValue | null, RecordValue | null, RecordValue | null]
         | null = null;
+    private pending = new Set(["payment", "relay", "shipment"]);
+    private optional: Record<"payment" | "relay" | "shipment", RecordValue | null> = {
+        payment: null,
+        relay: null,
+        shipment: null,
+    };
 
     constructor() {
-        super({ css, template: template as unknown as string });
+        super({ css: ":host { display: contents; }", template: "<slot></slot>" });
     }
 
     override connectedCallback(): void {
+        super.connectedCallback();
+        this.addEventListener("cms-source:success", this.onSourceSuccess as EventListener);
+        this.addEventListener("cms-source:failed", this.onSourceFailed as EventListener);
         this.syncPresentation();
-        this.load().catch((error) => this.fail(error));
+        this.load();
+    }
+
+    disconnectedCallback(): void {
+        this.removeEventListener("cms-source:success", this.onSourceSuccess as EventListener);
+        this.removeEventListener("cms-source:failed", this.onSourceFailed as EventListener);
     }
 
     attributeChangedCallback(): void {
@@ -57,11 +67,11 @@ export class OrderDetail extends Component {
 
     private syncPresentation(): void {
         this.set('[data-error] [slot="title"]', this.text("error-title", "Order not found"));
-        for (const element of this.shadowRoot!.querySelectorAll<HTMLElement>("[data-order-copy]")) {
+        for (const element of this.querySelectorAll<HTMLElement>("[data-order-copy]")) {
             element.textContent = this.copy(element.dataset.orderCopy!);
         }
-        this.shadowRoot!.querySelector("mossa-skeleton[label]")!.setAttribute("label", this.copy("loading-label"));
-        this.shadowRoot!.querySelector(".progress")!.setAttribute("aria-label", this.copy("progress-label"));
+        this.querySelector("mossa-skeleton[label]")!.setAttribute("label", this.copy("loading-label"));
+        this.querySelector("[data-progress]")!.setAttribute("aria-label", this.copy("progress-label"));
         if (this.renderedOrder) {
             this.render(...this.renderedOrder);
         }
@@ -73,38 +83,88 @@ export class OrderDetail extends Component {
         return this.getAttribute(name)?.trim() || fallback;
     }
 
-    private async load(): Promise<void> {
+    private load(): void {
         this.show("loading");
         if (!this.orderId) {
-            throw new PublicMessageError(this.text("missing-order-message", "The order identifier is missing."));
+            this.fail(new PublicMessageError(this.text("missing-order-message", "The order identifier is missing.")));
+            return;
         }
-        const order = await this.request(`/.cms/sources/commerce/myOrder?id=${encodeURIComponent(this.orderId)}`);
-        const [paymentResult, relay, offer] = await Promise.all([
-            this.request(
-                `/.cms/sources/system-functions/getPaymentForOrder?orderId=${encodeURIComponent(this.orderId)}`,
-            ).catch(() => null),
-            this.request(
-                `/.cms/sources/system-functions/getRelayPointForOrder?orderId=${encodeURIComponent(this.orderId)}`,
-            ).catch(() => null),
-            this.loadOffer(order).catch(() => null),
-        ]);
-        const payment = paymentResult?.payment || null;
-        const shipment = await this.loadShipment().catch(() => null);
-        this.renderedOrder = [order, payment, relay, offer, shipment];
-        this.render(...this.renderedOrder);
-        this.show("content");
+        this.renderedOrder = null;
+        this.pending = new Set(["payment", "relay", "shipment"]);
+        this.optional = { payment: null, relay: null, shipment: null };
+        for (const name of ["order", "payment", "relay", "shipment"]) {
+            setFormValue(this, name, this.orderId);
+            this.submit(name);
+        }
     }
 
-    private async loadOffer(order: RecordValue): Promise<RecordValue | null> {
-        const offerId = order.lines?.[0]?.offerId;
-        return offerId ? this.request(`/.cms/sources/commerce/offer?id=${encodeURIComponent(offerId)}`) : null;
+    private onSourceSuccess = (event: CustomEvent<{ body?: unknown }>): void => {
+        this.acceptSource(event.target, event.detail?.body);
+    };
+
+    private onSourceFailed = (event: Event): void => {
+        if (event.target === this.source("order")) {
+            this.fail(new Error());
+            return;
+        }
+        this.acceptSource(event.target, null);
+    };
+
+    private acceptSource(target: EventTarget | null, body: unknown): void {
+        const value = record(body);
+        if (target === this.source("order")) {
+            if (!value) {
+                this.fail(new Error());
+                return;
+            }
+            this.renderedOrder = [value, this.optional.payment, this.optional.relay, null, this.optional.shipment];
+            const offerId = value.lines?.[0]?.offerId;
+            if (offerId != null) {
+                this.pending.add("offer");
+                setFormValue(this, "offer", String(offerId));
+                this.submit("offer");
+            }
+        } else if (target === this.source("payment")) {
+            this.optional.payment = record(value?.payment);
+            if (this.renderedOrder) {
+                this.renderedOrder[1] = this.optional.payment;
+            }
+            this.pending.delete("payment");
+        } else if (target === this.source("relay")) {
+            this.optional.relay = value;
+            if (this.renderedOrder) {
+                this.renderedOrder[2] = value;
+            }
+            this.pending.delete("relay");
+        } else if (this.renderedOrder && target === this.source("offer")) {
+            this.renderedOrder[3] = value;
+            this.pending.delete("offer");
+        } else if (target === this.source("shipment")) {
+            this.optional.shipment = Array.isArray(value?.shipments) ? record(value.shipments[0]) : null;
+            if (this.renderedOrder) {
+                this.renderedOrder[4] = this.optional.shipment;
+            }
+            this.pending.delete("shipment");
+        }
+        this.renderIfReady();
     }
 
-    private async loadShipment(): Promise<RecordValue | null> {
-        const result = await this.request(
-            `/.cms/sources/system-functions/getShipmentForOrder?orderId=${encodeURIComponent(this.orderId)}`,
-        ).catch(() => null);
-        return Array.isArray(result?.shipments) ? result.shipments[0] : null;
+    private renderIfReady(): void {
+        if (this.renderedOrder && this.pending.size === 0) {
+            this.render(...this.renderedOrder);
+            this.show("content");
+        }
+    }
+
+    private source(name: string): HTMLFormElement | null {
+        return this.querySelector<HTMLFormElement>(`[data-${name}-source]`);
+    }
+
+    private submit(name: string): void {
+        const source = this.source(name);
+        if (source) {
+            queueMicrotask(() => source.isConnected && source.requestSubmit());
+        }
     }
 
     private render(
@@ -123,7 +183,7 @@ export class OrderDetail extends Component {
         );
         this.set("[data-order-date]", this.copy("order-date-label", { date: date(order.createdAt, this.locale) }));
         this.set("[data-order-status]", status.label);
-        this.orderStatus.dataset.tone = status.tone;
+        this.orderStatus.setAttribute("tone", badgeTone(status.tone));
 
         this.set("[data-line-title]", line.title || line.offerSnapshot?.title || this.copy("item-label"));
         const variant = variantLabel(line.variantSnapshot);
@@ -159,7 +219,7 @@ export class OrderDetail extends Component {
         );
         const paymentStatus = paymentPresentation(paymentState, this.copy);
         this.set("[data-payment-confirmation]", paymentStatus.label);
-        this.paymentConfirmation.dataset.state = paymentStatus.tone;
+        this.paymentConfirmation.setAttribute("tone", badgeTone(paymentStatus.tone));
         this.renderResumePayment(order, line, paymentState);
 
         this.renderRelay(relay, shipment);
@@ -252,7 +312,7 @@ export class OrderDetail extends Component {
             state = "pending";
         }
         this.set("[data-relay-confirmation]", label);
-        this.relayConfirmation.dataset.state = state;
+        this.relayConfirmation.setAttribute("tone", badgeTone(state));
     }
 
     private renderProgress(stage: number, confirmed: boolean): void {
@@ -265,33 +325,15 @@ export class OrderDetail extends Component {
                     ? "current"
                     : "upcoming";
             step.dataset.state = state;
+            step.setAttribute("tone", state === "complete" ? "success" : state === "current" ? "primary" : "info");
+            step.setAttribute("variant", state === "current" ? "filled" : "soft");
         });
     }
 
     private set(selector: string, value: string, hidden = false): void {
-        const element = this.shadowRoot!.querySelector<HTMLElement>(selector)!;
+        const element = this.querySelector<HTMLElement>(selector)!;
         element.textContent = value;
         element.hidden = hidden;
-    }
-
-    private async request(path: string, options: RequestInit = {}): Promise<RecordValue> {
-        const response = await fetch(path, {
-            credentials: "include",
-            ...options,
-            headers: {
-                accept: "application/json",
-                ...(options.body ? { "content-type": "application/json" } : {}),
-                ...headers(options.headers),
-            },
-        });
-        const body = await response.json().catch(() => null);
-        if (!response.ok) {
-            throw new RemoteRequestError(responseMessage(body));
-        }
-        if (!body || typeof body !== "object" || Array.isArray(body)) {
-            throw new Error();
-        }
-        return body;
     }
 
     private fail(error: unknown): void {
@@ -317,49 +359,49 @@ export class OrderDetail extends Component {
         return this.getAttribute("locale")?.trim() || "en-US";
     }
     private get loading() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-loading]")!;
+        return this.querySelector<HTMLElement>("[data-loading]")!;
     }
     private get content() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-content]")!;
+        return this.querySelector<HTMLElement>("[data-content]")!;
     }
     private get error() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-error]")!;
+        return this.querySelector<HTMLElement>("[data-error]")!;
     }
     private get errorMessage() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-error-message]")!;
+        return this.querySelector<HTMLElement>("[data-error-message]")!;
     }
     private get image() {
-        return this.shadowRoot!.querySelector<HTMLImageElement>("[data-image]")!;
+        return this.querySelector<HTMLImageElement>("[data-image]")!;
     }
     private get orderStatus() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-order-status]")!;
+        return this.querySelector<HTMLElement>("[data-order-status]")!;
     }
     private get paymentConfirmation() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-payment-confirmation]")!;
+        return this.querySelector<HTMLElement>("[data-payment-confirmation]")!;
     }
     private get resumePaymentAction() {
-        return this.querySelector<HTMLElement>(':scope > [slot="resume-action"][data-resume-payment-action]')!;
+        return this.querySelector<HTMLElement>("[data-resume-payment-action]")!;
     }
     private get resumePayment() {
-        return this.querySelector<HTMLAnchorElement>(':scope > [slot="resume-action"] > a[data-resume-payment]')!;
+        return this.querySelector<HTMLAnchorElement>("[data-resume-payment]")!;
     }
     private get progressSteps() {
-        return [...this.shadowRoot!.querySelectorAll<HTMLElement>("[data-progress-step]")];
+        return [...this.querySelectorAll<HTMLElement>("[data-progress-step]")];
     }
     private get latestEvent() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-latest-event]")!;
+        return this.querySelector<HTMLElement>("[data-latest-event]")!;
     }
     private get trackingAction() {
-        return this.querySelector<HTMLElement>(':scope > [slot="tracking-action"][data-tracking-action]')!;
+        return this.querySelector<HTMLElement>("[data-tracking-action]")!;
     }
     private get trackingLink() {
-        return this.querySelector<HTMLAnchorElement>(':scope > [slot="tracking-action"] > a[data-tracking-link]')!;
+        return this.querySelector<HTMLAnchorElement>("[data-tracking-link]")!;
     }
     private get trackingNumber() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-tracking-number]")!;
+        return this.querySelector<HTMLElement>("[data-tracking-number]")!;
     }
     private get relayConfirmation() {
-        return this.shadowRoot!.querySelector<HTMLElement>("[data-relay-confirmation]")!;
+        return this.querySelector<HTMLElement>("[data-relay-confirmation]")!;
     }
 }
 
@@ -389,6 +431,16 @@ function clearPublicSourceImage(image: HTMLImageElement): void {
 function positiveImageDimension(value: unknown): number | null {
     const parsed = Number(value);
     return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+function badgeTone(value: string): string {
+    if (value === "progress") {
+        return "primary";
+    }
+    if (value === "pending") {
+        return "warning";
+    }
+    return value === "neutral" ? "info" : value;
 }
 
 type FinancialBreakdown = {
@@ -760,18 +812,6 @@ function routeUrl(template: string, values: Record<string, string>): string {
         template,
     );
 }
-function headers(value: HeadersInit | undefined): Record<string, string> {
-    if (!value) {
-        return {};
-    }
-    if (value instanceof Headers) {
-        return Object.fromEntries(value.entries());
-    }
-    if (Array.isArray(value)) {
-        return Object.fromEntries(value);
-    }
-    return value as Record<string, string>;
-}
 
 function publicErrorMessage(error: unknown, fallback: string): string {
     if (error instanceof PublicMessageError) {
@@ -779,10 +819,14 @@ function publicErrorMessage(error: unknown, fallback: string): string {
     }
     return fallback;
 }
-function responseMessage(body: unknown): string {
-    if (!body || typeof body !== "object" || Array.isArray(body)) {
-        return "";
+
+function record(value: unknown): RecordValue | null {
+    return value && typeof value === "object" && !Array.isArray(value) ? (value as RecordValue) : null;
+}
+
+function setFormValue(host: Element, name: string, value: string): void {
+    const input = host.querySelector<HTMLInputElement>(`[data-${name}-id]`);
+    if (input) {
+        input.value = value;
     }
-    const value = (body as RecordValue).error ?? (body as RecordValue).message;
-    return typeof value === "string" ? value.trim() : "";
 }

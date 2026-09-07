@@ -331,6 +331,61 @@ describe("commerce negotiation list buyer checkout", () => {
             globalThis.fetch = realFetch;
         }
     });
+
+    test("submits proposal decisions through the declared mutation source", async () => {
+        await defineList();
+        const realFetch = globalThis.fetch;
+        const realConfirm = window.confirm;
+        const requests: Array<{ path: string; method: string; body: Record<string, string | number> | null }> = [];
+        let currentProposal = {
+            ...acceptedProposal,
+            status: "pending",
+            viewerRole: "seller",
+            agreementId: null,
+            checkoutStatus: null,
+            acceptedAt: null,
+        };
+        globalThis.fetch = (input, init) => {
+            const url = new URL(String(input));
+            const method = init?.method || "GET";
+            const body = typeof init?.body === "string" ? JSON.parse(init.body) : null;
+            requests.push({ path: url.pathname, method, body });
+            if (method === "POST") {
+                currentProposal = {
+                    ...currentProposal,
+                    status: "accepted",
+                    acceptedAt: "2026-07-21T12:00:00.000Z",
+                };
+            }
+            return Promise.resolve(
+                Response.json(method === "POST" ? currentProposal : { items: [currentProposal], total: 1 }),
+            );
+        };
+        window.confirm = () => true;
+        const list = createList();
+        let accepted: unknown;
+        list.addEventListener("commerce-negotiation:accepted", (event) => {
+            accepted = (event as CustomEvent).detail;
+        });
+        try {
+            document.body.append(list);
+            await settleLifecycle();
+            list.querySelector<HTMLElement>('[data-action="accept"]')?.click();
+            await settleLifecycle();
+
+            expect(requests.find(({ method }) => method === "POST")).toEqual({
+                path: "/.cms/sources/commerce-negotiation/respondToProposal",
+                method: "POST",
+                body: { id: 7, expectedVersion: 2, action: "accept" },
+            });
+            expect((accepted as { status?: string } | undefined)?.status).toBe("accepted");
+            expect(list.querySelector("[data-status]")?.textContent).toBe("Accepted");
+        } finally {
+            list.remove();
+            window.confirm = realConfirm;
+            globalThis.fetch = realFetch;
+        }
+    });
 });
 
 const acceptedProposal = {
@@ -417,11 +472,60 @@ async function defineList(): Promise<void> {
 function createList(): HTMLElement {
     const list = document.createElement(tag);
     list.innerHTML = listTemplateHTML;
+    attachSourceTransport(list);
     list.setAttribute("locale", "fr-FR");
     list.setAttribute("offer-url", "/offer");
     list.setAttribute("checkout-url", "/checkout");
     list.setAttribute("order-url", "/orders");
     return list;
+}
+
+function attachSourceTransport(list: HTMLElement): void {
+    for (const form of list.querySelectorAll<HTMLFormElement>("form[cms-source]")) {
+        form.addEventListener("submit", (event) => {
+            event.preventDefault();
+            void submitSource(form);
+        });
+    }
+}
+
+async function submitSource(form: HTMLFormElement): Promise<void> {
+    const method = form.getAttribute("cms-source-method") || "GET";
+    const fields = [...form.querySelectorAll<HTMLInputElement>("input[name]")]
+        .filter((input) => !input.disabled)
+        .map(
+            (input) =>
+                [
+                    input.name,
+                    input.getAttribute("cms-form-value-type") === "number" ? Number(input.value) : input.value,
+                ] as const,
+        );
+    const url = new URL(form.getAttribute("cms-source")!, document.baseURI);
+    if (method === "GET") {
+        for (const [name, value] of fields) {
+            url.searchParams.append(name, String(value));
+        }
+    }
+    try {
+        const response = await globalThis.fetch(url, {
+            method,
+            ...(method === "GET"
+                ? {}
+                : {
+                      headers: { "content-type": "application/json" },
+                      body: JSON.stringify(Object.fromEntries(fields)),
+                  }),
+        });
+        const body = await response.json().catch(() => null);
+        form.dispatchEvent(
+            new CustomEvent(response.ok ? "cms-source:success" : "cms-source:failed", {
+                bubbles: true,
+                detail: { body, status: response.status },
+            }),
+        );
+    } catch (error) {
+        form.dispatchEvent(new CustomEvent("cms-source:failed", { bubbles: true, detail: { error } }));
+    }
 }
 
 async function settleLifecycle(): Promise<void> {

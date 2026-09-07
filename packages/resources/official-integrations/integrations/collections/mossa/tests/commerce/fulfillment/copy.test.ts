@@ -16,10 +16,10 @@ describe("Fulfillment failure copy", () => {
         document.body.append(bloc);
         await new Promise((resolve) => setTimeout(resolve, 0));
         expect(calls).toHaveLength(0);
-        expect(bloc.shadowRoot?.querySelector("[data-error-title]")?.textContent).toBe("Select a sale first");
-        expect(bloc.shadowRoot?.querySelector("[data-error-message]")?.textContent).toBe("A sale must be selected");
+        expect(bloc.querySelector("[data-error-title]")?.textContent).toBe("Select a sale first");
+        expect(bloc.querySelector("[data-error-message]")?.textContent).toBe("A sale must be selected");
         bloc.removeAttribute("error-title");
-        expect(bloc.shadowRoot?.querySelector("[data-error-title]")?.textContent).toBe("Shipment unavailable");
+        expect(bloc.querySelector("[data-error-title]")?.textContent).toBe("Shipment unavailable");
     });
 
     test("can override a provider failure and restore the safe default message", async () => {
@@ -28,7 +28,7 @@ describe("Fulfillment failure copy", () => {
         });
         document.body.append(bloc);
         await new Promise((resolve) => setTimeout(resolve, 0));
-        const message = bloc.shadowRoot?.querySelector("[data-error-message]");
+        const message = bloc.querySelector("[data-error-message]");
         expect(message?.textContent).toBe("The delivery service is temporarily unavailable. Try again shortly.");
         bloc.setAttribute("error-message", "Please retry shipment details later");
         expect(message?.textContent).toBe("Please retry shipment details later");
@@ -48,7 +48,7 @@ test("populated shipment labels retain handoff state while copy changes", async 
     bloc.setAttribute("carrier-scan-pending-message", "Awaiting carrier confirmation.");
     document.body.append(bloc);
     await new Promise((resolve) => setTimeout(resolve, 0));
-    const root = bloc.shadowRoot!;
+    const root = bloc;
     expect(root.querySelector("[data-fulfillment-copy=order-label]")!.textContent).toBe("Purchase");
     expect(root.querySelector("[data-status]")!.textContent).toBe("Parcel handed over");
     expect(root.querySelector("[data-latest]")!.textContent).toBe("Awaiting carrier confirmation.");

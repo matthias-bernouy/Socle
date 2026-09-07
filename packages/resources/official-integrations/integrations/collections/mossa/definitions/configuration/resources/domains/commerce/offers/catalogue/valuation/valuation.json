@@ -25,21 +25,11 @@
             "mossa/blocs/info-row",
             "mossa/blocs/panel",
             "mossa/blocs/search-input",
-            "mossa/blocs/section-header"
-        ]
-    },
-    "theme": {
-        "contract": "ulvia-theme@3",
-        "required": [
-            "primary-contrasted",
-            "primary-muted",
-            "radius-card",
-            "radius-sm",
-            "shadow-lg",
-            "surface-background",
-            "surface-border",
-            "surface-muted-text",
-            "surface-text"
+            "mossa/blocs/section-header",
+            "mossa/blocs/skeleton",
+            "mossa/blocs/stack",
+            "mossa/blocs/surface-card",
+            "mossa/blocs/valuation-controller"
         ]
     }
 }

@@ -1,0 +1,9 @@
+{
+    "internal": true,
+    "default-tag": "mossa-valuation-controller",
+    "bloc": "./Bloc.ts",
+    "meta": {
+        "title": "Mossa valuation controller",
+        "description": "Internal search and presentation controller for mossa-valuation."
+    }
+}

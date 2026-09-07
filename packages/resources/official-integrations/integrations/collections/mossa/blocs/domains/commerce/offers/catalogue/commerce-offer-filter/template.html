@@ -1,0 +1,13 @@
+<mossa-commerce-offer-filter-controller data-p9r-composition-controller>
+    <slot></slot>
+    <form
+        data-offer-filter-schema-source
+        cms-source="/.cms/sources/commerce/offerFilterSchema"
+        cms-source-trigger="submit"
+        cms-source-method="GET"
+        cms-source-inherit-query="false"
+        hidden
+    >
+        <input data-schema-category-input name="category" type="hidden">
+    </form>
+</mossa-commerce-offer-filter-controller>

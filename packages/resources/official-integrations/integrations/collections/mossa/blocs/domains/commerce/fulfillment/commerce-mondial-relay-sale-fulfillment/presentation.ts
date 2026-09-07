@@ -13,6 +13,7 @@ export function renderFulfillment(host, result, shipment, resetMessage = true) {
     host.status.textContent = awaitingCarrierScan
         ? host.text("handoff-declared-label", "Handoff declared")
         : statusLabel(status, host.text.bind(host));
+    host.status.setAttribute("tone", fulfillmentTone(status, awaitingCarrierScan));
     host.expedition.textContent = String(shipment?.expeditionNumber || "—");
     host.latest.textContent = publicEventLabel(shipment?.latestEventLabel, status, host.text.bind(host));
     host.createButton.textContent = host.text(
@@ -20,12 +21,15 @@ export function renderFulfillment(host, result, shipment, resetMessage = true) {
         status === "failed" ? "Try again" : "Create shipping label",
     );
     host.createButton.hidden = Boolean(shipment) && status !== "failed";
+    host.createButton.closest("form")?.toggleAttribute("hidden", host.createButton.hidden);
     host.labelButton.textContent = handoffDeclared
         ? host.text("redownload-label", "Download label again")
         : host.text("label-label", "Download label");
     host.labelButton.hidden = !shipment || status !== "label_ready" || carrierAccepted;
+    host.labelButton.closest("form")?.toggleAttribute("hidden", host.labelButton.hidden);
     host.handoffButton.textContent = host.text("handoff-label", "I handed off the parcel");
     host.handoffButton.hidden = status !== "label_ready" || handoffDeclared || carrierAccepted;
+    host.handoffButton.closest("form")?.toggleAttribute("hidden", host.handoffButton.hidden);
     syncLink(host.trackingLink, shipment?.trackingUrl, host.text("tracking-label", "Track parcel"));
     if (awaitingCarrierScan) {
         host.latest.textContent = host.text("carrier-scan-pending-message", "Waiting for the carrier's first scan.");
@@ -64,6 +68,7 @@ export function syncFulfillmentPresentation(host) {
 function syncLink(element, value, label) {
     const url = safeHttpUrl(value);
     element.hidden = !url;
+    element.closest("mossa-button")?.toggleAttribute("hidden", !url);
     element.textContent = label;
     if (url) {
         element.setAttribute("href", url);
@@ -72,4 +77,17 @@ function syncLink(element, value, label) {
     } else {
         element.removeAttribute("href");
     }
+}
+
+function fulfillmentTone(status, awaitingCarrierScan) {
+    if (["incident", "lost", "failed"].includes(status)) {
+        return "danger";
+    }
+    if (["available_for_pickup", "collected_by_recipient"].includes(status)) {
+        return "success";
+    }
+    if (awaitingCarrierScan || ["creating", "created", "label_ready"].includes(status)) {
+        return "warning";
+    }
+    return status ? "info" : "secondary";
 }
