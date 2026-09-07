@@ -30219,6 +30219,8 @@ p9r-token-input {
     <div slot="aside" class="w-detail-aside" data-aside><slot name="bound-aside"></slot></div>
     <slot name="aside-extra" slot="aside"></slot>
 </cms-shell-detail>
+
+<slot name="footer"></slot>
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail/index.ts
@@ -33592,7 +33594,6 @@ slot { display: contents; }
     }
     return response.json();
   }
-  var readSettings = (id2) => managementRequest(id2, "settings");
   var readHealth = (id2, refresh = false) => managementRequest(id2, "health", undefined, refresh);
 
   // src/components/admin/Resources/Dashboards/runtime/actions/endpoint.ts
@@ -42046,12 +42047,19 @@ details[open] > summary > .chevron {
     return view;
   }
 
+  // src/static/admin/_content/sources/_management/settings.html
+  var settings_default = `<p slot="source-status" cms-condition="!detailReady &amp;&amp; !$source.loaded &amp;&amp; !$source.empty &amp;&amp; !$source.error">Loading…</p>
+<p slot="source-status" cms-condition="$source.error">{{ $source.message }} <button type="button" data-settings-retry>Retry</button></p>
+<button type="button" slot="footer" data-management-action="apply-settings" cms-condition="settings.savedRevision != settings.appliedRevision">Retry applying configuration</button>
+<p slot="source-status" cms-condition="!detailReady &amp;&amp; $source.loaded || !detailReady &amp;&amp; $source.empty">No connection settings are available. <button type="button" data-settings-retry>Retry</button></p>
+`;
+
   // src/components/admin/Resources/Integrations/management/settings.ts
-  function renderSettings(root, fields, settings, save) {
+  function mountSettings(root, fields, installationId, save, apply) {
     const widget = {
       widget: "w-detail",
       id: "connection-settings",
-      source: { endpoint: "" },
+      source: { endpoint: "", itemPath: "values" },
       title: { path: "", fallback: "Connection" },
       actions: [{ label: "Save settings", id: "save-settings", tone: "primary" }],
       main: [{ id: "configuration", title: "Configuration", fields }]
@@ -42059,24 +42067,41 @@ details[open] > summary > .chevron {
     const editor = new DashboardWDetail;
     editor.configure(widget);
     editor.dataset.rowKey = "settings";
-    editor.setAttribute("cms-source", "");
-    editor.append(composeDetail(widget));
-    Hd(editor, settings.values);
+    editor.setAttribute("cms-source", `${route("/api/integrations/management/settings")}?id=${encodeURIComponent(installationId)} as settings`);
+    const reload = `integration:${encodeURIComponent(installationId)}:settings:reload`;
+    editor.setAttribute("cms-reload-on", reload);
+    const template6 = document.createElement("template");
+    template6.innerHTML = settings_default;
+    if (!apply) {
+      template6.content.querySelector("[data-management-action]").remove();
+    }
+    editor.append(template6.content.cloneNode(true), composeDetail(widget));
+    editor.addEventListener("click", (event) => {
+      const target2 = event.target;
+      if (target2?.closest("[data-settings-retry]")) {
+        editor.ownerDocument.dispatchEvent(new Event(reload));
+      } else if (target2?.closest("[data-management-action]")) {
+        apply?.();
+      }
+    });
     editor.addEventListener(WIDGET_ACTION_EVENT, (event) => {
       event.stopPropagation();
       const detail = event.detail;
-      if (detail.action !== "save-settings") {
+      const settings = Md(editor);
+      if (detail.action !== "save-settings" || !settings?.values) {
         return;
       }
+      const submitted = structuredClone(detail.fields ?? {});
       const values = structuredClone(settings.values);
       for (const field3 of fields) {
-        if (detail.fields && Object.hasOwn(detail.fields, field3.id)) {
-          setValueAt(values, field3.path, detail.fields[field3.id]);
+        if (Object.hasOwn(submitted, field3.id)) {
+          setValueAt(values, field3.path, submitted[field3.id]);
         }
       }
-      save(values);
+      save(editor, values, submitted);
     });
     root.replaceChildren(editor);
+    return editor;
   }
 
   // src/components/admin/Resources/Integrations/management/presentation/style.css
@@ -42144,7 +42169,6 @@ details[open] > summary > .chevron {
   class IntegrationManagementView extends HTMLElement {
     installation;
     management;
-    settings;
     busy = false;
     revision = 0;
     feedback;
@@ -42221,18 +42245,7 @@ details[open] > summary > .chevron {
           }
           root.replaceChildren(dashboard);
         } else if (this.management?.settings) {
-          this.settings = await readSettings(installation.id);
-          if (revision !== this.revision || !this.isConnected) {
-            return;
-          }
-          renderSettings(root, this.management.settings.fields, this.settings, (values) => void this.save(values));
-          if (this.management.settings.applyFunctionId && this.settings.savedRevision !== this.settings.appliedRevision) {
-            const apply = document.createElement("button");
-            apply.type = "button";
-            apply.textContent = "Retry applying configuration";
-            apply.addEventListener("click", () => void this.runAction("apply-settings"));
-            root.append(apply);
-          }
+          mountSettings(root, this.management.settings.fields, installation.id, (editor, values, submitted) => void this.save(editor, values, submitted), this.management.settings.applyFunctionId ? () => void this.runAction("apply-settings") : undefined);
         } else {
           root.textContent = "This source has no connection settings.";
         }
@@ -42242,21 +42255,27 @@ details[open] > summary > .chevron {
         }
       }
     }
-    async save(values) {
-      if (this.busy || !this.settings) {
+    async save(editor, values, submitted) {
+      const settings = Md(editor);
+      if (this.busy || !settings) {
         return;
       }
       this.setBusy(true);
       this.status("Saving settings…");
       try {
-        this.settings = await managementRequest(this.installation.id, "settings", {
+        const saved = await managementRequest(this.installation.id, "settings", {
           values,
-          expectedRevision: this.settings.savedRevision
+          expectedRevision: settings.savedRevision
         });
-        await this.showPanel();
-        this.status("Settings saved.");
+        if (this.isConnected && editor.isConnected && this.contains(editor)) {
+          editor.acknowledgeSavedFields(submitted);
+          Hd(editor, saved);
+          this.status("Settings saved.");
+        }
       } catch (error) {
-        this.status(error instanceof Error ? error.message : "Unable to save settings.");
+        if (this.isConnected && this.contains(editor)) {
+          this.status(error instanceof Error ? error.message : "Unable to save settings.");
+        }
       } finally {
         this.setBusy(false);
       }
@@ -42269,8 +42288,16 @@ details[open] > summary > .chevron {
       this.status("Applying configuration…");
       try {
         await managementRequest(this.installation.id, "action", { actionId, input: {} });
+        if (!this.isConnected) {
+          return;
+        }
         this.status("Action completed.");
-        await this.showPanel(true);
+        const reload = this.panel === "connection" ? this.querySelector("cms-dashboard-w-detail")?.getAttribute("cms-reload-on") : undefined;
+        if (reload) {
+          this.ownerDocument.dispatchEvent(new Event(reload));
+        } else {
+          await this.showPanel(true);
+        }
       } catch (error) {
         this.status(error instanceof Error ? error.message : "Action failed.");
       } finally {
@@ -42279,7 +42306,9 @@ details[open] > summary > .chevron {
     }
     setBusy(busy) {
       this.busy = busy;
-      this.querySelector("[data-management-content]")?.toggleAttribute("inert", busy);
+      for (const action of Array.from(this.querySelectorAll("[data-action], [data-management-action]"))) {
+        action.toggleAttribute("disabled", busy);
+      }
       this.toggleAttribute("aria-busy", busy);
     }
     status(message) {

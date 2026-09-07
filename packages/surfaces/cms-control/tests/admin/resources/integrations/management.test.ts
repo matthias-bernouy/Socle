@@ -1,7 +1,8 @@
+import { setSourceData } from "@bernouy/components";
 import { afterEach, expect, test } from "bun:test";
 import type { IntegrationHealthEnvelope } from "@bernouy/cms-integrations";
 import { renderHealth } from "cms-control/components/admin/Resources/Integrations/management/presentation/health";
-import { renderSettings } from "cms-control/components/admin/Resources/Integrations/management/settings";
+import { mountSettings } from "cms-control/components/admin/Resources/Integrations/management/settings";
 import { managementRequest } from "cms-control/components/admin/Resources/Integrations/management/api";
 import { executeEndpointAction } from "cms-control/components/admin/Resources/Dashboards/runtime/actions/endpoint";
 import { WIDGET_ACTION_EVENT } from "cms-control/components/admin/Resources/Dashboards/widgets/shared";
@@ -65,19 +66,20 @@ test("settings use DashboardField paths and preserve untouched nested values", (
     const root = document.createElement("div");
     document.body.append(root);
     let saved: unknown;
-    renderSettings(
+    const editor = mountSettings(
         root,
         [{ id: "currency", label: "Currency", path: "market.currency", type: "text" }],
-        {
-            values: { market: { currency: "EUR", country: "FR" }, hidden: 42 },
-            savedRevision: "2",
-            appliedRevision: "1",
-        },
-        (values) => {
+        "service",
+        (_editor, values) => {
             saved = values;
         },
     );
-    root.firstElementChild!.dispatchEvent(
+    setSourceData(editor, {
+        values: { market: { currency: "EUR", country: "FR" }, hidden: 42 },
+        savedRevision: "2",
+        appliedRevision: "1",
+    });
+    editor.dispatchEvent(
         new CustomEvent(WIDGET_ACTION_EVENT, {
             detail: { action: "save-settings", fields: { currency: "USD" } },
             bubbles: true,

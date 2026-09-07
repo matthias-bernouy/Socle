@@ -1,18 +1,19 @@
+import { readSourceData, setSourceData } from "@bernouy/components";
+import type { DashboardWDetail } from "../../Dashboards/widgets/w-detail/WDetail";
 import type { IntegrationManagement, IntegrationSettingsResponse } from "@bernouy/cms-integrations";
 import { getIntegrationInstallation } from "../api";
 import type { IntegrationInstallationDetail } from "../model";
-import { managementRequest, readHealth, readSettings } from "./api";
+import { managementRequest, readHealth } from "./api";
 import { renderCollectionSettings } from "./collections";
 import { renderHealth } from "./presentation/health";
 import { settingsDashboard } from "./dashboard";
-import { renderSettings } from "./settings";
+import { mountSettings } from "./settings";
 import { renderManagementShell } from "./presentation/shell";
 import { managementFeedback } from "./feedback";
 
 export class IntegrationManagementView extends HTMLElement {
     private installation?: IntegrationInstallationDetail;
     private management?: IntegrationManagement;
-    private settings?: IntegrationSettingsResponse;
     private busy = false;
     private revision = 0;
     private feedback?: ReturnType<typeof managementFeedback>;
@@ -94,26 +95,13 @@ export class IntegrationManagementView extends HTMLElement {
                 }
                 root.replaceChildren(dashboard);
             } else if (this.management?.settings) {
-                this.settings = await readSettings(installation.id);
-                if (revision !== this.revision || !this.isConnected) {
-                    return;
-                }
-                renderSettings(
+                mountSettings(
                     root,
                     this.management.settings.fields,
-                    this.settings,
-                    (values) => void this.save(values),
+                    installation.id,
+                    (editor, values, submitted) => void this.save(editor, values, submitted),
+                    this.management.settings.applyFunctionId ? () => void this.runAction("apply-settings") : undefined,
                 );
-                if (
-                    this.management.settings.applyFunctionId &&
-                    this.settings.savedRevision !== this.settings.appliedRevision
-                ) {
-                    const apply = document.createElement("button");
-                    apply.type = "button";
-                    apply.textContent = "Retry applying configuration";
-                    apply.addEventListener("click", () => void this.runAction("apply-settings"));
-                    root.append(apply);
-                }
             } else {
                 root.textContent = "This source has no connection settings.";
             }
@@ -123,21 +111,32 @@ export class IntegrationManagementView extends HTMLElement {
             }
         }
     }
-    private async save(values: Record<string, unknown>): Promise<void> {
-        if (this.busy || !this.settings) {
+    private async save(
+        editor: DashboardWDetail,
+        values: Record<string, unknown>,
+        submitted: Record<string, unknown>,
+    ): Promise<void> {
+        const settings = readSourceData(editor) as IntegrationSettingsResponse | undefined;
+        if (this.busy || !settings) {
             return;
         }
         this.setBusy(true);
         this.status("Saving settings…");
         try {
-            this.settings = await managementRequest(this.installation!.id, "settings", {
+            // Nested field paths, opaque metadata and revision checks require this typed operation.
+            const saved = await managementRequest<IntegrationSettingsResponse>(this.installation!.id, "settings", {
                 values,
-                expectedRevision: this.settings.savedRevision,
+                expectedRevision: settings.savedRevision,
             });
-            await this.showPanel();
-            this.status("Settings saved.");
+            if (this.isConnected && editor.isConnected && this.contains(editor)) {
+                editor.acknowledgeSavedFields(submitted);
+                setSourceData(editor, saved);
+                this.status("Settings saved.");
+            }
         } catch (error) {
-            this.status(error instanceof Error ? error.message : "Unable to save settings.");
+            if (this.isConnected && this.contains(editor)) {
+                this.status(error instanceof Error ? error.message : "Unable to save settings.");
+            }
         } finally {
             this.setBusy(false);
         }
@@ -150,8 +149,19 @@ export class IntegrationManagementView extends HTMLElement {
         this.status("Applying configuration…");
         try {
             await managementRequest(this.installation!.id, "action", { actionId, input: {} });
+            if (!this.isConnected) {
+                return;
+            }
             this.status("Action completed.");
-            await this.showPanel(true);
+            const reload =
+                this.panel === "connection"
+                    ? this.querySelector("cms-dashboard-w-detail")?.getAttribute("cms-reload-on")
+                    : undefined;
+            if (reload) {
+                this.ownerDocument.dispatchEvent(new Event(reload));
+            } else {
+                await this.showPanel(true);
+            }
         } catch (error) {
             this.status(error instanceof Error ? error.message : "Action failed.");
         } finally {
@@ -160,7 +170,11 @@ export class IntegrationManagementView extends HTMLElement {
     }
     private setBusy(busy: boolean): void {
         this.busy = busy;
-        this.querySelector<HTMLElement>("[data-management-content]")?.toggleAttribute("inert", busy);
+        for (const action of Array.from(
+            this.querySelectorAll<HTMLElement>("[data-action], [data-management-action]"),
+        )) {
+            action.toggleAttribute("disabled", busy);
+        }
         this.toggleAttribute("aria-busy", busy);
     }
     private status(message: string): void {

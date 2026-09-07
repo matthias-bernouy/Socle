@@ -1,6 +1,6 @@
 import type { Page } from "playwright";
 
-export async function installConnectionRoutes(page: Page, bundle: string, styles: string) {
+export async function installConnectionRoutes(page: Page, bundle: string, styles: string, long = false) {
     const writes: Array<{ values: Record<string, unknown>; expectedRevision: string }> = [];
     const requests: string[] = [];
     let settings = {
@@ -9,6 +9,10 @@ export async function installConnectionRoutes(page: Page, bundle: string, styles
         appliedRevision: "v1",
     };
     let failure = false;
+    let readFailure = false;
+    let needsApply = false;
+    const actions: string[] = [];
+    let pendingSave: Promise<void> | undefined;
     await page.route("http://cms.test/**", async (route) => {
         const request = route.request();
         const path = new URL(request.url()).pathname;
@@ -36,6 +40,7 @@ export async function installConnectionRoutes(page: Page, bundle: string, styles
                         management: {
                             schemaVersion: 1,
                             settings: {
+                                ...(needsApply ? { applyFunctionId: "apply" } : {}),
                                 readFunctionId: "read",
                                 saveFunctionId: "save",
                                 fields: [
@@ -51,6 +56,14 @@ export async function installConnectionRoutes(page: Page, bundle: string, styles
                                         ],
                                     },
                                     { id: "enabled", label: "Enabled", path: "enabled", type: "checkbox" },
+                                    ...(long
+                                        ? Array.from({ length: 24 }, (_, index) => ({
+                                              id: `extra${index}`,
+                                              label: `Extra ${index}`,
+                                              path: `extra${index}`,
+                                              type: "text",
+                                          }))
+                                        : []),
                                     { id: "notes", label: "Notes", path: "notes", type: "textarea" },
                                 ],
                             },
@@ -59,9 +72,15 @@ export async function installConnectionRoutes(page: Page, bundle: string, styles
                 },
             });
         } else if (path === "/api/integrations/management/settings") {
+            if (request.method() === "GET" && readFailure) {
+                readFailure = false;
+                await route.fulfill({ status: 503, json: { error: "Settings are temporarily unavailable." } });
+                return;
+            }
             if (request.method() === "POST") {
                 const body = request.postDataJSON();
                 writes.push(body);
+                await pendingSave;
                 if (failure) {
                     failure = false;
                     await route.fulfill({ status: 503, json: { error: "Please retry this save." } });
@@ -78,6 +97,10 @@ export async function installConnectionRoutes(page: Page, bundle: string, styles
                 };
             }
             await route.fulfill({ json: settings });
+        } else if (path === "/api/integrations/management/action") {
+            actions.push(request.postDataJSON().actionId);
+            settings.appliedRevision = settings.savedRevision;
+            await route.fulfill({ json: { values: {} } });
         } else if (path === "/api/integrations/management/health") {
             await route.fulfill({
                 json: {
@@ -96,6 +119,24 @@ export async function installConnectionRoutes(page: Page, bundle: string, styles
     return {
         writes,
         requests,
+        actions,
+        requireApply() {
+            needsApply = true;
+            settings.appliedRevision = "v0";
+        },
+        holdSave() {
+            let release!: () => void;
+            pendingSave = new Promise<void>((resolve) => {
+                release = resolve;
+            });
+            return () => {
+                pendingSave = undefined;
+                release();
+            };
+        },
+        failRead: () => {
+            readFailure = true;
+        },
         failSave: () => {
             failure = true;
         },

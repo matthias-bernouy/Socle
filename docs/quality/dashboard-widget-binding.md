@@ -1477,3 +1477,83 @@ completion of the operator/provider coverage matrix, real local persistence and
 cleanup, repeated timing/request review, the known example mobile overflow and
 final activation of the validated local runtime. No production or external
 provider operation was performed for this checkpoint.
+
+### Connection settings retain their bound editor during operations
+
+`mountSettings` now composes from `DashboardField` definitions and gives the
+existing detail a real settings read source with `itemPath: "values"`. It no
+longer receives a settings response to seed a newly rebuilt editor. The old
+`readSettings` wrapper and management controller's duplicate settings state are
+removed. Loading, read errors, empty responses, retry and pending application
+are declared in `sources/_management/settings.html`. A generic detail `footer`
+slot keeps the application button after the detail shell without a second
+response renderer.
+
+Saving captures submitted fields against the current source snapshot, preserves
+opaque/nested values and includes the expected revision. This typed POST remains
+an operation helper: the current source-body contract supports raw scalar,
+query-parameter and string-state bindings, not this arbitrary nested object
+snapshot and revision contract. Its result is applied with `setSourceData` after
+acknowledging only the submitted snapshot. There is no subsequent GET or panel
+replacement. Newer edits remain in the draft; input controls remain editable
+while action buttons prevent duplicate operations. Disconnected save responses
+cannot update a replacement management host or its feedback. Applying saved
+configuration refreshes the existing settings source and preserves unsaved fields.
+
+Checkpoint verification (under `/tmp/cmscore-widget-binding-20260907/`):
+
+- `management-settings-unit-final.log`: all 284 Control admin tests pass in 89
+  files. Existing settings path/payload and lifecycle tests use the new mount.
+- `management-settings-browser-isolated/results.json`: six passing Chromium
+  tests in four separate Bun processes. Connection flows cover validation,
+  failure/retry, canonical saves, reload, Health navigation, initial-read retry,
+  an empty response with retry, applying configuration without saving a draft,
+  and completion after a simulated client navigation replaces the host.
+- The long-form test runs at 1440 and 390 pixels: a double click produces one
+  POST, a newer country/notes draft survives its delayed response, and five
+  successive frames retain input focus, selection endpoints, ancestor scroll
+  positions and screen position. The second save uses the new revision; a full
+  reload returns the later saved values and preserved opaque metadata. It
+  asserts exactly one settings GET before these saves.
+- The same directory contains pending/saved long-form captures and four
+  before/after connection/readonly pairs. `pixels.json` reports all four pairs
+  pixel-identical; geometry assertions pass. Inspected images include the
+  desktop/mobile connection screen, mobile long-form selection during/after
+  saving, and the readonly desktop detail. The immutable starting bundle is
+  `management-before-bundle.js` from `34513b9b5`; an initial pre-edit run is in
+  `management-before-connection.log`.
+- Initial connection requests remain six in both versions. Ready timings in the
+  comparative logs are single observations, not performance improvement claims.
+  The saved source's eliminated extra GET is verified separately by assertion.
+- `management-settings-build-verified.log` passes the full build; the final
+  empty-state declaration correction is included by the successful Control
+  rebuild in `management-settings-empty-build.log`. Initial
+  `management-binding-start.log` and final `management-settings-quality-verified.log`
+  pass all eight checks, with unchanged UI contracts: 0 errors, 77 warnings and
+  11 information. No exemption or fanout error was introduced.
+
+Grouped browser execution again hits the previously documented harness problem.
+`management-settings-browser-page-creation.log` narrows this occurrence to
+`browser.newPage()` for the final mobile page, after all preceding page actions
+and closure complete. The test passes by itself; the complete same test set
+passes with the established per-file process isolation above. The grouped
+failures remain recorded, the underlying harness issue is not claimed fixed,
+and no timeout was increased. Temporary stage logging was removed.
+
+The empty-state E2E also caught unsupported grouping parentheses in an authored
+condition. The declaration now uses the existing AND/OR precedence directly;
+no binding-language extension was introduced.
+
+This is still an intermediate goal checkpoint. The management installation
+loader, Health renderer, embedded dashboard/collection branches, shell CSS in
+light DOM and definition/navigation relays remain to migrate. Full operator and
+provider coverage, actual local persistence/cleanup, repeated performance and
+overflow review, and final local-runtime activation remain open. All endpoint
+writes in this checkpoint were controlled browser fixtures; no production or
+external provider was changed.
+
+The existing management controller now has 186 lines (previously 172), producing
+an advisory file-size warning. Its operation guards and panel lifecycle remain
+together until the pending shell/Health migration removes those branches;
+splitting this temporary controller only to cross the threshold would obscure
+that work. This warning is retained deliberately.

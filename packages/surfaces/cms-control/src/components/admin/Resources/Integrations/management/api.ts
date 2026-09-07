@@ -1,4 +1,4 @@
-import type { IntegrationHealthEnvelope, IntegrationSettingsResponse } from "@bernouy/cms-integrations";
+import type { IntegrationHealthEnvelope } from "@bernouy/cms-integrations";
 import { route } from "../api";
 
 export async function managementRequest<T>(
@@ -24,6 +24,5 @@ export async function managementRequest<T>(
     }
     return response.json() as Promise<T>;
 }
-export const readSettings = (id: string) => managementRequest<IntegrationSettingsResponse>(id, "settings");
 export const readHealth = (id: string, refresh = false) =>
     managementRequest<IntegrationHealthEnvelope>(id, "health", undefined, refresh);
