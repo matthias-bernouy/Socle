@@ -167,6 +167,21 @@ test("page-owned bindings preserve navigation, filtered tables and detail hosts 
         expect(await lowerNode!.evaluate((node) => node.isConnected && node.matches(":focus"))).toBe(true);
         expect(await lowerInput.inputValue()).toBe("Keep this draft");
         expect(await page.evaluate(scrollPositions)).toEqual(positions);
+
+        await page.evaluate(() => {
+            const core = document.querySelector("cms-binding-core")!;
+            core.remove();
+            document.body.append(core);
+        });
+        await input.waitFor();
+        expect(await input.inputValue()).toBe("Updated item");
+        expect(await lowerInput.inputValue()).toBe("");
+        await input.fill("Saved after reconnect");
+        const reconnectedSave = page.waitForResponse((response) => response.url().endsWith("/save"));
+        await page.getByRole("button", { name: "Save item", exact: true }).click();
+        expect((await reconnectedSave).status()).toBe(200);
+        expect(resource.name).toBe("Saved after reconnect");
+        expect(saves).toBe(2);
         expect(errors).toEqual([]);
     } finally {
         release();

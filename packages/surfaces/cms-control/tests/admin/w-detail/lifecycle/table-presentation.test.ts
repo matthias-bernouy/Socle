@@ -1,3 +1,4 @@
+import { configureDetail, setSourceData, mountDetail } from "../../dashboards/detail/boundDetail";
 import { afterEach, describe, expect, test } from "bun:test";
 import { P9rInput, Button, Combobox, P9rSelect, TokenInput } from "@bernouy/components";
 import "../../../../src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail";
@@ -33,84 +34,78 @@ describe("dashboard detail widget actions", () => {
             })) as typeof fetch;
 
         const detail = document.createElement("cms-dashboard-w-detail");
-        detail.setAttribute(
-            "data-config-json",
-            JSON.stringify({
-                widget: "w-detail",
-                id: "productDetail",
-                source: { endpoint: "product", params: { id: "$selection.id" } },
-                title: { path: "title", fallback: "Product" },
-                main: [
-                    {
-                        id: "variants",
-                        title: "Variants",
-                        fields: [
-                            {
-                                id: "variantAxes",
-                                label: "Axes",
-                                path: "variantAxes",
-                                type: "table",
-                                editable: true,
-                                columns: [
-                                    { id: "label", label: "Label", path: "label", editable: true },
-                                    { id: "values", label: "Values", path: "values", editable: true, type: "tokens" },
-                                ],
+        configureDetail(detail, {
+            widget: "w-detail",
+            id: "productDetail",
+            source: { endpoint: "product", params: { id: "$selection.id" } },
+            title: { path: "title", fallback: "Product" },
+            main: [
+                {
+                    id: "variants",
+                    title: "Variants",
+                    fields: [
+                        {
+                            id: "variantAxes",
+                            label: "Axes",
+                            path: "variantAxes",
+                            type: "table",
+                            editable: true,
+                            columns: [
+                                { id: "label", label: "Label", path: "label", editable: true },
+                                { id: "values", label: "Values", path: "values", editable: true, type: "tokens" },
+                            ],
+                        },
+                        {
+                            id: "variantMatrix",
+                            label: "Matrix",
+                            path: "variantMatrix",
+                            type: "table",
+                            derive: {
+                                type: "cartesian",
+                                sourceField: "variantAxes",
+                                labelPath: "label",
+                                valuesPath: "values",
                             },
-                            {
-                                id: "variantMatrix",
-                                label: "Matrix",
-                                path: "variantMatrix",
-                                type: "table",
-                                derive: {
-                                    type: "cartesian",
-                                    sourceField: "variantAxes",
-                                    labelPath: "label",
-                                    valuesPath: "values",
-                                },
-                                columns: [
-                                    { id: "options", label: "Options", path: "options" },
-                                    { id: "title", label: "Variant", path: "title" },
-                                    { id: "status", label: "Status", path: "status" },
-                                ],
+                            columns: [
+                                { id: "options", label: "Options", path: "options" },
+                                { id: "title", label: "Variant", path: "title" },
+                                { id: "status", label: "Status", path: "status" },
+                            ],
+                        },
+                        {
+                            id: "brandId",
+                            label: "Brand",
+                            path: "brandId",
+                            type: "combobox",
+                            lookup: {
+                                endpoint: "brands",
+                                params: { q: "$search", limit: "20" },
+                                itemsPath: "items",
+                                valuePath: "id",
+                                labelPath: "name",
                             },
-                            {
-                                id: "brandId",
-                                label: "Brand",
-                                path: "brandId",
-                                type: "combobox",
-                                lookup: {
-                                    endpoint: "brands",
-                                    params: { q: "$search", limit: "20" },
-                                    itemsPath: "items",
-                                    valuePath: "id",
-                                    labelPath: "name",
-                                },
-                            },
-                        ],
-                    },
-                ],
-            }),
-        );
-        detail.setAttribute(
-            "data-source-json",
-            JSON.stringify({
-                id: 2,
-                title: "Racket",
-                brandId: "brand-1",
-                variantAxes: [{ label: "Grip size", values: ["L1", "L2"] }],
-                variantMatrix: [
-                    { options: "L1", title: "Grip size: L1", status: "inactive" },
-                    { options: "L2", title: "Grip size: L2", status: "inactive" },
-                ],
-            }),
-        );
+                        },
+                    ],
+                },
+            ],
+        });
+        setSourceData(detail, {
+            id: 2,
+            title: "Racket",
+            brandId: "brand-1",
+            variantAxes: [{ label: "Grip size", values: ["L1", "L2"] }],
+            variantMatrix: [
+                { options: "L1", title: "Grip size: L1", status: "inactive" },
+                { options: "L2", title: "Grip size: L2", status: "inactive" },
+            ],
+        });
         detail.setAttribute("data-row-key", "2");
         detail.setAttribute("data-source-id", "products");
 
-        document.body.append(detail);
-        await waitFor(() => Boolean(detail.shadowRoot!.querySelector("p9r-combobox option[value='brand-1']")));
+        await mountDetail(detail);
+        await waitFor(() => Boolean(detail.querySelector("p9r-combobox option[value='brand-1']")));
 
-        const matrix = detail.shadowRoot!.querySelectorAll("[data-field-control]")[1] as HTMLElement;
+        const matrix = detail.querySelectorAll("[data-field-control]")[1] as HTMLElement;
         const rows = Array.from(matrix.querySelectorAll("[data-table-row]"));
         expect(rows).toHaveLength(2);
         expect(rows.map((row) => row.textContent?.replace(/\s+/g, " ").trim())).toEqual([

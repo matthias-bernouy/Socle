@@ -1,3 +1,4 @@
+import { configureDetail, setSourceData, mountDetail } from "../../dashboards/detail/boundDetail";
 import { afterEach, describe, expect, test } from "bun:test";
 import { resetLookupTest } from "./lookupTestSetup";
 
@@ -6,7 +7,10 @@ afterEach(resetLookupTest);
 describe("dashboard detail widget actions", () => {
     test("keeps independent lookup options when a dependent lookup fails", async () => {
         globalThis.fetch = (async (input, init) => {
-            const request = new Request(input, init);
+            const request = new Request(
+                input instanceof Request ? input : new URL(String(input), window.location.href),
+                init,
+            );
             const url = new URL(request.url);
             if (url.pathname.endsWith("/products")) {
                 return Response.json({ items: [{ id: "product-1", title: "Racket", slug: "racket" }] });
@@ -18,60 +22,57 @@ describe("dashboard detail widget actions", () => {
         }) as typeof fetch;
 
         const detail = document.createElement("cms-dashboard-w-detail");
-        detail.setAttribute(
-            "data-config-json",
-            JSON.stringify({
-                widget: "w-detail",
-                id: "offerDetail",
-                source: { endpoint: "offer", params: { id: "$selection.id" } },
-                title: { path: "title", fallback: "Offer" },
-                main: [
-                    {
-                        id: "details",
-                        title: "Details",
-                        fields: [
-                            {
-                                id: "productId",
-                                label: "Product",
-                                path: "productId",
-                                type: "combobox",
-                                lookup: {
-                                    sourceId: "products",
-                                    endpoint: "products",
-                                    params: { q: "$search", limit: "20" },
-                                    itemsPath: "items",
-                                    valuePath: "id",
-                                    labelPath: "title",
-                                },
+        configureDetail(detail, {
+            widget: "w-detail",
+            id: "offerDetail",
+            source: { endpoint: "offer", params: { id: "$selection.id" } },
+            title: { path: "title", fallback: "Offer" },
+            main: [
+                {
+                    id: "details",
+                    title: "Details",
+                    fields: [
+                        {
+                            id: "productId",
+                            label: "Product",
+                            path: "productId",
+                            type: "combobox",
+                            lookup: {
+                                sourceId: "products",
+                                endpoint: "products",
+                                params: { q: "$search", limit: "20" },
+                                itemsPath: "items",
+                                valuePath: "id",
+                                labelPath: "title",
                             },
-                            {
-                                id: "variantId",
-                                label: "Variant",
-                                path: "variantId",
-                                type: "combobox",
-                                lookup: {
-                                    sourceId: "products",
-                                    endpoint: "variants",
-                                    params: { productId: "$field.productId", q: "$search", limit: "20" },
-                                    itemsPath: "items",
-                                    valuePath: "id",
-                                    labelPath: "title",
-                                },
+                        },
+                        {
+                            id: "variantId",
+                            label: "Variant",
+                            path: "variantId",
+                            type: "combobox",
+                            lookup: {
+                                sourceId: "products",
+                                endpoint: "variants",
+                                params: { productId: "$field.productId", q: "$search", limit: "20" },
+                                itemsPath: "items",
+                                valuePath: "id",
+                                labelPath: "title",
                             },
-                        ],
-                    },
-                ],
-            }),
-        );
-        detail.setAttribute("data-source-json", JSON.stringify({ id: "offer-1", productId: "", variantId: "" }));
+                        },
+                    ],
+                },
+            ],
+        });
+        setSourceData(detail, { id: "offer-1", productId: "", variantId: "" });
         detail.setAttribute("data-row-key", "offer-1");
         detail.setAttribute("data-source-id", "offers");
 
-        document.body.append(detail);
-        await waitFor(() => Boolean(detail.shadowRoot!.querySelector("p9r-combobox option[value='product-1']")));
+        await mountDetail(detail);
+        await waitFor(() => Boolean(detail.querySelector("p9r-combobox option[value='product-1']")));
 
-        expect(detail.shadowRoot!.querySelector("p9r-combobox option[value='product-1']")?.textContent).toBe("Racket");
-        expect(detail.shadowRoot!.querySelector("p9r-combobox option[value='variant-1']")).toBeNull();
+        expect(detail.querySelector("p9r-combobox option[value='product-1']")?.textContent).toBe("Racket");
+        expect(detail.querySelector("p9r-combobox option[value='variant-1']")).toBeNull();
     });
 
     test("keeps media items when lookup options rerender current fields", async () => {
@@ -81,73 +82,67 @@ describe("dashboard detail widget actions", () => {
             })) as typeof fetch;
 
         const detail = document.createElement("cms-dashboard-w-detail");
-        detail.setAttribute(
-            "data-config-json",
-            JSON.stringify({
-                widget: "w-detail",
-                id: "productDetail",
-                source: { endpoint: "product", params: { id: "$selection.id" } },
-                title: { path: "title", fallback: "Product" },
-                main: [
-                    {
-                        id: "media",
-                        title: "Media",
-                        fields: [
-                            {
-                                id: "media",
-                                label: "Media",
-                                path: "media",
-                                type: "media",
-                                multiple: true,
-                                item: {
-                                    idPath: "media.id",
-                                    urlPath: "media.url",
-                                    altPath: "media.alt",
-                                },
-                                actions: {
-                                    upload: { endpoint: "uploadProductImage", params: { productId: "$resource.id" } },
-                                },
+        configureDetail(detail, {
+            widget: "w-detail",
+            id: "productDetail",
+            source: { endpoint: "product", params: { id: "$selection.id" } },
+            title: { path: "title", fallback: "Product" },
+            main: [
+                {
+                    id: "media",
+                    title: "Media",
+                    fields: [
+                        {
+                            id: "media",
+                            label: "Media",
+                            path: "media",
+                            type: "media",
+                            multiple: true,
+                            item: {
+                                idPath: "media.id",
+                                urlPath: "media.url",
+                                altPath: "media.alt",
                             },
-                        ],
-                    },
-                    {
-                        id: "organization",
-                        title: "Organization",
-                        fields: [
-                            {
-                                id: "brandId",
-                                label: "Brand",
-                                path: "brandId",
-                                type: "combobox",
-                                lookup: {
-                                    endpoint: "brands",
-                                    params: { q: "$search", limit: "20" },
-                                    itemsPath: "items",
-                                    valuePath: "id",
-                                    labelPath: "name",
-                                },
+                            actions: {
+                                upload: { endpoint: "uploadProductImage", params: { productId: "$resource.id" } },
                             },
-                        ],
-                    },
-                ],
-            }),
-        );
-        detail.setAttribute(
-            "data-source-json",
-            JSON.stringify({
-                id: 2,
-                title: "Poster",
-                brandId: "brand-1",
-                media: [{ media: { id: 10, url: null, alt: "Poster front" } }],
-            }),
-        );
+                        },
+                    ],
+                },
+                {
+                    id: "organization",
+                    title: "Organization",
+                    fields: [
+                        {
+                            id: "brandId",
+                            label: "Brand",
+                            path: "brandId",
+                            type: "combobox",
+                            lookup: {
+                                endpoint: "brands",
+                                params: { q: "$search", limit: "20" },
+                                itemsPath: "items",
+                                valuePath: "id",
+                                labelPath: "name",
+                            },
+                        },
+                    ],
+                },
+            ],
+        });
+        setSourceData(detail, {
+            id: 2,
+            title: "Poster",
+            brandId: "brand-1",
+            media: [{ media: { id: 10, url: null, alt: "Poster front" } }],
+        });
         detail.setAttribute("data-row-key", "2");
         detail.setAttribute("data-source-id", "products");
 
-        document.body.append(detail);
-        await waitFor(() => Boolean(detail.shadowRoot!.querySelector("p9r-combobox option[value='brand-1']")));
+        await mountDetail(detail);
+        await waitFor(() => Boolean(detail.querySelector("p9r-combobox option[value='brand-1']")));
 
-        const media = detail.shadowRoot!.querySelector("cms-dashboard-w-media-field") as HTMLElement & {
+        const media = detail.querySelector("cms-dashboard-media-field") as HTMLElement & {
             items: Array<{ id: string; url: string; alt?: string }>;
         };
         expect(media.items).toEqual([

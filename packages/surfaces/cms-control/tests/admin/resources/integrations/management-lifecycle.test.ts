@@ -1,3 +1,4 @@
+import "../../dashboards/detail/boundDetail";
 import { afterEach, expect, test } from "bun:test";
 import "cms-control/components/admin/Resources/Integrations/management/IntegrationManagement";
 import { WIDGET_ACTION_EVENT } from "cms-control/components/admin/Resources/Dashboards/widgets/shared";
@@ -63,12 +64,14 @@ test("connection save reloads canonical settings, health reads never apply, and 
     }) as typeof fetch;
     const host = document.createElement("cms-integration-management");
     host.setAttribute("installation-id", "service");
-    document.body.append(host);
+    const core = document.createElement("cms-binding-core");
+    core.append(host);
+    document.body.append(core);
     await flush();
     await flush();
     expect(host.textContent).toContain("Deployment: success");
     const editor = host.querySelector("cms-dashboard-w-detail")!;
-    expect(editor.shadowRoot?.querySelector("[data-field-control='country']")?.getAttribute("value")).toBe("FR");
+    expect(editor.querySelector("[data-field-control='country']")?.getAttribute("value")).toBe("FR");
     editor.dispatchEvent(
         new CustomEvent(WIDGET_ACTION_EVENT, {
             detail: { action: "save-settings", fields: { country: "BE" } },
@@ -87,7 +90,7 @@ test("connection save reloads canonical settings, health reads never apply, and 
     expect(
         host
             .querySelector("cms-dashboard-w-detail")
-            ?.shadowRoot?.querySelector("[data-field-control='country']")
+            ?.querySelector("[data-field-control='country']")
             ?.getAttribute("value"),
     ).toBe("BE");
     expect(host.textContent).toContain("Settings saved.");
@@ -133,7 +136,9 @@ test("late settings responses do not replace the selected Health panel", async (
     }) as typeof fetch;
     const host = document.createElement("cms-integration-management");
     host.setAttribute("installation-id", "service");
-    document.body.append(host);
+    const core = document.createElement("cms-binding-core");
+    core.append(host);
+    document.body.append(core);
     await flush();
     host.querySelector<HTMLButtonElement>("[data-panel='health']")!.click();
     await flush();
@@ -170,7 +175,9 @@ test.each([
     }) as typeof fetch;
     const host = document.createElement("cms-integration-management");
     host.setAttribute("installation-id", "source");
-    document.body.append(host);
+    const core = document.createElement("cms-binding-core");
+    core.append(host);
+    document.body.append(core);
     await flush();
     expect(host.querySelector("[data-panel='connection']")?.textContent).toBe(label);
     expect(host.querySelector("[data-panel='health']")?.textContent).toBe("Health");

@@ -16,7 +16,7 @@ if (!customElements.get("p9r-select")) {
 }
 
 export function changeDetailInput(detail: HTMLElement, fieldId: string, value: string): void {
-    const control = detail.shadowRoot!.querySelector<HTMLElement & { shadowRoot: ShadowRoot }>(
+    const control = detail.querySelector<HTMLElement & { shadowRoot: ShadowRoot }>(
         `[data-field-control='${fieldId}']`,
     )!;
     const input = control.shadowRoot.querySelector("input")!;

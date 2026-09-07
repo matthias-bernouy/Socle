@@ -1,3 +1,4 @@
+import { configureDetail, setSourceData, mountDetail } from "../../dashboards/detail/boundDetail";
 import { afterEach, describe, expect, test } from "bun:test";
 import {
     WIDGET_ACTION_EVENT,
@@ -10,44 +11,41 @@ afterEach(resetActionTest);
 describe("dashboard detail widget actions", () => {
     test("keeps required blank fields in the form instead of submitting an invalid request", async () => {
         const detail = document.createElement("cms-dashboard-w-detail");
-        detail.setAttribute(
-            "data-config-json",
-            JSON.stringify({
-                widget: "w-detail",
-                id: "partnerDetail",
-                source: { endpoint: "partner" },
-                actions: [{ id: "savePartner", label: "Save partner", endpoint: { endpoint: "savePartner" } }],
-                main: [
-                    {
-                        id: "identity",
-                        title: "Identity",
-                        fields: [
-                            {
-                                id: "displayName",
-                                label: "Display name",
-                                path: "displayName",
-                                type: "text",
-                                required: true,
-                            },
-                        ],
-                    },
-                ],
-            }),
-        );
-        detail.setAttribute("data-source-json", JSON.stringify({ displayName: "" }));
+        configureDetail(detail, {
+            widget: "w-detail",
+            id: "partnerDetail",
+            source: { endpoint: "partner" },
+            actions: [{ id: "savePartner", label: "Save partner", endpoint: { endpoint: "savePartner" } }],
+            main: [
+                {
+                    id: "identity",
+                    title: "Identity",
+                    fields: [
+                        {
+                            id: "displayName",
+                            label: "Display name",
+                            path: "displayName",
+                            type: "text",
+                            required: true,
+                        },
+                    ],
+                },
+            ],
+        });
+        setSourceData(detail, { displayName: "" });
         detail.setAttribute("data-row-key", "__new__");
         const actions: WidgetActionDetail[] = [];
         detail.addEventListener(WIDGET_ACTION_EVENT, (event) =>
             actions.push((event as CustomEvent<WidgetActionDetail>).detail),
         );
-        document.body.append(detail);
+        await mountDetail(detail);
         await Promise.resolve();
 
-        const input = detail.shadowRoot!.querySelector("p9r-input") as HTMLElement & {
+        const input = detail.querySelector("p9r-input") as HTMLElement & {
             value: string;
             shadowRoot: ShadowRoot;
         };
-        const save = detail.shadowRoot!.querySelector("p9r-button") as HTMLElement;
+        const save = detail.querySelector("p9r-button") as HTMLElement;
         expect(input.getAttribute("label")).toBe("Display name");
         expect(input.hasAttribute("required")).toBeTrue();
         input.value = "   ";
@@ -67,35 +65,32 @@ describe("dashboard detail widget actions", () => {
 
     test("snapshots current field values when an action is clicked", async () => {
         const detail = document.createElement("cms-dashboard-w-detail");
-        detail.setAttribute(
-            "data-config-json",
-            JSON.stringify({
-                widget: "w-detail",
-                id: "productDetail",
-                source: { endpoint: "product" },
-                title: { path: "title", fallback: "Product" },
-                actions: [
-                    {
-                        id: "saveProduct",
-                        label: "Save product",
-                        tone: "primary",
-                        endpoint: {
-                            endpoint: "upsertProduct",
-                            params: { id: "$resource.id" },
-                            body: { title: "$field.title" },
-                        },
+        configureDetail(detail, {
+            widget: "w-detail",
+            id: "productDetail",
+            source: { endpoint: "product" },
+            title: { path: "title", fallback: "Product" },
+            actions: [
+                {
+                    id: "saveProduct",
+                    label: "Save product",
+                    tone: "primary",
+                    endpoint: {
+                        endpoint: "upsertProduct",
+                        params: { id: "$resource.id" },
+                        body: { title: "$field.title" },
                     },
-                ],
-                main: [
-                    {
-                        id: "details",
-                        title: "Details",
-                        fields: [{ id: "title", label: "Title", path: "title", type: "text" }],
-                    },
-                ],
-            }),
-        );
-        detail.setAttribute("data-source-json", JSON.stringify({ id: 2, title: "Initial title" }));
+                },
+            ],
+            main: [
+                {
+                    id: "details",
+                    title: "Details",
+                    fields: [{ id: "title", label: "Title", path: "title", type: "text" }],
+                },
+            ],
+        });
+        setSourceData(detail, { id: 2, title: "Initial title" });
         detail.setAttribute("data-row-key", "2");
 
         const actions: WidgetActionDetail[] = [];
@@ -103,15 +98,15 @@ describe("dashboard detail widget actions", () => {
             actions.push((event as CustomEvent<WidgetActionDetail>).detail);
         });
 
-        document.body.append(detail);
+        await mountDetail(detail);
         await Promise.resolve();
 
-        const input = detail.shadowRoot!.querySelector("p9r-input") as HTMLElement & { shadowRoot: ShadowRoot };
+        const input = detail.querySelector("p9r-input") as HTMLElement & { shadowRoot: ShadowRoot };
         const nativeInput = input.shadowRoot.querySelector("input")!;
         nativeInput.value = "Edited title";
         nativeInput.dispatchEvent(new Event("input", { bubbles: true }));
 
-        const save = detail.shadowRoot!.querySelector("p9r-button") as HTMLElement & { shadowRoot: ShadowRoot };
+        const save = detail.querySelector("p9r-button") as HTMLElement & { shadowRoot: ShadowRoot };
         expect(save.shadowRoot.querySelector("button")?.getAttribute("aria-label")).toBe("Save product");
         expect(save.getAttribute("color")).toBe("primary");
         expect(save.hasAttribute("tone")).toBeFalse();
@@ -124,48 +119,42 @@ describe("dashboard detail widget actions", () => {
 
     test("blocks actions for invalid whole-unit money and submits valid amounts as minor units", async () => {
         const detail = document.createElement("cms-dashboard-w-detail");
-        detail.setAttribute(
-            "data-config-json",
-            JSON.stringify({
-                widget: "w-detail",
-                id: "offerDetail",
-                source: { endpoint: "offer" },
-                actions: [{ id: "saveOffer", label: "Save", endpoint: { endpoint: "saveOffer" } }],
-                main: [
-                    {
-                        id: "pricing",
-                        title: "Pricing",
-                        fields: [
-                            {
-                                id: "amount",
-                                label: "Amount",
-                                path: "amount",
-                                type: "money",
-                                currencyPath: "currency",
-                                allowDecimals: { value: "$resource.wholeUnitPrices", equals: false },
-                            },
-                        ],
-                    },
-                ],
-            }),
-        );
-        detail.setAttribute(
-            "data-source-json",
-            JSON.stringify({ id: 1, amount: 1500, currency: "EUR", wholeUnitPrices: true }),
-        );
+        configureDetail(detail, {
+            widget: "w-detail",
+            id: "offerDetail",
+            source: { endpoint: "offer" },
+            actions: [{ id: "saveOffer", label: "Save", endpoint: { endpoint: "saveOffer" } }],
+            main: [
+                {
+                    id: "pricing",
+                    title: "Pricing",
+                    fields: [
+                        {
+                            id: "amount",
+                            label: "Amount",
+                            path: "amount",
+                            type: "money",
+                            currencyPath: "currency",
+                            allowDecimals: { value: "$resource.wholeUnitPrices", equals: false },
+                        },
+                    ],
+                },
+            ],
+        });
+        setSourceData(detail, { id: 1, amount: 1500, currency: "EUR", wholeUnitPrices: true });
         detail.setAttribute("data-row-key", "1");
         const actions: WidgetActionDetail[] = [];
         detail.addEventListener(WIDGET_ACTION_EVENT, (event) =>
             actions.push((event as CustomEvent<WidgetActionDetail>).detail),
         );
-        document.body.append(detail);
+        await mountDetail(detail);
         await Promise.resolve();
 
-        const input = detail.shadowRoot!.querySelector("p9r-input") as HTMLElement & {
+        const input = detail.querySelector("p9r-input") as HTMLElement & {
             value: string;
             shadowRoot: ShadowRoot;
         };
-        const save = detail.shadowRoot!.querySelector("p9r-button") as HTMLElement;
+        const save = detail.querySelector("p9r-button") as HTMLElement;
         input.value = "15,26";
         input.shadowRoot.querySelector("input")!.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
         save.click();
@@ -180,57 +169,51 @@ describe("dashboard detail widget actions", () => {
 
     test("includes a reordered list in the field draft submitted by an action", async () => {
         const detail = document.createElement("cms-dashboard-w-detail");
-        detail.setAttribute(
-            "data-config-json",
-            JSON.stringify({
-                widget: "w-detail",
-                id: "fieldDetail",
-                source: { endpoint: "field" },
-                actions: [{ id: "saveField", label: "Save field", endpoint: { endpoint: "saveField" } }],
-                main: [
-                    {
-                        id: "options",
-                        title: "Allowed values",
-                        fields: [
-                            {
-                                id: "options",
-                                label: "Allowed values",
-                                path: "options",
-                                type: "reorderable-list",
-                                itemKey: "id",
-                                positionPath: "position",
-                                fields: [
-                                    { id: "value", label: "Value", path: "value", required: true },
-                                    { id: "label", label: "Label", path: "label", required: true },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            }),
-        );
-        detail.setAttribute(
-            "data-source-json",
-            JSON.stringify({
-                options: [
-                    { id: "agency", value: "agency", label: "Agency", position: 0 },
-                    { id: "club", value: "club", label: "Club", position: 1 },
-                ],
-            }),
-        );
+        configureDetail(detail, {
+            widget: "w-detail",
+            id: "fieldDetail",
+            source: { endpoint: "field" },
+            actions: [{ id: "saveField", label: "Save field", endpoint: { endpoint: "saveField" } }],
+            main: [
+                {
+                    id: "options",
+                    title: "Allowed values",
+                    fields: [
+                        {
+                            id: "options",
+                            label: "Allowed values",
+                            path: "options",
+                            type: "reorderable-list",
+                            itemKey: "id",
+                            positionPath: "position",
+                            fields: [
+                                { id: "value", label: "Value", path: "value", required: true },
+                                { id: "label", label: "Label", path: "label", required: true },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        });
+        setSourceData(detail, {
+            options: [
+                { id: "agency", value: "agency", label: "Agency", position: 0 },
+                { id: "club", value: "club", label: "Club", position: 1 },
+            ],
+        });
         detail.setAttribute("data-row-key", "company");
         const actions: WidgetActionDetail[] = [];
         detail.addEventListener(WIDGET_ACTION_EVENT, (event) =>
             actions.push((event as CustomEvent<WidgetActionDetail>).detail),
         );
 
-        document.body.append(detail);
+        await mountDetail(detail);
         await Promise.resolve();
-        const list = detail.shadowRoot!.querySelector<HTMLElement>("cms-dashboard-w-reorderable-list")!;
-        const rows = list.shadowRoot!.querySelectorAll<HTMLElement>(".row");
+        const list = detail.querySelector<HTMLElement>("cms-dashboard-reorderable-field")!;
+        const rows = list.querySelectorAll<HTMLElement>(".row");
         rows[0]!.querySelector<HTMLElement>(".handle")!.dispatchEvent(new Event("dragstart", { bubbles: true }));
         rows[1]!.dispatchEvent(new Event("drop", { bubbles: true, cancelable: true }));
-        (detail.shadowRoot!.querySelector("p9r-button") as HTMLElement).click();
+        (detail.querySelector("p9r-button") as HTMLElement).click();
 
         expect(actions[0]?.fields?.options).toEqual([
             { id: "club", value: "club", label: "Club", position: 0 },
@@ -239,32 +222,38 @@ describe("dashboard detail widget actions", () => {
     });
 
     test("applies inline-created lookup options without rerendering", async () => {
+        globalThis.fetch = (async () => Response.json([])) as unknown as typeof fetch;
         const detail = document.createElement("cms-dashboard-w-detail") as HTMLElement & {
             applyLookupCreate: (fieldId: string, value: unknown, option: { value: string; label: string }) => void;
         };
-        detail.setAttribute(
-            "data-config-json",
-            JSON.stringify({
-                widget: "w-detail",
-                id: "productDetail",
-                source: { endpoint: "product" },
-                title: { path: "title", fallback: "Product" },
-                main: [
-                    {
-                        id: "organization",
-                        title: "Organization",
-                        fields: [{ id: "brandId", label: "Brand", path: "brandId", type: "combobox" }],
-                    },
-                ],
-            }),
-        );
-        detail.setAttribute("data-source-json", JSON.stringify({ id: 2, title: "Product", brandId: "" }));
+        configureDetail(detail, {
+            widget: "w-detail",
+            id: "productDetail",
+            source: { endpoint: "product" },
+            title: { path: "title", fallback: "Product" },
+            main: [
+                {
+                    id: "organization",
+                    title: "Organization",
+                    fields: [
+                        {
+                            id: "brandId",
+                            label: "Brand",
+                            path: "brandId",
+                            type: "combobox",
+                            lookup: { endpoint: "brands", valuePath: "id", labelPath: "name" },
+                        },
+                    ],
+                },
+            ],
+        });
+        setSourceData(detail, { id: 2, title: "Product", brandId: "" });
         detail.setAttribute("data-row-key", "2");
 
-        document.body.append(detail);
+        await mountDetail(detail);
         await Promise.resolve();
 
-        const combobox = detail.shadowRoot!.querySelector("p9r-combobox") as HTMLElement & {
+        const combobox = detail.querySelector("p9r-combobox") as HTMLElement & {
             value: string;
             shadowRoot: ShadowRoot;
         };

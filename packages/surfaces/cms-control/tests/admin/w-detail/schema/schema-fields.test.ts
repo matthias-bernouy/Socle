@@ -1,3 +1,4 @@
+import { setSourceData, mountDetail } from "../../dashboards/detail/boundDetail";
 import { afterEach, describe, expect, test } from "bun:test";
 import {
     WIDGET_ACTION_EVENT,
@@ -17,7 +18,9 @@ describe("dashboard dynamic schema fields", () => {
     test("loads, excludes, and submits bounded schema fields without losing metadata", async () => {
         const requests: Request[] = [];
         globalThis.fetch = (async (input, init) => {
-            requests.push(new Request(input, init));
+            requests.push(
+                new Request(input instanceof Request ? input : new URL(String(input), window.location.href), init),
+            );
             return Response.json({
                 fields: [
                     { fieldKey: "weight", label: "Weight", fieldType: "number", required: true, unit: "g" },
@@ -34,21 +37,21 @@ describe("dashboard dynamic schema fields", () => {
         detail.addEventListener(WIDGET_ACTION_EVENT, (event) => {
             actions.push((event as CustomEvent<WidgetActionDetail>).detail);
         });
-        document.body.append(detail);
+        await mountDetail(detail);
 
-        await waitForDetail(() => Boolean(detail.shadowRoot?.querySelector("[data-schema-key='weight']")));
+        await waitForDetail(() => Boolean(detail.querySelector("[data-schema-key='weight']")));
         expect(requests).toHaveLength(1);
         expect(requests[0]?.url).toContain("categoryId=9");
-        expect(detail.shadowRoot?.querySelector("[data-schema-key='grip']")).toBeNull();
-        expect(detail.shadowRoot?.querySelector("[data-schema-key='constructor']")).toBeNull();
-        expect(detail.shadowRoot?.querySelector(".detail-schema-unit")?.textContent).toBe("g");
+        expect(detail.querySelector("[data-schema-key='grip']")).toBeNull();
+        expect(detail.querySelector("[data-schema-key='constructor']")).toBeNull();
+        expect(detail.querySelector("[data-schema-unit]")?.textContent).toBe("g");
 
-        const weight = detail.shadowRoot!.querySelector("[data-schema-key='weight']") as HTMLElement & {
+        const weight = detail.querySelector("[data-schema-key='weight']") as HTMLElement & {
             value: string;
         };
         weight.value = "320";
         weight.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
-        detail.shadowRoot!.querySelector<HTMLButtonElement>("[data-action='save']")!.click();
+        detail.querySelector<HTMLButtonElement>("[data-action='save']")!.click();
 
         expect(actions[0]?.fields).toMatchObject({
             metadata: { weight: 320, grip: "L1", legacy: "preserved" },
@@ -61,13 +64,9 @@ describe("dashboard dynamic schema fields", () => {
             optionalText: null,
         });
 
-        detail
-            .shadowRoot!.querySelector<HTMLButtonElement>("[data-field-control='variantAxes'] [data-table-remove]")!
-            .click();
-        await waitForDetail(() => Boolean(detail.shadowRoot?.querySelector("[data-schema-key='grip']")));
-        expect(
-            (detail.shadowRoot!.querySelector("[data-schema-key='grip']") as HTMLElement & { value: string }).value,
-        ).toBe("L1");
+        detail.querySelector<HTMLButtonElement>("[data-field-control='variantAxes'] [data-table-remove]")!.click();
+        await waitForDetail(() => Boolean(detail.querySelector("[data-schema-key='grip']")));
+        expect((detail.querySelector("[data-schema-key='grip']") as HTMLElement & { value: string }).value).toBe("L1");
     });
 
     test("distinguishes schema failures and preserves the existing object", async () => {
@@ -77,11 +76,11 @@ describe("dashboard dynamic schema fields", () => {
         detail.addEventListener(WIDGET_ACTION_EVENT, (event) => {
             actions.push((event as CustomEvent<WidgetActionDetail>).detail);
         });
-        document.body.append(detail);
+        await mountDetail(detail);
 
-        await waitForDetail(() => Boolean(detail.shadowRoot?.querySelector(".detail-schema-status-error")));
-        expect(detail.shadowRoot?.textContent).toContain("Existing values are preserved");
-        detail.shadowRoot!.querySelector<HTMLButtonElement>("[data-action='save']")!.click();
+        await waitForDetail(() => Boolean(detail.querySelector("[data-schema-state='error']")));
+        expect(detail.textContent).toContain("Existing values are preserved");
+        detail.querySelector<HTMLButtonElement>("[data-action='save']")!.click();
 
         expect(actions[0]?.fields).toMatchObject({
             metadata: { weight: 300, grip: "L1", legacy: "preserved" },
@@ -91,39 +90,37 @@ describe("dashboard dynamic schema fields", () => {
     test("distinguishes an empty schema from a loading or failed schema", async () => {
         globalThis.fetch = (async () => Response.json({ fields: [] })) as unknown as typeof fetch;
         const detail = detailElement();
-        document.body.append(detail);
+        await mountDetail(detail);
 
-        await waitForDetail(() => Boolean(detail.shadowRoot?.querySelector(".detail-schema-status-empty")));
-        expect(detail.shadowRoot?.textContent).toContain("No dynamic fields are configured");
-        expect(detail.shadowRoot?.querySelector(".detail-schema-status-error")).toBeNull();
+        await waitForDetail(() => Boolean(detail.querySelector("[data-schema-state='empty']")));
+        expect(detail.textContent).toContain("No dynamic fields are configured");
+        expect(detail.querySelector("[data-schema-state='error']")).toBeNull();
     });
 
     test("does not render schema definitions from an obsolete resource", async () => {
         const responses = new Map<string, (response: Response) => void>();
         globalThis.fetch = (async (input: RequestInfo | URL) => {
-            const categoryId = new URL(String(input)).searchParams.get("categoryId") ?? "";
+            const categoryId = new URL(String(input), window.location.href).searchParams.get("categoryId") ?? "";
             return new Promise<Response>((resolve) => responses.set(categoryId, resolve));
         }) as unknown as typeof fetch;
         const detail = detailElement();
-        document.body.append(detail);
+        await mountDetail(detail);
         await waitForDetail(() => responses.has("9"));
 
-        detail.setAttribute(
-            "data-source-json",
-            JSON.stringify({
-                id: 43,
-                primaryCategoryId: 10,
-                metadata: {},
-                variantAxes: [],
-            }),
-        );
+        detail.dataset.rowKey = "43";
+        setSourceData(detail, {
+            id: 43,
+            primaryCategoryId: 10,
+            metadata: {},
+            variantAxes: [],
+        });
         await waitForDetail(() => responses.has("10"));
         responses.get("10")!(
             Response.json({
                 fields: [{ id: "current", label: "Current", type: "string" }],
             }),
         );
-        await waitForDetail(() => Boolean(detail.shadowRoot?.querySelector("[data-schema-key='current']")));
+        await waitForDetail(() => Boolean(detail.querySelector("[data-schema-key='current']")));
 
         responses.get("9")!(
             Response.json({
@@ -131,6 +128,6 @@ describe("dashboard dynamic schema fields", () => {
             }),
         );
         await new Promise((resolve) => setTimeout(resolve, 20));
-        expect(detail.shadowRoot?.querySelector("[data-schema-key='obsolete']")).toBeNull();
+        expect(detail.querySelector("[data-schema-key='obsolete']")).toBeNull();
     });
 });

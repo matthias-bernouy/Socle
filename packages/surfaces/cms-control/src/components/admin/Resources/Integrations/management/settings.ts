@@ -1,9 +1,9 @@
-import type { DashboardField } from "@bernouy/cms-dashboards";
+import type { DashboardField, DashboardWidget } from "@bernouy/cms-dashboards";
 import type { IntegrationSettingsResponse } from "@bernouy/cms-integrations";
-import { detailField } from "../../Dashboards/runtime/mapping/fields";
+import { setSourceData } from "@bernouy/components";
+import { composeDetail } from "../../Dashboards/widgets/w-detail/binding/composition";
 import { setValueAt } from "../../Dashboards/runtime/expressions";
-import type { DashboardWDetail } from "../../Dashboards/widgets/w-detail/WDetail";
-import "../../Dashboards/widgets/w-detail/WDetail";
+import { DashboardWDetail } from "../../Dashboards/widgets/w-detail/WDetail";
 import { WIDGET_ACTION_EVENT, type WidgetActionDetail } from "../../Dashboards/widgets/shared";
 
 export function renderSettings(
@@ -12,17 +12,20 @@ export function renderSettings(
     settings: IntegrationSettingsResponse,
     save: (values: Record<string, unknown>) => void,
 ): void {
-    const editor = document.createElement("cms-dashboard-w-detail") as DashboardWDetail;
-    editor.data = {
-        rowKey: "settings",
-        eyebrow: "",
-        title: "Connection",
-        aside: [],
-        actions: [{ label: "Save settings", action: "save-settings", tone: "primary" }],
-        main: [
-            { title: "Configuration", fields: fields.map((field) => detailField(field, settings.values, {}, {}, "")) },
-        ],
+    const widget: Extract<DashboardWidget, { widget: "w-detail" }> = {
+        widget: "w-detail",
+        id: "connection-settings",
+        source: { endpoint: "" },
+        title: { path: "", fallback: "Connection" },
+        actions: [{ label: "Save settings", id: "save-settings", tone: "primary" }],
+        main: [{ id: "configuration", title: "Configuration", fields }],
     };
+    const editor = new DashboardWDetail();
+    editor.configure(widget);
+    editor.dataset.rowKey = "settings";
+    editor.setAttribute("cms-source", "");
+    editor.append(composeDetail(widget));
+    setSourceData(editor, settings.values);
     editor.addEventListener(WIDGET_ACTION_EVENT, (event) => {
         event.stopPropagation();
         const detail = (event as CustomEvent<WidgetActionDetail>).detail;

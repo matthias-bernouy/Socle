@@ -1,45 +1,58 @@
-import type { DashboardLookup } from "../lookups/Lookup";
-import { boundSchemas } from "../controls/schema/binding/data";
-import { releaseMediaFiles } from "../../w-media-field/binding/files";
 import { readSourceData, refreshSourceContext } from "@bernouy/components";
-import { bindDetailContext } from "../binding/context";
-import { valueAt } from "../../../runtime/expressions";
 import { Component } from "@bernouy/components/base";
-import { fieldValues } from "../../../runtime/mapping";
+import { bindDetailContext } from "../binding/context";
+import { boundSchemas } from "../controls/schema/binding/data";
+import type { DashboardLookup } from "../lookups/Lookup";
+import { releaseMediaFiles } from "../../w-media-field/binding/files";
+import { valueAt } from "../../../runtime/expressions";
+import { detailData } from "../../../runtime/mapping";
+import { DetailEvents } from "../runtime/events";
+import { DetailFieldState, type DetailBinding, type DetailWidget } from "../runtime/fieldState";
+import type { WDetailData, WDetailField, WDetailSection } from "../types";
 import "../../w-section/WSection";
 import "cms-control/components/admin/Layout/ShellDetail/ShellDetail";
-import { applyLookupOption } from "../runtime/detailView";
-import { readDetailBinding, type DetailWidget, type DetailBinding } from "../runtime/fieldState";
-import schemaCss from "../runtime/schemas/style.css" with { type: "text" };
-import type { WDetailData, WDetailField, WDetailSection } from "../types";
-import baseCss from "./base.css" with { type: "text" };
-import controlsCss from "./controls.css" with { type: "text" };
-import { createDetailRuntime, DetailSyncScheduler, mapDetailData, type DetailRuntime } from "./runtime";
+import css from "./base.css" with { type: "text" };
 import template from "./template.html" with { type: "text" };
 
-const styles = [baseCss, controlsCss, schemaCss].join("\n") as unknown as string;
-
+/** Visual shell and local edit operations. The page binding owns response rendering. */
 export class DashboardWDetail extends Component {
     private configuration?: DetailWidget;
+    private readonly fields: DetailFieldState;
+    private readonly events: DetailEvents;
+
+    constructor() {
+        super({ css, template: template as unknown as string });
+        this.fields = new DetailFieldState(
+            this.shadowRoot!,
+            () => this.readBinding(),
+            () => this.operationData(),
+        );
+        this.events = new DetailEvents(
+            this,
+            this.fields,
+            () => this.operationData(),
+            () => refreshSourceContext(this),
+        );
+    }
+
     configure(widget: DetailWidget): void {
         this.configuration = widget;
-        if (!this.hasAttribute("data-declarative")) {
-            this.setAttribute("data-declarative", "");
-            bindDetailContext(
-                this,
-                widget,
-                (resource) => this.runtime.fields.draftForResource(resource),
-                () => this.runtime.fields.displayDraft,
-            );
-        }
+        this.setAttribute("data-declarative", "");
+        bindDetailContext(
+            this,
+            widget,
+            (resource) => this.fields.draftForResource(resource),
+            () => this.fields.displayDraft,
+        );
     }
+
     private readBinding(): DetailBinding | null {
         if (!this.configuration) {
-            return readDetailBinding(this.dataset);
+            return null;
         }
         const data = readSourceData(this);
         const resource = this.configuration.source.itemPath ? valueAt(data, this.configuration.source.itemPath) : data;
-        return resource === undefined || resource === null
+        return resource == null
             ? null
             : {
                   widget: this.configuration,
@@ -48,208 +61,77 @@ export class DashboardWDetail extends Component {
                   sourceId: this.dataset.sourceId ?? "",
               };
     }
-    private value: WDetailData = emptyDetailData();
-    private readonly runtime: DetailRuntime;
-    private readonly syncScheduler = new DetailSyncScheduler();
-    private mode: "bound" | "manual" = "bound";
-    private bindingRevision = 0;
 
-    constructor() {
-        super({ css: styles, template: template as unknown as string });
-        this.runtime = createDetailRuntime(this, this.shadowRoot!, {
-            readBinding: () => this.readBinding(),
-            data: () => {
-                const binding = this.hasAttribute("data-declarative") ? this.readBinding() : null;
-                return binding
-                    ? mapDetailData(
-                          this.runtime,
-                          binding.widget,
-                          binding.resource,
-                          binding.rowKey,
-                          this.runtime.fields.draft,
-                          binding.sourceId,
-                          boundSchemas(this),
-                      )
-                    : this.value;
-            },
-            setData: (value) => {
-                this.value = value;
-            },
-            render: () => this.render(),
-            isConnected: () => this.isConnected,
-            isBound: () => this.mode === "bound",
-            refreshConditionalFields: () => this.refreshConditionalFields(),
-        });
-    }
-
-    set data(value: WDetailData) {
-        this.mode = "manual";
-        this.syncScheduler.advanceLifecycle();
-        this.clearRuntimeState();
-        this.value = value;
-        if (this.isConnected) {
-            this.render();
-        }
+    private operationData(): WDetailData {
+        const binding = this.readBinding();
+        return binding
+            ? detailData(
+                  binding.widget,
+                  binding.resource,
+                  binding.rowKey,
+                  this.fields.draft,
+                  {},
+                  binding.sourceId,
+                  boundSchemas(this),
+              )
+            : { rowKey: "", eyebrow: "", title: "", actions: [], main: [], aside: [] };
     }
 
     applyLookupCreate(fieldId: string, value: unknown, option: { value: string; label: string }): void {
-        const control = this.runtime.fields.control(fieldId);
-        const field = control ? this.runtime.fields.find(fieldId) : undefined;
-        if (control && field) {
-            const lookup = control.closest<DashboardLookup>("cms-dashboard-lookup");
-            if (lookup) {
-                this.runtime.fields.record(fieldId, value);
-                lookup.acceptCreatedOption(option);
-                refreshSourceContext(this);
-                return;
-            }
-            applyLookupOption(control, value, option);
+        const control = this.fields.control(fieldId);
+        const lookup = control?.closest<DashboardLookup>("cms-dashboard-lookup");
+        if (lookup && this.fields.find(fieldId)) {
+            this.fields.record(fieldId, value);
+            lookup.acceptCreatedOption(option);
+            refreshSourceContext(this);
         }
     }
 
     acknowledgeSavedFields(fields: Record<string, unknown>): void {
-        this.runtime.fields.acknowledgeSavedFields(fields);
+        this.fields.acknowledgeSavedFields(fields);
     }
 
     restoreField(field: string, submitted: unknown, previous: unknown): void {
-        this.runtime.fields.restoreField(field, submitted, previous);
-        this.refreshConditionalFields();
+        this.fields.restoreField(field, submitted, previous);
+        refreshSourceContext(this);
     }
 
     applyFieldDraft(field: string, value: unknown): void {
-        this.runtime.fields.record(field, value);
-        this.refreshConditionalFields();
+        this.fields.record(field, value);
+        refreshSourceContext(this);
     }
 
     currentFieldValues(): Record<string, unknown> {
-        return this.runtime.fields.currentFields();
+        return this.fields.currentFields();
     }
 
-    static get observedAttributes(): string[] {
-        return ["data-config-json", "data-source-json", "data-row-key", "data-source-id"];
-    }
+    static observedAttributes = ["data-row-key", "data-source-id"];
 
     attributeChangedCallback(): void {
-        this.mode = "bound";
-        this.bindingRevision += 1;
-        this.scheduleBoundDataSync();
+        if (this.isConnected) {
+            this.syncScope();
+        }
     }
 
     override connectedCallback(): void {
-        this.syncScheduler.advanceLifecycle();
-        this.runtime.events.bind();
-        if (this.mode === "manual") {
-            this.render();
-        } else {
-            this.syncBoundData();
-        }
+        this.syncScope();
+        this.events.bind();
     }
 
     disconnectedCallback(): void {
+        this.events.unbind();
+        this.fields.clear();
         releaseMediaFiles(this);
-        this.syncScheduler.advanceLifecycle();
-        this.runtime.events.unbind();
-        this.resetState(true);
     }
 
-    private render(): void {
-        if (this.hasAttribute("data-declarative")) {
-            return;
-        }
-        this.runtime.view.render(this.value);
-    }
-
-    private refreshConditionalFields(): void {
-        if (this.hasAttribute("data-declarative")) {
-            refreshSourceContext(this);
-            return;
-        }
-        if (this.mode !== "bound") {
-            return;
-        }
-        const binding = this.readBinding();
-        if (!binding) {
-            return;
-        }
-        const previous = this.value;
-        const next = mapDetailData(
-            this.runtime,
-            binding.widget,
-            binding.resource,
-            this.value.rowKey,
-            this.runtime.fields.currentFields(),
-            this.dataset.sourceId ?? "",
+    private syncScope(): void {
+        this.fields.syncScope(
+            JSON.stringify([this.dataset.sourceId ?? "", this.configuration?.id, this.dataset.rowKey ?? ""]),
         );
-        this.value = next;
-        this.runtime.view.refresh(previous, next);
-    }
-
-    private syncBoundData(): void {
-        const binding = this.readBinding();
-        if (!binding) {
-            this.resetState();
-            return;
-        }
-        const { widget, resource, rowKey, sourceId } = binding;
-        const scopeKey = JSON.stringify([sourceId, widget.id, rowKey, this.bindingRevision]);
-        this.runtime.requests.syncScope(scopeKey);
-        this.runtime.fields.syncScope(scopeKey);
-        this.runtime.lookups.syncScope(scopeKey);
-        this.runtime.schemas.syncScope(scopeKey);
-        this.value = mapDetailData(
-            this.runtime,
-            widget,
-            resource,
-            rowKey,
-            this.runtime.fields.draft,
-            this.dataset.sourceId ?? "",
-        );
-        if (this.isConnected) {
-            this.render();
-        }
-        if (!sourceId || this.hasAttribute("data-declarative")) {
-            return;
-        }
-        const fields = fieldValues(widget, resource);
-        void this.runtime.lookups.load(widget, resource, rowKey, sourceId, fields, { useLatestFields: true });
-        void this.runtime.schemas.load(widget, resource, rowKey, sourceId, fields, { useLatestFields: true });
-    }
-
-    private scheduleBoundDataSync(): void {
-        this.syncScheduler.schedule(
-            () => this.isConnected,
-            () => this.mode === "bound",
-            () => this.invalidateRequests(),
-            () => this.syncBoundData(),
-        );
-    }
-
-    private invalidateRequests(): void {
-        this.runtime.lookups.clear();
-        this.runtime.schemas.clear();
-        this.runtime.requests.clear();
-    }
-
-    private clearRuntimeState(): void {
-        this.invalidateRequests();
-        this.runtime.fields.clear();
-    }
-
-    private resetState(forceRender = false): void {
-        this.clearRuntimeState();
-        this.value = emptyDetailData();
-        if (forceRender || this.isConnected) {
-            this.render();
-        }
     }
 }
 
 if (!customElements.get("cms-dashboard-w-detail")) {
     customElements.define("cms-dashboard-w-detail", DashboardWDetail);
 }
-
 export type { WDetailData, WDetailField, WDetailSection };
-
-function emptyDetailData(): WDetailData {
-    return { rowKey: "", eyebrow: "", title: "", actions: [], main: [], aside: [] };
-}

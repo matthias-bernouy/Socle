@@ -96,7 +96,8 @@ test("embedded table desktop/mobile references cover ready, empty and pending lo
                         );
                     }
                     if (width === 390 && state === "ready") {
-                        const scroller = mode === "before" ? axes : axes.locator(".table");
+                        const tableScroller = axes.locator(".table");
+                        const scroller = (await tableScroller.count()) ? tableScroller : axes;
                         await scroller.evaluate((node) => {
                             node.scrollLeft = node.scrollWidth;
                         });

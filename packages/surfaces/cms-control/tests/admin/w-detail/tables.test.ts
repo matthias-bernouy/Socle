@@ -1,3 +1,4 @@
+import { configureDetail, setSourceData, mountDetail } from "../dashboards/detail/boundDetail";
 import { afterEach, describe, expect, test } from "bun:test";
 import { P9rInput, Button, Combobox, P9rSelect, TokenInput } from "@bernouy/components";
 import "../../../src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail";
@@ -37,77 +38,71 @@ afterEach(() => {
 describe("dashboard detail widget actions", () => {
     test("preserves the right row and serializes nested paths after deletion", async () => {
         const detail = document.createElement("cms-dashboard-w-detail");
-        detail.setAttribute(
-            "data-config-json",
-            JSON.stringify({
-                widget: "w-detail",
-                id: "productDetail",
-                source: { endpoint: "product" },
-                title: { path: "title", fallback: "Product" },
-                actions: [
-                    {
-                        id: "saveProduct",
-                        label: "Save product",
-                        tone: "primary",
-                        endpoint: { endpoint: "upsertProduct", body: { variantAxes: "$field.variantAxes" } },
-                    },
-                ],
-                main: [
-                    {
-                        id: "variants",
-                        title: "Variants",
-                        fields: [
-                            {
-                                id: "variantAxes",
-                                label: "Axes",
-                                path: "variantAxes",
-                                type: "table",
-                                editable: true,
-                                addLabel: "Add axis",
-                                columns: [
-                                    { id: "label", label: "Label", path: "details.label", editable: true },
-                                    {
-                                        id: "values",
-                                        label: "Values",
-                                        path: "details.values",
-                                        editable: true,
-                                        type: "tokens",
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            }),
-        );
-        detail.setAttribute(
-            "data-source-json",
-            JSON.stringify({
-                id: 2,
-                title: "Product",
-                variantAxes: [
-                    { id: "grip", details: { label: "Grip size", values: ["L1", "L2"] }, audit: { owner: "first" } },
-                    { id: "weight", details: { label: "Weight", values: ["250"] }, audit: { owner: "second" } },
-                ],
-            }),
-        );
+        configureDetail(detail, {
+            widget: "w-detail",
+            id: "productDetail",
+            source: { endpoint: "product" },
+            title: { path: "title", fallback: "Product" },
+            actions: [
+                {
+                    id: "saveProduct",
+                    label: "Save product",
+                    tone: "primary",
+                    endpoint: { endpoint: "upsertProduct", body: { variantAxes: "$field.variantAxes" } },
+                },
+            ],
+            main: [
+                {
+                    id: "variants",
+                    title: "Variants",
+                    fields: [
+                        {
+                            id: "variantAxes",
+                            label: "Axes",
+                            path: "variantAxes",
+                            type: "table",
+                            editable: true,
+                            addLabel: "Add axis",
+                            columns: [
+                                { id: "label", label: "Label", path: "details.label", editable: true },
+                                {
+                                    id: "values",
+                                    label: "Values",
+                                    path: "details.values",
+                                    editable: true,
+                                    type: "tokens",
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        });
+        setSourceData(detail, {
+            id: 2,
+            title: "Product",
+            variantAxes: [
+                { id: "grip", details: { label: "Grip size", values: ["L1", "L2"] }, audit: { owner: "first" } },
+                { id: "weight", details: { label: "Weight", values: ["250"] }, audit: { owner: "second" } },
+            ],
+        });
 
         const actions: WidgetActionDetail[] = [];
         detail.addEventListener(WIDGET_ACTION_EVENT, (event) => {
             actions.push((event as CustomEvent<WidgetActionDetail>).detail);
         });
 
-        document.body.append(detail);
+        await mountDetail(detail);
         await Promise.resolve();
 
-        detail.shadowRoot!.querySelector<HTMLButtonElement>("[data-table-remove]")!.click();
-        const labelInput = detail.shadowRoot!.querySelector("p9r-input") as HTMLElement & { value: string };
-        const valuesInput = detail.shadowRoot!.querySelector("p9r-token-input") as HTMLElement & { value: string };
+        detail.querySelector<HTMLButtonElement>("[data-table-remove]")!.click();
+        const labelInput = detail.querySelector("p9r-input") as HTMLElement & { value: string };
+        const valuesInput = detail.querySelector("p9r-token-input") as HTMLElement & { value: string };
         labelInput.value = "Weight updated";
         valuesInput.value = "285, 300";
-        expect(detail.shadowRoot!.querySelector("[data-table-add]")?.textContent).toBe("Add axis");
+        expect(detail.querySelector("[data-table-add]")?.textContent).toBe("Add axis");
 
-        const save = detail.shadowRoot!.querySelector("p9r-button") as HTMLElement & { shadowRoot: ShadowRoot };
+        const save = detail.querySelector("p9r-button") as HTMLElement & { shadowRoot: ShadowRoot };
         save.shadowRoot.querySelector("button")!.click();
 
         expect(actions[0]?.fields).toEqual({

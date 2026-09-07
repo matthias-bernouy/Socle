@@ -1,3 +1,4 @@
+import { setSourceData, mountDetail } from "../../dashboards/detail/boundDetail";
 import { afterEach, describe, expect, test } from "bun:test";
 import {
     WIDGET_ACTION_EVENT,
@@ -31,20 +32,15 @@ describe("dashboard dynamic schema requirements", () => {
                 ],
             })) as unknown as typeof fetch;
         const detail = schemaDetailElement();
-        detail.setAttribute(
-            "data-source-json",
-            JSON.stringify({ id: null, primaryCategoryId: 9, metadata: {}, variantAxes: [] }),
-        );
+        setSourceData(detail, { id: null, primaryCategoryId: 9, metadata: {}, variantAxes: [] });
         const actions: WidgetActionDetail[] = [];
         detail.addEventListener(WIDGET_ACTION_EVENT, (event) => {
             actions.push((event as CustomEvent<WidgetActionDetail>).detail);
         });
-        document.body.append(detail);
+        await mountDetail(detail);
 
-        await waitForDetail(() => Boolean(detail.shadowRoot?.querySelector("[data-schema-key='condition']")));
-        const condition = detail.shadowRoot!.querySelector<HTMLElement & { value: string }>(
-            "[data-schema-key='condition']",
-        )!;
+        await waitForDetail(() => Boolean(detail.querySelector("[data-schema-key='condition']")));
+        const condition = detail.querySelector<HTMLElement & { value: string }>("[data-schema-key='condition']")!;
         const placeholder = condition.querySelector<HTMLOptionElement>("option");
         let focused = false;
         condition.focus = () => {
@@ -63,7 +59,7 @@ describe("dashboard dynamic schema requirements", () => {
             placeholderDisabled: true,
         });
 
-        detail.shadowRoot!.querySelector<HTMLElement>("[data-action='save']")!.click();
+        detail.querySelector<HTMLElement>("[data-action='save']")!.click();
 
         expect(actions).toEqual([]);
         expect(focused).toBeTrue();
@@ -75,7 +71,7 @@ describe("dashboard dynamic schema requirements", () => {
 
         expect(condition.hasAttribute("invalid")).toBeFalse();
         expect(condition.hasAttribute("hint")).toBeFalse();
-        detail.shadowRoot!.querySelector<HTMLElement>("[data-action='save']")!.click();
+        detail.querySelector<HTMLElement>("[data-action='save']")!.click();
         expect(actions[0]?.fields).toMatchObject({ metadata: { condition: "used" } });
     });
 
@@ -85,23 +81,20 @@ describe("dashboard dynamic schema requirements", () => {
                 fields: [{ fieldKey: "refurbished", label: "Refurbished", fieldType: "boolean", required: true }],
             })) as unknown as typeof fetch;
         const detail = schemaDetailElement();
-        detail.setAttribute(
-            "data-source-json",
-            JSON.stringify({ id: null, primaryCategoryId: 9, metadata: {}, variantAxes: [] }),
-        );
+        setSourceData(detail, { id: null, primaryCategoryId: 9, metadata: {}, variantAxes: [] });
         const actions: WidgetActionDetail[] = [];
         detail.addEventListener(WIDGET_ACTION_EVENT, (event) => {
             actions.push((event as CustomEvent<WidgetActionDetail>).detail);
         });
-        document.body.append(detail);
+        await mountDetail(detail);
 
-        await waitForDetail(() => Boolean(detail.shadowRoot?.querySelector("[data-schema-key='refurbished']")));
-        const checkbox = detail.shadowRoot!.querySelector<HTMLInputElement>("[data-schema-key='refurbished']")!;
-        expect(checkbox.closest("label")?.textContent).toBe("Refurbished");
+        await waitForDetail(() => Boolean(detail.querySelector("[data-schema-key='refurbished']")));
+        const checkbox = detail.querySelector<HTMLInputElement>("[data-schema-key='refurbished']")!;
+        expect(checkbox.closest("label")?.textContent?.trim()).toBe("Refurbished");
         expect(checkbox.closest("label")?.hasAttribute("data-required")).toBeTrue();
         expect(checkbox.checked).toBeFalse();
 
-        detail.shadowRoot!.querySelector<HTMLElement>("[data-action='save']")!.click();
+        detail.querySelector<HTMLElement>("[data-action='save']")!.click();
 
         expect(actions[0]?.fields).toMatchObject({ metadata: { refurbished: false } });
     });

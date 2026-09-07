@@ -1,3 +1,4 @@
+import { configureDetail, setSourceData, mountDetail } from "../../dashboards/detail/boundDetail";
 import { afterEach, describe, expect, test } from "bun:test";
 import { changeDetailInput, waitForDetail } from "../../dashboards/detail/detailTestHelpers";
 
@@ -12,7 +13,10 @@ describe("dashboard targeted lookup failures", () => {
     test("preserves valid options after a failed refresh and retries", async () => {
         const requests: Request[] = [];
         globalThis.fetch = (async (input, init) => {
-            const request = new Request(input, init);
+            const request = new Request(
+                input instanceof Request ? input : new URL(String(input), window.location.href),
+                init,
+            );
             requests.push(request);
             const url = new URL(request.url);
             if (url.pathname.endsWith("/countries")) {
@@ -25,21 +29,16 @@ describe("dashboard targeted lookup failures", () => {
             return Response.json({ items: [{ id: "relay-1", label }] });
         }) as typeof fetch;
         const detail = detailElement();
-        document.body.append(detail);
-        await waitForDetail(
-            () => detail.shadowRoot?.querySelector("option[value='relay-1']")?.textContent === "Relay initial",
-        );
+        await mountDetail(detail);
+        await waitForDetail(() => detail.querySelector("option[value='relay-1']")?.textContent === "Relay initial");
 
         changeDetailInput(detail, "postalCode", "75001");
         await waitForDetail(() => requests.length === 3, 80);
         await new Promise((resolve) => setTimeout(resolve, 10));
-        expect(detail.shadowRoot?.querySelector("option[value='relay-1']")?.textContent).toBe("Relay initial");
+        expect(detail.querySelector("option[value='relay-1']")?.textContent).toBe("Relay initial");
 
         changeDetailInput(detail, "postalCode", "75002");
-        await waitForDetail(
-            () => detail.shadowRoot?.querySelector("option[value='relay-1']")?.textContent === "Relay updated",
-            80,
-        );
+        await waitForDetail(() => detail.querySelector("option[value='relay-1']")?.textContent === "Relay updated", 80);
         const paths = requests.map((request) => new URL(request.url).pathname);
         expect(paths.filter((path) => path.endsWith("/countries"))).toHaveLength(1);
         expect(paths.filter((path) => path.endsWith("/relayPoints"))).toHaveLength(3);
@@ -48,7 +47,7 @@ describe("dashboard targeted lookup failures", () => {
     test("does not abort an independent lookup while a dependency changes", async () => {
         const signals = new Map<string, AbortSignal>();
         globalThis.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
-            const path = new URL(String(input)).pathname;
+            const path = new URL(String(input), window.location.href).pathname;
             const signal = init?.signal;
             if (signal) {
                 signals.set(path, signal);
@@ -58,63 +57,60 @@ describe("dashboard targeted lookup failures", () => {
             });
         }) as unknown as typeof fetch;
         const detail = detailElement();
-        document.body.append(detail);
+        await mountDetail(detail);
         await waitForDetail(() => signals.size === 2);
 
         changeDetailInput(detail, "postalCode", "75001");
         const countrySignal = [...signals].find(([path]) => path.endsWith("/countries"))?.[1];
         const relaySignal = [...signals].find(([path]) => path.endsWith("/relayPoints"))?.[1];
 
-        expect(relaySignal?.aborted).toBeTrue();
+        await waitForDetail(() => relaySignal?.aborted === true);
         expect(countrySignal?.aborted).toBeFalse();
     });
 });
 
 function detailElement(): HTMLElement {
     const detail = document.createElement("cms-dashboard-w-detail");
-    detail.setAttribute(
-        "data-config-json",
-        JSON.stringify({
-            widget: "w-detail",
-            id: "shipment",
-            source: { endpoint: "shipment" },
-            main: [
-                {
-                    id: "main",
-                    title: "Shipment",
-                    fields: [
-                        { id: "postalCode", label: "Postal code", path: "postalCode", type: "text" },
-                        {
-                            id: "country",
-                            label: "Country",
-                            path: "country",
-                            type: "combobox",
-                            lookup: {
-                                endpoint: "countries",
-                                itemsPath: "items",
-                                valuePath: "id",
-                                labelPath: "label",
-                            },
+    configureDetail(detail, {
+        widget: "w-detail",
+        id: "shipment",
+        source: { endpoint: "shipment" },
+        main: [
+            {
+                id: "main",
+                title: "Shipment",
+                fields: [
+                    { id: "postalCode", label: "Postal code", path: "postalCode", type: "text" },
+                    {
+                        id: "country",
+                        label: "Country",
+                        path: "country",
+                        type: "combobox",
+                        lookup: {
+                            endpoint: "countries",
+                            itemsPath: "items",
+                            valuePath: "id",
+                            labelPath: "label",
                         },
-                        {
-                            id: "relayId",
-                            label: "Relay",
-                            path: "relayId",
-                            type: "combobox",
-                            lookup: {
-                                endpoint: "relayPoints",
-                                params: { postalCode: "$field.postalCode" },
-                                itemsPath: "items",
-                                valuePath: "id",
-                                labelPath: "label",
-                            },
+                    },
+                    {
+                        id: "relayId",
+                        label: "Relay",
+                        path: "relayId",
+                        type: "combobox",
+                        lookup: {
+                            endpoint: "relayPoints",
+                            params: { postalCode: "$field.postalCode" },
+                            itemsPath: "items",
+                            valuePath: "id",
+                            labelPath: "label",
                         },
-                    ],
-                },
-            ],
-        }),
-    );
+                    },
+                ],
+            },
+        ],
+    });
     detail.setAttribute("data-source-id", "delivery");
-    detail.setAttribute("data-source-json", JSON.stringify({ postalCode: "75000", country: "FR", relayId: "relay-1" }));
+    setSourceData(detail, { postalCode: "75000", country: "FR", relayId: "relay-1" });
     return detail;
 }

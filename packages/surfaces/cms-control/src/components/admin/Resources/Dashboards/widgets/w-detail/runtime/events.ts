@@ -12,8 +12,6 @@ import { serializedTableRows } from "../controls/table/context";
 import { readFieldControlDraft, readFieldControlValue } from "../controls";
 import type { WDetailData } from "../types";
 import { DetailFieldState } from "./fieldState";
-import { DetailLookups } from "./lookups";
-import { DetailSchemasState } from "./schemas";
 import { addTableRow, removeTableRow, toggleChip, updateDerivedTables } from "./tableValues";
 
 export class DetailEvents {
@@ -21,11 +19,7 @@ export class DetailEvents {
 
     constructor(
         private readonly host: HTMLElement,
-        private root: ShadowRoot | HTMLElement,
         private readonly fields: DetailFieldState,
-        private readonly lookups: DetailLookups,
-        private readonly schemas: DetailSchemasState,
-        private readonly isBound: () => boolean,
         private readonly readData: () => WDetailData,
         private readonly refreshConditionalFields: () => void,
     ) {}
@@ -34,27 +28,20 @@ export class DetailEvents {
         if (this.bound) {
             return;
         }
-        if (this.host.hasAttribute("data-declarative")) {
-            this.root = this.host;
-        }
-        this.root.addEventListener("click", this.onClick);
-        this.root.addEventListener("focusin", this.onFocusIn);
-        this.root.addEventListener("input", this.onInput);
-        this.root.addEventListener("change", this.onChange);
-        this.root.addEventListener("combobox-search", this.onComboboxSearch as EventListener);
-        this.root.addEventListener("combobox-load-more", this.onComboboxLoadMore);
-        this.root.addEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction as EventListener);
+        this.host.addEventListener("click", this.onClick);
+        this.host.addEventListener("focusin", this.onFocusIn);
+        this.host.addEventListener("input", this.onInput);
+        this.host.addEventListener("change", this.onChange);
+        this.host.addEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction as EventListener);
         this.bound = true;
     }
 
     unbind(): void {
-        this.root.removeEventListener("click", this.onClick);
-        this.root.removeEventListener("focusin", this.onFocusIn);
-        this.root.removeEventListener("input", this.onInput);
-        this.root.removeEventListener("change", this.onChange);
-        this.root.removeEventListener("combobox-search", this.onComboboxSearch as EventListener);
-        this.root.removeEventListener("combobox-load-more", this.onComboboxLoadMore);
-        this.root.removeEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction as EventListener);
+        this.host.removeEventListener("click", this.onClick);
+        this.host.removeEventListener("focusin", this.onFocusIn);
+        this.host.removeEventListener("input", this.onInput);
+        this.host.removeEventListener("change", this.onChange);
+        this.host.removeEventListener(W_MEDIA_FIELD_ACTION_EVENT, this.onMediaAction as EventListener);
         this.bound = false;
     }
 
@@ -82,7 +69,7 @@ export class DetailEvents {
                 detail: true,
                 widget: action.dataset.widget ?? this.host.dataset.widgetId,
                 row: data.rowKey,
-                resource: this.isBound() ? this.fields.currentResource() : undefined,
+                resource: this.fields.currentResource(),
                 fields: this.fields.submissionFields(),
             });
         }
@@ -100,7 +87,7 @@ export class DetailEvents {
             removeTableRow(tableRemove, this.fields, (control, draft) => this.emitFieldChange(control, false, draft));
         }
         if (changedControl) {
-            this.afterFieldChange(changedControl.dataset.fieldControl ?? "");
+            this.afterFieldChange();
         }
     };
 
@@ -111,7 +98,7 @@ export class DetailEvents {
     private onInput = (event: Event): void => {
         const control = findEventTarget(event, "[data-field-control]");
         const field = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
-        if (field?.input === "schema" && this.host.hasAttribute("data-declarative")) {
+        if (field?.input === "schema") {
             updateSchemaControl(field, event);
         }
         if (control && field?.input === "table") {
@@ -123,20 +110,16 @@ export class DetailEvents {
         if (control) {
             this.fields.refreshRequiredValidity(control);
         }
-        if (control && field && this.host.hasAttribute("data-declarative")) {
+        if (control && field) {
             this.fields.record(
                 field.id,
                 readFieldControlDraft(field, control),
                 this.displayValue(field.input, control),
             );
         }
-        if (field && this.host.hasAttribute("data-declarative")) {
+        if (field) {
             this.refreshConditionalFields();
             return;
-        }
-        if (field && this.isBound()) {
-            this.lookups.schedule(field.id);
-            this.schemas.schedule(field.id);
         }
     };
 
@@ -146,28 +129,13 @@ export class DetailEvents {
             return;
         }
         const field = this.fields.find(control.dataset.fieldControl ?? "");
-        if (field?.input === "schema" && this.host.hasAttribute("data-declarative")) {
+        if (field?.input === "schema") {
             updateSchemaControl(field, event);
         }
         this.fields.refreshRequiredValidity(control);
         this.emitFieldChange(control, Boolean((event as CustomEvent<{ created?: boolean }>).detail?.created));
         updateDerivedTables(control.dataset.fieldControl ?? "", this.fields);
-        this.afterFieldChange(control.dataset.fieldControl ?? "");
-    };
-
-    private onComboboxSearch = (event: CustomEvent<{ query?: unknown }>): void => {
-        const control = findEventTarget(event, "[data-lookup-target]");
-        const query = typeof event.detail?.query === "string" ? event.detail.query.slice(0, 200) : "";
-        if (control?.dataset.lookupTarget) {
-            this.lookups.search(control.dataset.lookupTarget, query, control);
-        }
-    };
-
-    private onComboboxLoadMore = (event: Event): void => {
-        const control = findEventTarget(event, "[data-lookup-target]");
-        if (control?.dataset.lookupTarget) {
-            this.lookups.loadMore(control.dataset.lookupTarget, control);
-        }
+        this.afterFieldChange();
     };
 
     private onMediaAction = (event: CustomEvent<DashboardMediaActionDetail>): void => {
@@ -203,11 +171,7 @@ export class DetailEvents {
         });
     };
 
-    private afterFieldChange(fieldId: string): void {
-        if (this.isBound() && !this.host.hasAttribute("data-declarative")) {
-            this.lookups.schedule(fieldId);
-            this.schemas.schedule(fieldId);
-        }
+    private afterFieldChange(): void {
         this.refreshConditionalFields();
     }
 
@@ -219,11 +183,7 @@ export class DetailEvents {
         const control = target?.closest<HTMLElement>("[data-field-control]");
         const field = control ? this.fields.find(control.dataset.fieldControl ?? "") : undefined;
         if (field?.input === "cms-user") {
-            if (this.host.hasAttribute("data-declarative")) {
-                this.host.querySelector<DashboardDirectory>("cms-dashboard-directory")?.retry();
-                return;
-            }
-            this.lookups.retryCmsUser(field.id);
+            this.host.querySelector<DashboardDirectory>("cms-dashboard-directory")?.retry();
         }
     }
 }

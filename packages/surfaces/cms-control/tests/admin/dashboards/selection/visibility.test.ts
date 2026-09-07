@@ -1,3 +1,4 @@
+import { configureDetail, setSourceData, mountDetail } from "../detail/boundDetail";
 import { afterEach, describe, expect, test } from "bun:test";
 import type { DashboardDto, DashboardWidget } from "@bernouy/cms-dashboards";
 import type { DashboardSourceGroup } from "../../../../src/components/admin/Resources/Dashboards/types";
@@ -15,17 +16,14 @@ describe("dashboard detail visibility", () => {
     test("reacts to nested field/resource expressions and preserves hidden local values", async () => {
         const widget = detailWidget();
         const detail = document.createElement("cms-dashboard-w-detail");
-        detail.setAttribute("data-config-json", JSON.stringify(widget));
-        detail.setAttribute(
-            "data-source-json",
-            JSON.stringify({
-                status: "draft",
-                mode: "simple",
-                locale: "fr",
-                metadata: { localNote: "" },
-            }),
-        );
-        document.body.append(detail);
+        configureDetail(detail, widget);
+        setSourceData(detail, {
+            status: "draft",
+            mode: "simple",
+            locale: "fr",
+            metadata: { localNote: "" },
+        });
+        await mountDetail(detail);
         await Promise.resolve();
 
         expect(fieldLabels(detail)).not.toContain("Local note");
@@ -121,17 +119,15 @@ function change(detail: HTMLElement, field: string, value: string): void {
 }
 
 function control(detail: HTMLElement, field: string): HTMLElement & { value: string } {
-    return detail.shadowRoot!.querySelector<HTMLElement & { value: string }>(`[data-field-control='${field}']`)!;
+    return detail.querySelector<HTMLElement & { value: string }>(`[data-field-control='${field}']`)!;
 }
 
 function fieldLabels(detail: HTMLElement): string[] {
-    return Array.from(detail.shadowRoot!.querySelectorAll<HTMLElement>("[data-field-label]")).map(
-        (label) => label.textContent ?? "",
+    return Array.from(detail.querySelectorAll<HTMLElement>("[data-field-control]")).map(
+        (label) => label.getAttribute("label") ?? "",
     );
 }
 
 function actionLabels(detail: HTMLElement): string[] {
-    return Array.from(detail.shadowRoot!.querySelectorAll<HTMLElement>("[data-action]")).map(
-        (action) => action.textContent ?? "",
-    );
+    return Array.from(detail.querySelectorAll<HTMLElement>("[data-action]")).map((action) => action.textContent ?? "");
 }

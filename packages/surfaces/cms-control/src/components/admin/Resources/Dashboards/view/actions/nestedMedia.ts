@@ -17,7 +17,7 @@ export function settleNestedMedia(
     item?: DashboardMediaItem,
     failed = false,
 ): void {
-    const bound = widget?.hasAttribute("data-declarative") ? (widget as BoundDetail) : undefined;
+    const bound = widget ? (widget as BoundDetail) : undefined;
     const draft = { ...(context.drafts.get(key) ?? {}) };
     const items = cloneItems(bound?.currentFieldValues()[media.field] ?? draft[media.field]);
     const parent = nestedMediaParent(items, media);
@@ -39,14 +39,6 @@ export function settleNestedMedia(
     if (bound) {
         bound.applyFieldDraft(media.field, items);
         return;
-    }
-    const control = Array.from(widget?.shadowRoot?.querySelectorAll<HTMLElement>("[data-field-control]") ?? []).find(
-        (node) => node.dataset.fieldControl === media.field,
-    ) as (HTMLElement & { data?: { items?: Record<string, unknown>[] } }) | undefined;
-    if (control?.data) {
-        control.data = { ...control.data, items: structuredClone(items) };
-    } else {
-        context.render();
     }
 }
 

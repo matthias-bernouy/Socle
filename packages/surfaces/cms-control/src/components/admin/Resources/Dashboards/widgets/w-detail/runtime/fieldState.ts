@@ -1,5 +1,4 @@
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
-import { valueAt } from "../../../runtime/expressions";
 import { invalidFieldControl, readFieldControlValue, readFieldControlDraft } from "../controls";
 import type { WDetailData, WDetailField } from "../types";
 import { serializedTableRows } from "../controls/table/context";
@@ -24,12 +23,12 @@ export class DetailFieldState {
 
     constructor(
         private readonly container: ShadowRoot,
-        private readonly dataset: DetailBindingInput,
+        private readonly readBinding: () => DetailBinding | null,
         private readonly readData: () => WDetailData,
     ) {}
 
     private get root(): ShadowRoot | Element {
-        return this.container.host.hasAttribute("data-declarative") ? this.container.host : this.container;
+        return this.container.host;
     }
 
     get draft(): Record<string, unknown> {
@@ -113,7 +112,7 @@ export class DetailFieldState {
     }
 
     currentResource(): unknown | undefined {
-        return readDetailBinding(this.dataset)?.resource;
+        return this.readBinding()?.resource;
     }
 
     currentFields(): Record<string, unknown> {
@@ -186,7 +185,7 @@ export class DetailFieldState {
     }
 
     private editableTableIds(): string[] {
-        const widget = readDetailBinding(this.dataset)?.widget;
+        const widget = this.readBinding()?.widget;
         return [...(widget?.main ?? []), ...(widget?.aside ?? [])].flatMap((section) =>
             "widget" in section
                 ? []
@@ -236,39 +235,4 @@ function clearRequiredError(control: HTMLElement): void {
     control.removeAttribute("aria-invalid");
     control.removeAttribute("hint");
     control.removeAttribute("hint-level");
-}
-
-export type DetailBindingInput = DOMStringMap | (() => DetailBinding | null);
-
-export function readDetailBinding(dataset: DetailBindingInput): DetailBinding | null {
-    if (typeof dataset === "function") {
-        return dataset();
-    }
-    const widget = parseJson<DetailWidget>(dataset.configJson ?? "");
-    const sourceJson = dataset.sourceJson ?? "";
-    const sourceData = parseJson<unknown>(sourceJson);
-    if (!widget || widget.widget !== "w-detail" || !sourceJson || sourceData === null) {
-        return null;
-    }
-    const resource = widget.source.itemPath ? valueAt(sourceData, widget.source.itemPath) : sourceData;
-    if (resource === undefined) {
-        return null;
-    }
-    return {
-        widget,
-        resource,
-        rowKey: dataset.rowKey ?? "",
-        sourceId: dataset.sourceId ?? "",
-    };
-}
-
-export function parseJson<T>(value: string): T | null {
-    if (!value) {
-        return null;
-    }
-    try {
-        return JSON.parse(value) as T;
-    } catch {
-        return null;
-    }
 }

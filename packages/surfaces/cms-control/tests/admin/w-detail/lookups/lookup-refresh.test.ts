@@ -1,3 +1,4 @@
+import { configureDetail, setSourceData, mountDetail } from "../../dashboards/detail/boundDetail";
 import { afterEach, describe, expect, test } from "bun:test";
 import { resetLookupTest } from "./lookupTestSetup";
 
@@ -7,7 +8,10 @@ describe("dashboard detail widget actions", () => {
     test("reloads lookup options from current field values", async () => {
         const requests: Request[] = [];
         globalThis.fetch = (async (input, init) => {
-            const request = new Request(input, init);
+            const request = new Request(
+                input instanceof Request ? input : new URL(String(input), window.location.href),
+                init,
+            );
             requests.push(request);
             const url = new URL(request.url);
             const postalCode = url.searchParams.get("postalCode");
@@ -19,62 +23,59 @@ describe("dashboard detail widget actions", () => {
         }) as typeof fetch;
 
         const detail = document.createElement("cms-dashboard-w-detail");
-        detail.setAttribute(
-            "data-config-json",
-            JSON.stringify({
-                widget: "w-detail",
-                id: "createShipmentForm",
-                source: { endpoint: "setting", params: { id: "default" } },
-                title: { path: "externalOrderId", fallback: "Create shipment" },
-                main: [
-                    {
-                        id: "recipient",
-                        title: "Recipient",
-                        fields: [
-                            {
-                                id: "recipientCountry",
-                                label: "Country",
-                                path: "recipientCountry",
-                                type: "select",
-                                options: [{ value: "FR", label: "France" }],
-                            },
-                            {
-                                id: "recipientPostalCode",
-                                label: "Postal code",
-                                path: "recipientPostalCode",
-                                type: "text",
-                            },
-                            {
-                                id: "deliveryRelayLocation",
-                                label: "Pickup point",
-                                path: "deliveryRelayLocation",
-                                type: "combobox",
-                                lookup: {
-                                    endpoint: "relayPoints",
-                                    params: {
-                                        country: "$field.recipientCountry",
-                                        postalCode: "$field.recipientPostalCode",
-                                        limit: "10",
-                                    },
-                                    itemsPath: "items",
-                                    valuePath: "location",
-                                    labelPath: "label",
+        configureDetail(detail, {
+            widget: "w-detail",
+            id: "createShipmentForm",
+            source: { endpoint: "setting", params: { id: "default" } },
+            title: { path: "externalOrderId", fallback: "Create shipment" },
+            main: [
+                {
+                    id: "recipient",
+                    title: "Recipient",
+                    fields: [
+                        {
+                            id: "recipientCountry",
+                            label: "Country",
+                            path: "recipientCountry",
+                            type: "select",
+                            options: [{ value: "FR", label: "France" }],
+                        },
+                        {
+                            id: "recipientPostalCode",
+                            label: "Postal code",
+                            path: "recipientPostalCode",
+                            type: "text",
+                        },
+                        {
+                            id: "deliveryRelayLocation",
+                            label: "Pickup point",
+                            path: "deliveryRelayLocation",
+                            type: "combobox",
+                            lookup: {
+                                endpoint: "relayPoints",
+                                params: {
+                                    country: "$field.recipientCountry",
+                                    postalCode: "$field.recipientPostalCode",
+                                    limit: "10",
                                 },
+                                itemsPath: "items",
+                                valuePath: "location",
+                                labelPath: "label",
                             },
-                        ],
-                    },
-                ],
-            }),
-        );
-        detail.setAttribute("data-source-json", JSON.stringify({ recipientCountry: "FR", recipientPostalCode: "" }));
+                        },
+                    ],
+                },
+            ],
+        });
+        setSourceData(detail, { recipientCountry: "FR", recipientPostalCode: "" });
         detail.setAttribute("data-row-key", "__new__");
         detail.setAttribute("data-source-id", "delivery");
 
-        document.body.append(detail);
+        await mountDetail(detail);
         await Promise.resolve();
 
         const inputEvents: string[] = [];
-        detail.shadowRoot!.addEventListener("input", (event) => {
+        detail.addEventListener("input", (event) => {
             inputEvents.push(
                 event
                     .composedPath()
@@ -84,7 +85,7 @@ describe("dashboard detail widget actions", () => {
                     )?.dataset.fieldControl ?? "",
             );
         });
-        const postalCode = detail.shadowRoot!.querySelector<HTMLElement & { value: string; shadowRoot: ShadowRoot }>(
+        const postalCode = detail.querySelector<HTMLElement & { value: string; shadowRoot: ShadowRoot }>(
             "[data-field-control='recipientPostalCode']",
         )!;
         const nativePostalCode = postalCode.shadowRoot.querySelector("input")!;
@@ -94,19 +95,20 @@ describe("dashboard detail widget actions", () => {
 
         expect(inputEvents).toContain("recipientPostalCode");
         expect(requests.at(-1)?.url).toContain("postalCode=75001");
-        const combobox = detail.shadowRoot!.querySelector("p9r-combobox")!;
+        const combobox = detail.querySelector("p9r-combobox")!;
         expect(combobox.querySelector("option[value='FR-024474']")?.textContent).toBe("Relay 75001");
         expect(
-            detail.shadowRoot!.querySelector<HTMLElement & { value: string }>(
-                "[data-field-control='recipientPostalCode']",
-            )!.value,
+            detail.querySelector<HTMLElement & { value: string }>("[data-field-control='recipientPostalCode']")!.value,
         ).toBe("75001");
     });
 
     test("loads lookup options from an explicit source id", async () => {
         const requests: Request[] = [];
         globalThis.fetch = (async (input, init) => {
-            const request = new Request(input, init);
+            const request = new Request(
+                input instanceof Request ? input : new URL(String(input), window.location.href),
+                init,
+            );
             requests.push(request);
             return Response.json({
                 items: [{ id: "product-1", title: "Racket", slug: "racket" }],
@@ -114,47 +116,44 @@ describe("dashboard detail widget actions", () => {
         }) as typeof fetch;
 
         const detail = document.createElement("cms-dashboard-w-detail");
-        detail.setAttribute(
-            "data-config-json",
-            JSON.stringify({
-                widget: "w-detail",
-                id: "offerDetail",
-                source: { endpoint: "offer", params: { id: "$selection.id" } },
-                title: { path: "title", fallback: "Offer" },
-                main: [
-                    {
-                        id: "details",
-                        title: "Details",
-                        fields: [
-                            {
-                                id: "productId",
-                                label: "Product",
-                                path: "productId",
-                                type: "combobox",
-                                lookup: {
-                                    sourceId: "products",
-                                    endpoint: "products",
-                                    params: { q: "$search", limit: "20" },
-                                    itemsPath: "items",
-                                    valuePath: "id",
-                                    labelPath: "title",
-                                    subtitlePath: "slug",
-                                },
+        configureDetail(detail, {
+            widget: "w-detail",
+            id: "offerDetail",
+            source: { endpoint: "offer", params: { id: "$selection.id" } },
+            title: { path: "title", fallback: "Offer" },
+            main: [
+                {
+                    id: "details",
+                    title: "Details",
+                    fields: [
+                        {
+                            id: "productId",
+                            label: "Product",
+                            path: "productId",
+                            type: "combobox",
+                            lookup: {
+                                sourceId: "products",
+                                endpoint: "products",
+                                params: { q: "$search", limit: "20" },
+                                itemsPath: "items",
+                                valuePath: "id",
+                                labelPath: "title",
+                                subtitlePath: "slug",
                             },
-                        ],
-                    },
-                ],
-            }),
-        );
-        detail.setAttribute("data-source-json", JSON.stringify({ id: "offer-1", productId: "product-1" }));
+                        },
+                    ],
+                },
+            ],
+        });
+        setSourceData(detail, { id: "offer-1", productId: "product-1" });
         detail.setAttribute("data-row-key", "offer-1");
         detail.setAttribute("data-source-id", "offers");
 
-        document.body.append(detail);
-        await waitFor(() => Boolean(detail.shadowRoot!.querySelector("p9r-combobox option[value='product-1']")));
+        await mountDetail(detail);
+        await waitFor(() => Boolean(detail.querySelector("p9r-combobox option[value='product-1']")));
 
         expect(requests[0]?.url).toContain("/.cms/sources/products/products");
-        expect(detail.shadowRoot!.querySelector("p9r-combobox option[value='product-1']")?.textContent).toBe("Racket");
+        expect(detail.querySelector("p9r-combobox option[value='product-1']")?.textContent).toBe("Racket");
     });
 });
 

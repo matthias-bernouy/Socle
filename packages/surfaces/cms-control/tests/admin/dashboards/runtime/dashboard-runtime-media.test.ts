@@ -1,3 +1,6 @@
+import { configureDetail, mountDetail, setSourceData } from "../detail/boundDetail";
+import type { DashboardWDetail } from "cms-control/components/admin/Resources/Dashboards/widgets/w-detail/WDetail";
+import type { DetailWidget } from "cms-control/components/admin/Resources/Dashboards/widgets/w-detail/runtime/fieldState";
 import { afterEach, describe, expect, test } from "bun:test";
 import type { DashboardDto } from "@bernouy/cms-dashboards";
 import { detailKey } from "../../../../src/components/admin/Resources/Dashboards/domain";
@@ -12,6 +15,7 @@ setupDashboardActionTests();
 
 afterEach(() => {
     globalThis.fetch = realFetch;
+    document.body.replaceChildren();
 });
 
 describe("dashboard nested media actions", () => {
@@ -58,19 +62,15 @@ describe("dashboard nested media actions", () => {
                 ? Response.json({ ref: "question-ref", options: [] })
                 : Response.json({ ok: true, mediaId: 101 });
         }) as typeof fetch;
-        const widget = document.createElement("section");
-        const root = widget.attachShadow({ mode: "open" });
-        const control = document.createElement("div") as HTMLDivElement & {
-            data: { items: Record<string, unknown>[] };
-        };
-        control.dataset.fieldControl = "imageOptions";
-        control.data = {
-            items: [
-                { key: "cool", label: "Cool", image: { id: "202", url: "/cool" } },
-                { key: "warm", label: "Warm", image: { id: "local:1", url: "blob:local" } },
-            ],
-        };
-        root.append(control);
+        const widget = document.createElement("cms-dashboard-w-detail") as DashboardWDetail;
+        configureDetail(widget, dashboard().views[0] as DetailWidget);
+        const items = [
+            { key: "cool", label: "Cool", image: { id: "202", url: "/cool" } },
+            { key: "warm", label: "Warm", image: { id: "local:1", url: "blob:local" } },
+        ];
+        setSourceData(widget, { ref: "question-ref", options: items });
+        await mountDetail(widget);
+        widget.applyFieldDraft("imageOptions", items);
         const key = detailKey("questionDetail", "question-ref");
         const drafts = new Map([
             [
@@ -78,7 +78,7 @@ describe("dashboard nested media actions", () => {
                 {
                     type: "choice",
                     presentation: "image-grid",
-                    imageOptions: structuredClone(control.data.items),
+                    imageOptions: structuredClone(items),
                 },
             ],
         ]);
@@ -105,7 +105,7 @@ describe("dashboard nested media actions", () => {
                 itemIndex: 0,
                 itemKey: "warm",
                 itemPath: "image",
-                parentItem: structuredClone(control.data.items[0]),
+                parentItem: structuredClone(items[0]),
                 value: [{ id: "local:1", url: "blob:local" }],
                 files: [new File(["image"], "warm.png", { type: "image/png" })],
             },
@@ -118,7 +118,10 @@ describe("dashboard nested media actions", () => {
             presentation: "image-grid",
             imageOptions: [{ image: { id: "202" } }, { image: { id: "101" } }],
         });
-        expect(control.data.items).toMatchObject([{ image: { id: "202" } }, { image: { id: "101" } }]);
+        expect(widget.currentFieldValues().imageOptions).toMatchObject([
+            { image: { id: "202" } },
+            { image: { id: "101" } },
+        ]);
     });
 });
 

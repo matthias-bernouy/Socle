@@ -1,3 +1,4 @@
+import { configureDetail, setSourceData, mountDetail } from "../../dashboards/detail/boundDetail";
 import { afterEach, describe, expect, test } from "bun:test";
 import { waitForDetail } from "../../dashboards/detail/detailTestHelpers";
 import { resetLookupTest } from "./lookupTestSetup";
@@ -8,7 +9,10 @@ describe("dashboard remote lookups", () => {
     test("searches and paginates without replacing the active combobox", async () => {
         const requests: URL[] = [];
         globalThis.fetch = (async (input, init) => {
-            const request = new Request(input, init);
+            const request = new Request(
+                input instanceof Request ? input : new URL(String(input), window.location.href),
+                init,
+            );
             const url = new URL(request.url);
             requests.push(url);
             const query = url.searchParams.get("q") ?? "initial";
@@ -24,14 +28,14 @@ describe("dashboard remote lookups", () => {
         }) as typeof fetch;
 
         const detail = document.createElement("cms-dashboard-w-detail");
-        detail.setAttribute("data-config-json", JSON.stringify(remoteLookupWidget()));
-        detail.setAttribute("data-source-json", JSON.stringify({ id: "offer-1", productId: "" }));
+        configureDetail(detail, remoteLookupWidget());
+        setSourceData(detail, { id: "offer-1", productId: "" });
         detail.setAttribute("data-row-key", "offer-1");
         detail.setAttribute("data-source-id", "offers");
-        document.body.append(detail);
+        await mountDetail(detail);
 
-        await waitForDetail(() => detail.shadowRoot!.querySelectorAll("p9r-combobox option").length === 25);
-        const control = detail.shadowRoot!.querySelector<HTMLElement & { shadowRoot: ShadowRoot }>("p9r-combobox")!;
+        await waitForDetail(() => detail.querySelectorAll("p9r-combobox option").length === 25);
+        const control = detail.querySelector<HTMLElement & { shadowRoot: ShadowRoot }>("p9r-combobox")!;
         expect(control.hasAttribute("remote-search")).toBeTrue();
         expect(control.hasAttribute("has-more")).toBeTrue();
 
@@ -47,7 +51,7 @@ describe("dashboard remote lookups", () => {
         expect(control.hasAttribute("loading")).toBeTrue();
         await waitForDetail(() => Boolean(control.querySelector("option[value='racket-0']")), 80);
 
-        expect(detail.shadowRoot!.querySelector("p9r-combobox")).toBe(control);
+        expect(detail.querySelector("p9r-combobox")).toBe(control);
         expect(control.shadowRoot.activeElement).toBe(input);
         expect(requests.at(-1)?.searchParams.get("q")).toBe("racket");
         expect(requests.at(-1)?.searchParams.get("take")).toBe("25");
@@ -60,13 +64,15 @@ describe("dashboard remote lookups", () => {
         expect(requests.at(-1)?.searchParams.get("q")).toBe("racket");
         expect(requests.at(-1)?.searchParams.get("skip")).toBe("25");
         expect(control.querySelectorAll("option")).toHaveLength(30);
-        expect(control.hasAttribute("has-more")).toBeFalse();
+        expect(control.getAttribute("has-more")).toBe("false");
     });
 
     test("ignores a slower response from an obsolete search", async () => {
         const pending = new Map<string, (response: Response) => void>();
         globalThis.fetch = (async (input, init) => {
-            const url = new URL(new Request(input, init).url);
+            const url = new URL(
+                new Request(input instanceof Request ? input : new URL(String(input), window.location.href), init).url,
+            );
             const query = url.searchParams.get("q");
             if (!query) {
                 return Response.json({ items: [], total: 0 });
@@ -75,14 +81,14 @@ describe("dashboard remote lookups", () => {
         }) as typeof fetch;
 
         const detail = document.createElement("cms-dashboard-w-detail");
-        detail.setAttribute("data-config-json", JSON.stringify(remoteLookupWidget()));
-        detail.setAttribute("data-source-json", JSON.stringify({ id: "offer-1", productId: "" }));
+        configureDetail(detail, remoteLookupWidget());
+        setSourceData(detail, { id: "offer-1", productId: "" });
         detail.setAttribute("data-row-key", "offer-1");
         detail.setAttribute("data-source-id", "offers");
-        document.body.append(detail);
-        await waitForDetail(() => Boolean(detail.shadowRoot!.querySelector("p9r-combobox")));
+        await mountDetail(detail);
+        await waitForDetail(() => Boolean(detail.querySelector("p9r-combobox")));
 
-        const control = detail.shadowRoot!.querySelector<HTMLElement & { shadowRoot: ShadowRoot }>("p9r-combobox")!;
+        const control = detail.querySelector<HTMLElement & { shadowRoot: ShadowRoot }>("p9r-combobox")!;
         const input = control.shadowRoot.querySelector("input")!;
         input.focus();
         input.value = "old";
@@ -102,7 +108,7 @@ describe("dashboard remote lookups", () => {
     });
 });
 
-function remoteLookupWidget(): unknown {
+function remoteLookupWidget(): import("cms-control/components/admin/Resources/Dashboards/widgets/w-detail/runtime/fieldState").DetailWidget {
     return {
         widget: "w-detail",
         id: "offerDetail",

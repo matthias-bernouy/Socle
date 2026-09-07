@@ -20,6 +20,7 @@ export class ReorderableInteractions {
     }
     private get handlers(): Array<[string, EventListener]> {
         return [
+            ["input", this.input],
             ["click", this.click],
             ["dragstart", this.start],
             ["dragover", this.over],
@@ -30,6 +31,12 @@ export class ReorderableInteractions {
             [W_MEDIA_FIELD_ACTION_EVENT, this.media],
         ];
     }
+    private readonly input = (event: Event): void => {
+        const editor = (event.target as Element | null)?.closest<HTMLElement>("[data-item-field]");
+        if (editor && editor.localName !== "cms-dashboard-media-field") {
+            this.commit(this.host.items);
+        }
+    };
     private readonly click = (event: Event): void => {
         const target = event.target as Element | null;
         const add = target?.closest("[data-add]");

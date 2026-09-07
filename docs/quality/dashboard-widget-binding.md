@@ -1321,3 +1321,98 @@ removed or migrated next; keeping them for their tests would not satisfy the
 goal. Definition/navigation object relays, the complete service/operator/provider
 matrix, real local persistence and cleanup, performance/overflow fixes and final
 runtime activation also remain open. The goal is not complete.
+
+## Manual detail entry points removed
+
+`WDetail` now contains its visual shell and local editing/validation operations.
+It has no `.data` property, JSON attribute reader, manual/bound mode switch,
+response renderer, private lookup/schema loader or rendering scheduler.
+`DetailEvents` and `DetailFieldState` read the document-bound controls. The old
+view, action renderer, schema/lookup controllers and their unused styles are
+removed. Nested media settlement operates on the actual bound detail draft.
+
+The integration connection settings consumer now composes a normal detail
+widget definition and supplies values to its URL-less binding source. The new
+connection browser fixture covers required validation, failed saves, retry,
+canonical server values, opaque metadata preservation, revision checks,
+restoration after document reload and read-only Health navigation. Its server
+state is simulated in the browser routes; this is not real local persistence.
+The surrounding `IntegrationManagementView` still reads and rebuilds panels
+imperatively, including after saves, and injects a light-DOM style from its shell.
+Its full binding/lifecycle migration remains necessary. The connection test
+proves idle presentation and the listed behaviors, not absence of save-time
+layout shifts in that legacy surrounding controller.
+
+Migrating the existing tests exposed three problems that were fixed rather than
+removing their assertions:
+
+- Happy DOM 20.9.0 stored its mutation delivery callback only through `WeakRef`.
+  After garbage collection, existing observers silently stopped delivering
+  mutations. A minimal forced-GC test reproduces it. The versioned Bun patch
+  retains that callback for the observer lifetime; disconnect is still tested.
+  This affects only test dependencies. Installing the patch also synchronized a
+  stale lockfile-only runtime development dependency with its existing manifest.
+- Binding teardown left rendered text in the DOM, so remounting captured old
+  values instead of expressions. Core shutdown and detached-source disposal now
+  restore authored declarations. Chromium verifies remounting a dashboard,
+  dropping the detached local draft, retaining saved server data and saving
+  again without duplicate submissions.
+- Replacing the private detail request coordinator initially made two equivalent
+  lookups and a schema issue three reads. Concurrent automatic reads are now
+  shared inside the page core, restoring the original single request. Consumers
+  cancel independently, results are isolated snapshots, completed/error reads
+  are not cached, and separate cores and submissions do not share work. The
+  tests also exposed a response arriving between a URL mutation and observer
+  delivery; it is discarded before publication and the current URL is fetched.
+
+The reorderable detail used to emit a change during text input. Its bound
+interaction controller now preserves that behavior, including the edited
+control, focus and an independent earlier value snapshot. This avoids changing
+field-driven behavior while removing the old renderer.
+
+Validation and evidence for this checkpoint (all under
+`/tmp/cmscore-widget-binding-20260907/`):
+
+- `legacy-detail-unit-final.log`: 545 passing tests across 136 files, covering
+  all Control admin tests, the foundation binding suite and the forced-GC
+  regression. Existing detail tests were migrated to real declared composition,
+  page-owned cores and light-DOM controls rather than retaining the deleted API.
+- `legacy-detail-browser-final/` exercises all 64 dashboard browser tests in 56
+  independent files. Its table comparison initially assumed every baseline was
+  the former manual table; selecting the actual scroll container fixes that
+  test harness assumption. `legacy-detail-browser-current/` reruns all affected
+  reorderable tests, the corrected desktop/mobile table comparison and core
+  reconnect behavior on the final interaction implementation. The combined
+  `legacy-detail-browser-results.json` has no failure.
+- `legacy-detail-connection-first.log` adds one passing browser test at both
+  1440 and 390 pixels against the immutable pre-cleanup bundle, exercising the
+  connection behaviors above. Together these are 65 browser tests in 57 files.
+- `legacy-detail-pixel-comparison.json`: 78 comparable before/after image pairs,
+  74 pixel-identical. Four pairs differ by 12–26 pixels in text/control edges;
+  every geometry comparison passes. Images inspected include the connection
+  screen at both widths, mobile media, CMS users, empty schema and the scrolled
+  mobile table. Connection images are exactly identical at both widths.
+- The single connection readiness comparison measures 175.4/165.5 ms at 1440
+  pixels and 147.4/167.8 ms at 390 pixels, with six initial requests in both
+  versions. These individual observations are not a performance improvement
+  claim. Other fixture timings remain in their browser logs. The baseline is
+  `legacy-detail-before-bundle.js`, preserved from `2270520f7`.
+- `legacy-detail-build-verified.log`: full workspace build passes. Initial and final
+  quality reports are `legacy-detail-start.log` and
+  `legacy-detail-quality-verified.log`: all eight checks pass. UI contracts remain
+  at 0 errors, 77 warnings and 11 information. No fanout error or exemption was
+  introduced. The lifecycle scenarios and local editing classes remain cohesive
+  despite advisory file-size findings; most migrated files became shorter.
+  The connection browser fixture and forced-GC test pass again in
+  `legacy-detail-connection-verified.log`. Frozen installation of the runtime-only
+  Happy DOM patch succeeds (`legacy-detail-frozen-install-final.log`).
+
+The dependency patch is committed as `338b0c50d`; the binding lifecycle and shared
+reads are committed as `acb788f34`.
+
+This checkpoint does not complete the goal. Old standalone control creators and
+legacy media/reorderable components remain referenced by tests and reader
+modules; their remaining compatibility branches must be removed next. The
+integration management controller, definition/navigation relays, complete
+operator/provider matrix, actual local persistence with cleanup, outstanding
+performance/overflow review and final local-runtime activation are also open.

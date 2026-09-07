@@ -16,12 +16,6 @@ export async function fetchSourceJson(
     return responseJson(response);
 }
 
-export function sourceRequestKey(sourceId: string, ref: DashboardDataRef, vars: RuntimeVars): string {
-    const url = sourceUrl(sourceId, ref, vars);
-    url.searchParams.sort();
-    return url.href;
-}
-
 export async function sendSourceJson(
     sourceId: string,
     ref: DashboardEndpointRef,

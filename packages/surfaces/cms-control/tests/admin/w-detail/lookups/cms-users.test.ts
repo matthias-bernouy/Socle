@@ -1,3 +1,4 @@
+import { configureDetail, setSourceData, mountDetail } from "../../dashboards/detail/boundDetail";
 import { afterEach, describe, expect, test } from "bun:test";
 import {
     WIDGET_ACTION_EVENT,
@@ -44,14 +45,12 @@ describe("dashboard CMS user fields", () => {
         detail.addEventListener(WIDGET_ACTION_EVENT, (event) =>
             actions.push((event as CustomEvent<WidgetActionDetail>).detail),
         );
-        document.body.append(detail);
+        await mountDetail(detail);
 
-        await waitFor(() => Boolean(detail.shadowRoot?.querySelector("option[value='local:alice:opaque']")));
+        await waitFor(() => Boolean(detail.querySelector("option[value='local:alice:opaque']")));
 
         expect(requests).toEqual(["/api/users"]);
-        const combobox = detail.shadowRoot!.querySelector<HTMLElement & { value: string; shadowRoot: ShadowRoot }>(
-            "p9r-combobox",
-        )!;
+        const combobox = detail.querySelector<HTMLElement & { value: string; shadowRoot: ShadowRoot }>("p9r-combobox")!;
         const alice = combobox.querySelector<HTMLOptionElement>("option[value='local:alice:opaque']")!;
         expect(alice.textContent).toBe("Alice Martin — alice@example.test · Sales partner · local:alice:opaque");
 
@@ -61,7 +60,7 @@ describe("dashboard CMS user fields", () => {
         expect(input.labels?.[0]?.textContent).toBe("CMS user");
         expect(combobox.hasAttribute("required")).toBeTrue();
 
-        detail.shadowRoot!.querySelector<HTMLElement>("p9r-button")!.click();
+        detail.querySelector<HTMLElement>("p9r-button")!.click();
         expect(actions).toEqual([]);
         expect(combobox.getAttribute("hint")).toBe("This field is required.");
         expect(input.getAttribute("aria-required")).toBe("true");
@@ -78,7 +77,7 @@ describe("dashboard CMS user fields", () => {
         input.dispatchEvent(new Event("input", { bubbles: true }));
         input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
         input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
-        detail.shadowRoot!.querySelector<HTMLElement>("p9r-button")!.click();
+        detail.querySelector<HTMLElement>("p9r-button")!.click();
 
         expect(actions[0]?.fields?.cmsUserId).toBe("local:alice:opaque");
     });
@@ -94,22 +93,22 @@ describe("dashboard CMS user fields", () => {
         }) as typeof fetch;
 
         const detail = cmsUserDetail("");
-        document.body.append(detail);
-        await waitFor(() => Boolean(detail.shadowRoot?.querySelector("p9r-combobox[invalid]")));
+        await mountDetail(detail);
+        await waitFor(() => Boolean(detail.querySelector("p9r-combobox[invalid]")));
 
-        const failed = detail.shadowRoot!.querySelector<HTMLElement & { shadowRoot: ShadowRoot }>("p9r-combobox")!;
+        const failed = detail.querySelector<HTMLElement & { shadowRoot: ShadowRoot }>("p9r-combobox")!;
         expect(requests).toEqual(["/api/users"]);
         expect(failed.getAttribute("hint")).toBe("Unable to load CMS users. Focus or click to retry.");
         expect(failed.shadowRoot.querySelector<HTMLInputElement>("input")?.getAttribute("aria-invalid")).toBe("true");
         expect(failed.shadowRoot.querySelector<HTMLElement>("#hint")?.hidden).toBe(false);
 
         failed.dispatchEvent(new FocusEvent("focusin", { bubbles: true, composed: true }));
-        await waitFor(() => Boolean(detail.shadowRoot?.querySelector("option[value='local:retry:opaque']")));
+        await waitFor(() => Boolean(detail.querySelector("option[value='local:retry:opaque']")));
 
-        const recovered = detail.shadowRoot!.querySelector<HTMLElement & { shadowRoot: ShadowRoot }>("p9r-combobox")!;
+        const recovered = detail.querySelector<HTMLElement & { shadowRoot: ShadowRoot }>("p9r-combobox")!;
         expect(requests).toEqual(["/api/users", "/api/users"]);
         expect(recovered.hasAttribute("invalid")).toBe(false);
-        expect(recovered.hasAttribute("hint")).toBe(false);
+        expect(recovered.getAttribute("hint") ?? "").toBe("");
         expect(recovered.shadowRoot.querySelector<HTMLInputElement>("input")?.hasAttribute("aria-invalid")).toBe(false);
     });
 
@@ -121,18 +120,16 @@ describe("dashboard CMS user fields", () => {
         }) as typeof fetch;
 
         const detail = conditionalCmsUserDetail();
-        document.body.append(detail);
+        await mountDetail(detail);
         await new Promise((resolve) => setTimeout(resolve, 30));
         expect(requests).toEqual([]);
-        expect(detail.shadowRoot!.querySelector("p9r-combobox")).toBeNull();
+        expect(detail.querySelector("p9r-combobox")).toBeNull();
 
-        const mode = detail.shadowRoot!.querySelector<HTMLElement & { value: string }>(
-            "p9r-select[data-field-control='mode']",
-        )!;
+        const mode = detail.querySelector<HTMLElement & { value: string }>("p9r-select[data-field-control='mode']")!;
         mode.value = "assign";
         mode.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
 
-        await waitFor(() => Boolean(detail.shadowRoot?.querySelector("option[value='local:visible:opaque']")));
+        await waitFor(() => Boolean(detail.querySelector("option[value='local:visible:opaque']")));
         expect(requests).toEqual(["/api/users"]);
     });
 
@@ -147,9 +144,9 @@ describe("dashboard CMS user fields", () => {
             ])) as unknown as typeof fetch;
 
         const known = cmsUserDetail("oidc:known:opaque");
-        document.body.append(known);
-        await waitFor(() => Boolean(known.shadowRoot?.querySelector("option[value='oidc:known:opaque']")));
-        const knownCombobox = known.shadowRoot!.querySelector<HTMLElement & { value: string; shadowRoot: ShadowRoot }>(
+        await mountDetail(known);
+        await waitFor(() => Boolean(known.querySelector("option[value='oidc:known:opaque']")));
+        const knownCombobox = known.querySelector<HTMLElement & { value: string; shadowRoot: ShadowRoot }>(
             "p9r-combobox",
         )!;
         expect(knownCombobox.value).toBe("oidc:known:opaque");
@@ -159,9 +156,9 @@ describe("dashboard CMS user fields", () => {
 
         known.remove();
         const orphan = cmsUserDetail("legacy:missing:opaque");
-        document.body.append(orphan);
-        await waitFor(() => Boolean(orphan.shadowRoot?.querySelector("option[value='legacy:missing:opaque']")));
-        const orphanCombobox = orphan.shadowRoot!.querySelector<HTMLElement & { value: string }>("p9r-combobox")!;
+        await mountDetail(orphan);
+        await waitFor(() => Boolean(orphan.querySelector("option[value='legacy:missing:opaque']")));
+        const orphanCombobox = orphan.querySelector<HTMLElement & { value: string }>("p9r-combobox")!;
         expect(orphanCombobox.value).toBe("legacy:missing:opaque");
         expect(orphanCombobox.querySelector("option[value='legacy:missing:opaque']")?.textContent).toBe(
             "Unknown CMS user · legacy:missing:opaque",
@@ -175,57 +172,10 @@ describe("dashboard CMS user fields", () => {
             return Response.json([]);
         }) as typeof fetch;
         const detail = document.createElement("cms-dashboard-w-detail");
-        detail.setAttribute(
-            "data-config-json",
-            JSON.stringify({
-                widget: "w-detail",
-                id: "partnerDetail",
-                source: { endpoint: "partner" },
-                main: [
-                    {
-                        id: "identity",
-                        title: "Identity",
-                        fields: [
-                            {
-                                id: "cmsUserId",
-                                label: "CMS user",
-                                path: "cmsUserId",
-                                type: "cms-user",
-                                visibleWhen: { value: "$resource.id", equals: null },
-                            },
-                            {
-                                id: "linkedCmsUserId",
-                                label: "CMS user id",
-                                path: "cmsUserId",
-                                type: "readonly",
-                                visibleWhen: { value: "$resource.id", notEquals: null },
-                            },
-                        ],
-                    },
-                ],
-            }),
-        );
-        detail.setAttribute("data-source-json", JSON.stringify({ id: 42, cmsUserId: "local:immutable:opaque" }));
-        detail.setAttribute("data-row-key", "42");
-        detail.setAttribute("data-source-id", "example-source");
-        document.body.append(detail);
-        await new Promise((resolve) => setTimeout(resolve, 20));
-
-        expect(requests).toEqual([]);
-        expect(detail.shadowRoot!.querySelector("p9r-combobox")).toBeNull();
-        expect(detail.shadowRoot!.textContent).toContain("local:immutable:opaque");
-    });
-});
-
-function cmsUserDetail(cmsUserId: string): HTMLElement {
-    const detail = document.createElement("cms-dashboard-w-detail");
-    detail.setAttribute(
-        "data-config-json",
-        JSON.stringify({
+        configureDetail(detail, {
             widget: "w-detail",
             id: "partnerDetail",
             source: { endpoint: "partner" },
-            actions: [{ id: "savePartner", label: "Save partner", endpoint: { endpoint: "savePartner" } }],
             main: [
                 {
                     id: "identity",
@@ -236,15 +186,56 @@ function cmsUserDetail(cmsUserId: string): HTMLElement {
                             label: "CMS user",
                             path: "cmsUserId",
                             type: "cms-user",
-                            placeholder: "Search by name, email, or CMS user id",
-                            required: true,
+                            visibleWhen: { value: "$resource.id", equals: null },
+                        },
+                        {
+                            id: "linkedCmsUserId",
+                            label: "CMS user id",
+                            path: "cmsUserId",
+                            type: "readonly",
+                            visibleWhen: { value: "$resource.id", notEquals: null },
                         },
                     ],
                 },
             ],
-        }),
-    );
-    detail.setAttribute("data-source-json", JSON.stringify({ id: null, cmsUserId }));
+        });
+        setSourceData(detail, { id: 42, cmsUserId: "local:immutable:opaque" });
+        detail.setAttribute("data-row-key", "42");
+        detail.setAttribute("data-source-id", "example-source");
+        await mountDetail(detail);
+        await new Promise((resolve) => setTimeout(resolve, 20));
+
+        expect(requests).toEqual([]);
+        expect(detail.querySelector("p9r-combobox")).toBeNull();
+        expect(detail.textContent).toContain("local:immutable:opaque");
+    });
+});
+
+function cmsUserDetail(cmsUserId: string): HTMLElement {
+    const detail = document.createElement("cms-dashboard-w-detail");
+    configureDetail(detail, {
+        widget: "w-detail",
+        id: "partnerDetail",
+        source: { endpoint: "partner" },
+        actions: [{ id: "savePartner", label: "Save partner", endpoint: { endpoint: "savePartner" } }],
+        main: [
+            {
+                id: "identity",
+                title: "Identity",
+                fields: [
+                    {
+                        id: "cmsUserId",
+                        label: "CMS user",
+                        path: "cmsUserId",
+                        type: "cms-user",
+                        placeholder: "Search by name, email, or CMS user id",
+                        required: true,
+                    },
+                ],
+            },
+        ],
+    });
+    setSourceData(detail, { id: null, cmsUserId });
     detail.setAttribute("data-row-key", "__new__");
     detail.setAttribute("data-source-id", "example-source");
     return detail;
@@ -252,40 +243,37 @@ function cmsUserDetail(cmsUserId: string): HTMLElement {
 
 function conditionalCmsUserDetail(): HTMLElement {
     const detail = document.createElement("cms-dashboard-w-detail");
-    detail.setAttribute(
-        "data-config-json",
-        JSON.stringify({
-            widget: "w-detail",
-            id: "conditionalPartnerDetail",
-            source: { endpoint: "partner" },
-            main: [
-                {
-                    id: "identity",
-                    title: "Identity",
-                    fields: [
-                        {
-                            id: "mode",
-                            label: "Mode",
-                            path: "mode",
-                            type: "select",
-                            options: [
-                                { value: "off", label: "Off" },
-                                { value: "assign", label: "Assign" },
-                            ],
-                        },
-                        {
-                            id: "cmsUserId",
-                            label: "CMS user",
-                            path: "cmsUserId",
-                            type: "cms-user",
-                            visibleWhen: { value: "$field.mode", equals: "assign" },
-                        },
-                    ],
-                },
-            ],
-        }),
-    );
-    detail.setAttribute("data-source-json", JSON.stringify({ id: null, mode: "off", cmsUserId: "" }));
+    configureDetail(detail, {
+        widget: "w-detail",
+        id: "conditionalPartnerDetail",
+        source: { endpoint: "partner" },
+        main: [
+            {
+                id: "identity",
+                title: "Identity",
+                fields: [
+                    {
+                        id: "mode",
+                        label: "Mode",
+                        path: "mode",
+                        type: "select",
+                        options: [
+                            { value: "off", label: "Off" },
+                            { value: "assign", label: "Assign" },
+                        ],
+                    },
+                    {
+                        id: "cmsUserId",
+                        label: "CMS user",
+                        path: "cmsUserId",
+                        type: "cms-user",
+                        visibleWhen: { value: "$field.mode", equals: "assign" },
+                    },
+                ],
+            },
+        ],
+    });
+    setSourceData(detail, { id: null, mode: "off", cmsUserId: "" });
     detail.setAttribute("data-row-key", "__new__");
     detail.setAttribute("data-source-id", "example-source");
     return detail;

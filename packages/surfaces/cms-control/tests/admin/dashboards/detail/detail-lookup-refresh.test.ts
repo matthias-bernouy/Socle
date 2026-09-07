@@ -1,3 +1,4 @@
+import { configureDetail, setSourceData, mountDetail } from "./boundDetail";
 import { afterEach, describe, expect, test } from "bun:test";
 import { Button, Combobox, P9rInput, P9rSelect } from "@bernouy/components";
 import "../../../../src/components/admin/Resources/Dashboards/widgets/w-detail/WDetail";
@@ -26,7 +27,10 @@ describe("dashboard targeted lookup refresh", () => {
     test("reloads only lookups that depend on the changed field", async () => {
         const requests: Request[] = [];
         globalThis.fetch = (async (input, init) => {
-            const request = new Request(input, init);
+            const request = new Request(
+                input instanceof Request ? input : new URL(String(input), window.location.href),
+                init,
+            );
             requests.push(request);
             const path = new URL(request.url).pathname;
             return path.endsWith("/countries")
@@ -34,61 +38,55 @@ describe("dashboard targeted lookup refresh", () => {
                 : Response.json({ items: [{ id: "relay-1", label: "Relay" }] });
         }) as typeof fetch;
         const detail = document.createElement("cms-dashboard-w-detail");
-        detail.setAttribute(
-            "data-config-json",
-            JSON.stringify({
-                widget: "w-detail",
-                id: "shipment",
-                source: { endpoint: "shipment" },
-                main: [
-                    {
-                        id: "main",
-                        title: "Shipment",
-                        fields: [
-                            { id: "postalCode", label: "Postal code", path: "postalCode", type: "text" },
-                            {
-                                id: "country",
-                                label: "Country",
-                                path: "country",
-                                type: "combobox",
-                                lookup: {
-                                    endpoint: "countries",
-                                    itemsPath: "items",
-                                    valuePath: "code",
-                                    labelPath: "label",
-                                },
+        configureDetail(detail, {
+            widget: "w-detail",
+            id: "shipment",
+            source: { endpoint: "shipment" },
+            main: [
+                {
+                    id: "main",
+                    title: "Shipment",
+                    fields: [
+                        { id: "postalCode", label: "Postal code", path: "postalCode", type: "text" },
+                        {
+                            id: "country",
+                            label: "Country",
+                            path: "country",
+                            type: "combobox",
+                            lookup: {
+                                endpoint: "countries",
+                                itemsPath: "items",
+                                valuePath: "code",
+                                labelPath: "label",
                             },
-                            {
-                                id: "relayId",
-                                label: "Relay",
-                                path: "relayId",
-                                type: "combobox",
-                                lookup: {
-                                    endpoint: "relayPoints",
-                                    params: { postalCode: "$field.postalCode" },
-                                    itemsPath: "items",
-                                    valuePath: "id",
-                                    labelPath: "label",
-                                },
+                        },
+                        {
+                            id: "relayId",
+                            label: "Relay",
+                            path: "relayId",
+                            type: "combobox",
+                            lookup: {
+                                endpoint: "relayPoints",
+                                params: { postalCode: "$field.postalCode" },
+                                itemsPath: "items",
+                                valuePath: "id",
+                                labelPath: "label",
                             },
-                        ],
-                    },
-                ],
-            }),
-        );
+                        },
+                    ],
+                },
+            ],
+        });
         detail.setAttribute("data-source-id", "delivery");
-        detail.setAttribute(
-            "data-source-json",
-            JSON.stringify({
-                postalCode: "75000",
-                country: "FR",
-                relayId: "relay-1",
-            }),
-        );
-        document.body.append(detail);
+        setSourceData(detail, {
+            postalCode: "75000",
+            country: "FR",
+            relayId: "relay-1",
+        });
+        await mountDetail(detail);
         await waitFor(() => requests.length === 2);
 
-        const control = detail.shadowRoot!.querySelector<HTMLElement & { shadowRoot: ShadowRoot }>(
+        const control = detail.querySelector<HTMLElement & { shadowRoot: ShadowRoot }>(
             "[data-field-control='postalCode']",
         )!;
         const input = control.shadowRoot.querySelector("input")!;

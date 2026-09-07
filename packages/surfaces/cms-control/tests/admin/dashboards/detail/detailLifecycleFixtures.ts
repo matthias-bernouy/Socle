@@ -1,10 +1,13 @@
-export function detailElement(widget: unknown): HTMLElement {
+import type { DashboardField } from "@bernouy/cms-dashboards";
+import type { DetailWidget } from "cms-control/components/admin/Resources/Dashboards/widgets/w-detail/runtime/fieldState";
+import { configureDetail } from "./boundDetail";
+export function detailElement(widget: DetailWidget): HTMLElement {
     const detail = document.createElement("cms-dashboard-w-detail");
-    detail.setAttribute("data-config-json", JSON.stringify(widget));
+    configureDetail(detail, widget);
     return detail;
 }
 
-export function sharedLookupWidget(): unknown {
+export function sharedLookupWidget(): DetailWidget {
     const lookup = {
         endpoint: "brands",
         params: { categoryId: "$field.categoryId" },
@@ -30,7 +33,7 @@ export function sharedLookupWidget(): unknown {
     ]);
 }
 
-export function singleLookupWidget(): unknown {
+export function singleLookupWidget(): DetailWidget {
     return {
         ...widget([
             {
@@ -51,7 +54,7 @@ export function singleLookupWidget(): unknown {
     };
 }
 
-function widget(fields: unknown[]) {
+function widget(fields: DashboardField[]): DetailWidget {
     return {
         widget: "w-detail",
         id: "detail",
