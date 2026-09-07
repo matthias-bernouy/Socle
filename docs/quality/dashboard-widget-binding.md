@@ -41,7 +41,7 @@ applied by binding to that composed HTML, not used to reconstruct a widget tree.
 | Lists | Filters/search, selection, bulk actions, reordering, pagination where offered | Pending |
 | Details | Create/edit, validation, repeated save, confirmation/cancel, persisted reload | Pending |
 | Dynamic controls | Conditional fields, lookups, relations, schemas, pages, secrets, CMS users | Pending |
-| Collections | Embedded tables, reorderable rows/cards, derived values | Pending |
+| Collections | Embedded tables, reorderable rows/cards, derived values | Embedded tables verified with route fixtures; reorderable rows/cards pending |
 | Media | Upload/replace/remove/reorder/download, real file payload checks | Pending |
 | Concurrency | Delays, errors/retry, double actions, stale/out-of-order/cancelled requests | Pending |
 | UI stability | Long forms, active edits, focus/caret/selection, drafts, scroll/nav position | Pending |
@@ -940,11 +940,11 @@ submitted text on response. All five sampled frames show the old value and
 lost focus. This probe is not counted among passing tests and must become a
 passing regression test during the binding migration.
 
-Mobile images also expose pre-existing clipped columns: the editable table has
-552px of content inside a 324px container. The matrix and readonly table exceed
-their containers too. The migration must provide access to every column while
-preserving desktop presentation; equal reference screenshots alone do not
-satisfy the overflow requirement.
+Mobile images show columns outside the initial table viewport: the editable
+table has 552px of content inside a 324px container. The matrix and readonly
+table exceed their containers too. The reference checkpoint had not yet tested
+horizontal scrolling, so those images alone do not establish inaccessible
+columns. The migration checkpoint below verifies access in both bundles.
 
 The eight browser files affected by this checkpoint pass independently.
 Initial and final `check:all` pass all eight gates; UI contracts remain at
@@ -954,3 +954,119 @@ the passing rerun. Logs are `embedded-table-start.log`,
 `table-reference-final.log` and `table-reference-browser/`.
 No runtime implementation changed. The full migration, concurrency correction,
 mobile overflow correction and remaining goal scope are still outstanding.
+
+
+### Embedded tables use document binding
+
+Details containing table fields now enter the declarative path. Column
+composition reads dashboard definitions only. `static/.../detail/table.html`
+defines headers, cells, editors, options and row actions; ordinary repeats
+apply row values and lookup options. The table and row visual shells encapsulate
+the existing styles. Native text cells and official editor controls are slotted
+directly into rows. No private core, JSON attribute, template-use mechanism or
+repeat key was added.
+
+Table context projects stable positional row records and formatted values.
+Reading an operation merges edited columns into their original row records,
+preserving unknown identifiers and nested metadata. Add/remove interactions
+change draft arrays; binding updates the rows. Cartesian derivation is a pure
+projection shared with the remaining legacy path, and bound derived tables
+receive draft values instead of imperative DOM replacements.
+
+Nested lookup columns use one hidden binding source per column, shared by all
+rows. The existing lookup controller exposes its option/query state to the
+detail's binding context. The table forwards only user search/load-more events
+to the matching source; no response data is forwarded to a renderer. Dependency
+URLs, debounce, pagination, stale-response handling and the double-click guard
+remain owned by that source/controller. The column source is not wrapped around
+the rows because an independent source has its own scope; no binding-core
+extension was necessary.
+
+Editable table drafts retain empty added rows, while action payloads omit empty
+rows. Submission snapshots distinguish an empty row already submitted from one
+added during an in-flight save. This also applies when a condition hides the
+table. Acknowledging a response clears only the corresponding submitted draft;
+it retains later edits and later added rows. The formerly failing concurrency
+probe now passes as a checked-in regression test, including focus, selection
+and geometry across five frames.
+
+Eight table browser cases now cover:
+
+- Selected detail: all four column editor types, nested/opaque row values,
+  removal, blank-row omission, two saves/reloads and Cartesian combinations.
+- Standalone detail: save an empty table and matrix, create a new row, save and
+  reload its value.
+- Pending options and overlapping saves: unchanged text focus/selection/geometry,
+  preserved newer edits, a second save and persisted reload.
+- Add a blank row while a save is pending, keep it after the response, fill it
+  and verify the next saved reload.
+- Two lookup columns shared across rows: isolated searches, stale response,
+  pagination/double clicks, failure/new query, dependent category and saved values.
+- Mobile failed save and retry from a long detail: bottom draft, selection,
+  scroll and navigation positions remain stable across five frames.
+- Conditional hide/reveal and save while hidden: retain added/edited rows and
+  derived data, omit an extra empty row, then verify the reloaded values.
+- Seven desktop/mobile visual states, including horizontal scrolling to the
+  rightmost Remove button in both old and new bundles.
+
+All writes above are route-fixture persistence. These cases do not establish
+real local database writes or provider behavior. The mobile access check also
+corrects the reference checkpoint's initial interpretation: the original table
+already scrolls horizontally. Both versions expose the rightmost controls;
+the new shell retains that behavior without page-level overflow.
+
+The final seven capture pairs preserve all measured field, row and navigation
+geometry, including the table's effective scrollable width. Three pairs are
+pixel identical; the other four differ by 4, 7, 7 and 15 border pixels. Images
+were inspected. Evidence is `table-migrated-captures/`,
+`table-migration-visual-{0..4}.log` and `table-migration-timings.json` under the
+existing evidence directory. Five-run medians in milliseconds are:
+
+| State | Desktop original / current | Mobile original / current |
+|---|---:|---:|
+| Ready | 203.2 / 201.9 | 172.3 / 193.4 |
+| Empty | 157.9 / 181.8 | 156.2 / 181.7 |
+| Pending lookup | 169.8 / 189.9 | 168.2 / 193.4 |
+
+Each initial case makes one detail GET and one shared lookup GET. Save-response
+medians are 52.7ms originally and 52.5ms now. Original saves issue one additional
+lookup GET; current saves issue none. Neither refetches the main detail. The
+separate five-run probe checks both rendered and fixture-persisted values;
+evidence is `table-save-benchmark.ts`, its log and `table-save-timings.json`.
+
+Initial rendering is still slower in several states. Chromium profiling compares
+the original bundle, the immediately preceding table-reference bundle and the
+current bundle. Before removing redundant visual cell wrappers, current median
+script work was 75.0ms; afterward it is 66.7ms, compared with 49.5ms for the
+preceding bundle in the latter run. The reported Nodes metric decreased from
+21,052 to 18,128. These are separate profiling runs and do not prove a wall-time
+speedup. Remaining initial binding cost belongs in the final performance review;
+this checkpoint claims stable interactions and fewer save requests, not an
+overall speed improvement. Raw profiles are `table-initial-profile-wrapped.json`
+and `table-initial-profile.json`.
+
+All 54 dashboard browser tests across 46 files pass in separate Bun processes,
+and 181 Control tests pass. The final table structure was rechecked with all
+its affected browser files. Build and initial/final check:all pass all eight
+gates; UI contracts remain 0 errors, 77 warnings and 11 information. The table
+fixture's 152-line information and the eight-entry browser directory were
+reviewed and retained as cohesive responsibilities. Existing event/state files
+are 235/270 lines: their shared event and draft responsibilities remain together
+while the remaining legacy branch is pending removal. No fanout error or rule
+exemption was added.
+
+Grouped browser runs again stalled during a reload: after successful retry,
+`/control.js` did not finish and data endpoints were never reached. Logs
+`table-migration-final-flows.log`, `table-migration-final-flows-retry.log` and
+`table-migration-batch-debug3.log` retain those failures. The previously recorded
+original-bundle grouped navigation failure remains relevant; the root cause of
+this harness behavior is not established here. Diagnostic logging was removed,
+no timeout was increased, and passing isolated runs are recorded separately in
+`table-migration-browser/`. Held mobile fixture requests are released in cleanup.
+
+The old table renderer is relocated under `controls/table/legacy.ts` for mixed
+details still containing reorderable lists and for manual examples. It is not
+a permanent compatibility contract and must disappear with those consumers.
+Reorderable lists/cards and nested media, metadata relays, complete operator and
+provider coverage, real local writes/cleanup, final performance review and
+runtime activation still prevent goal completion.

@@ -1,5 +1,6 @@
 import { composeUserOptions } from "../lookups/users";
 import { composeSchema } from "../controls/schema/binding/composition";
+import { composeTable } from "../controls/table/composition";
 import { composeMedia } from "../../w-media-field/binding/composition";
 import { composeLookup } from "../lookups/composition";
 import type { DashboardField } from "@bernouy/cms-dashboards";
@@ -24,7 +25,10 @@ export function fieldElement(field: DashboardField, root: string): HTMLElement {
     }
     wrapper.setAttribute("label", field.label);
     wrapper.toggleAttribute("required", field.required === true);
-    wrapper.toggleAttribute("internal-label", field.type !== "readonly" && field.type !== "checkbox");
+    wrapper.toggleAttribute(
+        "internal-label",
+        field.type !== "readonly" && field.type !== "checkbox" && field.type !== "table",
+    );
     if (field.type === "readonly") {
         composeReadonly(control, field, root);
         wrapper.append(...Array.from(control.childNodes));
@@ -34,7 +38,7 @@ export function fieldElement(field: DashboardField, root: string): HTMLElement {
         if (field.type === "checkbox") {
             control.setAttribute("cms-bind-value", field.path === "." ? root : `${root}.${field.path}`);
             control.setAttribute("aria-label", field.label);
-        } else if (field.type !== "media" && field.type !== "schema") {
+        } else if (field.type !== "media" && field.type !== "schema" && field.type !== "table") {
             control.setAttribute(
                 "value",
                 fieldBinding(root, field.path, field.type === "tokens" ? "dashboardTokens" : undefined),
@@ -97,9 +101,11 @@ export function fieldElement(field: DashboardField, root: string): HTMLElement {
             control.setAttribute("published-only", String(field.publishedOnly === true));
         }
         wrapper.append(
-            (field.type === "combobox" || field.type === "tokens") && field.lookup
-                ? composeLookup(control, field)
-                : control,
+            field.type === "table"
+                ? composeTable(control, field)
+                : (field.type === "combobox" || field.type === "tokens") && field.lookup
+                  ? composeLookup(control, field)
+                  : control,
         );
     }
     return wrapper;

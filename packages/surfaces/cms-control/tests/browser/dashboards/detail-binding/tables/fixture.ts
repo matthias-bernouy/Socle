@@ -65,10 +65,11 @@ const fields: DashboardField[] = [
     { id: "notes", path: "notes", label: "Notes", type: "textarea" },
 ];
 
-export async function installTableRoutes(page: Page, bundle: string, styles: string) {
+export async function installTableRoutes(page: Page, bundle: string, styles: string, conditional = false) {
     const resource = {
         id: "quality-table",
         title: "Product variants",
+        showAxes: true,
         notes: "Saved notes",
         axes: [
             {
@@ -108,7 +109,16 @@ export async function installTableRoutes(page: Page, bundle: string, styles: str
         ],
     };
     const fixture = await installReadonlyRoutes(page, bundle, styles, {
-        fields,
+        fields: conditional
+            ? [
+                  { id: "showAxes", path: "showAxes", label: "Show axes", type: "checkbox" },
+                  ...fields.map((field) =>
+                      field.id === "axes"
+                          ? { ...field, visibleWhen: { value: "$field.showAxes", equals: true } }
+                          : field,
+                  ),
+              ]
+            : fields,
         resource,
         normalize: (value) => Object.assign(resource, value),
         extraEndpoints: [{ endpointId: "brands", method: "GET", params: [] }],

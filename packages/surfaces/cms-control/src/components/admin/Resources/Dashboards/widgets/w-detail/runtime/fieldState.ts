@@ -1,7 +1,8 @@
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import { valueAt } from "../../../runtime/expressions";
-import { invalidFieldControl, readFieldControlValue } from "../controls";
+import { invalidFieldControl, readFieldControlValue, readFieldControlDraft } from "../controls";
 import type { WDetailData, WDetailField } from "../types";
+import { serializedTableRows } from "../controls/table/context";
 import { remainingDraft } from "../../../domain/drafts";
 
 export type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
@@ -17,6 +18,7 @@ export class DetailFieldState {
     private scopeKey = "";
     private values: Record<string, unknown> = {};
     private displayValues: Record<string, string> = {};
+    private submittedTables: Record<string, unknown> = {};
     private acknowledged: { fields: Record<string, unknown>; resource: unknown } | null = null;
 
     constructor(
@@ -38,7 +40,17 @@ export class DetailFieldState {
     }
 
     acknowledgeSavedFields(fields: Record<string, unknown>): void {
-        this.acknowledged = { fields, resource: this.currentResource() };
+        const accepted = { ...fields };
+        for (const [id, draft] of Object.entries(this.submittedTables)) {
+            if (
+                Object.hasOwn(fields, id) &&
+                JSON.stringify(serializedTableRows(draft)) === JSON.stringify(fields[id])
+            ) {
+                accepted[id] = draft;
+                delete this.submittedTables[id];
+            }
+        }
+        this.acknowledged = { fields: accepted, resource: this.currentResource() };
     }
 
     draftForResource(resource: unknown): Record<string, unknown> {
@@ -60,6 +72,7 @@ export class DetailFieldState {
         this.values = {};
         this.displayValues = {};
         this.acknowledged = null;
+        this.submittedTables = {};
     }
 
     clear(): void {
@@ -67,6 +80,7 @@ export class DetailFieldState {
         this.values = {};
         this.displayValues = {};
         this.acknowledged = null;
+        this.submittedTables = {};
     }
 
     record(fieldId: string, value: unknown, displayValue?: string): void {
@@ -110,7 +124,29 @@ export class DetailFieldState {
                 fields[field.id] = readFieldControlValue(field, control);
             }
         }
+        for (const id of this.editableTableIds()) {
+            if (Object.hasOwn(fields, id)) {
+                fields[id] = serializedTableRows(fields[id]);
+            }
+        }
         return fields;
+    }
+
+    submissionFields(): Record<string, unknown> {
+        const submitted = this.currentFields();
+        for (const id of this.editableTableIds()) {
+            const field = this.find(id);
+            const control = this.control(id);
+            const draft =
+                field && control?.localName === "cms-dashboard-table-field"
+                    ? readFieldControlDraft(field, control)
+                    : this.values[id];
+            if (draft !== undefined) {
+                this.record(id, draft);
+                this.submittedTables[id] = structuredClone(draft);
+            }
+        }
+        return submitted;
     }
 
     validate(): boolean {
@@ -142,6 +178,15 @@ export class DetailFieldState {
             Array.from(this.root.querySelectorAll<HTMLElement>("[data-field-control]")).find(
                 (control) => control.dataset.fieldControl === fieldId,
             ) ?? null
+        );
+    }
+
+    private editableTableIds(): string[] {
+        const widget = readDetailBinding(this.dataset)?.widget;
+        return [...(widget?.main ?? []), ...(widget?.aside ?? [])].flatMap((section) =>
+            "widget" in section
+                ? []
+                : section.fields.filter((field) => field.type === "table" && field.editable).map((field) => field.id),
         );
     }
 

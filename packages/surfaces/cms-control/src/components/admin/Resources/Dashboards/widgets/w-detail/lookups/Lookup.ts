@@ -9,6 +9,8 @@ export class DashboardLookup extends HTMLElement {
     static observedAttributes = ["request-base", "selected-value"];
     private timer: ReturnType<typeof setTimeout> | undefined;
     private query = "";
+    private queued = false;
+    sharedContext: Record<string, unknown> = {};
     private offset = 0;
     private received = 0;
     private acceptedOffset = 0;
@@ -20,9 +22,9 @@ export class DashboardLookup extends HTMLElement {
     private declared: DashboardOption[] = [];
 
     connectedCallback(): void {
-        this.declared = Array.from(this.querySelectorAll<HTMLOptionElement>("[data-static-options] option")).map(
-            (option) => ({ value: option.value, label: option.textContent ?? option.value }),
-        );
+        this.declared = Array.from(
+            this.querySelectorAll<HTMLOptionElement>(":scope > [data-static-options] option"),
+        ).map((option) => ({ value: option.value, label: option.textContent ?? option.value }));
         this.setAttribute("cms-reload-on", `dashboard:lookup:${++sequence}`);
         setSourceContext(this, (value) => this.context(value));
         this.addEventListener("combobox-search", this.onSearch);
@@ -70,7 +72,7 @@ export class DashboardLookup extends HTMLElement {
                 (page.total === undefined ? page.received >= 25 : this.offset + page.received < page.total);
         }
 
-        return {
+        const context = {
             lookupValue: this.getAttribute("selected-value") ?? "",
             lookupOptions: distinctOptions([
                 ...this.declared,
@@ -79,7 +81,14 @@ export class DashboardLookup extends HTMLElement {
                 ...selectedLookupOptions(this),
             ]),
             lookupHasMore: this.hasMore,
+            lookupLoading: this.pending,
         };
+        const name = this.getAttribute("context-name");
+        if (name) {
+            this.sharedContext = context;
+            this.refreshOwner();
+        }
+        return context;
     }
     private updateUrl(retry = false): void {
         const base = this.getAttribute("request-base");
@@ -112,7 +121,7 @@ export class DashboardLookup extends HTMLElement {
         }
     }
     private onSearch = (event: Event): void => {
-        if (!this.getAttribute("search-params")) {
+        if (!this.ownsControl(event) || !this.getAttribute("search-params")) {
             return;
         }
         event.stopPropagation();
@@ -125,11 +134,32 @@ export class DashboardLookup extends HTMLElement {
         }, 250);
     };
     private onMore = (event: Event): void => {
+        if (!this.ownsControl(event)) {
+            return;
+        }
         event.stopPropagation();
         if (this.hasMore && !this.pending) {
             this.offset = this.acceptedOffset + this.received;
             this.updateUrl(true);
         }
     };
+
+    private ownsControl(event: Event): boolean {
+        return !this.hasAttribute("context-name") || event.target === this;
+    }
+
+    private refreshOwner(): void {
+        if (this.queued) {
+            return;
+        }
+        this.queued = true;
+        queueMicrotask(() => {
+            this.queued = false;
+            const owner = this.closest("cms-dashboard-w-detail");
+            if (this.isConnected && owner) {
+                refreshSourceContext(owner);
+            }
+        });
+    }
 }
 customElements.define("cms-dashboard-lookup", DashboardLookup);

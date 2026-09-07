@@ -8,7 +8,8 @@ import {
     WIDGET_MEDIA_ACTION_EVENT,
 } from "../../shared";
 import { W_MEDIA_FIELD_ACTION_EVENT, type DashboardMediaActionDetail } from "../../w-media-field/types";
-import { readFieldControlValue } from "../controls";
+import { serializedTableRows } from "../controls/table/context";
+import { readFieldControlDraft, readFieldControlValue } from "../controls";
 import type { WDetailData } from "../types";
 import { DetailFieldState } from "./fieldState";
 import { DetailLookups } from "./lookups";
@@ -82,21 +83,21 @@ export class DetailEvents {
                 widget: action.dataset.widget ?? this.host.dataset.widgetId,
                 row: data.rowKey,
                 resource: this.isBound() ? this.fields.currentResource() : undefined,
-                fields: this.fields.currentFields(),
+                fields: this.fields.submissionFields(),
             });
         }
         const chip = target?.closest<HTMLButtonElement>(".chip");
         if (chip) {
-            toggleChip(chip, this.emitFieldChange);
+            toggleChip(chip, (control) => this.emitFieldChange(control));
         }
         const tableAdd = target?.closest<HTMLButtonElement>("[data-table-add]");
         const tableRemove = target?.closest<HTMLButtonElement>("[data-table-remove]");
         const changedControl = (chip ?? tableAdd ?? tableRemove)?.closest<HTMLElement>("[data-field-control]");
         if (tableAdd) {
-            addTableRow(tableAdd, this.fields, this.emitFieldChange);
+            addTableRow(tableAdd, this.fields, (control, draft) => this.emitFieldChange(control, false, draft));
         }
         if (tableRemove) {
-            removeTableRow(tableRemove, this.fields, this.emitFieldChange);
+            removeTableRow(tableRemove, this.fields, (control, draft) => this.emitFieldChange(control, false, draft));
         }
         if (changedControl) {
             this.afterFieldChange(changedControl.dataset.fieldControl ?? "");
@@ -125,7 +126,7 @@ export class DetailEvents {
         if (control && field && this.host.hasAttribute("data-declarative")) {
             this.fields.record(
                 field.id,
-                readFieldControlValue(field, control),
+                readFieldControlDraft(field, control),
                 this.displayValue(field.input, control),
             );
         }
@@ -186,13 +187,14 @@ export class DetailEvents {
         });
     };
 
-    private emitFieldChange = (control: HTMLElement, created = false): void => {
+    private emitFieldChange = (control: HTMLElement, created = false, override?: unknown): void => {
         const field = this.fields.find(control.dataset.fieldControl ?? "");
         if (!field) {
             return;
         }
-        const value = readFieldControlValue(field, control);
-        this.fields.record(field.id, value, this.displayValue(field.input, control));
+        const draft = override ?? readFieldControlDraft(field, control);
+        const value = field.input === "table" && field.editable ? serializedTableRows(draft) : draft;
+        this.fields.record(field.id, draft, this.displayValue(field.input, control));
         emitWidgetEvent(this.host, WIDGET_FIELD_CHANGE_EVENT, {
             rowKey: this.readData().rowKey,
             field: field.id,

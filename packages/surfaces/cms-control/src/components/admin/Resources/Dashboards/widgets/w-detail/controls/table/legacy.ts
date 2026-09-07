@@ -1,9 +1,10 @@
-import { formatDashboardValue } from "../../../domain/formatting";
-import { setValueAt, valueAt } from "../../../runtime/expressions";
-import { DashboardWReorderableList, type ReorderableListData } from "../../w-reorderable-list/WReorderableList";
-import type { WDetailField, WDetailFieldValue } from "../types";
-import { createTableEditor, readTableEditor } from "./editors";
-import { bindFieldControl } from "./shared";
+import { formatDashboardValue } from "../../../../domain/formatting";
+import { setValueAt, valueAt } from "../../../../runtime/expressions";
+import { DashboardWReorderableList, type ReorderableListData } from "../../../w-reorderable-list/WReorderableList";
+import type { WDetailField, WDetailFieldValue } from "../../types";
+import { createTableEditor, readTableEditor } from "../editors";
+import { bindFieldControl } from "../shared";
+import { readBoundTableRows, serializedTableRows } from "./context";
 
 const tableRowSources = new WeakMap<HTMLElement, Record<string, unknown>>();
 
@@ -84,6 +85,10 @@ export function tableRow(field: WDetailField, row: Record<string, unknown>): HTM
 }
 
 export function readTableValue(field: WDetailField, control: HTMLElement): Record<string, unknown>[] {
+    if (control.localName === "cms-dashboard-table-field") {
+        const rows = readBoundTableRows(field, control);
+        return field.editable ? serializedTableRows(rows) : rows;
+    }
     if (!field.editable) {
         return structuredClone(tableRows(field.value));
     }

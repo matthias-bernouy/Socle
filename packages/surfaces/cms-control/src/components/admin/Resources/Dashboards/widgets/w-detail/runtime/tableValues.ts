@@ -1,9 +1,10 @@
-import { valueAt } from "../../../runtime/expressions";
+import { deriveTableRows } from "../controls/table/derive";
+import { readBoundTableRows } from "../controls/table/context";
 import { readFieldControlValue, tableRow } from "../controls";
 import type { WDetailField } from "../types";
 import { DetailFieldState } from "./fieldState";
 
-type EmitFieldChange = (control: HTMLElement) => void;
+type EmitFieldChange = (control: HTMLElement, draft?: unknown) => void;
 
 export function toggleChip(chip: HTMLButtonElement, emitFieldChange: EmitFieldChange): void {
     chip.setAttribute("aria-pressed", String(chip.getAttribute("aria-pressed") !== "true"));
@@ -23,6 +24,12 @@ export function addTableRow(
     if (!control || !field || field.input !== "table") {
         return;
     }
+    if (control.localName === "cms-dashboard-table-field") {
+        const rows = [...readBoundTableRows(field, control), {}];
+        emitFieldChange(control, rows);
+        updateDerivedTables(field.id, fields, rows);
+        return;
+    }
     control.insertBefore(tableRow(field, {}), button);
     emitFieldChange(control);
     updateDerivedTables(field.id, fields);
@@ -38,18 +45,29 @@ export function removeTableRow(
     if (!control || !row) {
         return;
     }
+    if (control.localName === "cms-dashboard-table-field") {
+        const field = fields.find(control.dataset.fieldControl ?? "");
+        if (!field) {
+            return;
+        }
+        const rows = readBoundTableRows(field, control);
+        rows.splice(Number((row as HTMLElement).dataset.tableIndex), 1);
+        emitFieldChange(control, rows);
+        updateDerivedTables(field.id, fields, rows);
+        return;
+    }
     row.remove();
     emitFieldChange(control);
     updateDerivedTables(control.dataset.fieldControl ?? "", fields);
 }
 
-export function updateDerivedTables(sourceFieldId: string, fields: DetailFieldState): void {
+export function updateDerivedTables(sourceFieldId: string, fields: DetailFieldState, sourceDraft?: unknown): void {
     const sourceControl = fields.control(sourceFieldId);
     const sourceField = sourceControl ? fields.find(sourceFieldId) : undefined;
     if (!sourceControl || !sourceField) {
         return;
     }
-    const sourceValue = readFieldControlValue(sourceField, sourceControl);
+    const sourceValue = sourceDraft ?? readFieldControlValue(sourceField, sourceControl);
     for (const field of fields.fields()) {
         if (field.input !== "table" || field.derive?.sourceField !== sourceFieldId) {
             continue;
@@ -60,7 +78,11 @@ export function updateDerivedTables(sourceFieldId: string, fields: DetailFieldSt
         }
         const rows = deriveTableRows(field, sourceValue);
         field.value = rows;
-        replaceTableRows(control, field, rows);
+        if (control.localName === "cms-dashboard-table-field") {
+            fields.record(field.id, rows);
+        } else {
+            replaceTableRows(control, field, rows);
+        }
     }
 }
 
@@ -70,63 +92,4 @@ function replaceTableRows(control: HTMLElement, field: WDetailField, rows: Recor
     for (const row of rows) {
         control.insertBefore(tableRow(field, row), anchor);
     }
-}
-
-function deriveTableRows(field: WDetailField, sourceValue: unknown): Record<string, unknown>[] {
-    if (field.derive?.type !== "cartesian") {
-        return [];
-    }
-    const axes = Array.isArray(sourceValue)
-        ? sourceValue
-              .filter(
-                  (row): row is Record<string, unknown> =>
-                      row !== null && typeof row === "object" && !Array.isArray(row),
-              )
-              .map((row, index) => ({
-                  label: textValue(valueAt(row, field.derive!.labelPath)),
-                  values: listValue(valueAt(row, field.derive!.valuesPath)),
-                  position: index,
-              }))
-              .filter((axis) => axis.label && axis.values.length)
-        : [];
-    if (!axes.length) {
-        return [];
-    }
-    return axes
-        .reduce<Array<Array<{ label: string; value: string }>>>(
-            (sets, axis) => sets.flatMap((set) => axis.values.map((value) => [...set, { label: axis.label, value }])),
-            [[]],
-        )
-        .map((choices, index) => ({
-            key: choices.map((choice) => `${slug(choice.label)}:${slug(choice.value)}`).join("|"),
-            options: choices.map((choice) => choice.value).join(" / "),
-            title: choices.map((choice) => `${choice.label}: ${choice.value}`).join(" / "),
-            status: "inactive",
-            position: index,
-        }));
-}
-
-function listValue(value: unknown): string[] {
-    if (Array.isArray(value)) {
-        return value.map((item) => String(item).trim()).filter(Boolean);
-    }
-    if (typeof value === "string") {
-        return value
-            .split(",")
-            .map((item) => item.trim())
-            .filter(Boolean);
-    }
-    return [];
-}
-
-function textValue(value: unknown): string {
-    return value === null || value === undefined ? "" : String(value).trim();
-}
-
-function slug(value: string): string {
-    return value
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "");
 }

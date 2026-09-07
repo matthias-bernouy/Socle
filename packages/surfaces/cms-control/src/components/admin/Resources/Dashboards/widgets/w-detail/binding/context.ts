@@ -1,7 +1,8 @@
 import { directoryContext } from "../lookups/directoryContext";
 import { schemaContext } from "../controls/schema/binding/context";
+import { tableContext, tableLookupContexts } from "../controls/table/context";
 import { mediaContext } from "../../w-media-field/binding/context";
-import { detailLookupUrls } from "../lookups/urls";
+import { detailLookupUrls, tableLookupUrls } from "../lookups/urls";
 import { readSourceData, setSourceContext } from "@bernouy/components";
 import { fieldValues } from "../../../runtime/mapping";
 import { matchesDashboardVisibility, setValueAt, valueAt } from "../../../runtime/expressions";
@@ -22,6 +23,7 @@ export function bindDetailContext(
     const users = directoryContext(host, fields);
     const media = mediaContext(host, fields);
     const schemas = schemaContext(host, fields);
+    const tables = tableContext(host, fields);
     const actions = actionLayout(widget.actions ?? []);
     const rules = Object.fromEntries(fields.map((field) => [field.id, field.visibleWhen]));
     setSourceContext(host, () => {
@@ -67,6 +69,9 @@ export function bindDetailContext(
                 }),
         );
         return {
+            detailTables: tables(values),
+            ...tableLookupContexts(host),
+            detailTableLookupUrls: tableLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
             ...schemas(values, resource),
             detailMedia: media(values, edits),
             ...users(values, resource),

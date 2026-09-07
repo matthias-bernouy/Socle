@@ -1,4 +1,5 @@
 import type { WDetailField, WDetailFieldValue } from "../types";
+import { readBoundTableRows } from "./table/context";
 import { isMediaControl, mediaList } from "../mediaControl";
 import { createBasicControl, fieldUsesBasicInternalLabel, readBasicControlValue } from "./basic";
 import { createSchemaControl, readSchemaControlValue, validateSchemaControl } from "./schema";
@@ -49,6 +50,13 @@ export function readFieldControlValue(field: WDetailField, control: HTMLElement)
         return readSchemaControlValue(field, control);
     }
     return readBasicControlValue(field, control);
+}
+
+/** Drafts retain blank added rows until submission; operation values omit them. */
+export function readFieldControlDraft(field: WDetailField, control: HTMLElement): WDetailFieldValue {
+    return field.input === "table" && control.localName === "cms-dashboard-table-field"
+        ? readBoundTableRows(field, control)
+        : readFieldControlValue(field, control);
 }
 
 export function invalidFieldControl(field: WDetailField, control: HTMLElement): HTMLElement | null {

@@ -24,6 +24,9 @@ test("embedded tables preserve hidden row data, all editor values and derived ro
         const rows = axes.locator("[data-table-row]");
         const matrix = page.locator('[data-field-control="matrix"] [data-table-row]');
         await rows.first().locator('option[value="head"]').waitFor({ state: "attached" });
+        expect(await axes.evaluate((node) => node.getRootNode() === document)).toBe(true);
+        expect(await rows.evaluateAll((nodes) => nodes.every((node) => node.getRootNode() === document))).toBe(true);
+        expect(await page.locator("[data-config-json], [data-source-json]").count()).toBe(0);
         expect(await rows.count()).toBe(2);
         await rows.first().getByRole("button", { name: "Remove", exact: true }).click();
         expect(await rows.count()).toBe(1);
@@ -49,6 +52,7 @@ test("embedded tables preserve hidden row data, all editor values and derived ro
             },
         ]);
         expect(fixture.saved[0]?.prices).toEqual(prices);
+        expect(fixture.lookups).toHaveLength(1);
         expect(fixture.saved[0]?.matrix).toEqual([
             {
                 key: "weight-updated:300",
@@ -107,3 +111,33 @@ async function save(page: Page) {
     await page.getByRole("button", { name: "Save choices", exact: true }).click();
     expect((await response).ok()).toBe(true);
 }
+
+test("standalone table details persist empty collections and a newly created row", async () => {
+    const browser = await chromium.launch();
+    try {
+        const page = await browser.newPage();
+        page.setDefaultTimeout(5000);
+        const fixture = await installTableRoutes(page, bundle, styles);
+        await page.goto(tablePage.replace("&collection=detail&row=quality-table", ""));
+        const axes = page.locator('[data-field-control="axes"]');
+        const rows = axes.locator("[data-table-row]");
+        await rows.first().locator('option[value="head"]').waitFor({ state: "attached" });
+        await rows.first().getByRole("button", { name: "Remove", exact: true }).click();
+        await rows.first().getByRole("button", { name: "Remove", exact: true }).click();
+        await save(page);
+        expect(fixture.saved[0]?.axes).toEqual([]);
+        expect(fixture.saved[0]?.matrix).toEqual([]);
+        await page.reload();
+        await axes.getByRole("button", { name: "Add axis", exact: true }).click();
+        await rows.first().locator('[data-table-column="label"] input').fill("First standalone axis");
+        await save(page);
+        await page.reload();
+        await rows.first().locator('[data-table-column="label"] input').waitFor();
+        expect(await rows.count()).toBe(1);
+        expect(await rows.first().locator('[data-table-column="label"] input').inputValue()).toBe(
+            "First standalone axis",
+        );
+    } finally {
+        await browser.close();
+    }
+}, 20_000);

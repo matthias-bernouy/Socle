@@ -26966,6 +26966,1690 @@ w13c-lateral-menu-item {
     };
   }
 
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/template.html
+  var template_default9 = `<div class="page-link">
+    <div class="head">
+        <span class="label"></span>
+        <span class="hint"></span>
+    </div>
+    <div class="tabs" role="tablist"></div>
+    <div class="panel page-panel">
+        <input class="search" type="search" placeholder="Search pages" />
+        <div class="picker" hidden>
+            <div class="page-list" role="listbox"></div>
+            <div class="empty" hidden>No pages found</div>
+        </div>
+    </div>
+    <div class="panel external-panel" hidden>
+        <input class="external-input" type="url" placeholder="https://example.com" />
+    </div>
+    <div class="panel media-panel" hidden>
+        <button class="file-button" type="button">
+            <span class="file-preview" aria-hidden="true"></span>
+            <span class="file-copy">
+                <strong class="file-title">Choose file</strong>
+                <code class="file-value">No file selected</code>
+            </span>
+            <span class="file-action">Change</span>
+        </button>
+    </div>
+    <div class="target">
+        <span class="icon">↗</span>
+        <span class="copy">
+            <strong></strong>
+            <code></code>
+        </span>
+    </div>
+</div>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-1.css
+  var part_1_default = `:host {
+    --_page-link-surface: var(--editor-v2-surface, var(--bg-surface, #ffffff));
+    --_page-link-surface-muted: var(--editor-v2-surface-muted, var(--bg-subtle, #f9faf9));
+    --_page-link-border: var(--editor-v2-border, var(--border-default, #e2e6e4));
+    --_page-link-text: var(--editor-v2-text, var(--text-default, #151b19));
+    --_page-link-label: var(--editor-v2-label, var(--text-muted, #5f6d68));
+    --_page-link-muted: var(--editor-v2-muted, var(--text-muted, #87948f));
+    --_page-link-accent: var(--editor-v2-accent, var(--primary-base, #165f4b));
+    display: block;
+}
+
+:host([disabled]) {
+    cursor: not-allowed;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.page-link {
+    display: grid;
+    gap: 7px;
+}
+
+.head {
+    display: grid;
+    gap: 2px;
+}
+
+.label {
+    color: var(--_page-link-label);
+    font-size: 12px;
+    font-weight: 720;
+}
+
+.hint {
+    color: var(--_page-link-muted);
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.tabs {
+    display: flex;
+    gap: 2px;
+    border: 1px solid var(--_page-link-border);
+    border-radius: 8px;
+    background: var(--_page-link-surface-muted);
+    padding: 3px;
+}
+
+.tabs:empty {
+    display: none;
+}
+
+.tabs[hidden] {
+    display: none;
+}
+
+button {
+    font: inherit;
+}
+
+.tabs button {
+    flex: 1;
+    min-height: 28px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--_page-link-muted);
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.tabs button[aria-selected="true"] {
+    background: var(--_page-link-surface);
+    color: var(--_page-link-text);
+    box-shadow: 0 1px 2px rgba(16, 24, 21, .08);
+}
+
+.panel {
+    display: grid;
+    gap: 6px;
+}
+
+.panel[hidden] {
+    display: none;
+}
+
+.page-panel {
+    position: relative;
+}
+
+.search,
+.external-input {
+    width: 100%;
+    min-height: 32px;
+    border: 1px solid var(--_page-link-border);
+    border-radius: 7px;
+    background: var(--_page-link-surface);
+    color: var(--_page-link-text);
+    font: inherit;
+    font-size: 12px;
+    outline: none;
+    padding: 0 10px;
+}
+
+.file-button {
+    display: grid;
+    gap: 8px;
+    width: 100%;
+    border: 1px solid color-mix(in srgb, var(--_page-link-border) 76%, transparent);
+    border-radius: 8px;
+    background: var(--_page-link-surface-muted);
+    color: var(--_page-link-text);
+    padding: 8px;
+    cursor: pointer;
+    text-align: left;
+}
+
+.file-button:hover {
+    border-color: color-mix(in srgb, var(--_page-link-accent) 32%, var(--_page-link-border));
+    background: color-mix(in srgb, var(--_page-link-accent) 4%, var(--_page-link-surface));
+}
+
+.file-preview {
+    display: grid;
+    overflow: hidden;
+    place-items: center;
+    width: 100%;
+    min-height: 112px;
+    aspect-ratio: 16 / 9;
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--_page-link-accent) 10%, var(--_page-link-surface));
+    color: var(--_page-link-accent);
+    font-size: 18px;
+}
+
+.file-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+.file-copy {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+}
+
+.file-title,
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-2.css
+  var part_2_default = `.file-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-value[hidden] {
+    display: none;
+}
+
+.file-action {
+    justify-self: start;
+    color: var(--_page-link-accent);
+    font-size: 11px;
+    font-weight: 720;
+}
+
+.search:focus,
+.external-input:focus {
+    border-color: color-mix(in srgb, var(--_page-link-accent) 46%, var(--_page-link-border));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--_page-link-accent) 10%, transparent);
+}
+
+.picker {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 4px);
+    right: 0;
+    left: 0;
+    overflow: hidden;
+    border: 1px solid var(--_page-link-border);
+    border-radius: 8px;
+    background: var(--_page-link-surface);
+    box-shadow: 0 12px 28px rgba(16, 24, 21, .14);
+}
+
+.picker[hidden] {
+    display: none;
+}
+
+.page-list {
+    display: grid;
+    max-height: 184px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 4px;
+}
+
+.page-option {
+    display: grid;
+    gap: 2px;
+    min-height: 34px;
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--_page-link-text);
+    padding: 6px 7px;
+    text-align: left;
+    cursor: pointer;
+}
+
+.page-option:hover {
+    background: color-mix(in srgb, var(--_page-link-accent) 4%, var(--_page-link-surface));
+}
+
+.page-option[aria-selected="true"] {
+    background: color-mix(in srgb, var(--_page-link-accent) 8%, var(--_page-link-surface));
+    color: var(--_page-link-accent);
+}
+
+.page-title {
+    overflow: hidden;
+    min-width: 0;
+    font-size: 12px;
+    font-weight: 720;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.page-path {
+    overflow: hidden;
+    min-width: 0;
+    color: var(--_page-link-muted);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.empty {
+    color: var(--_page-link-muted);
+    font-size: 12px;
+    padding: 10px 11px;
+}
+
+.target {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 34px;
+    border: 1px solid color-mix(in srgb, var(--_page-link-border) 76%, transparent);
+    border-radius: 7px;
+    background: var(--_page-link-surface-muted);
+    padding: 6px 8px;
+    cursor: pointer;
+}
+
+.target[hidden] {
+    display: none;
+}
+
+.icon {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--_page-link-accent) 12%, var(--_page-link-surface));
+    color: var(--_page-link-accent);
+    font-size: 12px;
+}
+
+.copy {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+
+strong {
+    overflow: hidden;
+    color: var(--_page-link-text);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+code {
+    overflow: hidden;
+    color: var(--_page-link-muted);
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-3.css
+  var part_3_default = `
+:host([disabled]) button,
+:host([disabled]) input,
+:host([disabled]) .target {
+    opacity: .62;
+    cursor: not-allowed;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/index.ts
+  var styles_default3 = [String(part_1_default), String(part_2_default), String(part_3_default)].join("");
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkDomain.ts
+  function allowedLinkModes(options) {
+    const modes = [];
+    if (options.allowPage) {
+      modes.push("page");
+    }
+    if (options.allowExternal) {
+      modes.push("external");
+    }
+    if (options.allowMedia) {
+      modes.push("media");
+    }
+    return modes;
+  }
+  function modeForLinkValue(value2, options) {
+    if (value2 && isMediaLink(value2)) {
+      return "media";
+    }
+    if (value2 && isExternalLink(value2)) {
+      return "external";
+    }
+    if (!options.allowPage && !options.allowExternal && options.allowMedia) {
+      return "media";
+    }
+    if (!options.allowPage && options.allowExternal) {
+      return "external";
+    }
+    return "page";
+  }
+  function isExternalLink(value2) {
+    return /^[a-z][a-z0-9+.-]*:/i.test(value2) || value2.startsWith("//");
+  }
+  function isMediaLink(value2) {
+    return value2.includes("/.cms/files/by-id/");
+  }
+  function isImageMediaLink(value2) {
+    return /\.(avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(value2) || value2.includes("/.cms/files/by-id/");
+  }
+  function mediaDisplayName(value2, isImage2, mediaLabel = "") {
+    if (mediaLabel) {
+      return mediaLabel;
+    }
+    if (value2.includes("/.cms/files/by-id/")) {
+      return isImage2 ? "Image" : "Selected file";
+    }
+    const clean = value2.split(/[?#]/, 1)[0] ?? value2;
+    const segment = clean.split("/").filter(Boolean).at(-1);
+    if (!segment) {
+      return "File";
+    }
+    try {
+      return decodeURIComponent(segment);
+    } catch {
+      return segment;
+    }
+  }
+  function mediaSelectionLabel(isImage2) {
+    return isImage2 ? "Image" : "File selected";
+  }
+  function linkSummaryFallback(mode) {
+    if (mode === "external") {
+      return "External URL";
+    }
+    if (mode === "media") {
+      return "File";
+    }
+    return "Internal page";
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkMediaView.ts
+  function renderPageLinkPanels(input) {
+    const { elements } = input;
+    elements.pagePanel.hidden = input.mode !== "page" || !input.allowPage;
+    elements.externalPanel.hidden = input.mode !== "external" || !input.allowExternal;
+    elements.mediaPanel.hidden = input.mode !== "media" || !input.allowMedia;
+    elements.searchInput.disabled = input.disabled;
+    elements.externalInput.disabled = input.disabled;
+    elements.fileButton.disabled = input.disabled;
+    elements.picker.hidden = !input.pickerOpen || elements.pagePanel.hidden;
+    if (input.mode === "external") {
+      elements.externalInput.value = input.value;
+    }
+    renderPageLinkMedia(elements, input.mode, input.value, input.mediaLabel);
+  }
+  function renderPageLinkMedia(elements, mode, value2, mediaLabel) {
+    const hasValue = mode === "media" && value2 !== "";
+    const isImage2 = hasValue && isImageMediaLink(value2);
+    elements.fileTitle.textContent = hasValue ? mediaDisplayName(value2, isImage2, mediaLabel) : "Choose file";
+    elements.fileValue.textContent = hasValue ? mediaSelectionLabel(isImage2) : "No file selected";
+    elements.fileValue.toggleAttribute("hidden", hasValue && isImage2);
+    elements.fileAction.textContent = hasValue ? "Change" : "Choose";
+    elements.filePreview.replaceChildren();
+    elements.filePreview.dataset.kind = isImage2 ? "image" : "file";
+    if (isImage2) {
+      const image = document.createElement("img");
+      image.src = value2;
+      image.alt = "";
+      image.loading = "lazy";
+      elements.filePreview.append(image);
+      return;
+    }
+    elements.filePreview.textContent = "↗";
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkNavigationView.ts
+  function renderPageLinkTabs(input) {
+    input.elements.tabs.replaceChildren();
+    if (input.allowedModes.length <= 1) {
+      input.elements.tabs.hidden = true;
+      return;
+    }
+    input.elements.tabs.hidden = false;
+    for (const mode of input.allowedModes) {
+      input.elements.tabs.append(modeTab(mode, input.mode, input.disabled, input.onMode));
+    }
+  }
+  function renderPageLinkPages(input) {
+    input.elements.pageList.replaceChildren();
+    input.elements.picker.hidden = !input.pickerOpen || input.elements.pagePanel.hidden;
+    const query4 = input.query.trim().toLowerCase();
+    const pages = input.pages.filter((page) => !query4 || page.title.toLowerCase().includes(query4) || page.path.toLowerCase().includes(query4));
+    input.elements.empty.hidden = !input.pickerOpen || pages.length > 0;
+    for (const page of pages) {
+      const button = document.createElement("button");
+      button.className = "page-option";
+      button.type = "button";
+      button.ariaSelected = String(page.path === input.value);
+      button.disabled = input.disabled;
+      button.addEventListener("click", () => {
+        if (!input.disabled) {
+          input.onSelect(page.path);
+        }
+      });
+      const title = document.createElement("span");
+      title.className = "page-title";
+      title.textContent = page.title;
+      const path = document.createElement("span");
+      path.className = "page-path";
+      path.textContent = page.path;
+      button.append(title, path);
+      input.elements.pageList.append(button);
+    }
+  }
+  function renderPageLinkSummary(elements, pages, mode, value2) {
+    const page = pages.find((candidate) => candidate.path === value2);
+    elements.summaryTitle.textContent = page?.title ?? (value2 ? linkSummaryFallback(mode) : "No link selected");
+    elements.summaryValue.textContent = value2 || "Choose a target";
+    elements.target.hidden = !value2 || mode === "media";
+  }
+  function modeTab(mode, activeMode, disabled, onMode) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.role = "tab";
+    button.textContent = mode === "page" ? "Page" : mode === "external" ? "External" : "Media";
+    button.ariaSelected = String(activeMode === mode);
+    button.disabled = disabled;
+    button.addEventListener("click", () => {
+      if (!disabled) {
+        onMode(mode);
+      }
+    });
+    return button;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkElements.ts
+  function queryPageLinkElements(root) {
+    const query4 = (selector) => root.querySelector(selector);
+    return {
+      empty: query4(".empty"),
+      externalInput: query4(".external-input"),
+      externalPanel: query4(".external-panel"),
+      fileAction: query4(".file-action"),
+      fileButton: query4(".file-button"),
+      filePreview: query4(".file-preview"),
+      fileTitle: query4(".file-title"),
+      fileValue: query4(".file-value"),
+      hint: query4(".hint"),
+      label: query4(".label"),
+      mediaPanel: query4(".media-panel"),
+      pageList: query4(".page-list"),
+      pagePanel: query4(".page-panel"),
+      picker: query4(".picker"),
+      searchInput: query4(".search"),
+      summaryTitle: query4(".target strong"),
+      summaryValue: query4(".target code"),
+      tabs: query4(".tabs"),
+      target: query4(".target")
+    };
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/template.html
+  var template_default10 = `<div class="backdrop" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="files-title">
+        <header class="top">
+            <div>
+                <h2 id="files-title">Choose file</h2>
+                <p>Select a file from the CMS library.</p>
+            </div>
+            <button class="icon-button close" type="button" aria-label="Close">×</button>
+        </header>
+
+        <div class="toolbar">
+            <nav class="breadcrumb" aria-label="Current folder"></nav>
+            <input class="search" type="search" placeholder="Search files" />
+        </div>
+
+        <div class="grid" role="listbox"></div>
+        <div class="empty" hidden>No files found</div>
+
+        <footer class="footer">
+            <div class="selection">
+                <strong>No file selected</strong>
+                <code>Choose a file</code>
+            </div>
+            <div class="actions">
+                <button class="secondary cancel" type="button">Cancel</button>
+                <button class="primary select" type="button" disabled>Select file</button>
+            </div>
+        </footer>
+    </section>
+</div>
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-1.css
+  var part_1_default2 = `:host {
+    color: var(--editor-v2-text, #111);
+    font: 12px/1.35 system-ui, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+.backdrop {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: grid;
+    place-items: start center;
+    overflow: auto;
+    background: rgba(16, 24, 21, .34);
+    padding: 72px 24px 24px;
+}
+
+.backdrop[hidden] {
+    display: none;
+}
+
+.modal {
+    display: grid;
+    grid-template-rows: auto auto minmax(180px, 1fr) auto;
+    width: min(940px, calc(100vw - 48px));
+    max-height: min(760px, calc(100vh - 96px));
+    overflow: hidden;
+    border: 1px solid var(--editor-v2-border, #d7ddd9);
+    border-radius: 8px;
+    background: var(--editor-v2-surface, #fff);
+    box-shadow: 0 24px 70px rgba(16, 24, 21, .22);
+}
+
+.top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    border-bottom: 1px solid var(--editor-v2-border, #d7ddd9);
+    padding: 16px 18px;
+}
+
+h2,
+p {
+    margin: 0;
+}
+
+h2 {
+    font-size: 15px;
+    font-weight: 760;
+}
+
+p {
+    margin-top: 3px;
+    color: var(--editor-v2-muted, #708078);
+}
+
+button,
+input {
+    font: inherit;
+}
+
+.icon-button {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--editor-v2-border, #d7ddd9);
+    border-radius: 7px;
+    background: var(--editor-v2-surface, #fff);
+    cursor: pointer;
+}
+
+.toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: 10px;
+    align-items: center;
+    border-bottom: 1px solid var(--editor-v2-border, #d7ddd9);
+    padding: 10px 12px;
+}
+
+.breadcrumb {
+    display: flex;
+    min-width: 0;
+    gap: 4px;
+    overflow: hidden;
+}
+
+.breadcrumb button {
+    min-width: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--editor-v2-muted, #708078);
+    cursor: pointer;
+    font-weight: 650;
+    padding: 5px 7px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.breadcrumb button:hover,
+.breadcrumb button[aria-current="page"] {
+    background: var(--editor-v2-surface-muted, #f5f7f6);
+    color: var(--editor-v2-text, #111);
+}
+
+.search {
+    min-height: 32px;
+    min-width: 0;
+    border: 1px solid var(--editor-v2-border, #d7ddd9);
+    border-radius: 7px;
+    outline: none;
+    padding: 0 10px;
+}
+
+.search:focus {
+    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 46%, var(--editor-v2-border, #d7ddd9));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent, #176b58) 10%, transparent);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    align-content: start;
+    gap: 10px;
+    justify-items: center;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 12px;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-2.css
+  var part_2_default2 = `.item {
+    display: grid;
+    grid-template-rows: 108px auto;
+    gap: 8px;
+    width: 100%;
+    max-width: 180px;
+    min-height: 168px;
+    min-width: 0;
+    border: 1px solid var(--editor-v2-border, #d7ddd9);
+    border-radius: 7px;
+    background: var(--editor-v2-surface, #fff);
+    color: var(--editor-v2-text, #111);
+    cursor: pointer;
+    padding: 8px;
+    text-align: left;
+}
+
+.item:hover {
+    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 34%, var(--editor-v2-border, #d7ddd9));
+    background: color-mix(in srgb, var(--editor-v2-accent, #176b58) 4%, var(--editor-v2-surface, #fff));
+}
+
+.item[aria-selected="true"] {
+    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 66%, var(--editor-v2-border, #d7ddd9));
+    background: color-mix(in srgb, var(--editor-v2-accent, #176b58) 8%, var(--editor-v2-surface, #fff));
+}
+
+.preview {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    width: 100%;
+    height: 108px;
+    border-radius: 6px;
+    background: var(--editor-v2-surface-muted, #f5f7f6);
+    color: var(--editor-v2-accent, #176b58);
+}
+
+.preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.preview svg {
+    width: 46px;
+    height: 46px;
+    fill: color-mix(in srgb, var(--editor-v2-accent, #176b58) 72%, var(--editor-v2-text, #111));
+    opacity: .9;
+}
+
+.item[data-type="folder"] .preview {
+    background: color-mix(in srgb, #e2b45c 16%, var(--editor-v2-surface-muted, #f5f7f6));
+    color: #9a6a10;
+}
+
+.item[data-type="folder"] .preview svg {
+    fill: currentColor;
+}
+
+.item[data-type="pdf"] .preview {
+    background: color-mix(in srgb, #c84d4d 12%, var(--editor-v2-surface-muted, #f5f7f6));
+    color: #9d3030;
+}
+
+.preview text {
+    fill: currentColor;
+    font: 700 5px system-ui, sans-serif;
+}
+
+.copy {
+    display: grid;
+    min-width: 0;
+    gap: 1px;
+}
+
+.name,
+.meta,
+.selection strong,
+.selection code {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.name {
+    font-weight: 720;
+}
+
+.meta,
+.selection code {
+    color: var(--editor-v2-muted, #708078);
+    font-size: 11px;
+}
+
+.empty {
+    color: var(--editor-v2-muted, #708078);
+    padding: 18px;
+}
+
+.footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    border-top: 1px solid var(--editor-v2-border, #d7ddd9);
+    padding: 12px;
+}
+
+.selection {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+}
+
+.actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 8px;
+}
+
+.secondary,
+.primary {
+    min-height: 32px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: 720;
+    padding: 0 12px;
+}
+
+.secondary {
+    border: 1px solid var(--editor-v2-border, #d7ddd9);
+    background: var(--editor-v2-surface, #fff);
+    color: var(--editor-v2-text, #111);
+}
+
+.primary {
+    border: 1px solid var(--editor-v2-accent, #176b58);
+    background: var(--editor-v2-accent, #176b58);
+    color: #fff;
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-3.css
+  var part_3_default2 = `.primary:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+    .toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .modal {
+        width: calc(100vw - 24px);
+    }
+}
+`;
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/index.ts
+  var styles_default4 = [String(part_1_default2), String(part_2_default2), String(part_3_default2)].join(`
+`);
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterDomain.ts
+  async function loadFilesPage(basePath3, folder, accept) {
+    const params = new URLSearchParams;
+    if (folder) {
+      params.set("parentId", folder);
+    }
+    params.set("accept", accept.join(","));
+    params.set("sortBy", "name");
+    params.set("limit", "10000");
+    const response = await fetch(`${basePath3}/api/files?${params.toString()}`);
+    if (!response.ok) {
+      return [];
+    }
+    return (await response.json()).items;
+  }
+  function fileUrl(basePath3, id2) {
+    return `${basePath3}/.cms/files/by-id/${encodeURIComponent(id2)}`;
+  }
+  function isCmsFileSource(value2) {
+    return value2.startsWith("/") && !value2.startsWith("//") && !/[\u0000-\u0020\u007F]/.test(value2) && /\/\.cms\/files\/by-id\/[^/?#]+(?:[?#].*)?$/.test(value2);
+  }
+  function fileDetail(basePath3, item) {
+    return {
+      id: item.id,
+      label: item.name,
+      src: fileUrl(basePath3, item.id),
+      mimeType: item.mimeType
+    };
+  }
+  function fileKind(item) {
+    if (item.mimeType?.startsWith("image/")) {
+      return "image";
+    }
+    if (item.mimeType?.includes("pdf")) {
+      return "pdf";
+    }
+    return "file";
+  }
+  function matchesFileAccept(item, accept) {
+    if (!accept || accept.length === 0) {
+      return true;
+    }
+    const mimeType = item.mimeType?.split(";", 1)[0]?.trim().toLowerCase() ?? "";
+    if (accept.includes("image") && mimeType.startsWith("image/")) {
+      return true;
+    }
+    if (accept.includes("svg") && mimeType === "image/svg+xml") {
+      return true;
+    }
+    if (accept.includes("bitmap") && mimeType.startsWith("image/") && mimeType !== "image/svg+xml") {
+      return true;
+    }
+    if (accept.includes("video") && mimeType.startsWith("video/")) {
+      return true;
+    }
+    if (accept.includes("audio") && mimeType.startsWith("audio/")) {
+      return true;
+    }
+    if (accept.includes("document") && !mimeType.startsWith("image/") && !mimeType.startsWith("video/") && !mimeType.startsWith("audio/")) {
+      return true;
+    }
+    return false;
+  }
+  function fileMeta(item) {
+    const parts = [item.mimeType ?? "File"];
+    if (typeof item.size === "number") {
+      parts.push(formatFileSize(item.size));
+    }
+    return parts.join(" · ");
+  }
+  function formatFileSize(size) {
+    if (size < 1024) {
+      return `${size} B`;
+    }
+    if (size < 1024 * 1024) {
+      return `${Math.round(size / 1024)} KB`;
+    }
+    return `${(size / 1024 / 1024).toFixed(1)} MB`;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterElements.ts
+  function queryFilesCenterElements(root) {
+    const query4 = (selector) => root.querySelector(selector);
+    return {
+      backdrop: query4(".backdrop"),
+      breadcrumb: query4(".breadcrumb"),
+      cancelButton: query4(".cancel"),
+      closeButton: query4(".close"),
+      empty: query4(".empty"),
+      grid: query4(".grid"),
+      searchInput: query4(".search"),
+      selectButton: query4(".select"),
+      selectionTitle: query4(".selection strong"),
+      selectionValue: query4(".selection code")
+    };
+  }
+  function wireFilesCenterElements(elements, callbacks) {
+    elements.closeButton.addEventListener("click", callbacks.close);
+    elements.cancelButton.addEventListener("click", callbacks.close);
+    elements.backdrop.addEventListener("click", (event) => {
+      if (event.target === elements.backdrop) {
+        callbacks.close();
+      }
+    });
+    elements.selectButton.addEventListener("click", callbacks.confirm);
+    elements.searchInput.addEventListener("input", callbacks.search);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterList.ts
+  function renderFilesBreadcrumb(container, trail, onOpen) {
+    container.replaceChildren();
+    trail.forEach((entry, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = entry.label;
+      button.ariaCurrent = index === trail.length - 1 ? "page" : null;
+      button.addEventListener("click", () => onOpen(entry, index));
+      container.append(button);
+    });
+  }
+  function renderFilesList(input) {
+    input.grid.replaceChildren();
+    const query4 = input.query.trim().toLowerCase();
+    const items = input.items.filter((item) => {
+      if (item.type === "file" && !matchesFileAccept(item, input.fileAccept)) {
+        return false;
+      }
+      return !query4 || item.name.toLowerCase().includes(query4);
+    });
+    input.empty.hidden = items.length > 0;
+    for (const item of items) {
+      const button = document.createElement("button");
+      button.className = "item";
+      button.dataset.type = item.type === "folder" ? "folder" : fileKind(item);
+      button.type = "button";
+      button.ariaSelected = String(input.isSelected(item));
+      button.addEventListener("click", () => {
+        if (item.type === "folder") {
+          input.onOpenFolder(item);
+          return;
+        }
+        input.onSelectFile(item);
+      });
+      button.addEventListener("dblclick", () => {
+        if (item.type === "file" && !input.multiple) {
+          input.onConfirm();
+        }
+      });
+      button.append(renderFilePreview(item, input.basePath), renderFileCopy(item));
+      input.grid.append(button);
+    }
+  }
+  function renderFileCopy(item) {
+    const copy = document.createElement("span");
+    copy.className = "copy";
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = item.name;
+    const meta = document.createElement("span");
+    meta.className = "meta";
+    meta.textContent = item.type === "folder" ? "Folder" : fileMeta(item);
+    copy.append(name, meta);
+    return copy;
+  }
+  function renderFilePreview(item, basePath3) {
+    const preview = document.createElement("span");
+    preview.className = "preview";
+    if (item.type === "folder") {
+      preview.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.8A2.8 2.8 0 0 1 5.8 4h4.1l2 2H18.2A2.8 2.8 0 0 1 21 8.8v8.4a2.8 2.8 0 0 1-2.8 2.8H5.8A2.8 2.8 0 0 1 3 17.2Z"/></svg>`;
+      return preview;
+    }
+    if (item.mimeType?.startsWith("image/")) {
+      const image = document.createElement("img");
+      image.alt = "";
+      image.loading = "lazy";
+      image.src = fileUrl(basePath3, item.id);
+      preview.append(image);
+      return preview;
+    }
+    preview.innerHTML = fileKind(item) === "pdf" ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/><text x="7" y="17">PDF</text></svg>` : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></svg>`;
+    return preview;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterSelection.ts
+  function renderFilesSelection(elements, selection) {
+    if (selection.multiple) {
+      const count = selection.selectedMany.length;
+      elements.selectButton.disabled = count === 0;
+      elements.selectButton.textContent = count === 1 ? "Select 1 file" : `Select ${count} files`;
+      elements.selectionTitle.textContent = count === 0 ? "No files selected" : `${count} files selected`;
+      elements.selectionValue.textContent = selection.maxSelection ? `Up to ${selection.maxSelection} files` : "Choose files";
+      return;
+    }
+    elements.selectButton.disabled = !selection.selected;
+    elements.selectButton.textContent = "Select file";
+    elements.selectionTitle.textContent = selection.selected?.name ?? "No file selected";
+    elements.selectionValue.textContent = selection.selected ? fileMeta(selection.selected) : "Choose a file";
+  }
+  function toggleSelectedFile(item, selection) {
+    if (!selection.multiple) {
+      return item;
+    }
+    const existingIndex = selection.selectedMany.findIndex((selected2) => selected2.id === item.id);
+    if (existingIndex >= 0) {
+      selection.selectedMany.splice(existingIndex, 1);
+      return selection.selected;
+    }
+    if (!selection.maxSelection || selection.selectedMany.length < selection.maxSelection) {
+      selection.selectedMany.push(item);
+    }
+    return selection.selected;
+  }
+  function isFileSelected(item, selection) {
+    return selection.multiple ? selection.selectedMany.some((selected2) => selected2.id === item.id) : selection.selected?.id === item.id;
+  }
+  function dispatchFilesSelection(host, basePath3, selection) {
+    if (selection.multiple) {
+      if (selection.selectedMany.length === 0) {
+        return false;
+      }
+      host.dispatchEvent(new CustomEvent("select-files", {
+        bubbles: true,
+        composed: true,
+        detail: { files: selection.selectedMany.map((file) => fileDetail(basePath3, file)) }
+      }));
+      return true;
+    }
+    if (!selection.selected) {
+      return false;
+    }
+    host.dispatchEvent(new CustomEvent("select-file", {
+      bubbles: true,
+      composed: true,
+      detail: fileDetail(basePath3, selection.selected)
+    }));
+    return true;
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts
+  var template = document.createElement("template");
+  template.innerHTML = `<style>${String(styles_default4)}</style>${String(template_default10)}`;
+
+  class FilesCenter extends HTMLElement {
+    _folder = null;
+    _trail = [{ id: null, label: "Files" }];
+    _items = [];
+    _selected = null;
+    _selectedMany = [];
+    _wired = false;
+    _accept = ["folder", "file"];
+    _fileAccept = null;
+    _multiple = false;
+    _maxSelection = null;
+    elements;
+    constructor() {
+      super();
+      const shadowRoot = this.attachShadow({ mode: "open" });
+      shadowRoot.append(template.content.cloneNode(true));
+      this.elements = queryFilesCenterElements(shadowRoot);
+    }
+    connectedCallback() {
+      this._wire();
+    }
+    show(options = {}) {
+      this._wire();
+      this._accept = options.accept ?? ["folder", "file"];
+      this._fileAccept = options.fileAccept ?? null;
+      this._multiple = options.multiple === true;
+      this._maxSelection = typeof options.maxSelection === "number" ? Math.max(1, options.maxSelection) : null;
+      this._folder = null;
+      this._trail = [{ id: null, label: "Files" }];
+      this._selected = null;
+      this._selectedMany = [];
+      this.elements.searchInput.value = "";
+      this.elements.backdrop.hidden = false;
+      this._load();
+    }
+    _wire() {
+      if (this._wired) {
+        return;
+      }
+      this._wired = true;
+      wireFilesCenterElements(this.elements, {
+        close: () => this._close(),
+        confirm: () => this._confirm(),
+        search: () => this._renderItems()
+      });
+    }
+    async _load() {
+      this._selected = null;
+      this._updateSelection();
+      this._items = await loadFilesPage(this._basePath(), this._folder, this._accept);
+      this._render();
+    }
+    _render() {
+      this._renderBreadcrumb();
+      this._renderItems();
+      this._updateSelection();
+    }
+    _renderBreadcrumb() {
+      renderFilesBreadcrumb(this.elements.breadcrumb, this._trail, (entry, index) => {
+        this._folder = entry.id;
+        this._trail = this._trail.slice(0, index + 1);
+        this._load();
+      });
+    }
+    _renderItems() {
+      renderFilesList({
+        basePath: this._basePath(),
+        empty: this.elements.empty,
+        fileAccept: this._fileAccept,
+        grid: this.elements.grid,
+        isSelected: (item) => this._isSelected(item),
+        items: this._items,
+        multiple: this._multiple,
+        onConfirm: () => this._confirm(),
+        onOpenFolder: (item) => this._openFolder(item),
+        onSelectFile: (item) => {
+          this._selectFile(item);
+          this._renderItems();
+          this._updateSelection();
+        },
+        query: this.elements.searchInput.value
+      });
+    }
+    _openFolder(item) {
+      this._folder = item.id;
+      this._trail.push({ id: item.id, label: item.name });
+      this.elements.searchInput.value = "";
+      this._load();
+    }
+    _updateSelection() {
+      renderFilesSelection(this.elements, this._selection());
+    }
+    _confirm() {
+      if (dispatchFilesSelection(this, this._basePath(), this._selection())) {
+        this._close();
+      }
+    }
+    _selectFile(item) {
+      this._selected = toggleSelectedFile(item, this._selection());
+    }
+    _isSelected(item) {
+      return isFileSelected(item, this._selection());
+    }
+    _close() {
+      this.elements.backdrop.hidden = true;
+      this.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
+    }
+    _basePath() {
+      return document.querySelector('meta[name="basePath"]')?.content ?? "";
+    }
+    _selection() {
+      return {
+        maxSelection: this._maxSelection,
+        multiple: this._multiple,
+        selected: this._selected,
+        selectedMany: this._selectedMany
+      };
+    }
+  }
+  if (!customElements.get("cms-editor-v2-files-center")) {
+    customElements.define("cms-editor-v2-files-center", FilesCenter);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkMediaPicker.ts
+  function openPageLinkMediaPicker(onSelect, accept) {
+    const center = new FilesCenter;
+    const cleanup = () => center.remove();
+    center.addEventListener("close", cleanup, { once: true });
+    center.addEventListener("select-file", (event) => {
+      const detail = event.detail;
+      if (detail?.src && isCmsFileSource(detail.src) && matchesMediaDetail(detail, accept)) {
+        onSelect(detail.src, detail.label);
+      }
+    }, { once: true });
+    document.body.append(center);
+    center.show({ accept: ["folder", "file"], fileAccept: accept });
+  }
+  function matchesMediaDetail(detail, accept) {
+    return matchesFileAccept({
+      id: detail.id,
+      name: detail.label,
+      parentId: null,
+      type: "file",
+      mimeType: detail.mimeType
+    }, accept ?? null);
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkState.ts
+  class PageLinkState extends HTMLElement {
+    pages = [];
+    mode = "page";
+    currentValue = "";
+    loaded = false;
+    wired = false;
+    pickerOpen = false;
+    reflectingValue = false;
+    mediaLabel = "";
+    elements;
+    constructor(template2) {
+      super();
+      const shadowRoot = this.attachShadow({ mode: "open" });
+      shadowRoot.append(template2.content.cloneNode(true));
+      this.elements = queryPageLinkElements(shadowRoot);
+    }
+    static get observedAttributes() {
+      return ["label", "hint", "value", "allow-page", "allow-external", "allow-media", "media-accept", "disabled"];
+    }
+    attributeChangedCallback() {
+      if (!this.shadowRoot || this.reflectingValue) {
+        return;
+      }
+      this.syncFromAttributes();
+      this.render();
+    }
+    get value() {
+      return this.currentValue;
+    }
+    set value(value2) {
+      this.currentValue = value2;
+      this.reflectValue(value2);
+      this.render();
+    }
+    syncFromAttributes() {
+      this.currentValue = this.getAttribute("value") ?? "";
+      this.mode = modeForLinkValue(this.currentValue, this.modeOptions());
+    }
+    setValue(value2) {
+      if (!isSafeNavigationalUrl(value2)) {
+        return;
+      }
+      this.currentValue = value2;
+      this.reflectValue(value2);
+      this.renderPages();
+      this.renderSummary();
+      this.renderMediaFile();
+      this.dispatchEvent(new CustomEvent("input", {
+        bubbles: true,
+        composed: true,
+        detail: { value: value2 }
+      }));
+    }
+    openPicker() {
+      if (this.disabled || this.mode !== "page") {
+        return;
+      }
+      this.pickerOpen = true;
+      this.renderPages();
+    }
+    closePicker() {
+      this.pickerOpen = false;
+      this.renderPages();
+    }
+    openFilesCenter() {
+      if (this.disabled) {
+        return;
+      }
+      openPageLinkMediaPicker((source2, label2) => {
+        this.mode = "media";
+        this.mediaLabel = label2;
+        this.setValue(source2);
+      }, this.mediaAccept());
+    }
+    renderMediaFile() {
+      renderPageLinkMedia(this.elements, this.mode, this.currentValue, this.mediaLabel);
+    }
+    allowedModes() {
+      return allowedLinkModes(this.modeOptions());
+    }
+    allowPage() {
+      return this.getAttribute("allow-page") !== "false";
+    }
+    allowExternal() {
+      return this.getAttribute("allow-external") !== "false";
+    }
+    allowMedia() {
+      return this.getAttribute("allow-media") !== "false";
+    }
+    mediaAccept() {
+      const allowed = new Set(["image", "bitmap", "svg", "video", "audio", "document"]);
+      const values = (this.getAttribute("media-accept") ?? "").split(",").map((value2) => value2.trim()).filter((value2) => allowed.has(value2));
+      return values.length > 0 ? values : undefined;
+    }
+    basePath() {
+      return document.querySelector('meta[name="basePath"]')?.content ?? "";
+    }
+    get disabled() {
+      return this.hasAttribute("disabled");
+    }
+    modeOptions() {
+      return {
+        allowPage: this.allowPage(),
+        allowExternal: this.allowExternal(),
+        allowMedia: this.allowMedia()
+      };
+    }
+    reflectValue(value2) {
+      this.reflectingValue = true;
+      this.setAttribute("value", value2);
+      this.reflectingValue = false;
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkController.ts
+  class PageLinkController extends PageLinkState {
+    constructor(template2) {
+      super(template2);
+    }
+    connectedCallback() {
+      this.syncFromAttributes();
+      this.wire();
+      this.loadPages();
+      this.render();
+    }
+    render() {
+      this.elements.label.textContent = this.getAttribute("label") ?? "Link";
+      this.elements.hint.textContent = this.getAttribute("hint") ?? "";
+      this.elements.hint.toggleAttribute("hidden", !this.elements.hint.textContent);
+      this.renderTabs();
+      this.renderPanels();
+      this.renderPages();
+      this.renderSummary();
+    }
+    renderPages() {
+      renderPageLinkPages({
+        disabled: this.disabled,
+        elements: this.elements,
+        onSelect: (value2) => {
+          this.setValue(value2);
+          this.elements.searchInput.value = "";
+          this.closePicker();
+        },
+        pages: this.pages,
+        pickerOpen: this.pickerOpen,
+        query: this.elements.searchInput.value,
+        value: this.currentValue
+      });
+    }
+    renderSummary() {
+      renderPageLinkSummary(this.elements, this.pages, this.mode, this.currentValue);
+    }
+    wire() {
+      if (this.wired) {
+        return;
+      }
+      this.wired = true;
+      this.elements.searchInput.addEventListener("focus", () => this.openPicker());
+      this.elements.searchInput.addEventListener("click", () => this.openPicker());
+      this.elements.searchInput.addEventListener("input", () => {
+        this.pickerOpen = true;
+        this.renderPages();
+      });
+      this.elements.externalInput.addEventListener("input", () => {
+        if (!this.disabled) {
+          this.setValue(this.elements.externalInput.value);
+        }
+      });
+      this.elements.fileButton.addEventListener("click", () => this.openFilesCenter());
+      this.elements.pagePanel.addEventListener("focusout", () => {
+        setTimeout(() => {
+          if (this.shadowRoot?.activeElement && this.elements.pagePanel.contains(this.shadowRoot.activeElement)) {
+            return;
+          }
+          this.closePicker();
+        }, 0);
+      });
+      this.elements.target.addEventListener("click", () => {
+        if (!this.disabled && this.mode === "page") {
+          this.elements.searchInput.focus();
+          this.openPicker();
+        }
+      });
+    }
+    async loadPages() {
+      if (this.loaded || !this.allowPage()) {
+        return;
+      }
+      this.loaded = true;
+      try {
+        const published = this.getAttribute("published-only") === "true" ? "?visible=published" : "";
+        const response = await fetch(`${this.basePath()}/api/page/links${published}`);
+        if (!response.ok) {
+          return;
+        }
+        this.pages = await response.json();
+        this.renderPages();
+        this.renderSummary();
+      } catch {
+        this.pages = [];
+        this.renderPages();
+      }
+    }
+    renderTabs() {
+      renderPageLinkTabs({
+        allowedModes: this.allowedModes(),
+        disabled: this.disabled,
+        elements: this.elements,
+        mode: this.mode,
+        onMode: (mode) => {
+          this.mode = mode;
+          if (mode !== "page") {
+            this.pickerOpen = false;
+          }
+          if (mode === "external") {
+            this.elements.externalInput.value = this.currentValue;
+          }
+          this.render();
+        }
+      });
+    }
+    renderPanels() {
+      renderPageLinkPanels({
+        allowExternal: this.allowExternal(),
+        allowMedia: this.allowMedia(),
+        allowPage: this.allowPage(),
+        disabled: this.disabled,
+        elements: this.elements,
+        mediaLabel: this.mediaLabel,
+        mode: this.mode,
+        pickerOpen: this.pickerOpen,
+        value: this.currentValue
+      });
+    }
+  }
+
+  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
+  var template2 = document.createElement("template");
+  template2.innerHTML = `<style>${String(styles_default3)}</style>${String(template_default9)}`;
+
+  class PageLink extends PageLinkController {
+    constructor() {
+      super(template2);
+    }
+  }
+  if (!customElements.get("cms-editor-v2-page-link")) {
+    customElements.define("cms-editor-v2-page-link", PageLink);
+  }
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/shared.ts
+  function bindFieldControl(control, field2) {
+    control.dataset.fieldControl = field2.id;
+  }
+  function applyRemoteLookupMetadata(control, field2) {
+    if (field2.lookupKey) {
+      control.dataset.lookupTarget = field2.lookupKey;
+    }
+    control.toggleAttribute("remote-search", field2.remoteSearch === true);
+    control.toggleAttribute("remote-pagination", field2.remotePagination === true);
+    control.toggleAttribute("loading", field2.lookupLoading === true);
+    control.toggleAttribute("has-more", field2.lookupHasMore === true);
+  }
+  function optionElement(option2, value2) {
+    const element = document.createElement("option");
+    element.value = option2.value;
+    element.textContent = option2.label;
+    element.selected = option2.value === value2;
+    return element;
+  }
+  function selectOptionElements(options, value2) {
+    const elements = options.map((option2) => optionElement(option2, value2));
+    if (value2 !== "" || options.some((option2) => option2.value === "")) {
+      return elements;
+    }
+    const placeholder = optionElement({ label: "Select an option", value: "" }, value2);
+    placeholder.disabled = true;
+    return [placeholder, ...elements];
+  }
+  function isValueControl(control) {
+    return "value" in control && typeof control.value === "string";
+  }
+  function isTokenControl(control) {
+    return isValueControl(control) && "values" in control && Array.isArray(control.values);
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/editors.ts
+  function createTableEditor(column, value2) {
+    if (column.editable !== true) {
+      throw new Error("Cannot create an editor for a readonly column");
+    }
+    const control = column.type === "select" ? selectEditor(column, value2) : column.type === "combobox" ? comboboxEditor(column, value2) : column.type === "tokens" ? tokensEditor(value2) : textEditor(value2);
+    control.dataset.tableColumn = column.key;
+    control.setAttribute("aria-label", column.label);
+    return control;
+  }
+  function readTableEditor(column, control) {
+    if (column.editable !== true) {
+      return;
+    }
+    if (column.type === "tokens") {
+      return isTokenControl(control) ? [...control.values] : [];
+    }
+    return isValueControl(control) ? control.value : "";
+  }
+  function textEditor(value2) {
+    const input = document.createElement("p9r-input");
+    const text5 = textValue2(value2);
+    input.setAttribute("value", text5);
+    input.value = text5;
+    return input;
+  }
+  function selectEditor(column, value2) {
+    const input = document.createElement("p9r-select");
+    const text5 = textValue2(value2);
+    input.setAttribute("value", text5);
+    input.replaceChildren(...column.options.map((option2) => optionElement(option2, text5)));
+    return input;
+  }
+  function comboboxEditor(column, value2) {
+    const input = document.createElement("p9r-combobox");
+    const text5 = textValue2(value2);
+    input.setAttribute("value", text5);
+    input.replaceChildren(...column.options.map((option2) => optionElement(option2, text5)));
+    applyRemoteLookupMetadata(input, column);
+    input.value = text5;
+    return input;
+  }
+  function tokensEditor(value2) {
+    const input = document.createElement("p9r-token-input");
+    const values = Array.isArray(value2) ? value2.map(textValue2).filter(Boolean) : [];
+    input.setAttribute("value", values.join(","));
+    input.setAttribute("creatable", "");
+    return input;
+  }
+  function textValue2(value2) {
+    return value2 === null || value2 === undefined ? "" : String(value2);
+  }
+  function createReferenceEditor(field2, value2) {
+    const control = document.createElement(field2.type === "secret-ref" ? "cms-credential-select" : "cms-editor-v2-page-link");
+    control.setAttribute("label", field2.label);
+    control.setAttribute("value", textValue2(value2));
+    if (field2.type === "page-link") {
+      control.setAttribute("allow-external", String(field2.allowExternal === true));
+      control.setAttribute("allow-media", String(field2.allowMedia === true));
+      control.setAttribute("published-only", String(field2.publishedOnly === true));
+      control.addEventListener("input", () => control.dispatchEvent(new Event("change", { bubbles: true, composed: true })));
+    } else {
+      const base = document.querySelector('meta[name="basePath"]')?.content ?? "";
+      control.setAttribute("api", `${base}/api/secrets`);
+    }
+    return control;
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/context.ts
+  var tables = new WeakMap;
+  function tableContext(host, fields) {
+    const definitions = fields.filter((field2) => field2.type === "table");
+    const state = new Map;
+    tables.set(host, state);
+    return (values) => Object.fromEntries(definitions.map((field2) => {
+      const previous = state.get(field2.id) ?? [];
+      const rows = tableRows(values[field2.id]).map((source2, index) => {
+        const row = previous[index] ?? { index, source: source2, cells: {} };
+        row.source = source2;
+        for (const column of field2.columns) {
+          const value2 = valueAt(source2, column.path);
+          const editor = field2.editable && column.editable;
+          row.cells[column.id] = editor ? column.type === "tokens" ? Array.isArray(value2) ? value2.join(",") : "" : value2 == null ? "" : String(value2) : formatDashboardValue(value2, column.format, { currency: currency(source2, column.path) });
+        }
+        return row;
+      });
+      state.set(field2.id, rows);
+      return [field2.id, rows];
+    }));
+  }
+  function readBoundTableRows(field2, control) {
+    if (!field2.editable) {
+      return structuredClone(tableRows(field2.value));
+    }
+    const host = control.closest("cms-dashboard-w-detail");
+    const sources = host ? tables.get(host)?.get(field2.id) : undefined;
+    return Array.from(control.querySelectorAll("[data-table-row]")).map((element) => {
+      const row = structuredClone(sources?.[Number(element.dataset.tableIndex)]?.source ?? {});
+      for (const column of field2.columns ?? []) {
+        const editor = Array.from(element.querySelectorAll("[data-table-column]")).find((node) => node.dataset.tableColumn === column.key);
+        if (editor) {
+          setValueAt(row, column.path, readTableEditor(column, editor));
+        }
+      }
+      return row;
+    });
+  }
+  function tableRows(value2) {
+    return Array.isArray(value2) ? value2.filter((row) => row !== null && typeof row === "object" && !Array.isArray(row)) : [];
+  }
+  function serializedTableRows(value2) {
+    return tableRows(value2).filter(hasValue);
+  }
+  function hasValue(value2) {
+    if (value2 && typeof value2 === "object") {
+      return Object.values(value2).some(hasValue);
+    }
+    return String(value2 ?? "").trim().length > 0;
+  }
+  function currency(row, path) {
+    const separator = path.lastIndexOf(".");
+    const sibling = separator < 0 ? "currency" : `${path.slice(0, separator)}.currency`;
+    const value2 = valueAt(row, sibling) ?? row.currency;
+    return value2 == null ? undefined : String(value2).trim() || undefined;
+  }
+  function tableLookupContexts(host) {
+    return Object.fromEntries(Array.from(host.querySelectorAll("cms-dashboard-lookup[context-name]")).map((source2) => [
+      source2.getAttribute("context-name"),
+      source2.sharedContext
+    ]));
+  }
+
   // src/components/admin/Resources/Dashboards/runtime/media.ts
   function mediaValue(value2, field2, sourceId) {
     const values = Array.isArray(value2) ? value2 : value2 !== null && typeof value2 === "object" ? [value2] : arrayAt({ value: value2 }, "value");
@@ -27228,30 +28912,39 @@ w13c-lateral-menu-item {
       if (field2.type !== "combobox" && field2.type !== "tokens" || !field2.lookup) {
         return [];
       }
-      const vars = {
-        fields: values,
-        resource,
-        ...lookupUsesRemoteSearch(field2.lookup) ? { search: "" } : {},
-        ...lookupUsesOffsetPagination(field2.lookup) ? { limit: 25, offset: 0 } : {}
-      };
-      const ready = Object.values(field2.lookup.params ?? {}).every((expression) => {
-        if (!expression.startsWith("$") || ["$search", "$limit", "$offset"].includes(expression)) {
-          return true;
-        }
-        const value2 = resolveExpression(expression, vars);
-        return value2 !== undefined && value2 !== null && value2 !== "";
-      });
-      return [[field2.id, ready ? sourceUrl(sourceId, field2.lookup, vars).href : ""]];
+      return [[field2.id, lookupUrl(field2.lookup, sourceId, values, resource)]];
     }));
+  }
+  function lookupUrl(lookup, sourceId, values, resource) {
+    const vars = {
+      fields: values,
+      resource,
+      ...lookupUsesRemoteSearch(lookup) ? { search: "" } : {},
+      ...lookupUsesOffsetPagination(lookup) ? { limit: 25, offset: 0 } : {}
+    };
+    const ready = Object.values(lookup.params ?? {}).every((expression) => {
+      if (!expression.startsWith("$") || ["$search", "$limit", "$offset"].includes(expression)) {
+        return true;
+      }
+      const value2 = resolveExpression(expression, vars);
+      return value2 !== undefined && value2 !== null && value2 !== "";
+    });
+    return ready ? sourceUrl(sourceId, lookup, vars).href : "";
+  }
+  function tableLookupUrls(fields, sourceId, values, resource) {
+    return Object.fromEntries(fields.filter((field2) => field2.type === "table").map((field2) => [
+      field2.id,
+      Object.fromEntries(field2.columns.flatMap((column) => column.editable && column.type === "combobox" && column.lookup ? [[column.id, lookupUrl(column.lookup, sourceId, values, resource)]] : []))
+    ]));
   }
 
   // src/components/admin/Resources/Dashboards/runtime/mapping/money.ts
-  function currencyFractionDigits2(currency) {
-    if (!currency) {
+  function currencyFractionDigits2(currency2) {
+    if (!currency2) {
       return 2;
     }
     try {
-      return new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits ?? 2;
+      return new Intl.NumberFormat("en", { style: "currency", currency: currency2 }).resolvedOptions().maximumFractionDigits ?? 2;
     } catch {
       return 2;
     }
@@ -27428,14 +29121,14 @@ w13c-lateral-menu-item {
       };
     }
     if (field2.type === "money") {
-      const currency = field2.currencyPath ? textValue(valueAt(fields, field2.currencyPath) ?? valueAt(resource, field2.currencyPath)) : "";
+      const currency2 = field2.currencyPath ? textValue(valueAt(fields, field2.currencyPath) ?? valueAt(resource, field2.currencyPath)) : "";
       const allowDecimals = field2.allowDecimals === undefined ? true : typeof field2.allowDecimals === "boolean" ? field2.allowDecimals : matchesDashboardVisibility(field2.allowDecimals, { fields, resource });
       return {
         ...base,
         input: "money",
         value: numberValue(value2),
-        ...currency ? { currency } : {},
-        fractionDigits: currencyFractionDigits2(currency || undefined),
+        ...currency2 ? { currency: currency2 } : {},
+        fractionDigits: currencyFractionDigits2(currency2 || undefined),
         allowDecimals
       };
     }
@@ -27571,8 +29264,8 @@ w13c-lateral-menu-item {
     const separator = valuePath.lastIndexOf(".");
     const siblingPath = separator === -1 ? "currency" : `${valuePath.slice(0, separator)}.currency`;
     const value2 = valueAt(fields, "currency") ?? valueAt(resource, siblingPath) ?? (siblingPath === "currency" ? undefined : valueAt(resource, "currency"));
-    const currency = textValue(value2).trim();
-    return currency || undefined;
+    const currency2 = textValue(value2).trim();
+    return currency2 || undefined;
   }
 
   // src/components/admin/Resources/Dashboards/runtime/mapping/detail.ts
@@ -27640,9 +29333,9 @@ w13c-lateral-menu-item {
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/actions.ts
   function composeActions() {
-    const template = document.createElement("template");
-    template.innerHTML = actions_default;
-    return template.content;
+    const template3 = document.createElement("template");
+    template3.innerHTML = actions_default;
+    return template3.content;
   }
   function actionLayout(actions) {
     const entries = actions.map((action) => ({
@@ -27682,6 +29375,7 @@ w13c-lateral-menu-item {
     const users = directoryContext(host, fields);
     const media = mediaContext(host, fields);
     const schemas = schemaContext(host, fields);
+    const tables2 = tableContext(host, fields);
     const actions = actionLayout(widget.actions ?? []);
     const rules = Object.fromEntries(fields.map((field2) => [field2.id, field2.visibleWhen]));
     fd(host, () => {
@@ -27701,17 +29395,20 @@ w13c-lateral-menu-item {
         }
       }
       const amounts = Object.fromEntries(fields.filter((field2) => field2.type === "money").map((field2) => {
-        const currency = field2.currencyPath ? valueAt(values, field2.currencyPath) ?? valueAt(resource, field2.currencyPath) : undefined;
+        const currency2 = field2.currencyPath ? valueAt(values, field2.currencyPath) ?? valueAt(resource, field2.currencyPath) : undefined;
         const decimals = typeof field2.allowDecimals === "object" ? matchesDashboardVisibility(field2.allowDecimals, { fields: values, resource }) : field2.allowDecimals !== false;
         return [
           field2.id,
           {
-            value: displayDraft()[field2.id] ?? formatMinorUnits(values[field2.id], currencyFractionDigits2(typeof currency === "string" ? currency : undefined), decimals),
+            value: displayDraft()[field2.id] ?? formatMinorUnits(values[field2.id], currencyFractionDigits2(typeof currency2 === "string" ? currency2 : undefined), decimals),
             inputmode: decimals ? "decimal" : "numeric"
           }
         ];
       }));
       return {
+        detailTables: tables2(values),
+        ...tableLookupContexts(host),
+        detailTableLookupUrls: tableLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
         ...schemas(values, resource),
         detailMedia: media(values, edits),
         ...users(values, resource),
@@ -27933,15 +29630,405 @@ slot { display: contents; }
     return source2;
   }
   function composeSchema(control, field2) {
-    const template = document.createElement("template");
-    template.innerHTML = schema_default;
+    const template3 = document.createElement("template");
+    template3.innerHTML = schema_default;
     const root = `detailSchemas.${field2.id}`;
     for (const state of ["loading", "error", "empty", "ready"]) {
-      const element = template.content.querySelector(`[data-schema-state="${state}"]`);
+      const element = template3.content.querySelector(`[data-schema-state="${state}"]`);
       element.setAttribute("cms-condition", state === "empty" ? `${root}.status == 'ready' && ${root}.empty` : `${root}.status == '${state}'`);
     }
-    template.content.querySelector("[data-schema-row]").setAttribute("cms-repeat", `${root}.rows as schemaRow`);
-    control.append(template.content);
+    template3.content.querySelector("[data-schema-row]").setAttribute("cms-repeat", `${root}.rows as schemaRow`);
+    control.append(template3.content);
+  }
+
+  // src/static/admin/_content/sources/_runtime/detail/table.html
+  var table_default2 = `<template data-table-template="head"><cms-dashboard-table-row data-table-head></cms-dashboard-table-row></template>
+<template data-table-template="row"><cms-dashboard-table-row data-table-row data-table-index="{{ tableRow.index }}"></cms-dashboard-table-row></template>
+<template data-table-template="cell"><span></span></template>
+<template data-table-template="text"><p9r-input></p9r-input></template>
+<template data-table-template="select"><p9r-select></p9r-select></template>
+<template data-table-template="combobox"><p9r-combobox></p9r-combobox></template>
+<template data-table-template="tokens"><p9r-token-input creatable></p9r-token-input></template>
+<template data-table-template="option"><option value="{{ tableOption.value }}">{{ tableOption.label }}</option></template>
+<template data-table-template="add"><button type="button" data-table-add>Add row</button></template>
+<template data-table-template="remove"><button type="button" data-table-remove>Remove</button></template>
+`;
+
+  // src/static/admin/_content/sources/_runtime/detail/lookup.html
+  var lookup_default = `<template data-lookup="states">
+    <span hidden cms-condition="$source.loading"></span>
+    <span hidden cms-condition="$source.error"></span>
+</template>
+<template data-lookup="options">
+    <option cms-repeat="lookupOptions as lookupOption" value="{{ lookupOption.value }}">{{ lookupOption.label }}</option>
+</template>
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/options.ts
+  function lookupPage(host, payload) {
+    const lookup = {
+      endpoint: "",
+      valuePath: host.getAttribute("value-path") ?? "id",
+      labelPath: host.getAttribute("label-path") ?? "name",
+      itemsPath: host.getAttribute("items-path") || undefined
+    };
+    const items = itemsFrom(payload, lookup);
+    const options = items.flatMap((item) => option2(item, lookup));
+    const totalPath = host.getAttribute("total-path");
+    const totalValue = totalPath ? valueAt(payload, totalPath) : undefined;
+    const parsedTotal = Number(totalValue);
+    const total = Number.isFinite(parsedTotal) && parsedTotal >= 0 ? parsedTotal : undefined;
+    return { options, received: items.length, total };
+  }
+  function selectedLookupOptions(host) {
+    const parent = host.closest("cms-dashboard-w-detail");
+    const data = parent ? Td(parent) : undefined;
+    const resourcePath = host.getAttribute("resource-path");
+    const resource = resourcePath ? valueAt(data, resourcePath) : data;
+    const expression = host.getAttribute("selected-expression");
+    if (!expression || !isSafeDashboardExpression(expression, ["resource"], true)) {
+      return [];
+    }
+    const items = resolveExpression(expression, { resource });
+    const selected2 = new Set((host.getAttribute("selected-value") ?? "").split(","));
+    const lookup = {
+      valuePath: host.getAttribute("value-path") ?? "id",
+      labelPath: host.getAttribute("label-path") ?? "name"
+    };
+    return (Array.isArray(items) ? items : [items]).flatMap((item) => option2(item, lookup, false).filter((entry) => selected2.has(entry.value)));
+  }
+  function distinctOptions(options) {
+    const seen = new Set;
+    return options.filter((option2) => {
+      if (seen.has(option2.value)) {
+        return false;
+      }
+      seen.add(option2.value);
+      return true;
+    });
+  }
+  function option2(item, lookup, fallback = true) {
+    const value2 = textAt(item, lookup.valuePath);
+    const label2 = textAt(item, lookup.labelPath, fallback ? value2 : "");
+    return value2 && label2 ? [{ value: value2, label: label2 }] : [];
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/Lookup.ts
+  var sequence2 = 0;
+
+  class DashboardLookup extends HTMLElement {
+    static observedAttributes = ["request-base", "selected-value"];
+    timer;
+    query = "";
+    queued = false;
+    sharedContext = {};
+    offset = 0;
+    received = 0;
+    acceptedOffset = 0;
+    pending = false;
+    hasMore = false;
+    previous;
+    options = [];
+    created = [];
+    declared = [];
+    connectedCallback() {
+      this.declared = Array.from(this.querySelectorAll(":scope > [data-static-options] option")).map((option3) => ({ value: option3.value, label: option3.textContent ?? option3.value }));
+      this.setAttribute("cms-reload-on", `dashboard:lookup:${++sequence2}`);
+      fd(this, (value2) => this.context(value2));
+      this.addEventListener("combobox-search", this.onSearch);
+      this.addEventListener("combobox-load-more", this.onMore);
+      this.updateUrl();
+      if (!this.getAttribute("cms-source")) {
+        Md(this, {});
+      }
+    }
+    disconnectedCallback() {
+      clearTimeout(this.timer);
+      this.removeEventListener("combobox-search", this.onSearch);
+      this.removeEventListener("combobox-load-more", this.onMore);
+    }
+    attributeChangedCallback(name, before, after) {
+      if (before === after || !this.isConnected) {
+        return;
+      }
+      if (name === "request-base") {
+        clearTimeout(this.timer);
+        this.query = "";
+        this.offset = 0;
+        this.updateUrl();
+      } else {
+        bi(this);
+      }
+    }
+    acceptCreatedOption(option3) {
+      this.created = distinctOptions([...this.created, option3]);
+      bi(this);
+    }
+    context(rendered) {
+      if (rendered !== undefined) {
+        this.pending = false;
+      }
+      const payload = Td(this);
+      if (payload !== undefined && !Object.is(payload, this.previous)) {
+        this.previous = payload;
+        this.acceptedOffset = this.offset;
+        const page = lookupPage(this, payload);
+        this.options = distinctOptions(this.offset ? [...this.options, ...page.options] : page.options);
+        this.received = page.received;
+        this.hasMore = Boolean(this.getAttribute("offset-params")) && (page.total === undefined ? page.received >= 25 : this.offset + page.received < page.total);
+      }
+      const context = {
+        lookupValue: this.getAttribute("selected-value") ?? "",
+        lookupOptions: distinctOptions([
+          ...this.declared,
+          ...this.options,
+          ...this.created,
+          ...selectedLookupOptions(this)
+        ]),
+        lookupHasMore: this.hasMore,
+        lookupLoading: this.pending
+      };
+      const name = this.getAttribute("context-name");
+      if (name) {
+        this.sharedContext = context;
+        this.refreshOwner();
+      }
+      return context;
+    }
+    updateUrl(retry = false) {
+      const base = this.getAttribute("request-base");
+      if (!base || base.includes("{{")) {
+        this.offset = 0;
+        this.setAttribute("cms-source", "");
+        Md(this, {});
+        return;
+      }
+      const url = new URL(base, this.ownerDocument.location.href);
+      for (const [attribute, value2] of [
+        ["search-params", this.query],
+        ["offset-params", String(this.offset)]
+      ]) {
+        for (const key of (this.getAttribute(attribute) ?? "").split(" ").filter(Boolean)) {
+          if (attribute === "search-params" && value2 === "") {
+            url.searchParams.delete(key);
+          } else {
+            url.searchParams.set(key, value2);
+          }
+        }
+      }
+      const source2 = `${url.pathname}${url.search} as lookupData`;
+      if (this.getAttribute("cms-source") !== source2) {
+        this.pending = true;
+        this.setAttribute("cms-source", source2);
+      } else if (retry) {
+        this.pending = true;
+        this.ownerDocument.dispatchEvent(new Event(this.getAttribute("cms-reload-on")));
+      }
+    }
+    onSearch = (event) => {
+      if (!this.ownsControl(event) || !this.getAttribute("search-params")) {
+        return;
+      }
+      event.stopPropagation();
+      const query4 = event.detail?.query;
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => {
+        this.query = typeof query4 === "string" ? query4.slice(0, 200) : "";
+        this.offset = 0;
+        this.updateUrl(true);
+      }, 250);
+    };
+    onMore = (event) => {
+      if (!this.ownsControl(event)) {
+        return;
+      }
+      event.stopPropagation();
+      if (this.hasMore && !this.pending) {
+        this.offset = this.acceptedOffset + this.received;
+        this.updateUrl(true);
+      }
+    };
+    ownsControl(event) {
+      return !this.hasAttribute("context-name") || event.target === this;
+    }
+    refreshOwner() {
+      if (this.queued) {
+        return;
+      }
+      this.queued = true;
+      queueMicrotask(() => {
+        this.queued = false;
+        const owner = this.closest("cms-dashboard-w-detail");
+        if (this.isConnected && owner) {
+          bi(owner);
+        }
+      });
+    }
+  }
+  customElements.define("cms-dashboard-lookup", DashboardLookup);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/composition.ts
+  function composeLookup(control, field2) {
+    const lookup = field2.lookup;
+    const host = lookupSource(lookup, field2.id);
+    host.setAttribute("selected-value", control.getAttribute("value") ?? "");
+    const declared = document.createElement("span");
+    declared.hidden = true;
+    declared.setAttribute("data-static-options", "");
+    declared.append(...Array.from(control.children));
+    host.append(declared);
+    control.setAttribute("value", "{{ lookupValue }}");
+    if (field2.type === "combobox") {
+      control.toggleAttribute("remote-search", Boolean(host.getAttribute("search-params")));
+      control.setAttribute("loading", "{{ $source.loading }}");
+      control.setAttribute("has-more", "{{ lookupHasMore }}");
+    }
+    control.toggleAttribute("creatable", Boolean(field2.allowCustom || lookup.create?.mode === "inline"));
+    const template3 = document.createElement("template");
+    template3.innerHTML = lookup_default;
+    control.append(template3.content.querySelector('[data-lookup="options"]').content.cloneNode(true));
+    host.append(control, template3.content.querySelector('[data-lookup="states"]').content.cloneNode(true));
+    return host;
+  }
+  function lookupSource(lookup, path, root = "detailLookupUrls") {
+    const host = document.createElement("cms-dashboard-lookup");
+    host.setAttribute("cms-source", "");
+    host.setAttribute("request-base", `{{ ${root}.${path} }}`);
+    host.setAttribute("resource-path", "{{ detailResourcePath }}");
+    for (const [attribute, value2] of Object.entries({
+      "items-path": lookup.itemsPath,
+      "value-path": lookup.valuePath,
+      "label-path": lookup.labelPath,
+      "total-path": lookup.totalPath,
+      "selected-expression": lookup.selected
+    })) {
+      if (typeof value2 === "string") {
+        host.setAttribute(attribute, value2);
+      }
+    }
+    for (const [attribute, expression] of [
+      ["search-params", "$search"],
+      ["offset-params", "$offset"]
+    ]) {
+      host.setAttribute(attribute, Object.entries(lookup.params ?? {}).filter(([, value2]) => value2 === expression).map(([key]) => key).join(" "));
+    }
+    if (!lookupUsesOffsetPagination(lookup)) {
+      host.removeAttribute("offset-params");
+    }
+    return host;
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/field.css
+  var field_default2 = `:host { display: block; min-width: 0; }
+.table { display: grid; gap: 6px; max-width: 100%; min-width: 0; overflow-x: auto; padding-bottom: 2px; }
+.row { display: grid; grid-template-columns: var(--detail-table-columns); gap: 8px; align-items: start; width: 100%; min-width: 0; min-height: 34px; }
+:host([data-table-head]) { color: #66736f; font-size: 11px; font-weight: 750; text-transform: uppercase; }
+:host([data-table-row][data-readonly]) { color: #16231f; font-size: 13px; }
+::slotted(*) { min-width: 0; }
+::slotted(p9r-input), ::slotted(p9r-select), ::slotted(p9r-combobox), ::slotted(p9r-token-input) { width: 100%; }
+::slotted(p9r-input) { --_field-min-height: 34px; --_field-padding-y: 5px; --_field-padding-x: 9px; --_field-font-size: 13px; }
+::slotted(button) { min-height: 30px; border: 1px solid #cfd8d4; border-radius: 6px; background: #fff; color: #0f1f1a; cursor: pointer; font: inherit; font-weight: 700; padding: 4px 8px; font-size: 12px; }
+::slotted(button:hover) { background: #f3f7f5; }
+::slotted([data-table-add]) { width: fit-content; }
+::slotted([data-table-remove]) { color: #8a1f12; }
+`;
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/Field.ts
+  class TableField extends l2 {
+    constructor() {
+      super({ css: field_default2, template: '<div class="table"><slot></slot></div>' });
+      for (const type of ["combobox-search", "combobox-load-more"]) {
+        this.addEventListener(type, (event) => {
+          const control = event.composedPath().find((node) => node instanceof HTMLElement && node.hasAttribute("data-table-column"));
+          if (!control) {
+            return;
+          }
+          const source2 = Array.from(this.querySelectorAll("cms-dashboard-lookup[table-column]")).find((node) => node.getAttribute("table-column") === control.dataset.tableColumn);
+          if (source2) {
+            event.stopPropagation();
+            source2.dispatchEvent(new CustomEvent(type, { detail: event.detail }));
+          }
+        });
+      }
+    }
+  }
+
+  class TableRow extends l2 {
+    constructor() {
+      super({ css: field_default2, template: '<div class="row"><slot></slot></div>' });
+    }
+  }
+  customElements.define("cms-dashboard-table-field", TableField);
+  customElements.define("cms-dashboard-table-row", TableRow);
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/composition.ts
+  function composeTable(control, field2) {
+    const template3 = document.createElement("template");
+    template3.innerHTML = table_default2;
+    const clone = (name) => template3.content.querySelector(`[data-table-template="${name}"]`).content.firstElementChild.cloneNode(true);
+    control.setAttribute("data-table-editable", String(field2.editable === true));
+    control.style.setProperty("--detail-table-columns", [
+      ...field2.columns.map((column) => column.width ?? "minmax(8rem, 1fr)"),
+      ...field2.editable ? ["72px"] : []
+    ].join(" "));
+    const head = clone("head");
+    const row = clone("row");
+    row.setAttribute("cms-repeat", `detailTables.${field2.id} as tableRow`);
+    row.toggleAttribute("data-readonly", !field2.editable);
+    for (const [index, column] of field2.columns.entries()) {
+      const heading = clone("cell");
+      heading.textContent = column.label;
+      head.append(heading);
+      if (field2.editable && column.editable) {
+        const editor = clone(column.type ?? "text");
+        editor.setAttribute("data-table-column", column.id);
+        editor.setAttribute("aria-label", column.label);
+        editor.setAttribute("value", `{{ tableRow.cells.${column.id} }}`);
+        if (column.type === "select" || column.type === "combobox") {
+          for (const item of column.options ?? []) {
+            const option3 = document.createElement("option");
+            option3.value = item.value;
+            option3.textContent = item.label;
+            editor.append(option3);
+          }
+        }
+        if (column.type === "combobox" && column.lookup) {
+          const source2 = lookupSource(column.lookup, `${field2.id}.${column.id}`, "detailTableLookupUrls");
+          const scope = `tableLookup_${field2.id}_${index}`;
+          source2.setAttribute("context-name", scope);
+          source2.setAttribute("table-column", column.id);
+          const declared = document.createElement("span");
+          declared.hidden = true;
+          declared.setAttribute("data-static-options", "");
+          declared.append(...Array.from(editor.children));
+          source2.hidden = true;
+          source2.append(declared);
+          control.append(source2);
+          const option3 = clone("option");
+          option3.setAttribute("cms-repeat", `${scope}.lookupOptions as tableOption`);
+          editor.append(option3);
+          editor.toggleAttribute("remote-search", Boolean(source2.getAttribute("search-params")));
+          editor.setAttribute("loading", `{{ ${scope}.lookupLoading }}`);
+          editor.setAttribute("has-more", `{{ ${scope}.lookupHasMore }}`);
+        }
+        row.append(editor);
+      } else {
+        const cell = clone("cell");
+        cell.textContent = `{{ tableRow.cells.${column.id} }}`;
+        row.append(cell);
+      }
+    }
+    if (field2.editable) {
+      head.append(clone("cell"));
+      row.append(clone("remove"));
+    }
+    control.append(head, row);
+    if (field2.editable) {
+      const add = clone("add");
+      add.textContent = field2.addLabel ?? "Add row";
+      control.append(add);
+    }
+    return control;
   }
 
   // src/static/admin/_content/sources/_runtime/detail/media.html
@@ -27965,7 +30052,7 @@ slot { display: contents; }
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/field.css
-  var field_default2 = `:host {
+  var field_default3 = `:host {
     --media-grid-item-max: 120px;
     --media-grid-item-max-mobile: 112px;
     --media-grid-featured-item-max: calc((var(--media-grid-item-max) * 2) + 8px);
@@ -28404,11 +30491,11 @@ button {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/styles/index.ts
-  var styles_default3 = [field_default2, preview_layout_default, preview_media_default].join(`
+  var styles_default5 = [field_default3, preview_layout_default, preview_media_default].join(`
 `);
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/field.css
-  var field_default3 = `slot { display: contents; }
+  var field_default4 = `slot { display: contents; }
 .media-grid ::slotted(*) { max-width: var(--media-grid-item-max); width: 100%; }
 .media-grid ::slotted(cms-dashboard-media-tile:first-child) {
     grid-column: span 2;
@@ -28437,7 +30524,7 @@ button {
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/binding/parts/field.html
-  var field_default4 = `<section class="media-field">
+  var field_default5 = `<section class="media-field">
     <div class="label-row">
         <span data-label></span>
         <button class="preview-trigger" data-preview-open type="button" hidden>
@@ -28749,7 +30836,7 @@ button {
       this.suppressClick = value2;
     });
     constructor() {
-      super({ css: styles_default3 + field_default3, template: field_default4 });
+      super({ css: styles_default5 + field_default4, template: field_default5 });
       this.preview = new MediaPreview(this);
     }
     connectedCallback() {
@@ -29026,238 +31113,6 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
     control.append(tile, add, image, caption, counter, thumbnail);
   }
 
-  // src/static/admin/_content/sources/_runtime/detail/lookup.html
-  var lookup_default = `<template data-lookup="states">
-    <span hidden cms-condition="$source.loading"></span>
-    <span hidden cms-condition="$source.error"></span>
-</template>
-<template data-lookup="options">
-    <option cms-repeat="lookupOptions as lookupOption" value="{{ lookupOption.value }}">{{ lookupOption.label }}</option>
-</template>
-`;
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/options.ts
-  function lookupPage(host, payload) {
-    const lookup = {
-      endpoint: "",
-      valuePath: host.getAttribute("value-path") ?? "id",
-      labelPath: host.getAttribute("label-path") ?? "name",
-      itemsPath: host.getAttribute("items-path") || undefined
-    };
-    const items = itemsFrom(payload, lookup);
-    const options = items.flatMap((item) => option2(item, lookup));
-    const totalPath = host.getAttribute("total-path");
-    const totalValue = totalPath ? valueAt(payload, totalPath) : undefined;
-    const parsedTotal = Number(totalValue);
-    const total = Number.isFinite(parsedTotal) && parsedTotal >= 0 ? parsedTotal : undefined;
-    return { options, received: items.length, total };
-  }
-  function selectedLookupOptions(host) {
-    const parent = host.closest("cms-dashboard-w-detail");
-    const data = parent ? Td(parent) : undefined;
-    const resourcePath = host.getAttribute("resource-path");
-    const resource = resourcePath ? valueAt(data, resourcePath) : data;
-    const expression = host.getAttribute("selected-expression");
-    if (!expression || !isSafeDashboardExpression(expression, ["resource"], true)) {
-      return [];
-    }
-    const items = resolveExpression(expression, { resource });
-    const selected2 = new Set((host.getAttribute("selected-value") ?? "").split(","));
-    const lookup = {
-      valuePath: host.getAttribute("value-path") ?? "id",
-      labelPath: host.getAttribute("label-path") ?? "name"
-    };
-    return (Array.isArray(items) ? items : [items]).flatMap((item) => option2(item, lookup, false).filter((entry) => selected2.has(entry.value)));
-  }
-  function distinctOptions(options) {
-    const seen = new Set;
-    return options.filter((option2) => {
-      if (seen.has(option2.value)) {
-        return false;
-      }
-      seen.add(option2.value);
-      return true;
-    });
-  }
-  function option2(item, lookup, fallback = true) {
-    const value2 = textAt(item, lookup.valuePath);
-    const label2 = textAt(item, lookup.labelPath, fallback ? value2 : "");
-    return value2 && label2 ? [{ value: value2, label: label2 }] : [];
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/Lookup.ts
-  var sequence2 = 0;
-
-  class DashboardLookup extends HTMLElement {
-    static observedAttributes = ["request-base", "selected-value"];
-    timer;
-    query = "";
-    offset = 0;
-    received = 0;
-    acceptedOffset = 0;
-    pending = false;
-    hasMore = false;
-    previous;
-    options = [];
-    created = [];
-    declared = [];
-    connectedCallback() {
-      this.declared = Array.from(this.querySelectorAll("[data-static-options] option")).map((option3) => ({ value: option3.value, label: option3.textContent ?? option3.value }));
-      this.setAttribute("cms-reload-on", `dashboard:lookup:${++sequence2}`);
-      fd(this, (value2) => this.context(value2));
-      this.addEventListener("combobox-search", this.onSearch);
-      this.addEventListener("combobox-load-more", this.onMore);
-      this.updateUrl();
-      if (!this.getAttribute("cms-source")) {
-        Md(this, {});
-      }
-    }
-    disconnectedCallback() {
-      clearTimeout(this.timer);
-      this.removeEventListener("combobox-search", this.onSearch);
-      this.removeEventListener("combobox-load-more", this.onMore);
-    }
-    attributeChangedCallback(name, before, after) {
-      if (before === after || !this.isConnected) {
-        return;
-      }
-      if (name === "request-base") {
-        clearTimeout(this.timer);
-        this.query = "";
-        this.offset = 0;
-        this.updateUrl();
-      } else {
-        bi(this);
-      }
-    }
-    acceptCreatedOption(option3) {
-      this.created = distinctOptions([...this.created, option3]);
-      bi(this);
-    }
-    context(rendered) {
-      if (rendered !== undefined) {
-        this.pending = false;
-      }
-      const payload = Td(this);
-      if (payload !== undefined && !Object.is(payload, this.previous)) {
-        this.previous = payload;
-        this.acceptedOffset = this.offset;
-        const page = lookupPage(this, payload);
-        this.options = distinctOptions(this.offset ? [...this.options, ...page.options] : page.options);
-        this.received = page.received;
-        this.hasMore = Boolean(this.getAttribute("offset-params")) && (page.total === undefined ? page.received >= 25 : this.offset + page.received < page.total);
-      }
-      return {
-        lookupValue: this.getAttribute("selected-value") ?? "",
-        lookupOptions: distinctOptions([
-          ...this.declared,
-          ...this.options,
-          ...this.created,
-          ...selectedLookupOptions(this)
-        ]),
-        lookupHasMore: this.hasMore
-      };
-    }
-    updateUrl(retry = false) {
-      const base = this.getAttribute("request-base");
-      if (!base || base.includes("{{")) {
-        this.offset = 0;
-        this.setAttribute("cms-source", "");
-        Md(this, {});
-        return;
-      }
-      const url = new URL(base, this.ownerDocument.location.href);
-      for (const [attribute, value2] of [
-        ["search-params", this.query],
-        ["offset-params", String(this.offset)]
-      ]) {
-        for (const key of (this.getAttribute(attribute) ?? "").split(" ").filter(Boolean)) {
-          if (attribute === "search-params" && value2 === "") {
-            url.searchParams.delete(key);
-          } else {
-            url.searchParams.set(key, value2);
-          }
-        }
-      }
-      const source2 = `${url.pathname}${url.search} as lookupData`;
-      if (this.getAttribute("cms-source") !== source2) {
-        this.pending = true;
-        this.setAttribute("cms-source", source2);
-      } else if (retry) {
-        this.pending = true;
-        this.ownerDocument.dispatchEvent(new Event(this.getAttribute("cms-reload-on")));
-      }
-    }
-    onSearch = (event) => {
-      if (!this.getAttribute("search-params")) {
-        return;
-      }
-      event.stopPropagation();
-      const query4 = event.detail?.query;
-      clearTimeout(this.timer);
-      this.timer = setTimeout(() => {
-        this.query = typeof query4 === "string" ? query4.slice(0, 200) : "";
-        this.offset = 0;
-        this.updateUrl(true);
-      }, 250);
-    };
-    onMore = (event) => {
-      event.stopPropagation();
-      if (this.hasMore && !this.pending) {
-        this.offset = this.acceptedOffset + this.received;
-        this.updateUrl(true);
-      }
-    };
-  }
-  customElements.define("cms-dashboard-lookup", DashboardLookup);
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/lookups/composition.ts
-  function composeLookup(control, field2) {
-    const lookup = field2.lookup;
-    const host = document.createElement("cms-dashboard-lookup");
-    host.setAttribute("cms-source", "");
-    host.setAttribute("request-base", `{{ detailLookupUrls.${field2.id} }}`);
-    host.setAttribute("selected-value", control.getAttribute("value") ?? "");
-    host.setAttribute("resource-path", "{{ detailResourcePath }}");
-    for (const [attribute, value2] of Object.entries({
-      "items-path": lookup.itemsPath,
-      "value-path": lookup.valuePath,
-      "label-path": lookup.labelPath,
-      "total-path": lookup.totalPath,
-      "selected-expression": lookup.selected
-    })) {
-      if (typeof value2 === "string") {
-        host.setAttribute(attribute, value2);
-      }
-    }
-    for (const [attribute, expression] of [
-      ["search-params", "$search"],
-      ["offset-params", "$offset"]
-    ]) {
-      host.setAttribute(attribute, Object.entries(lookup.params ?? {}).filter(([, value2]) => value2 === expression).map(([key]) => key).join(" "));
-    }
-    if (!lookupUsesOffsetPagination(lookup)) {
-      host.removeAttribute("offset-params");
-    }
-    const declared = document.createElement("span");
-    declared.hidden = true;
-    declared.setAttribute("data-static-options", "");
-    declared.append(...Array.from(control.children));
-    host.append(declared);
-    control.setAttribute("value", "{{ lookupValue }}");
-    if (field2.type === "combobox") {
-      control.toggleAttribute("remote-search", Boolean(host.getAttribute("search-params")));
-      control.setAttribute("loading", "{{ $source.loading }}");
-      control.setAttribute("has-more", "{{ lookupHasMore }}");
-    }
-    control.toggleAttribute("creatable", Boolean(field2.allowCustom || lookup.create?.mode === "inline"));
-    const template = document.createElement("template");
-    template.innerHTML = lookup_default;
-    control.append(template.content.querySelector('[data-lookup="options"]').content.cloneNode(true));
-    host.append(control, template.content.querySelector('[data-lookup="states"]').content.cloneNode(true));
-    return host;
-  }
-
   // src/static/admin/_content/sources/_runtime/detail/controls.html
   var controls_default = `<template data-control="text"><p9r-input type="text"></p9r-input></template>
 <template data-control="number"><p9r-input type="number"></p9r-input></template>
@@ -29285,6 +31140,7 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 <template data-control="image"><div><span>No image</span><img class="detail-image" loading="lazy" /></div></template>
 <template data-control="media"><cms-dashboard-media-field></cms-dashboard-media-field></template>
 <template data-control="schema"><cms-dashboard-schema-field></cms-dashboard-schema-field></template>
+<template data-control="table"><cms-dashboard-table-field></cms-dashboard-table-field></template>
 `;
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/readonly.ts
@@ -29323,17 +31179,17 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/fields.ts
   function fieldElement(field2, root) {
-    const template = document.createElement("template");
-    template.innerHTML = controls_default;
+    const template3 = document.createElement("template");
+    template3.innerHTML = controls_default;
     const kind = field2.type === "readonly" ? field2.format ?? "readonly" : field2.type === "money" ? "amount" : field2.type;
-    const control = template.content.querySelector(`[data-control="${kind === "text" && field2.type === "readonly" ? "readonly" : kind}"]`).content.firstElementChild.cloneNode(true);
+    const control = template3.content.querySelector(`[data-control="${kind === "text" && field2.type === "readonly" ? "readonly" : kind}"]`).content.firstElementChild.cloneNode(true);
     const wrapper = document.createElement("cms-dashboard-detail-field");
     if (field2.visibleWhen) {
       wrapper.setAttribute("cms-condition", `detailVisibility | dashboardVisibility(detailRules.${field2.id})`);
     }
     wrapper.setAttribute("label", field2.label);
     wrapper.toggleAttribute("required", field2.required === true);
-    wrapper.toggleAttribute("internal-label", field2.type !== "readonly" && field2.type !== "checkbox");
+    wrapper.toggleAttribute("internal-label", field2.type !== "readonly" && field2.type !== "checkbox" && field2.type !== "table");
     if (field2.type === "readonly") {
       composeReadonly(control, field2, root);
       wrapper.append(...Array.from(control.childNodes));
@@ -29343,7 +31199,7 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
       if (field2.type === "checkbox") {
         control.setAttribute("cms-bind-value", field2.path === "." ? root : `${root}.${field2.path}`);
         control.setAttribute("aria-label", field2.label);
-      } else if (field2.type !== "media" && field2.type !== "schema") {
+      } else if (field2.type !== "media" && field2.type !== "schema" && field2.type !== "table") {
         control.setAttribute("value", fieldBinding(root, field2.path, field2.type === "tokens" ? "dashboardTokens" : undefined));
       }
       control.toggleAttribute("required", field2.required === true);
@@ -29402,13 +31258,13 @@ button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
         control.setAttribute("allow-media", String(field2.allowMedia === true));
         control.setAttribute("published-only", String(field2.publishedOnly === true));
       }
-      wrapper.append((field2.type === "combobox" || field2.type === "tokens") && field2.lookup ? composeLookup(control, field2) : control);
+      wrapper.append(field2.type === "table" ? composeTable(control, field2) : (field2.type === "combobox" || field2.type === "tokens") && field2.lookup ? composeLookup(control, field2) : control);
     }
     return wrapper;
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/field.css
-  var field_default5 = `:host { display: block; min-width: 0; }
+  var field_default6 = `:host { display: block; min-width: 0; }
 dl { display: grid; gap: 7px; margin: 0; min-width: 0; }
 dt { color: #66736f; font-size: 11px; font-weight: 750; letter-spacing: 0; text-transform: uppercase; }
 dd { margin: 0; min-width: 0; }
@@ -29429,7 +31285,7 @@ dd { margin: 0; min-width: 0; }
   // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/Field.ts
   class DashboardDetailField extends l2 {
     constructor() {
-      super({ css: field_default5, template: "<dl><dt></dt><dd><slot></slot></dd></dl>" });
+      super({ css: field_default6, template: "<dl><dt></dt><dd><slot></slot></dd></dl>" });
     }
     static observedAttributes = ["label", "required", "internal-label"];
     attributeChangedCallback() {
@@ -29440,6 +31296,7 @@ dd { margin: 0; min-width: 0; }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/binding/composition.ts
   var supported = new Set([
+    "table",
     "schema",
     "media",
     "cms-user",
@@ -29667,7 +31524,7 @@ dd { margin: 0; min-width: 0; }
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-media-field/legacy/template.html
-  var template_default9 = `<section class="media-field">
+  var template_default11 = `<section class="media-field">
     <div class="label-row">
         <span data-label></span>
         <button class="preview-trigger" data-preview-open type="button" hidden>
@@ -29984,7 +31841,7 @@ dd { margin: 0; min-width: 0; }
     pendingPick = { action: "upload" };
     suppressClick = false;
     constructor() {
-      super({ css: styles_default3, template: template_default9 });
+      super({ css: styles_default5, template: template_default11 });
       this.preview = new MediaPreviewController(this.shadowRoot, () => this.currentItems);
     }
     static get observedAttributes() {
@@ -30140,1626 +31997,6 @@ dd { margin: 0; min-width: 0; }
       return [];
     }
     return value2.filter((item) => Boolean(item) && typeof item === "object" && ("url" in item));
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/template.html
-  var template_default10 = `<div class="page-link">
-    <div class="head">
-        <span class="label"></span>
-        <span class="hint"></span>
-    </div>
-    <div class="tabs" role="tablist"></div>
-    <div class="panel page-panel">
-        <input class="search" type="search" placeholder="Search pages" />
-        <div class="picker" hidden>
-            <div class="page-list" role="listbox"></div>
-            <div class="empty" hidden>No pages found</div>
-        </div>
-    </div>
-    <div class="panel external-panel" hidden>
-        <input class="external-input" type="url" placeholder="https://example.com" />
-    </div>
-    <div class="panel media-panel" hidden>
-        <button class="file-button" type="button">
-            <span class="file-preview" aria-hidden="true"></span>
-            <span class="file-copy">
-                <strong class="file-title">Choose file</strong>
-                <code class="file-value">No file selected</code>
-            </span>
-            <span class="file-action">Change</span>
-        </button>
-    </div>
-    <div class="target">
-        <span class="icon">↗</span>
-        <span class="copy">
-            <strong></strong>
-            <code></code>
-        </span>
-    </div>
-</div>
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-1.css
-  var part_1_default = `:host {
-    --_page-link-surface: var(--editor-v2-surface, var(--bg-surface, #ffffff));
-    --_page-link-surface-muted: var(--editor-v2-surface-muted, var(--bg-subtle, #f9faf9));
-    --_page-link-border: var(--editor-v2-border, var(--border-default, #e2e6e4));
-    --_page-link-text: var(--editor-v2-text, var(--text-default, #151b19));
-    --_page-link-label: var(--editor-v2-label, var(--text-muted, #5f6d68));
-    --_page-link-muted: var(--editor-v2-muted, var(--text-muted, #87948f));
-    --_page-link-accent: var(--editor-v2-accent, var(--primary-base, #165f4b));
-    display: block;
-}
-
-:host([disabled]) {
-    cursor: not-allowed;
-}
-
-* {
-    box-sizing: border-box;
-}
-
-.page-link {
-    display: grid;
-    gap: 7px;
-}
-
-.head {
-    display: grid;
-    gap: 2px;
-}
-
-.label {
-    color: var(--_page-link-label);
-    font-size: 12px;
-    font-weight: 720;
-}
-
-.hint {
-    color: var(--_page-link-muted);
-    font-size: 11px;
-    line-height: 1.35;
-}
-
-.tabs {
-    display: flex;
-    gap: 2px;
-    border: 1px solid var(--_page-link-border);
-    border-radius: 8px;
-    background: var(--_page-link-surface-muted);
-    padding: 3px;
-}
-
-.tabs:empty {
-    display: none;
-}
-
-.tabs[hidden] {
-    display: none;
-}
-
-button {
-    font: inherit;
-}
-
-.tabs button {
-    flex: 1;
-    min-height: 28px;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--_page-link-muted);
-    font-size: 12px;
-    font-weight: 650;
-}
-
-.tabs button[aria-selected="true"] {
-    background: var(--_page-link-surface);
-    color: var(--_page-link-text);
-    box-shadow: 0 1px 2px rgba(16, 24, 21, .08);
-}
-
-.panel {
-    display: grid;
-    gap: 6px;
-}
-
-.panel[hidden] {
-    display: none;
-}
-
-.page-panel {
-    position: relative;
-}
-
-.search,
-.external-input {
-    width: 100%;
-    min-height: 32px;
-    border: 1px solid var(--_page-link-border);
-    border-radius: 7px;
-    background: var(--_page-link-surface);
-    color: var(--_page-link-text);
-    font: inherit;
-    font-size: 12px;
-    outline: none;
-    padding: 0 10px;
-}
-
-.file-button {
-    display: grid;
-    gap: 8px;
-    width: 100%;
-    border: 1px solid color-mix(in srgb, var(--_page-link-border) 76%, transparent);
-    border-radius: 8px;
-    background: var(--_page-link-surface-muted);
-    color: var(--_page-link-text);
-    padding: 8px;
-    cursor: pointer;
-    text-align: left;
-}
-
-.file-button:hover {
-    border-color: color-mix(in srgb, var(--_page-link-accent) 32%, var(--_page-link-border));
-    background: color-mix(in srgb, var(--_page-link-accent) 4%, var(--_page-link-surface));
-}
-
-.file-preview {
-    display: grid;
-    overflow: hidden;
-    place-items: center;
-    width: 100%;
-    min-height: 112px;
-    aspect-ratio: 16 / 9;
-    border-radius: 7px;
-    background: color-mix(in srgb, var(--_page-link-accent) 10%, var(--_page-link-surface));
-    color: var(--_page-link-accent);
-    font-size: 18px;
-}
-
-.file-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-}
-
-.file-copy {
-    display: grid;
-    min-width: 0;
-    gap: 2px;
-}
-
-.file-title,
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-2.css
-  var part_2_default = `.file-value {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.file-value[hidden] {
-    display: none;
-}
-
-.file-action {
-    justify-self: start;
-    color: var(--_page-link-accent);
-    font-size: 11px;
-    font-weight: 720;
-}
-
-.search:focus,
-.external-input:focus {
-    border-color: color-mix(in srgb, var(--_page-link-accent) 46%, var(--_page-link-border));
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--_page-link-accent) 10%, transparent);
-}
-
-.picker {
-    position: absolute;
-    z-index: 20;
-    top: calc(100% + 4px);
-    right: 0;
-    left: 0;
-    overflow: hidden;
-    border: 1px solid var(--_page-link-border);
-    border-radius: 8px;
-    background: var(--_page-link-surface);
-    box-shadow: 0 12px 28px rgba(16, 24, 21, .14);
-}
-
-.picker[hidden] {
-    display: none;
-}
-
-.page-list {
-    display: grid;
-    max-height: 184px;
-    overflow-x: hidden;
-    overflow-y: auto;
-    padding: 4px;
-}
-
-.page-option {
-    display: grid;
-    gap: 2px;
-    min-height: 34px;
-    width: 100%;
-    min-width: 0;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--_page-link-text);
-    padding: 6px 7px;
-    text-align: left;
-    cursor: pointer;
-}
-
-.page-option:hover {
-    background: color-mix(in srgb, var(--_page-link-accent) 4%, var(--_page-link-surface));
-}
-
-.page-option[aria-selected="true"] {
-    background: color-mix(in srgb, var(--_page-link-accent) 8%, var(--_page-link-surface));
-    color: var(--_page-link-accent);
-}
-
-.page-title {
-    overflow: hidden;
-    min-width: 0;
-    font-size: 12px;
-    font-weight: 720;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.page-path {
-    overflow: hidden;
-    min-width: 0;
-    color: var(--_page-link-muted);
-    font-size: 11px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.empty {
-    color: var(--_page-link-muted);
-    font-size: 12px;
-    padding: 10px 11px;
-}
-
-.target {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-height: 34px;
-    border: 1px solid color-mix(in srgb, var(--_page-link-border) 76%, transparent);
-    border-radius: 7px;
-    background: var(--_page-link-surface-muted);
-    padding: 6px 8px;
-    cursor: pointer;
-}
-
-.target[hidden] {
-    display: none;
-}
-
-.icon {
-    display: grid;
-    flex: 0 0 auto;
-    place-items: center;
-    width: 22px;
-    height: 22px;
-    border-radius: 6px;
-    background: color-mix(in srgb, var(--_page-link-accent) 12%, var(--_page-link-surface));
-    color: var(--_page-link-accent);
-    font-size: 12px;
-}
-
-.copy {
-    min-width: 0;
-    display: grid;
-    gap: 2px;
-}
-
-strong {
-    overflow: hidden;
-    color: var(--_page-link-text);
-    font-size: 12px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-code {
-    overflow: hidden;
-    color: var(--_page-link-muted);
-    font-size: 11px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/part-3.css
-  var part_3_default = `
-:host([disabled]) button,
-:host([disabled]) input,
-:host([disabled]) .target {
-    opacity: .62;
-    cursor: not-allowed;
-}
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/styles/index.ts
-  var styles_default4 = [String(part_1_default), String(part_2_default), String(part_3_default)].join("");
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkDomain.ts
-  function allowedLinkModes(options) {
-    const modes = [];
-    if (options.allowPage) {
-      modes.push("page");
-    }
-    if (options.allowExternal) {
-      modes.push("external");
-    }
-    if (options.allowMedia) {
-      modes.push("media");
-    }
-    return modes;
-  }
-  function modeForLinkValue(value2, options) {
-    if (value2 && isMediaLink(value2)) {
-      return "media";
-    }
-    if (value2 && isExternalLink(value2)) {
-      return "external";
-    }
-    if (!options.allowPage && !options.allowExternal && options.allowMedia) {
-      return "media";
-    }
-    if (!options.allowPage && options.allowExternal) {
-      return "external";
-    }
-    return "page";
-  }
-  function isExternalLink(value2) {
-    return /^[a-z][a-z0-9+.-]*:/i.test(value2) || value2.startsWith("//");
-  }
-  function isMediaLink(value2) {
-    return value2.includes("/.cms/files/by-id/");
-  }
-  function isImageMediaLink(value2) {
-    return /\.(avif|gif|jpe?g|png|svg|webp)(?:[?#].*)?$/i.test(value2) || value2.includes("/.cms/files/by-id/");
-  }
-  function mediaDisplayName(value2, isImage2, mediaLabel = "") {
-    if (mediaLabel) {
-      return mediaLabel;
-    }
-    if (value2.includes("/.cms/files/by-id/")) {
-      return isImage2 ? "Image" : "Selected file";
-    }
-    const clean = value2.split(/[?#]/, 1)[0] ?? value2;
-    const segment = clean.split("/").filter(Boolean).at(-1);
-    if (!segment) {
-      return "File";
-    }
-    try {
-      return decodeURIComponent(segment);
-    } catch {
-      return segment;
-    }
-  }
-  function mediaSelectionLabel(isImage2) {
-    return isImage2 ? "Image" : "File selected";
-  }
-  function linkSummaryFallback(mode) {
-    if (mode === "external") {
-      return "External URL";
-    }
-    if (mode === "media") {
-      return "File";
-    }
-    return "Internal page";
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkMediaView.ts
-  function renderPageLinkPanels(input) {
-    const { elements } = input;
-    elements.pagePanel.hidden = input.mode !== "page" || !input.allowPage;
-    elements.externalPanel.hidden = input.mode !== "external" || !input.allowExternal;
-    elements.mediaPanel.hidden = input.mode !== "media" || !input.allowMedia;
-    elements.searchInput.disabled = input.disabled;
-    elements.externalInput.disabled = input.disabled;
-    elements.fileButton.disabled = input.disabled;
-    elements.picker.hidden = !input.pickerOpen || elements.pagePanel.hidden;
-    if (input.mode === "external") {
-      elements.externalInput.value = input.value;
-    }
-    renderPageLinkMedia(elements, input.mode, input.value, input.mediaLabel);
-  }
-  function renderPageLinkMedia(elements, mode, value2, mediaLabel) {
-    const hasValue = mode === "media" && value2 !== "";
-    const isImage2 = hasValue && isImageMediaLink(value2);
-    elements.fileTitle.textContent = hasValue ? mediaDisplayName(value2, isImage2, mediaLabel) : "Choose file";
-    elements.fileValue.textContent = hasValue ? mediaSelectionLabel(isImage2) : "No file selected";
-    elements.fileValue.toggleAttribute("hidden", hasValue && isImage2);
-    elements.fileAction.textContent = hasValue ? "Change" : "Choose";
-    elements.filePreview.replaceChildren();
-    elements.filePreview.dataset.kind = isImage2 ? "image" : "file";
-    if (isImage2) {
-      const image = document.createElement("img");
-      image.src = value2;
-      image.alt = "";
-      image.loading = "lazy";
-      elements.filePreview.append(image);
-      return;
-    }
-    elements.filePreview.textContent = "↗";
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkNavigationView.ts
-  function renderPageLinkTabs(input) {
-    input.elements.tabs.replaceChildren();
-    if (input.allowedModes.length <= 1) {
-      input.elements.tabs.hidden = true;
-      return;
-    }
-    input.elements.tabs.hidden = false;
-    for (const mode of input.allowedModes) {
-      input.elements.tabs.append(modeTab(mode, input.mode, input.disabled, input.onMode));
-    }
-  }
-  function renderPageLinkPages(input) {
-    input.elements.pageList.replaceChildren();
-    input.elements.picker.hidden = !input.pickerOpen || input.elements.pagePanel.hidden;
-    const query5 = input.query.trim().toLowerCase();
-    const pages = input.pages.filter((page) => !query5 || page.title.toLowerCase().includes(query5) || page.path.toLowerCase().includes(query5));
-    input.elements.empty.hidden = !input.pickerOpen || pages.length > 0;
-    for (const page of pages) {
-      const button = document.createElement("button");
-      button.className = "page-option";
-      button.type = "button";
-      button.ariaSelected = String(page.path === input.value);
-      button.disabled = input.disabled;
-      button.addEventListener("click", () => {
-        if (!input.disabled) {
-          input.onSelect(page.path);
-        }
-      });
-      const title = document.createElement("span");
-      title.className = "page-title";
-      title.textContent = page.title;
-      const path = document.createElement("span");
-      path.className = "page-path";
-      path.textContent = page.path;
-      button.append(title, path);
-      input.elements.pageList.append(button);
-    }
-  }
-  function renderPageLinkSummary(elements, pages, mode, value2) {
-    const page = pages.find((candidate) => candidate.path === value2);
-    elements.summaryTitle.textContent = page?.title ?? (value2 ? linkSummaryFallback(mode) : "No link selected");
-    elements.summaryValue.textContent = value2 || "Choose a target";
-    elements.target.hidden = !value2 || mode === "media";
-  }
-  function modeTab(mode, activeMode, disabled, onMode) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.role = "tab";
-    button.textContent = mode === "page" ? "Page" : mode === "external" ? "External" : "Media";
-    button.ariaSelected = String(activeMode === mode);
-    button.disabled = disabled;
-    button.addEventListener("click", () => {
-      if (!disabled) {
-        onMode(mode);
-      }
-    });
-    return button;
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/View/pageLinkElements.ts
-  function queryPageLinkElements(root) {
-    const query5 = (selector) => root.querySelector(selector);
-    return {
-      empty: query5(".empty"),
-      externalInput: query5(".external-input"),
-      externalPanel: query5(".external-panel"),
-      fileAction: query5(".file-action"),
-      fileButton: query5(".file-button"),
-      filePreview: query5(".file-preview"),
-      fileTitle: query5(".file-title"),
-      fileValue: query5(".file-value"),
-      hint: query5(".hint"),
-      label: query5(".label"),
-      mediaPanel: query5(".media-panel"),
-      pageList: query5(".page-list"),
-      pagePanel: query5(".page-panel"),
-      picker: query5(".picker"),
-      searchInput: query5(".search"),
-      summaryTitle: query5(".target strong"),
-      summaryValue: query5(".target code"),
-      tabs: query5(".tabs"),
-      target: query5(".target")
-    };
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/template.html
-  var template_default11 = `<div class="backdrop" hidden>
-    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="files-title">
-        <header class="top">
-            <div>
-                <h2 id="files-title">Choose file</h2>
-                <p>Select a file from the CMS library.</p>
-            </div>
-            <button class="icon-button close" type="button" aria-label="Close">×</button>
-        </header>
-
-        <div class="toolbar">
-            <nav class="breadcrumb" aria-label="Current folder"></nav>
-            <input class="search" type="search" placeholder="Search files" />
-        </div>
-
-        <div class="grid" role="listbox"></div>
-        <div class="empty" hidden>No files found</div>
-
-        <footer class="footer">
-            <div class="selection">
-                <strong>No file selected</strong>
-                <code>Choose a file</code>
-            </div>
-            <div class="actions">
-                <button class="secondary cancel" type="button">Cancel</button>
-                <button class="primary select" type="button" disabled>Select file</button>
-            </div>
-        </footer>
-    </section>
-</div>
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-1.css
-  var part_1_default2 = `:host {
-    color: var(--editor-v2-text, #111);
-    font: 12px/1.35 system-ui, sans-serif;
-}
-
-* {
-    box-sizing: border-box;
-}
-
-.backdrop {
-    position: fixed;
-    z-index: 1000;
-    inset: 0;
-    display: grid;
-    place-items: start center;
-    overflow: auto;
-    background: rgba(16, 24, 21, .34);
-    padding: 72px 24px 24px;
-}
-
-.backdrop[hidden] {
-    display: none;
-}
-
-.modal {
-    display: grid;
-    grid-template-rows: auto auto minmax(180px, 1fr) auto;
-    width: min(940px, calc(100vw - 48px));
-    max-height: min(760px, calc(100vh - 96px));
-    overflow: hidden;
-    border: 1px solid var(--editor-v2-border, #d7ddd9);
-    border-radius: 8px;
-    background: var(--editor-v2-surface, #fff);
-    box-shadow: 0 24px 70px rgba(16, 24, 21, .22);
-}
-
-.top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    border-bottom: 1px solid var(--editor-v2-border, #d7ddd9);
-    padding: 16px 18px;
-}
-
-h2,
-p {
-    margin: 0;
-}
-
-h2 {
-    font-size: 15px;
-    font-weight: 760;
-}
-
-p {
-    margin-top: 3px;
-    color: var(--editor-v2-muted, #708078);
-}
-
-button,
-input {
-    font: inherit;
-}
-
-.icon-button {
-    display: grid;
-    place-items: center;
-    width: 28px;
-    height: 28px;
-    border: 1px solid var(--editor-v2-border, #d7ddd9);
-    border-radius: 7px;
-    background: var(--editor-v2-surface, #fff);
-    cursor: pointer;
-}
-
-.toolbar {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 240px;
-    gap: 10px;
-    align-items: center;
-    border-bottom: 1px solid var(--editor-v2-border, #d7ddd9);
-    padding: 10px 12px;
-}
-
-.breadcrumb {
-    display: flex;
-    min-width: 0;
-    gap: 4px;
-    overflow: hidden;
-}
-
-.breadcrumb button {
-    min-width: 0;
-    border: 0;
-    border-radius: 6px;
-    background: transparent;
-    color: var(--editor-v2-muted, #708078);
-    cursor: pointer;
-    font-weight: 650;
-    padding: 5px 7px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.breadcrumb button:hover,
-.breadcrumb button[aria-current="page"] {
-    background: var(--editor-v2-surface-muted, #f5f7f6);
-    color: var(--editor-v2-text, #111);
-}
-
-.search {
-    min-height: 32px;
-    min-width: 0;
-    border: 1px solid var(--editor-v2-border, #d7ddd9);
-    border-radius: 7px;
-    outline: none;
-    padding: 0 10px;
-}
-
-.search:focus {
-    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 46%, var(--editor-v2-border, #d7ddd9));
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--editor-v2-accent, #176b58) 10%, transparent);
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    align-content: start;
-    gap: 10px;
-    justify-items: center;
-    overflow-x: hidden;
-    overflow-y: auto;
-    padding: 12px;
-}
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-2.css
-  var part_2_default2 = `.item {
-    display: grid;
-    grid-template-rows: 108px auto;
-    gap: 8px;
-    width: 100%;
-    max-width: 180px;
-    min-height: 168px;
-    min-width: 0;
-    border: 1px solid var(--editor-v2-border, #d7ddd9);
-    border-radius: 7px;
-    background: var(--editor-v2-surface, #fff);
-    color: var(--editor-v2-text, #111);
-    cursor: pointer;
-    padding: 8px;
-    text-align: left;
-}
-
-.item:hover {
-    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 34%, var(--editor-v2-border, #d7ddd9));
-    background: color-mix(in srgb, var(--editor-v2-accent, #176b58) 4%, var(--editor-v2-surface, #fff));
-}
-
-.item[aria-selected="true"] {
-    border-color: color-mix(in srgb, var(--editor-v2-accent, #176b58) 66%, var(--editor-v2-border, #d7ddd9));
-    background: color-mix(in srgb, var(--editor-v2-accent, #176b58) 8%, var(--editor-v2-surface, #fff));
-}
-
-.preview {
-    display: grid;
-    place-items: center;
-    overflow: hidden;
-    width: 100%;
-    height: 108px;
-    border-radius: 6px;
-    background: var(--editor-v2-surface-muted, #f5f7f6);
-    color: var(--editor-v2-accent, #176b58);
-}
-
-.preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.preview svg {
-    width: 46px;
-    height: 46px;
-    fill: color-mix(in srgb, var(--editor-v2-accent, #176b58) 72%, var(--editor-v2-text, #111));
-    opacity: .9;
-}
-
-.item[data-type="folder"] .preview {
-    background: color-mix(in srgb, #e2b45c 16%, var(--editor-v2-surface-muted, #f5f7f6));
-    color: #9a6a10;
-}
-
-.item[data-type="folder"] .preview svg {
-    fill: currentColor;
-}
-
-.item[data-type="pdf"] .preview {
-    background: color-mix(in srgb, #c84d4d 12%, var(--editor-v2-surface-muted, #f5f7f6));
-    color: #9d3030;
-}
-
-.preview text {
-    fill: currentColor;
-    font: 700 5px system-ui, sans-serif;
-}
-
-.copy {
-    display: grid;
-    min-width: 0;
-    gap: 1px;
-}
-
-.name,
-.meta,
-.selection strong,
-.selection code {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.name {
-    font-weight: 720;
-}
-
-.meta,
-.selection code {
-    color: var(--editor-v2-muted, #708078);
-    font-size: 11px;
-}
-
-.empty {
-    color: var(--editor-v2-muted, #708078);
-    padding: 18px;
-}
-
-.footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    border-top: 1px solid var(--editor-v2-border, #d7ddd9);
-    padding: 12px;
-}
-
-.selection {
-    display: grid;
-    min-width: 0;
-    gap: 2px;
-}
-
-.actions {
-    display: flex;
-    flex: 0 0 auto;
-    gap: 8px;
-}
-
-.secondary,
-.primary {
-    min-height: 32px;
-    border-radius: 7px;
-    cursor: pointer;
-    font-weight: 720;
-    padding: 0 12px;
-}
-
-.secondary {
-    border: 1px solid var(--editor-v2-border, #d7ddd9);
-    background: var(--editor-v2-surface, #fff);
-    color: var(--editor-v2-text, #111);
-}
-
-.primary {
-    border: 1px solid var(--editor-v2-accent, #176b58);
-    background: var(--editor-v2-accent, #176b58);
-    color: #fff;
-}
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/part-3.css
-  var part_3_default2 = `.primary:disabled {
-    opacity: .45;
-    cursor: not-allowed;
-}
-
-@media (max-width: 720px) {
-    .toolbar {
-        grid-template-columns: 1fr;
-    }
-
-    .modal {
-        width: calc(100vw - 24px);
-    }
-}
-`;
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/styles/index.ts
-  var styles_default5 = [String(part_1_default2), String(part_2_default2), String(part_3_default2)].join(`
-`);
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterDomain.ts
-  async function loadFilesPage(basePath3, folder, accept) {
-    const params = new URLSearchParams;
-    if (folder) {
-      params.set("parentId", folder);
-    }
-    params.set("accept", accept.join(","));
-    params.set("sortBy", "name");
-    params.set("limit", "10000");
-    const response = await fetch(`${basePath3}/api/files?${params.toString()}`);
-    if (!response.ok) {
-      return [];
-    }
-    return (await response.json()).items;
-  }
-  function fileUrl(basePath3, id2) {
-    return `${basePath3}/.cms/files/by-id/${encodeURIComponent(id2)}`;
-  }
-  function isCmsFileSource(value2) {
-    return value2.startsWith("/") && !value2.startsWith("//") && !/[\u0000-\u0020\u007F]/.test(value2) && /\/\.cms\/files\/by-id\/[^/?#]+(?:[?#].*)?$/.test(value2);
-  }
-  function fileDetail(basePath3, item) {
-    return {
-      id: item.id,
-      label: item.name,
-      src: fileUrl(basePath3, item.id),
-      mimeType: item.mimeType
-    };
-  }
-  function fileKind(item) {
-    if (item.mimeType?.startsWith("image/")) {
-      return "image";
-    }
-    if (item.mimeType?.includes("pdf")) {
-      return "pdf";
-    }
-    return "file";
-  }
-  function matchesFileAccept(item, accept) {
-    if (!accept || accept.length === 0) {
-      return true;
-    }
-    const mimeType = item.mimeType?.split(";", 1)[0]?.trim().toLowerCase() ?? "";
-    if (accept.includes("image") && mimeType.startsWith("image/")) {
-      return true;
-    }
-    if (accept.includes("svg") && mimeType === "image/svg+xml") {
-      return true;
-    }
-    if (accept.includes("bitmap") && mimeType.startsWith("image/") && mimeType !== "image/svg+xml") {
-      return true;
-    }
-    if (accept.includes("video") && mimeType.startsWith("video/")) {
-      return true;
-    }
-    if (accept.includes("audio") && mimeType.startsWith("audio/")) {
-      return true;
-    }
-    if (accept.includes("document") && !mimeType.startsWith("image/") && !mimeType.startsWith("video/") && !mimeType.startsWith("audio/")) {
-      return true;
-    }
-    return false;
-  }
-  function fileMeta(item) {
-    const parts = [item.mimeType ?? "File"];
-    if (typeof item.size === "number") {
-      parts.push(formatFileSize(item.size));
-    }
-    return parts.join(" · ");
-  }
-  function formatFileSize(size) {
-    if (size < 1024) {
-      return `${size} B`;
-    }
-    if (size < 1024 * 1024) {
-      return `${Math.round(size / 1024)} KB`;
-    }
-    return `${(size / 1024 / 1024).toFixed(1)} MB`;
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterElements.ts
-  function queryFilesCenterElements(root) {
-    const query5 = (selector) => root.querySelector(selector);
-    return {
-      backdrop: query5(".backdrop"),
-      breadcrumb: query5(".breadcrumb"),
-      cancelButton: query5(".cancel"),
-      closeButton: query5(".close"),
-      empty: query5(".empty"),
-      grid: query5(".grid"),
-      searchInput: query5(".search"),
-      selectButton: query5(".select"),
-      selectionTitle: query5(".selection strong"),
-      selectionValue: query5(".selection code")
-    };
-  }
-  function wireFilesCenterElements(elements, callbacks) {
-    elements.closeButton.addEventListener("click", callbacks.close);
-    elements.cancelButton.addEventListener("click", callbacks.close);
-    elements.backdrop.addEventListener("click", (event) => {
-      if (event.target === elements.backdrop) {
-        callbacks.close();
-      }
-    });
-    elements.selectButton.addEventListener("click", callbacks.confirm);
-    elements.searchInput.addEventListener("input", callbacks.search);
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterList.ts
-  function renderFilesBreadcrumb(container, trail, onOpen) {
-    container.replaceChildren();
-    trail.forEach((entry, index) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.textContent = entry.label;
-      button.ariaCurrent = index === trail.length - 1 ? "page" : null;
-      button.addEventListener("click", () => onOpen(entry, index));
-      container.append(button);
-    });
-  }
-  function renderFilesList(input) {
-    input.grid.replaceChildren();
-    const query5 = input.query.trim().toLowerCase();
-    const items = input.items.filter((item) => {
-      if (item.type === "file" && !matchesFileAccept(item, input.fileAccept)) {
-        return false;
-      }
-      return !query5 || item.name.toLowerCase().includes(query5);
-    });
-    input.empty.hidden = items.length > 0;
-    for (const item of items) {
-      const button = document.createElement("button");
-      button.className = "item";
-      button.dataset.type = item.type === "folder" ? "folder" : fileKind(item);
-      button.type = "button";
-      button.ariaSelected = String(input.isSelected(item));
-      button.addEventListener("click", () => {
-        if (item.type === "folder") {
-          input.onOpenFolder(item);
-          return;
-        }
-        input.onSelectFile(item);
-      });
-      button.addEventListener("dblclick", () => {
-        if (item.type === "file" && !input.multiple) {
-          input.onConfirm();
-        }
-      });
-      button.append(renderFilePreview(item, input.basePath), renderFileCopy(item));
-      input.grid.append(button);
-    }
-  }
-  function renderFileCopy(item) {
-    const copy = document.createElement("span");
-    copy.className = "copy";
-    const name = document.createElement("span");
-    name.className = "name";
-    name.textContent = item.name;
-    const meta = document.createElement("span");
-    meta.className = "meta";
-    meta.textContent = item.type === "folder" ? "Folder" : fileMeta(item);
-    copy.append(name, meta);
-    return copy;
-  }
-  function renderFilePreview(item, basePath3) {
-    const preview = document.createElement("span");
-    preview.className = "preview";
-    if (item.type === "folder") {
-      preview.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.8A2.8 2.8 0 0 1 5.8 4h4.1l2 2H18.2A2.8 2.8 0 0 1 21 8.8v8.4a2.8 2.8 0 0 1-2.8 2.8H5.8A2.8 2.8 0 0 1 3 17.2Z"/></svg>`;
-      return preview;
-    }
-    if (item.mimeType?.startsWith("image/")) {
-      const image = document.createElement("img");
-      image.alt = "";
-      image.loading = "lazy";
-      image.src = fileUrl(basePath3, item.id);
-      preview.append(image);
-      return preview;
-    }
-    preview.innerHTML = fileKind(item) === "pdf" ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/><text x="7" y="17">PDF</text></svg>` : `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></svg>`;
-    return preview;
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/filesCenterSelection.ts
-  function renderFilesSelection(elements, selection) {
-    if (selection.multiple) {
-      const count = selection.selectedMany.length;
-      elements.selectButton.disabled = count === 0;
-      elements.selectButton.textContent = count === 1 ? "Select 1 file" : `Select ${count} files`;
-      elements.selectionTitle.textContent = count === 0 ? "No files selected" : `${count} files selected`;
-      elements.selectionValue.textContent = selection.maxSelection ? `Up to ${selection.maxSelection} files` : "Choose files";
-      return;
-    }
-    elements.selectButton.disabled = !selection.selected;
-    elements.selectButton.textContent = "Select file";
-    elements.selectionTitle.textContent = selection.selected?.name ?? "No file selected";
-    elements.selectionValue.textContent = selection.selected ? fileMeta(selection.selected) : "Choose a file";
-  }
-  function toggleSelectedFile(item, selection) {
-    if (!selection.multiple) {
-      return item;
-    }
-    const existingIndex = selection.selectedMany.findIndex((selected2) => selected2.id === item.id);
-    if (existingIndex >= 0) {
-      selection.selectedMany.splice(existingIndex, 1);
-      return selection.selected;
-    }
-    if (!selection.maxSelection || selection.selectedMany.length < selection.maxSelection) {
-      selection.selectedMany.push(item);
-    }
-    return selection.selected;
-  }
-  function isFileSelected(item, selection) {
-    return selection.multiple ? selection.selectedMany.some((selected2) => selected2.id === item.id) : selection.selected?.id === item.id;
-  }
-  function dispatchFilesSelection(host, basePath3, selection) {
-    if (selection.multiple) {
-      if (selection.selectedMany.length === 0) {
-        return false;
-      }
-      host.dispatchEvent(new CustomEvent("select-files", {
-        bubbles: true,
-        composed: true,
-        detail: { files: selection.selectedMany.map((file) => fileDetail(basePath3, file)) }
-      }));
-      return true;
-    }
-    if (!selection.selected) {
-      return false;
-    }
-    host.dispatchEvent(new CustomEvent("select-file", {
-      bubbles: true,
-      composed: true,
-      detail: fileDetail(basePath3, selection.selected)
-    }));
-    return true;
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/FilesCenter/FilesCenter.ts
-  var template = document.createElement("template");
-  template.innerHTML = `<style>${String(styles_default5)}</style>${String(template_default11)}`;
-
-  class FilesCenter extends HTMLElement {
-    _folder = null;
-    _trail = [{ id: null, label: "Files" }];
-    _items = [];
-    _selected = null;
-    _selectedMany = [];
-    _wired = false;
-    _accept = ["folder", "file"];
-    _fileAccept = null;
-    _multiple = false;
-    _maxSelection = null;
-    elements;
-    constructor() {
-      super();
-      const shadowRoot = this.attachShadow({ mode: "open" });
-      shadowRoot.append(template.content.cloneNode(true));
-      this.elements = queryFilesCenterElements(shadowRoot);
-    }
-    connectedCallback() {
-      this._wire();
-    }
-    show(options = {}) {
-      this._wire();
-      this._accept = options.accept ?? ["folder", "file"];
-      this._fileAccept = options.fileAccept ?? null;
-      this._multiple = options.multiple === true;
-      this._maxSelection = typeof options.maxSelection === "number" ? Math.max(1, options.maxSelection) : null;
-      this._folder = null;
-      this._trail = [{ id: null, label: "Files" }];
-      this._selected = null;
-      this._selectedMany = [];
-      this.elements.searchInput.value = "";
-      this.elements.backdrop.hidden = false;
-      this._load();
-    }
-    _wire() {
-      if (this._wired) {
-        return;
-      }
-      this._wired = true;
-      wireFilesCenterElements(this.elements, {
-        close: () => this._close(),
-        confirm: () => this._confirm(),
-        search: () => this._renderItems()
-      });
-    }
-    async _load() {
-      this._selected = null;
-      this._updateSelection();
-      this._items = await loadFilesPage(this._basePath(), this._folder, this._accept);
-      this._render();
-    }
-    _render() {
-      this._renderBreadcrumb();
-      this._renderItems();
-      this._updateSelection();
-    }
-    _renderBreadcrumb() {
-      renderFilesBreadcrumb(this.elements.breadcrumb, this._trail, (entry, index) => {
-        this._folder = entry.id;
-        this._trail = this._trail.slice(0, index + 1);
-        this._load();
-      });
-    }
-    _renderItems() {
-      renderFilesList({
-        basePath: this._basePath(),
-        empty: this.elements.empty,
-        fileAccept: this._fileAccept,
-        grid: this.elements.grid,
-        isSelected: (item) => this._isSelected(item),
-        items: this._items,
-        multiple: this._multiple,
-        onConfirm: () => this._confirm(),
-        onOpenFolder: (item) => this._openFolder(item),
-        onSelectFile: (item) => {
-          this._selectFile(item);
-          this._renderItems();
-          this._updateSelection();
-        },
-        query: this.elements.searchInput.value
-      });
-    }
-    _openFolder(item) {
-      this._folder = item.id;
-      this._trail.push({ id: item.id, label: item.name });
-      this.elements.searchInput.value = "";
-      this._load();
-    }
-    _updateSelection() {
-      renderFilesSelection(this.elements, this._selection());
-    }
-    _confirm() {
-      if (dispatchFilesSelection(this, this._basePath(), this._selection())) {
-        this._close();
-      }
-    }
-    _selectFile(item) {
-      this._selected = toggleSelectedFile(item, this._selection());
-    }
-    _isSelected(item) {
-      return isFileSelected(item, this._selection());
-    }
-    _close() {
-      this.elements.backdrop.hidden = true;
-      this.dispatchEvent(new CustomEvent("close", { bubbles: true, composed: true }));
-    }
-    _basePath() {
-      return document.querySelector('meta[name="basePath"]')?.content ?? "";
-    }
-    _selection() {
-      return {
-        maxSelection: this._maxSelection,
-        multiple: this._multiple,
-        selected: this._selected,
-        selectedMany: this._selectedMany
-      };
-    }
-  }
-  if (!customElements.get("cms-editor-v2-files-center")) {
-    customElements.define("cms-editor-v2-files-center", FilesCenter);
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/pageLinkMediaPicker.ts
-  function openPageLinkMediaPicker(onSelect, accept) {
-    const center = new FilesCenter;
-    const cleanup = () => center.remove();
-    center.addEventListener("close", cleanup, { once: true });
-    center.addEventListener("select-file", (event) => {
-      const detail = event.detail;
-      if (detail?.src && isCmsFileSource(detail.src) && matchesMediaDetail(detail, accept)) {
-        onSelect(detail.src, detail.label);
-      }
-    }, { once: true });
-    document.body.append(center);
-    center.show({ accept: ["folder", "file"], fileAccept: accept });
-  }
-  function matchesMediaDetail(detail, accept) {
-    return matchesFileAccept({
-      id: detail.id,
-      name: detail.label,
-      parentId: null,
-      type: "file",
-      mimeType: detail.mimeType
-    }, accept ?? null);
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkState.ts
-  class PageLinkState extends HTMLElement {
-    pages = [];
-    mode = "page";
-    currentValue = "";
-    loaded = false;
-    wired = false;
-    pickerOpen = false;
-    reflectingValue = false;
-    mediaLabel = "";
-    elements;
-    constructor(template2) {
-      super();
-      const shadowRoot = this.attachShadow({ mode: "open" });
-      shadowRoot.append(template2.content.cloneNode(true));
-      this.elements = queryPageLinkElements(shadowRoot);
-    }
-    static get observedAttributes() {
-      return ["label", "hint", "value", "allow-page", "allow-external", "allow-media", "media-accept", "disabled"];
-    }
-    attributeChangedCallback() {
-      if (!this.shadowRoot || this.reflectingValue) {
-        return;
-      }
-      this.syncFromAttributes();
-      this.render();
-    }
-    get value() {
-      return this.currentValue;
-    }
-    set value(value2) {
-      this.currentValue = value2;
-      this.reflectValue(value2);
-      this.render();
-    }
-    syncFromAttributes() {
-      this.currentValue = this.getAttribute("value") ?? "";
-      this.mode = modeForLinkValue(this.currentValue, this.modeOptions());
-    }
-    setValue(value2) {
-      if (!isSafeNavigationalUrl(value2)) {
-        return;
-      }
-      this.currentValue = value2;
-      this.reflectValue(value2);
-      this.renderPages();
-      this.renderSummary();
-      this.renderMediaFile();
-      this.dispatchEvent(new CustomEvent("input", {
-        bubbles: true,
-        composed: true,
-        detail: { value: value2 }
-      }));
-    }
-    openPicker() {
-      if (this.disabled || this.mode !== "page") {
-        return;
-      }
-      this.pickerOpen = true;
-      this.renderPages();
-    }
-    closePicker() {
-      this.pickerOpen = false;
-      this.renderPages();
-    }
-    openFilesCenter() {
-      if (this.disabled) {
-        return;
-      }
-      openPageLinkMediaPicker((source2, label2) => {
-        this.mode = "media";
-        this.mediaLabel = label2;
-        this.setValue(source2);
-      }, this.mediaAccept());
-    }
-    renderMediaFile() {
-      renderPageLinkMedia(this.elements, this.mode, this.currentValue, this.mediaLabel);
-    }
-    allowedModes() {
-      return allowedLinkModes(this.modeOptions());
-    }
-    allowPage() {
-      return this.getAttribute("allow-page") !== "false";
-    }
-    allowExternal() {
-      return this.getAttribute("allow-external") !== "false";
-    }
-    allowMedia() {
-      return this.getAttribute("allow-media") !== "false";
-    }
-    mediaAccept() {
-      const allowed = new Set(["image", "bitmap", "svg", "video", "audio", "document"]);
-      const values = (this.getAttribute("media-accept") ?? "").split(",").map((value2) => value2.trim()).filter((value2) => allowed.has(value2));
-      return values.length > 0 ? values : undefined;
-    }
-    basePath() {
-      return document.querySelector('meta[name="basePath"]')?.content ?? "";
-    }
-    get disabled() {
-      return this.hasAttribute("disabled");
-    }
-    modeOptions() {
-      return {
-        allowPage: this.allowPage(),
-        allowExternal: this.allowExternal(),
-        allowMedia: this.allowMedia()
-      };
-    }
-    reflectValue(value2) {
-      this.reflectingValue = true;
-      this.setAttribute("value", value2);
-      this.reflectingValue = false;
-    }
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkController.ts
-  class PageLinkController extends PageLinkState {
-    constructor(template2) {
-      super(template2);
-    }
-    connectedCallback() {
-      this.syncFromAttributes();
-      this.wire();
-      this.loadPages();
-      this.render();
-    }
-    render() {
-      this.elements.label.textContent = this.getAttribute("label") ?? "Link";
-      this.elements.hint.textContent = this.getAttribute("hint") ?? "";
-      this.elements.hint.toggleAttribute("hidden", !this.elements.hint.textContent);
-      this.renderTabs();
-      this.renderPanels();
-      this.renderPages();
-      this.renderSummary();
-    }
-    renderPages() {
-      renderPageLinkPages({
-        disabled: this.disabled,
-        elements: this.elements,
-        onSelect: (value2) => {
-          this.setValue(value2);
-          this.elements.searchInput.value = "";
-          this.closePicker();
-        },
-        pages: this.pages,
-        pickerOpen: this.pickerOpen,
-        query: this.elements.searchInput.value,
-        value: this.currentValue
-      });
-    }
-    renderSummary() {
-      renderPageLinkSummary(this.elements, this.pages, this.mode, this.currentValue);
-    }
-    wire() {
-      if (this.wired) {
-        return;
-      }
-      this.wired = true;
-      this.elements.searchInput.addEventListener("focus", () => this.openPicker());
-      this.elements.searchInput.addEventListener("click", () => this.openPicker());
-      this.elements.searchInput.addEventListener("input", () => {
-        this.pickerOpen = true;
-        this.renderPages();
-      });
-      this.elements.externalInput.addEventListener("input", () => {
-        if (!this.disabled) {
-          this.setValue(this.elements.externalInput.value);
-        }
-      });
-      this.elements.fileButton.addEventListener("click", () => this.openFilesCenter());
-      this.elements.pagePanel.addEventListener("focusout", () => {
-        setTimeout(() => {
-          if (this.shadowRoot?.activeElement && this.elements.pagePanel.contains(this.shadowRoot.activeElement)) {
-            return;
-          }
-          this.closePicker();
-        }, 0);
-      });
-      this.elements.target.addEventListener("click", () => {
-        if (!this.disabled && this.mode === "page") {
-          this.elements.searchInput.focus();
-          this.openPicker();
-        }
-      });
-    }
-    async loadPages() {
-      if (this.loaded || !this.allowPage()) {
-        return;
-      }
-      this.loaded = true;
-      try {
-        const published = this.getAttribute("published-only") === "true" ? "?visible=published" : "";
-        const response = await fetch(`${this.basePath()}/api/page/links${published}`);
-        if (!response.ok) {
-          return;
-        }
-        this.pages = await response.json();
-        this.renderPages();
-        this.renderSummary();
-      } catch {
-        this.pages = [];
-        this.renderPages();
-      }
-    }
-    renderTabs() {
-      renderPageLinkTabs({
-        allowedModes: this.allowedModes(),
-        disabled: this.disabled,
-        elements: this.elements,
-        mode: this.mode,
-        onMode: (mode) => {
-          this.mode = mode;
-          if (mode !== "page") {
-            this.pickerOpen = false;
-          }
-          if (mode === "external") {
-            this.elements.externalInput.value = this.currentValue;
-          }
-          this.render();
-        }
-      });
-    }
-    renderPanels() {
-      renderPageLinkPanels({
-        allowExternal: this.allowExternal(),
-        allowMedia: this.allowMedia(),
-        allowPage: this.allowPage(),
-        disabled: this.disabled,
-        elements: this.elements,
-        mediaLabel: this.mediaLabel,
-        mode: this.mode,
-        pickerOpen: this.pickerOpen,
-        value: this.currentValue
-      });
-    }
-  }
-
-  // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/PageLink.ts
-  var template2 = document.createElement("template");
-  template2.innerHTML = `<style>${String(styles_default4)}</style>${String(template_default10)}`;
-
-  class PageLink extends PageLinkController {
-    constructor() {
-      super(template2);
-    }
-  }
-  if (!customElements.get("cms-editor-v2-page-link")) {
-    customElements.define("cms-editor-v2-page-link", PageLink);
-  }
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/shared.ts
-  function bindFieldControl(control, field2) {
-    control.dataset.fieldControl = field2.id;
-  }
-  function applyRemoteLookupMetadata(control, field2) {
-    if (field2.lookupKey) {
-      control.dataset.lookupTarget = field2.lookupKey;
-    }
-    control.toggleAttribute("remote-search", field2.remoteSearch === true);
-    control.toggleAttribute("remote-pagination", field2.remotePagination === true);
-    control.toggleAttribute("loading", field2.lookupLoading === true);
-    control.toggleAttribute("has-more", field2.lookupHasMore === true);
-  }
-  function optionElement(option3, value2) {
-    const element = document.createElement("option");
-    element.value = option3.value;
-    element.textContent = option3.label;
-    element.selected = option3.value === value2;
-    return element;
-  }
-  function selectOptionElements(options, value2) {
-    const elements = options.map((option3) => optionElement(option3, value2));
-    if (value2 !== "" || options.some((option3) => option3.value === "")) {
-      return elements;
-    }
-    const placeholder = optionElement({ label: "Select an option", value: "" }, value2);
-    placeholder.disabled = true;
-    return [placeholder, ...elements];
-  }
-  function isValueControl(control) {
-    return "value" in control && typeof control.value === "string";
-  }
-  function isTokenControl(control) {
-    return isValueControl(control) && "values" in control && Array.isArray(control.values);
-  }
-
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/editors.ts
-  function createTableEditor(column, value2) {
-    if (column.editable !== true) {
-      throw new Error("Cannot create an editor for a readonly column");
-    }
-    const control = column.type === "select" ? selectEditor(column, value2) : column.type === "combobox" ? comboboxEditor(column, value2) : column.type === "tokens" ? tokensEditor(value2) : textEditor(value2);
-    control.dataset.tableColumn = column.key;
-    control.setAttribute("aria-label", column.label);
-    return control;
-  }
-  function readTableEditor(column, control) {
-    if (column.editable !== true) {
-      return;
-    }
-    if (column.type === "tokens") {
-      return isTokenControl(control) ? [...control.values] : [];
-    }
-    return isValueControl(control) ? control.value : "";
-  }
-  function textEditor(value2) {
-    const input = document.createElement("p9r-input");
-    const text5 = textValue2(value2);
-    input.setAttribute("value", text5);
-    input.value = text5;
-    return input;
-  }
-  function selectEditor(column, value2) {
-    const input = document.createElement("p9r-select");
-    const text5 = textValue2(value2);
-    input.setAttribute("value", text5);
-    input.replaceChildren(...column.options.map((option3) => optionElement(option3, text5)));
-    return input;
-  }
-  function comboboxEditor(column, value2) {
-    const input = document.createElement("p9r-combobox");
-    const text5 = textValue2(value2);
-    input.setAttribute("value", text5);
-    input.replaceChildren(...column.options.map((option3) => optionElement(option3, text5)));
-    applyRemoteLookupMetadata(input, column);
-    input.value = text5;
-    return input;
-  }
-  function tokensEditor(value2) {
-    const input = document.createElement("p9r-token-input");
-    const values = Array.isArray(value2) ? value2.map(textValue2).filter(Boolean) : [];
-    input.setAttribute("value", values.join(","));
-    input.setAttribute("creatable", "");
-    return input;
-  }
-  function textValue2(value2) {
-    return value2 === null || value2 === undefined ? "" : String(value2);
-  }
-  function createReferenceEditor(field2, value2) {
-    const control = document.createElement(field2.type === "secret-ref" ? "cms-credential-select" : "cms-editor-v2-page-link");
-    control.setAttribute("label", field2.label);
-    control.setAttribute("value", textValue2(value2));
-    if (field2.type === "page-link") {
-      control.setAttribute("allow-external", String(field2.allowExternal === true));
-      control.setAttribute("allow-media", String(field2.allowMedia === true));
-      control.setAttribute("published-only", String(field2.publishedOnly === true));
-      control.addEventListener("input", () => control.dispatchEvent(new Event("change", { bubbles: true, composed: true })));
-    } else {
-      const base = document.querySelector('meta[name="basePath"]')?.content ?? "";
-      control.setAttribute("api", `${base}/api/secrets`);
-    }
-    return control;
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/display.ts
@@ -32826,7 +33063,7 @@ input {
     customElements.define("cms-dashboard-w-reorderable-list", DashboardWReorderableList);
   }
 
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table.ts
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/legacy.ts
   var tableRowSources = new WeakMap;
   function createTableControl(field2) {
     const root = document.createElement("div");
@@ -32846,7 +33083,7 @@ input {
       header.append(document.createElement("span"));
     }
     root.append(header);
-    for (const row of tableRows(field2.value)) {
+    for (const row of tableRows2(field2.value)) {
       root.append(tableRow(field2, row));
     }
     if (field2.editable) {
@@ -32862,7 +33099,7 @@ input {
   function createReorderableListControl(field2) {
     const list = document.createElement("cms-dashboard-w-reorderable-list");
     const data = {
-      items: tableRows(field2.value),
+      items: tableRows2(field2.value),
       itemKey: field2.itemKey ?? "id",
       ...field2.positionPath ? { positionPath: field2.positionPath } : {},
       ...field2.reorderableLayout ? { layout: field2.reorderableLayout } : {},
@@ -32900,8 +33137,12 @@ input {
     return element;
   }
   function readTableValue(field2, control) {
+    if (control.localName === "cms-dashboard-table-field") {
+      const rows = readBoundTableRows(field2, control);
+      return field2.editable ? serializedTableRows(rows) : rows;
+    }
     if (!field2.editable) {
-      return structuredClone(tableRows(field2.value));
+      return structuredClone(tableRows2(field2.value));
     }
     return Array.from(control.querySelectorAll("[data-table-row]")).map((row) => readTableRow(field2, row)).filter(hasTableValue);
   }
@@ -32919,7 +33160,7 @@ input {
     }
     return value2;
   }
-  function tableRows(value2) {
+  function tableRows2(value2) {
     if (!Array.isArray(value2)) {
       return [];
     }
@@ -32949,8 +33190,8 @@ input {
     const separator = valuePath.lastIndexOf(".");
     const siblingPath = separator === -1 ? "currency" : `${valuePath.slice(0, separator)}.currency`;
     const value2 = valueAt(row, siblingPath) ?? (siblingPath === "currency" ? undefined : valueAt(row, "currency"));
-    const currency = value2 === null || value2 === undefined ? "" : String(value2).trim();
-    return currency || undefined;
+    const currency2 = value2 === null || value2 === undefined ? "" : String(value2).trim();
+    return currency2 || undefined;
   }
   function tableColumns(columns2, editable) {
     return [
@@ -32961,7 +33202,6 @@ input {
   function cssEscape(value2) {
     return typeof CSS !== "undefined" && CSS.escape ? CSS.escape(value2) : value2.replace(/"/g, "\\\"");
   }
-
   // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/index.ts
   function createFieldControl(field2) {
     if (field2.input === "media-list") {
@@ -32995,6 +33235,9 @@ input {
       return readSchemaControlValue(field2, control);
     }
     return readBasicControlValue(field2, control);
+  }
+  function readFieldControlDraft(field2, control) {
+    return field2.input === "table" && control.localName === "cms-dashboard-table-field" ? readBoundTableRows(field2, control) : readFieldControlValue(field2, control);
   }
   function invalidFieldControl(field2, control) {
     if (field2.input === "schema") {
@@ -33169,6 +33412,7 @@ input {
     scopeKey = "";
     values = {};
     displayValues = {};
+    submittedTables = {};
     acknowledged = null;
     constructor(container, dataset, readData) {
       this.container = container;
@@ -33185,7 +33429,14 @@ input {
       return this.displayValues;
     }
     acknowledgeSavedFields(fields) {
-      this.acknowledged = { fields, resource: this.currentResource() };
+      const accepted = { ...fields };
+      for (const [id2, draft] of Object.entries(this.submittedTables)) {
+        if (Object.hasOwn(fields, id2) && JSON.stringify(serializedTableRows(draft)) === JSON.stringify(fields[id2])) {
+          accepted[id2] = draft;
+          delete this.submittedTables[id2];
+        }
+      }
+      this.acknowledged = { fields: accepted, resource: this.currentResource() };
     }
     draftForResource(resource) {
       if (this.acknowledged && !Object.is(this.acknowledged.resource, resource)) {
@@ -33203,12 +33454,14 @@ input {
       this.values = {};
       this.displayValues = {};
       this.acknowledged = null;
+      this.submittedTables = {};
     }
     clear() {
       this.scopeKey = "";
       this.values = {};
       this.displayValues = {};
       this.acknowledged = null;
+      this.submittedTables = {};
     }
     record(fieldId, value2, displayValue) {
       this.values[fieldId] = value2;
@@ -33243,7 +33496,25 @@ input {
           fields[field2.id] = readFieldControlValue(field2, control);
         }
       }
+      for (const id2 of this.editableTableIds()) {
+        if (Object.hasOwn(fields, id2)) {
+          fields[id2] = serializedTableRows(fields[id2]);
+        }
+      }
       return fields;
+    }
+    submissionFields() {
+      const submitted = this.currentFields();
+      for (const id2 of this.editableTableIds()) {
+        const field2 = this.find(id2);
+        const control = this.control(id2);
+        const draft = field2 && control?.localName === "cms-dashboard-table-field" ? readFieldControlDraft(field2, control) : this.values[id2];
+        if (draft !== undefined) {
+          this.record(id2, draft);
+          this.submittedTables[id2] = structuredClone(draft);
+        }
+      }
+      return submitted;
     }
     validate() {
       const values = this.currentFields();
@@ -33269,6 +33540,10 @@ input {
     }
     control(fieldId) {
       return Array.from(this.root.querySelectorAll("[data-field-control]")).find((control) => control.dataset.fieldControl === fieldId) ?? null;
+    }
+    editableTableIds() {
+      const widget = readDetailBinding(this.dataset)?.widget;
+      return [...widget?.main ?? [], ...widget?.aside ?? []].flatMap((section2) => ("widget" in section2) ? [] : section2.fields.filter((field2) => field2.type === "table" && field2.editable).map((field2) => field2.id));
     }
     syncRequiredValidity(field2, control, value2) {
       if (!field2.required) {
@@ -33711,61 +33986,7 @@ p9r-token-input {
 }
 `;
 
-  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/tableValues.ts
-  function toggleChip(chip, emitFieldChange) {
-    chip.setAttribute("aria-pressed", String(chip.getAttribute("aria-pressed") !== "true"));
-    const control = chip.closest("[data-field-control]");
-    if (control) {
-      emitFieldChange(control);
-    }
-  }
-  function addTableRow(button, fields, emitFieldChange) {
-    const control = button.closest("[data-field-control]");
-    const field2 = control ? fields.find(control.dataset.fieldControl ?? "") : undefined;
-    if (!control || !field2 || field2.input !== "table") {
-      return;
-    }
-    control.insertBefore(tableRow(field2, {}), button);
-    emitFieldChange(control);
-    updateDerivedTables(field2.id, fields);
-  }
-  function removeTableRow(button, fields, emitFieldChange) {
-    const control = button.closest("[data-field-control]");
-    const row = button.closest("[data-table-row]");
-    if (!control || !row) {
-      return;
-    }
-    row.remove();
-    emitFieldChange(control);
-    updateDerivedTables(control.dataset.fieldControl ?? "", fields);
-  }
-  function updateDerivedTables(sourceFieldId, fields) {
-    const sourceControl = fields.control(sourceFieldId);
-    const sourceField = sourceControl ? fields.find(sourceFieldId) : undefined;
-    if (!sourceControl || !sourceField) {
-      return;
-    }
-    const sourceValue = readFieldControlValue(sourceField, sourceControl);
-    for (const field2 of fields.fields()) {
-      if (field2.input !== "table" || field2.derive?.sourceField !== sourceFieldId) {
-        continue;
-      }
-      const control = fields.control(field2.id);
-      if (!control) {
-        continue;
-      }
-      const rows = deriveTableRows(field2, sourceValue);
-      field2.value = rows;
-      replaceTableRows(control, field2, rows);
-    }
-  }
-  function replaceTableRows(control, field2, rows) {
-    control.querySelectorAll("[data-table-row]").forEach((row) => row.remove());
-    const anchor = control.querySelector("[data-table-add]");
-    for (const row of rows) {
-      control.insertBefore(tableRow(field2, row), anchor);
-    }
-  }
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/controls/table/derive.ts
   function deriveTableRows(field2, sourceValue) {
     if (field2.derive?.type !== "cartesian") {
       return [];
@@ -33800,6 +34021,83 @@ p9r-token-input {
   }
   function slug(value2) {
     return value2.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  }
+
+  // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/tableValues.ts
+  function toggleChip(chip, emitFieldChange) {
+    chip.setAttribute("aria-pressed", String(chip.getAttribute("aria-pressed") !== "true"));
+    const control = chip.closest("[data-field-control]");
+    if (control) {
+      emitFieldChange(control);
+    }
+  }
+  function addTableRow(button, fields, emitFieldChange) {
+    const control = button.closest("[data-field-control]");
+    const field2 = control ? fields.find(control.dataset.fieldControl ?? "") : undefined;
+    if (!control || !field2 || field2.input !== "table") {
+      return;
+    }
+    if (control.localName === "cms-dashboard-table-field") {
+      const rows = [...readBoundTableRows(field2, control), {}];
+      emitFieldChange(control, rows);
+      updateDerivedTables(field2.id, fields, rows);
+      return;
+    }
+    control.insertBefore(tableRow(field2, {}), button);
+    emitFieldChange(control);
+    updateDerivedTables(field2.id, fields);
+  }
+  function removeTableRow(button, fields, emitFieldChange) {
+    const control = button.closest("[data-field-control]");
+    const row = button.closest("[data-table-row]");
+    if (!control || !row) {
+      return;
+    }
+    if (control.localName === "cms-dashboard-table-field") {
+      const field2 = fields.find(control.dataset.fieldControl ?? "");
+      if (!field2) {
+        return;
+      }
+      const rows = readBoundTableRows(field2, control);
+      rows.splice(Number(row.dataset.tableIndex), 1);
+      emitFieldChange(control, rows);
+      updateDerivedTables(field2.id, fields, rows);
+      return;
+    }
+    row.remove();
+    emitFieldChange(control);
+    updateDerivedTables(control.dataset.fieldControl ?? "", fields);
+  }
+  function updateDerivedTables(sourceFieldId, fields, sourceDraft) {
+    const sourceControl = fields.control(sourceFieldId);
+    const sourceField = sourceControl ? fields.find(sourceFieldId) : undefined;
+    if (!sourceControl || !sourceField) {
+      return;
+    }
+    const sourceValue = sourceDraft ?? readFieldControlValue(sourceField, sourceControl);
+    for (const field2 of fields.fields()) {
+      if (field2.input !== "table" || field2.derive?.sourceField !== sourceFieldId) {
+        continue;
+      }
+      const control = fields.control(field2.id);
+      if (!control) {
+        continue;
+      }
+      const rows = deriveTableRows(field2, sourceValue);
+      field2.value = rows;
+      if (control.localName === "cms-dashboard-table-field") {
+        fields.record(field2.id, rows);
+      } else {
+        replaceTableRows(control, field2, rows);
+      }
+    }
+  }
+  function replaceTableRows(control, field2, rows) {
+    control.querySelectorAll("[data-table-row]").forEach((row) => row.remove());
+    const anchor = control.querySelector("[data-table-add]");
+    for (const row of rows) {
+      control.insertBefore(tableRow(field2, row), anchor);
+    }
   }
 
   // src/components/admin/Resources/Dashboards/widgets/w-detail/runtime/events.ts
@@ -33874,21 +34172,21 @@ p9r-token-input {
           widget: action.dataset.widget ?? this.host.dataset.widgetId,
           row: data.rowKey,
           resource: this.isBound() ? this.fields.currentResource() : undefined,
-          fields: this.fields.currentFields()
+          fields: this.fields.submissionFields()
         });
       }
       const chip = target2?.closest(".chip");
       if (chip) {
-        toggleChip(chip, this.emitFieldChange);
+        toggleChip(chip, (control) => this.emitFieldChange(control));
       }
       const tableAdd = target2?.closest("[data-table-add]");
       const tableRemove = target2?.closest("[data-table-remove]");
       const changedControl = (chip ?? tableAdd ?? tableRemove)?.closest("[data-field-control]");
       if (tableAdd) {
-        addTableRow(tableAdd, this.fields, this.emitFieldChange);
+        addTableRow(tableAdd, this.fields, (control, draft) => this.emitFieldChange(control, false, draft));
       }
       if (tableRemove) {
-        removeTableRow(tableRemove, this.fields, this.emitFieldChange);
+        removeTableRow(tableRemove, this.fields, (control, draft) => this.emitFieldChange(control, false, draft));
       }
       if (changedControl) {
         this.afterFieldChange(changedControl.dataset.fieldControl ?? "");
@@ -33913,7 +34211,7 @@ p9r-token-input {
         this.fields.refreshRequiredValidity(control);
       }
       if (control && field2 && this.host.hasAttribute("data-declarative")) {
-        this.fields.record(field2.id, readFieldControlValue(field2, control), this.displayValue(field2.input, control));
+        this.fields.record(field2.id, readFieldControlDraft(field2, control), this.displayValue(field2.input, control));
       }
       if (field2 && this.host.hasAttribute("data-declarative")) {
         this.refreshConditionalFields();
@@ -33967,13 +34265,14 @@ p9r-token-input {
         field: field2.id
       });
     };
-    emitFieldChange = (control, created = false) => {
+    emitFieldChange = (control, created = false, override) => {
       const field2 = this.fields.find(control.dataset.fieldControl ?? "");
       if (!field2) {
         return;
       }
-      const value2 = readFieldControlValue(field2, control);
-      this.fields.record(field2.id, value2, this.displayValue(field2.input, control));
+      const draft = override ?? readFieldControlDraft(field2, control);
+      const value2 = field2.input === "table" && field2.editable ? serializedTableRows(draft) : draft;
+      this.fields.record(field2.id, draft, this.displayValue(field2.input, control));
       emitWidgetEvent(this.host, WIDGET_FIELD_CHANGE_EVENT, {
         rowKey: this.readData().rowKey,
         field: field2.id,
@@ -35393,7 +35692,7 @@ slot {
   }
 
   // src/static/admin/_content/sources/_runtime/table.html
-  var table_default2 = `<template data-table-control="column"><span slot="columns" role="columnheader"></span></template>
+  var table_default3 = `<template data-table-control="column"><span slot="columns" role="columnheader"></span></template>
 <template data-table-control="action"><p9r-button slot="actions" type="button"></p9r-button></template>
 <template data-table-control="filters">
     <form slot="filters" data-filters>
@@ -35592,7 +35891,7 @@ slot { display: contents; }
   }
   function fragment(kind) {
     const template5 = document.createElement("template");
-    template5.innerHTML = table_default2;
+    template5.innerHTML = table_default3;
     return template5.content.querySelector(`[data-table-control="${kind}"]`).content.cloneNode(true);
   }
 

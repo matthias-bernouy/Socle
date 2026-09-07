@@ -62,7 +62,7 @@ test("embedded table desktop/mobile references cover ready, empty and pending lo
                                         y: box.y,
                                         width: box.width,
                                         height: box.height,
-                                        scrollWidth: node.scrollWidth,
+                                        scrollWidth: (node.shadowRoot?.querySelector(".table") ?? node).scrollWidth,
                                         clientWidth: node.clientWidth,
                                     };
                                 }),
@@ -94,6 +94,28 @@ test("embedded table desktop/mobile references cover ready, empty and pending lo
                                 positions,
                             }),
                         );
+                    }
+                    if (width === 390 && state === "ready") {
+                        const scroller = mode === "before" ? axes : axes.locator(".table");
+                        await scroller.evaluate((node) => {
+                            node.scrollLeft = node.scrollWidth;
+                        });
+                        const left = await scroller.evaluate((node) => node.scrollLeft);
+                        expect(left).toBeGreaterThan(0);
+                        const remove = axes
+                            .locator("[data-table-row]")
+                            .first()
+                            .getByRole("button", { name: "Remove", exact: true });
+                        const button = await remove.boundingBox();
+                        const table = await axes.boundingBox();
+                        expect(button!.x).toBeGreaterThanOrEqual(table!.x);
+                        expect(button!.x + button!.width).toBeLessThanOrEqual(table!.x + table!.width);
+                        if (captures) {
+                            await page.screenshot({
+                                path: `${captures}/${mode}-390-scrolled.png`,
+                                animations: "disabled",
+                            });
+                        }
                     }
                     release?.();
                     await page.close();
