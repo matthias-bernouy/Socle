@@ -11,53 +11,7 @@
         "path": "givenName",
         "fallback": "User"
     },
-    "actions": [
-        {
-            "id": "saveAccount",
-            "label": "Save user",
-            "tone": "primary",
-            "placement": "primary",
-            "endpoint": {
-                "endpoint": "createUserPersonalInformation",
-                "params": {
-                    "userId": "$resource.userId"
-                },
-                "body": {
-                    "givenName": "$field.givenName",
-                    "surname": "$field.surname",
-                    "birthDate": "$field.birthDate",
-                    "phone": "$field.phone",
-                    "addressLine1": "$field.addressLine1",
-                    "addressLine2": "$field.addressLine2",
-                    "addressLine3": "$field.addressLine3",
-                    "postalCode": "$field.postalCode",
-                    "city": "$field.city",
-                    "region": "$field.region",
-                    "countryCode": "$field.countryCode",
-                    "avatarUrl": "$resource.avatarUrl",
-                    "avatarFileId": "$resource.avatarFileId",
-                    "locale": "$field.locale",
-                    "timezone": "$field.timezone"
-                }
-            },
-            "after": {
-                "resource": "$result"
-            }
-        },
-        {
-            "id": "deleteAccount",
-            "label": "Delete user",
-            "tone": "danger",
-            "placement": "more",
-            "confirm": "Delete this user's personal information?",
-            "endpoint": {
-                "endpoint": "deleteUserPersonalInformation",
-                "params": {
-                    "userId": "$resource.userId"
-                }
-            }
-        }
-    ],
+    "actions": [],
     "main": {
         "$include": "main.json"
     },
@@ -95,5 +49,29 @@
                 }
             ]
         }
-    ]
+    ],
+    "save": {
+        "endpoint": "createUserPersonalInformation",
+        "hiddenFields": [
+            {
+                "name": "userId",
+                "value": "$resource.userId",
+                "type": "string"
+            }
+        ],
+        "label": "Save user"
+    },
+    "delete": {
+        "endpoint": "deleteUserPersonalInformation",
+        "confirm": "Delete this user's personal information?",
+        "hiddenFields": [
+            {
+                "name": "userId",
+                "value": "$resource.userId",
+                "type": "string"
+            }
+        ],
+        "label": "Delete user",
+        "tone": "danger"
+    }
 }

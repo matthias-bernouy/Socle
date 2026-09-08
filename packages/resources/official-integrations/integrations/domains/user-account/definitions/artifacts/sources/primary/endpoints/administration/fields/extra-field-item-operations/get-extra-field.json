@@ -11,7 +11,7 @@
         {
             "name": "id",
             "in": "query",
-            "required": true,
+            "required": false,
             "type": "string",
             "description": "Configured extra field id or __new__."
         }

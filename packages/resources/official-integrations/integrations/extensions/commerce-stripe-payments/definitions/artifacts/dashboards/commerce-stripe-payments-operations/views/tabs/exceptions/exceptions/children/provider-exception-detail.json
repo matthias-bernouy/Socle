@@ -21,7 +21,6 @@
             "label": "Requeue Commerce projection",
             "tone": "danger",
             "placement": "primary",
-            "confirm": "Requeue this exact projection after verifying that the Commerce consumer is healthy?",
             "visibleWhen": {
                 "all": [
                     {
@@ -34,14 +33,33 @@
                     }
                 ]
             },
-            "endpoint": {
-                "sourceId": "{{dependencies.stripe.sourceId}}",
+            "form": {
                 "endpoint": "requeueCommerceProjection",
-                "body": {
-                    "projectionId": "$resource.details.projectionId",
-                    "expectedInterventionRevision": "$resource.details.interventionRevision",
-                    "reason": "$field.interventionReason"
-                }
+                "confirm": "Requeue this exact projection after verifying that the Commerce consumer is healthy?",
+                "hiddenFields": [
+                    {
+                        "name": "projectionId",
+                        "value": "$resource.details.projectionId",
+                        "type": "number"
+                    },
+                    {
+                        "name": "expectedInterventionRevision",
+                        "value": "$resource.details.interventionRevision",
+                        "type": "number"
+                    }
+                ],
+                "fields": [
+                    {
+                        "id": "interventionReason",
+                        "label": "Finance intervention reason",
+                        "path": "interventionReason",
+                        "type": "textarea",
+                        "required": true,
+                        "rows": 3,
+                        "name": "reason"
+                    }
+                ],
+                "sourceId": "{{dependencies.stripe.sourceId}}"
             }
         }
     ],
@@ -113,14 +131,6 @@
                     "label": "Attempts",
                     "path": "details.attemptCount",
                     "type": "readonly"
-                },
-                {
-                    "id": "interventionReason",
-                    "label": "Finance intervention reason",
-                    "path": "interventionReason",
-                    "type": "textarea",
-                    "required": true,
-                    "rows": 3
                 }
             ]
         }

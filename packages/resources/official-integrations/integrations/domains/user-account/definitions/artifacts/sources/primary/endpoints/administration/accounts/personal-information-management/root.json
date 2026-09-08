@@ -10,15 +10,7 @@
             "name": "Delete user personal information",
             "description": "Delete personal information for a target CMS user."
         },
-        "params": [
-            {
-                "name": "userId",
-                "in": "query",
-                "required": true,
-                "type": "string",
-                "description": "Target CMS user id."
-            }
-        ],
+        "params": [],
         "headers": [
             {
                 "name": "authorization",
@@ -55,7 +47,18 @@
                     ]
                 }
             }
-        ]
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "userId": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "userId"
+            ]
+        }
     },
     {
         "$include": "upload-user-personal-information-avatar.json"

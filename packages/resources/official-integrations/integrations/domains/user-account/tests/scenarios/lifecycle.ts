@@ -87,16 +87,12 @@ export function registerLifecycleTest(): void {
             }),
         );
         const adminCreated = await okJson(
-            await sourceJson(
-                harness,
-                "createUserPersonalInformation",
-                {
-                    givenName: "Admin",
-                    surname: "Target",
-                    metadata: { company: ["agency"] },
-                },
-                { userId: "target-user" },
-            ),
+            await sourceJson(harness, "createUserPersonalInformation", {
+                userId: "target-user",
+                givenName: "Admin",
+                surname: "Target",
+                metadata: { company: ["agency"] },
+            }),
         );
         const listed = await okJson(await sourceRequest(harness, "listAccounts", { q: "target", limit: "20" }));
         const fetched = await okJson(await sourceRequest(harness, "getAccountByUserId", { userId: "target-user" }));
@@ -213,6 +209,7 @@ export function registerLifecycleTest(): void {
         expect(listed.accounts).toEqual([
             expect.objectContaining({
                 userId: "target-user",
+                userId: "target-user",
                 givenName: "Admin",
                 surname: "Target",
                 metadata: { company: ["agency"] },
@@ -220,6 +217,7 @@ export function registerLifecycleTest(): void {
         ]);
         expect(fetched).toMatchObject({
             exists: true,
+            userId: "target-user",
             userId: "target-user",
             givenName: "Admin",
             surname: "Target",
@@ -241,10 +239,9 @@ export function registerLifecycleTest(): void {
         });
         expect(extraFieldsTable?.actions).toEqual(
             expect.arrayContaining([
-                expect.objectContaining({ id: "newExtraField", selection: { opens: "extraFieldDetail" } }),
                 expect.objectContaining({
                     id: "reorderExtraFields",
-                    endpoint: { endpoint: "reorderExtraFields", body: { ids: "$value" } },
+                    form: { endpoint: "reorderExtraFields" },
                 }),
             ]),
         );
@@ -256,15 +253,10 @@ export function registerLifecycleTest(): void {
         expect(createExtraFieldEndpoint?.effects).toEqual({ invalidatesSchema: true });
         expect(reorderExtraFieldsEndpoint?.effects).toEqual({ invalidatesSchema: true });
         expect(deleteExtraFieldEndpoint?.effects).toEqual({ invalidatesSchema: true });
-        expect(extraFieldDetail?.actions).toEqual(
-            expect.arrayContaining([
-                expect.objectContaining({
-                    id: "deleteExtraField",
-                    confirm: "Delete this field definition? Existing user metadata values will be kept.",
-                    visibleWhen: { value: "$field.id", notEquals: "" },
-                }),
-            ]),
-        );
+        expect(extraFieldDetail?.delete).toMatchObject({
+            endpoint: "deleteExtraField",
+            confirm: "Delete this field definition? Existing user metadata values will be kept.",
+        });
         expect(
             (accountDetail?.main as JsonRecord[]).find((section) => section.id === "additionalInformation"),
         ).toMatchObject({

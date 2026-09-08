@@ -35,33 +35,6 @@
     {
         "id": "refundDecision",
         "title": "Finance decision",
-        "fields": [
-            {
-                "id": "decision",
-                "label": "Decision",
-                "path": "decision",
-                "type": "select",
-                "options": [
-                    {
-                        "value": "approved",
-                        "label": "Approve"
-                    },
-                    {
-                        "value": "rejected",
-                        "label": "Reject"
-                    },
-                    {
-                        "value": "cancelled",
-                        "label": "Cancel before provider operation"
-                    }
-                ]
-            },
-            {
-                "id": "reviewReason",
-                "label": "Review reason",
-                "path": "reviewReason",
-                "type": "textarea"
-            }
-        ]
+        "fields": []
     }
 ]

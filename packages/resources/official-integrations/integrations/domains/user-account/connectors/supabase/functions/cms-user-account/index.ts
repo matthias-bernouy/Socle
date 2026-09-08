@@ -330,8 +330,8 @@ async function listExtraFields(request: Request): Promise<Response> {
 async function getExtraField(request: Request): Promise<Response> {
     requireCmsRequest(request, { requireUser: false });
 
-    const id = requiredQueryText(request, "id", 64);
-    if (id === "__new__") {
+    const id = new URL(request.url).searchParams.get("id");
+    if (!id || id === "__new__") {
         return json({
             field: {
                 id: "",
@@ -422,7 +422,7 @@ async function reorderExtraFields(request: Request): Promise<Response> {
 async function deleteExtraField(request: Request): Promise<Response> {
     requireCmsRequest(request, { requireUser: false });
 
-    const id = requiredQueryText(request, "id", 64);
+    const id = await mutationIdentity(request, "id", 64);
     const response = await rest(`extra_fields?id=eq.${encodeURIComponent(id)}&select=id`, {
         method: "DELETE",
         headers: { prefer: "return=representation" },
@@ -445,17 +445,27 @@ async function getAccountByUserId(request: Request): Promise<Response> {
 async function createAccountByUserId(request: Request): Promise<Response> {
     requireCmsRequest(request);
 
-    const userId = requiredQueryText(request, "userId", 200);
     const body = await readJsonObject(request);
+    const userId = await mutationIdentity(request, "userId", 200, body);
     const values = accountValues(body);
     const row = await upsertAccountRow(userId, values);
     return json(publicAccount(row, userId));
 }
 
+async function mutationIdentity(request: Request, name: string, max: number, payload?: JsonRecord): Promise<string> {
+    const body = payload ?? (request.body ? await readJsonObject(request) : {});
+    const query = new URL(request.url).searchParams.get(name);
+    const value = optionalText(body, name, max);
+    if (value && query && value !== query) {
+        throw new HttpError(400, `body.${name} and query ${name} disagree`);
+    }
+    return value ?? requiredQueryText(request, name, max);
+}
+
 async function deleteAccountByUserId(request: Request): Promise<Response> {
     requireCmsRequest(request);
 
-    const userId = requiredQueryText(request, "userId", 200);
+    const userId = await mutationIdentity(request, "userId", 200);
     const deleted = await deleteAccountRow(userId);
     return json({ deleted, userId });
 }

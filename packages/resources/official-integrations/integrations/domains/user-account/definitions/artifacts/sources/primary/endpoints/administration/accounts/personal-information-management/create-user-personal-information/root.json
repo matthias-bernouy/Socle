@@ -6,15 +6,7 @@
         "name": "Create user personal information",
         "description": "Create or update personal information for a target CMS user."
     },
-    "params": [
-        {
-            "name": "userId",
-            "in": "query",
-            "required": true,
-            "type": "string",
-            "description": "Target CMS user id."
-        }
-    ],
+    "params": [],
     "headers": [
         {
             "name": "authorization",
@@ -79,8 +71,14 @@
             },
             "timezone": {
                 "type": "string"
+            },
+            "userId": {
+                "type": "string"
             }
-        }
+        },
+        "required": [
+            "userId"
+        ]
     },
     "output": {
         "$include": "output.json"

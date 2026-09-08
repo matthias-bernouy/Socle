@@ -66,41 +66,5 @@
                 "format": "date"
             }
         ]
-    },
-    {
-        "id": "disputeEvidence",
-        "title": "Evidence staging",
-        "fields": [
-            {
-                "id": "evidenceText",
-                "label": "Evidence statement",
-                "path": "evidenceText",
-                "type": "textarea"
-            },
-            {
-                "id": "shippingTrackingNumber",
-                "label": "Tracking number",
-                "path": "shippingTrackingNumber",
-                "type": "text"
-            },
-            {
-                "id": "shippingDate",
-                "label": "Shipping date",
-                "path": "shippingDate",
-                "type": "text"
-            },
-            {
-                "id": "shippingDocumentationFileId",
-                "label": "Shipping document file id",
-                "path": "shippingDocumentationFileId",
-                "type": "text"
-            },
-            {
-                "id": "customerCommunicationFileId",
-                "label": "Customer communication file id",
-                "path": "customerCommunicationFileId",
-                "type": "text"
-            }
-        ]
     }
 ]

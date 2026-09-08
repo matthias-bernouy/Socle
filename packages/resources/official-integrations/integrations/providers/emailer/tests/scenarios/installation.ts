@@ -29,27 +29,19 @@ export function registerInstallationTest(): void {
         if (templateDetail?.widget !== "w-detail") {
             throw new Error("emailer details not installed");
         }
-        expect(templateDetail.actions?.find((action) => action.id === "saveTemplate")?.after).toEqual({
-            opens: "templateDetail",
-            row: "$result.key",
-            resource: "$result",
-        });
-        expect(templateDetail.actions?.find((action) => action.id === "archiveTemplate")?.after).toEqual({
-            resource: "$result",
-        });
+        expect(templateDetail.save).toMatchObject({ endpoint: "upsertTemplate", idPath: "key" });
+        expect(templateDetail.actions?.find((action) => action.id === "archiveTemplate")?.form?.endpoint).toBe(
+            "archiveTemplate",
+        );
         const dashboardJson = JSON.stringify(templatesDashboard);
         const settingsJson = "";
-        expect(dashboardJson).toContain("newTemplate");
+        expect(templateDetail.create).toBeDefined();
         expect(dashboardJson).toContain("sendTestEmail");
         expect(dashboardJson).not.toContain("messagesTable");
         expect(dashboardJson).toContain("textBody");
         expect(dashboardJson).toContain("sampleDataJson");
-        const saveTemplate = templateDetail.actions?.find((action) => action.id === "saveTemplate");
-        expect(saveTemplate?.endpoint.body).toMatchObject({
-            textBody: "$field.textBody",
-            sampleDataJson: "$field.sampleDataJson",
-            metadata: "$resource.metadata",
-        });
+        expect(templateDetail.save).not.toHaveProperty("body");
+        expect(templateDetail.save?.hiddenFields).toBeUndefined();
         expect(harness.deployment?.dataApiSchemas).toEqual(["emailer", "broadcast"]);
         expect(
             harness.deployment?.schemas.map((schema) => ("manifest" in schema ? schema.manifest : schema.path)),

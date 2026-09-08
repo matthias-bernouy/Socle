@@ -44,50 +44,5 @@
                 "type": "readonly"
             }
         ]
-    },
-    {
-        "id": "operationInput",
-        "title": "Guarded operation",
-        "fields": [
-            {
-                "id": "releaseReason",
-                "label": "Release reason",
-                "path": "releaseReason",
-                "type": "text"
-            },
-            {
-                "id": "refundReason",
-                "label": "Refund reason",
-                "path": "refundReason",
-                "type": "textarea"
-            },
-            {
-                "id": "merchandiseRefundAmount",
-                "label": "Merchandise refund (minor units)",
-                "path": "merchandiseRefundAmount",
-                "type": "number",
-                "min": 0,
-                "step": 1,
-                "required": true
-            },
-            {
-                "id": "shippingRefundAmount",
-                "label": "Shipping refund (minor units)",
-                "path": "shippingRefundAmount",
-                "type": "number",
-                "min": 0,
-                "step": 1,
-                "required": true
-            },
-            {
-                "id": "protectionFeeRefundAmount",
-                "label": "Protection fee refund (minor units)",
-                "path": "protectionFeeRefundAmount",
-                "type": "number",
-                "min": 0,
-                "step": 1,
-                "required": true
-            }
-        ]
     }
 ]

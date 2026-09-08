@@ -27,6 +27,11 @@ export function registerDeliveryLifecycleTest(): void {
                 requiredTokens: [{ name: "order.number", description: "Order number", sample: "A-100" }],
             }),
         );
+        const withMetadata = await okJson(
+            await sourceJson(harness, "upsertTemplate", { ...welcomeTemplate(), metadata: { owner: "integration" } }),
+        );
+        const withoutMetadata = await okJson(await sourceJson(harness, "upsertTemplate", welcomeTemplate()));
+        expect(withoutMetadata.metadata).toEqual(withMetadata.metadata);
         const listed = await okJson(await sourceRequest(harness, "listTemplates", { q: "welcome" }));
         const fetched = await okJson(await sourceRequest(harness, "getTemplate", { key: "auth.welcome" }));
         const rendered = await okJson(
@@ -56,11 +61,11 @@ export function registerDeliveryLifecycleTest(): void {
             }),
         );
         const messages = await okJson(await sourceRequest(harness, "listMessages", { status: "sent" }));
-        const archived = await okJson(await sourceJson(harness, "archiveTemplate", {}, { key: "auth.welcome" }));
+        const archived = await okJson(await sourceJson(harness, "archiveTemplate", { key: "auth.welcome" }));
         const fetchedAfterArchive = await okJson(await sourceRequest(harness, "getTemplate", { key: "auth.welcome" }));
 
         expect(saved).toMatchObject({ key: "auth.welcome", name: "Welcome email", status: "active" });
-        expect(saved).toEqual(fetched);
+        expect({ ...saved, metadata: fetched.metadata, updatedAt: fetched.updatedAt }).toEqual(fetched);
         expect(created).toMatchObject({ key: "billing.receipt", name: "Receipt email", status: "draft" });
         expect(listed.items).toContainEqual(expect.objectContaining({ key: "auth.welcome" }));
         expect(String(fetched.sampleDataJson)).toContain("Ada");

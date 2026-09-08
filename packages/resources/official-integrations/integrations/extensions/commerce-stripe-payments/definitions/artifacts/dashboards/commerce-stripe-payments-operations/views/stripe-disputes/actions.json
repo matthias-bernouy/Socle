@@ -1,0 +1,7 @@
+{
+    "$files": [
+        "operations/stageEvidence.json",
+        "operations/submitEvidence.json",
+        "operations/acceptDispute.json"
+    ]
+}

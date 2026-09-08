@@ -9,7 +9,7 @@
                 "name": "key",
                 "in": "query",
                 "type": "string",
-                "required": true
+                "required": false
             }
         ],
         "headers": [
@@ -39,14 +39,7 @@
         "method": "POST",
         "access": "admin",
         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-emailer/template/archive",
-        "params": [
-            {
-                "name": "key",
-                "in": "query",
-                "type": "string",
-                "required": true
-            }
-        ],
+        "params": [],
         "headers": [
             {
                 "name": "authorization",
@@ -64,7 +57,18 @@
                     "type": "object"
                 }
             }
-        ]
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "key"
+            ]
+        }
     },
     {
         "$include": "render-template.json"

@@ -58,9 +58,7 @@ export function registerInstallationTests(): void {
         if (settingsDetail?.widget !== "w-detail") {
             throw new Error("delivery settings detail not installed");
         }
-        expect(settingsDetail.actions?.find((action) => action.id === "saveSettings")?.after).toEqual({
-            resource: "$result",
-        });
+        expect(settingsDetail.save?.endpoint).toBe("setSettings");
         const dashboardJson = JSON.stringify(dashboard);
         expect(dashboardJson).toContain("recoverUnknownShipment");
         expect(dashboardJson).not.toContain("createShipmentForm");

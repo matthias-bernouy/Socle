@@ -320,7 +320,12 @@ async function getTemplate(request: Request): Promise<Response> {
 async function upsertTemplate(request: Request): Promise<Response> {
     requireCmsRequest(request);
     const body = await readJsonObject(request);
-    const row = await upsertTemplateRow(templatePayload(body));
+    const payload = templatePayload(body);
+    // Metadata belongs to the integration; an editor that omits it must preserve it.
+    if (!Object.hasOwn(body, "metadata")) {
+        delete payload.metadata;
+    }
+    const row = await upsertTemplateRow(payload);
     return json(publicTemplate(row));
 }
 
@@ -349,7 +354,12 @@ async function installTemplates(request: Request): Promise<Response> {
 
 async function archiveTemplate(request: Request): Promise<Response> {
     requireCmsRequest(request);
-    const key = requiredQuery(request, "key");
+    const body = request.body ? await readJsonObject(request) : {};
+    const query = new URL(request.url).searchParams.get("key");
+    const key = Object.hasOwn(body, "key") ? templateKey(body.key) : requiredQuery(request, "key");
+    if (query && key !== query) {
+        throw new HttpError(400, "body.key and query key disagree");
+    }
     const row = await patchTemplateRow(key, { status: "archived" });
     return json(publicTemplate(row));
 }

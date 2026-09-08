@@ -56,10 +56,14 @@ export async function sourceDelete(
     params: Record<string, string>,
 ): Promise<Response> {
     const url = new URL(`http://cms.local${sourcePrefix}user-account/${endpoint}`);
-    for (const [key, value] of Object.entries(params)) {
-        url.searchParams.set(key, value);
-    }
-    return await proxySource(harness, new Request(url, { method: "DELETE" }));
+    return await proxySource(
+        harness,
+        new Request(url, {
+            method: "DELETE",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(params),
+        }),
+    );
 }
 
 async function proxySource(harness: Harness, request: Request): Promise<Response> {

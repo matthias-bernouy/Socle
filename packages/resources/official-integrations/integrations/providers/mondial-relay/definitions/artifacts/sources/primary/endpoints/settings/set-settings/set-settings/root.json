@@ -2,13 +2,7 @@
     "endpointId": "setSettings",
     "method": "POST",
     "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-delivery-v2/settings",
-    "params": [
-        {
-            "name": "id",
-            "in": "query",
-            "type": "string"
-        }
-    ],
+    "params": [],
     "headers": [
         {
             "name": "authorization",

@@ -1,6 +1,6 @@
 {
-  "type": "dashboard-view",
-  "view": {
+    "type": "dashboard-view",
+    "view": {
         "id": "commerce-negotiation-settings",
         "source": "commerce-negotiation",
         "meta": {
@@ -20,28 +20,7 @@
                     "path": "id",
                     "fallback": "Negotiation settings"
                 },
-                "actions": [
-                    {
-                        "id": "saveSettings",
-                        "label": "Save settings",
-                        "tone": "primary",
-                        "placement": "primary",
-                        "endpoint": {
-                            "endpoint": "updateSettings",
-                            "body": {
-                                "expectedVersion": "$resource.version",
-                                "minimumPercent": "$field.minimumPercent",
-                "maximumPercent": "$field.maximumPercent",
-                "proposalTtlHours": "$field.proposalTtlHours",
-                "acceptedCheckoutTtlHours": "$field.acceptedCheckoutTtlHours",
-                "enabled": "$field.enabled"
-                            }
-                        },
-                        "after": {
-                            "resource": "$result"
-                        }
-                    }
-                ],
+                "actions": [],
                 "main": [
                     {
                         "id": "policy",
@@ -51,39 +30,60 @@
                                 "id": "minimumPercent",
                                 "label": "Minimum percent",
                                 "path": "minimumPercent",
-                                "type": "text",
-                                "required": true
+                                "type": "number",
+                                "required": true,
+                                "name": "minimumPercent",
+                                "valueType": "number"
                             },
                             {
                                 "id": "maximumPercent",
                                 "label": "Maximum percent",
                                 "path": "maximumPercent",
-                                "type": "text",
-                                "required": true
+                                "type": "number",
+                                "required": true,
+                                "name": "maximumPercent",
+                                "valueType": "number"
                             },
-              {
-                "id": "proposalTtlHours",
-                "label": "Proposal lifetime in hours",
-                "path": "proposalTtlHours",
-                "type": "text",
-                "required": true
-              },
-              {
-                "id": "acceptedCheckoutTtlHours",
-                "label": "Accepted checkout lifetime in hours",
-                "path": "acceptedCheckoutTtlHours",
-                "type": "text",
-                "required": true
-              },
+                            {
+                                "id": "proposalTtlHours",
+                                "label": "Proposal lifetime in hours",
+                                "path": "proposalTtlHours",
+                                "type": "number",
+                                "required": true,
+                                "name": "proposalTtlHours",
+                                "valueType": "number"
+                            },
+                            {
+                                "id": "acceptedCheckoutTtlHours",
+                                "label": "Accepted checkout lifetime in hours",
+                                "path": "acceptedCheckoutTtlHours",
+                                "type": "number",
+                                "required": true,
+                                "name": "acceptedCheckoutTtlHours",
+                                "valueType": "number"
+                            },
                             {
                                 "id": "enabled",
                                 "label": "Enabled",
                                 "path": "enabled",
-                                "type": "checkbox"
+                                "type": "checkbox",
+                                "name": "enabled",
+                                "valueType": "boolean"
                             }
                         ]
                     }
-                ]
+                ],
+                "save": {
+                    "endpoint": "updateSettings",
+                    "hiddenFields": [
+                        {
+                            "name": "expectedVersion",
+                            "value": "$resource.version",
+                            "type": "number"
+                        }
+                    ],
+                    "label": "Save settings"
+                }
             }
         ]
     }

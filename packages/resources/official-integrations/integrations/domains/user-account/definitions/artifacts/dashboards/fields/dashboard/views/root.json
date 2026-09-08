@@ -24,24 +24,18 @@
         },
         "actions": [
             {
-                "id": "newExtraField",
-                "label": "Add field",
-                "tone": "primary",
-                "selection": {
-                    "opens": "extraFieldDetail"
-                }
-            },
-            {
                 "id": "reorderExtraFields",
                 "label": "Reorder fields",
-                "endpoint": {
-                    "endpoint": "reorderExtraFields",
-                    "body": {
-                        "ids": "$value"
-                    }
+                "form": {
+                    "endpoint": "reorderExtraFields"
                 }
             }
-        ]
+        ],
+        "create": {
+            "viewId": "extraFieldDetail",
+            "presentation": "page",
+            "label": "Add field"
+        }
     },
     {
         "$include": "extra-field-detail/root.json"

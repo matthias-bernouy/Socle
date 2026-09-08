@@ -8,14 +8,16 @@
                 "label": "Key",
                 "type": "text",
                 "path": "key",
-                "required": true
+                "required": true,
+                "name": "key"
             },
             {
                 "id": "name",
                 "label": "Name",
                 "type": "text",
                 "path": "name",
-                "required": true
+                "required": true,
+                "name": "name"
             },
             {
                 "id": "status",
@@ -35,14 +37,16 @@
                         "value": "archived",
                         "label": "Archived"
                     }
-                ]
+                ],
+                "name": "status"
             },
             {
                 "id": "subject",
                 "label": "Subject",
                 "type": "text",
                 "path": "subject",
-                "required": true
+                "required": true,
+                "name": "subject"
             },
             {
                 "id": "htmlBody",
@@ -50,14 +54,16 @@
                 "type": "textarea",
                 "path": "htmlBody",
                 "rows": 12,
-                "required": true
+                "required": true,
+                "name": "htmlBody"
             },
             {
                 "id": "textBody",
                 "label": "Plain-text body",
                 "type": "textarea",
                 "path": "textBody",
-                "rows": 8
+                "rows": 8,
+                "name": "textBody"
             }
         ]
     },
@@ -90,14 +96,16 @@
                         "path": "sample",
                         "editable": true
                     }
-                ]
+                ],
+                "name": "requiredTokens"
             },
             {
                 "id": "sampleDataJson",
                 "label": "Sample data (JSON)",
                 "type": "textarea",
                 "path": "sampleDataJson",
-                "rows": 8
+                "rows": 8,
+                "name": "sampleDataJson"
             }
         ]
     }

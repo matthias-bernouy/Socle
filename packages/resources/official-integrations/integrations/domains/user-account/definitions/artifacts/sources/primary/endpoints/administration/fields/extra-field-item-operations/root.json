@@ -71,15 +71,7 @@
             "name": "Delete personal information field",
             "description": "Delete a configured extra personal information field definition while keeping existing account metadata values."
         },
-        "params": [
-            {
-                "name": "id",
-                "in": "query",
-                "required": true,
-                "type": "string",
-                "description": "Configured extra field id."
-            }
-        ],
+        "params": [],
         "headers": [
             {
                 "name": "authorization",
@@ -109,6 +101,17 @@
                     ]
                 }
             }
-        ]
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id"
+            ]
+        }
     }
 ]

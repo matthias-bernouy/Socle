@@ -20,29 +20,43 @@
             "label": "Cancel proposal",
             "tone": "danger",
             "placement": "more",
-            "confirm": "Cancel this proposal?",
             "visibleWhen": {
                 "any": [
                     {
-                        "value": "$field.status",
+                        "value": "$resource.status",
                         "equals": "pending"
                     },
                     {
-                        "value": "$field.status",
+                        "value": "$resource.status",
                         "equals": "accepted"
                     }
                 ]
             },
-            "endpoint": {
+            "form": {
                 "endpoint": "cancelProposal",
-                "body": {
-                    "id": "$resource.id",
-                    "expectedVersion": "$resource.version",
-                    "reason": "$field.cancellationReason"
-                }
-            },
-            "after": {
-                "resource": "$result"
+                "confirm": "Cancel this proposal?",
+                "hiddenFields": [
+                    {
+                        "name": "id",
+                        "value": "$resource.id",
+                        "type": "number"
+                    },
+                    {
+                        "name": "expectedVersion",
+                        "value": "$resource.version",
+                        "type": "number"
+                    }
+                ],
+                "fields": [
+                    {
+                        "id": "cancellationReason",
+                        "label": "Cancellation reason",
+                        "path": "cancellationReason",
+                        "type": "textarea",
+                        "rows": 3,
+                        "name": "reason"
+                    }
+                ]
             }
         }
     ],

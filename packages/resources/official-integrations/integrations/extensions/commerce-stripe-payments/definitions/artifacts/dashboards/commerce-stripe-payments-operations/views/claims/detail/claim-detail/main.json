@@ -7,8 +7,5 @@
     },
     {
         "$include": "main/claim-materialized-resolution.json"
-    },
-    {
-        "$include": "main/claim-decision.json"
     }
 ]

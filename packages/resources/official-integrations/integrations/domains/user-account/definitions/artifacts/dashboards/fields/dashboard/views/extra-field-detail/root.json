@@ -15,49 +15,7 @@
     "status": {
         "path": "type"
     },
-    "actions": [
-        {
-            "id": "saveExtraField",
-            "label": "Save field",
-            "tone": "primary",
-            "placement": "primary",
-            "endpoint": {
-                "endpoint": "createExtraField",
-                "body": {
-                    "label": "$field.label",
-                    "id": "$field.id",
-                    "type": "$field.type",
-                    "required": "$field.required",
-                    "multiple": "$field.multiple",
-                    "hasAllowedValues": "$field.hasAllowedValues",
-                    "showInDashboardTable": "$field.showInDashboardTable",
-                    "options": "$field.options"
-                }
-            },
-            "after": {
-                "opens": "extraFieldDetail",
-                "row": "$result.field.id"
-            }
-        },
-        {
-            "id": "deleteExtraField",
-            "label": "Delete field",
-            "icon": "trash",
-            "tone": "danger",
-            "placement": "more",
-            "confirm": "Delete this field definition? Existing user metadata values will be kept.",
-            "visibleWhen": {
-                "value": "$field.id",
-                "notEquals": ""
-            },
-            "endpoint": {
-                "endpoint": "deleteExtraField",
-                "params": {
-                    "id": "$resource.id"
-                }
-            }
-        }
-    ],
+    "actions": [],
     "main": {
         "$include": "main.json"
     },
@@ -75,5 +33,34 @@
                 }
             ]
         }
-    ]
+    ],
+    "save": {
+        "endpoint": "createExtraField",
+        "hiddenFields": [
+            {
+                "name": "id",
+                "value": "$resource.id",
+                "type": "string",
+                "empty": "omit"
+            }
+        ],
+        "label": "Save field",
+        "idPath": "field.id"
+    },
+    "delete": {
+        "endpoint": "deleteExtraField",
+        "confirm": "Delete this field definition? Existing user metadata values will be kept.",
+        "hiddenFields": [
+            {
+                "name": "id",
+                "value": "$resource.id",
+                "type": "string"
+            }
+        ],
+        "label": "Delete field",
+        "tone": "danger"
+    },
+    "create": {
+        "label": "Create"
+    }
 }

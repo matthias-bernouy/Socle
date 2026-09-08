@@ -20,19 +20,57 @@
             "label": "Review refund",
             "tone": "primary",
             "placement": "primary",
-            "confirm": "Apply this finance review decision?",
             "visibleWhen": {
-                "value": "$field.status",
+                "value": "$resource.status",
                 "equals": "requested"
             },
-            "endpoint": {
+            "form": {
                 "endpoint": "reviewOrderRefund",
-                "body": {
-                    "refundRequestId": "$resource.id",
-                    "decision": "$field.decision",
-                    "reason": "$field.reviewReason",
-                    "expectedVersion": "$resource.version"
-                }
+                "confirm": "Apply this finance review decision?",
+                "hiddenFields": [
+                    {
+                        "name": "refundRequestId",
+                        "value": "$resource.id",
+                        "type": "number"
+                    },
+                    {
+                        "name": "expectedVersion",
+                        "value": "$resource.version",
+                        "type": "number"
+                    }
+                ],
+                "fields": [
+                    {
+                        "id": "decision",
+                        "label": "Decision",
+                        "path": "decision",
+                        "type": "select",
+                        "options": [
+                            {
+                                "value": "approved",
+                                "label": "Approve"
+                            },
+                            {
+                                "value": "rejected",
+                                "label": "Reject"
+                            },
+                            {
+                                "value": "cancelled",
+                                "label": "Cancel before provider operation"
+                            }
+                        ],
+                        "name": "decision",
+                        "required": true
+                    },
+                    {
+                        "id": "reviewReason",
+                        "label": "Review reason",
+                        "path": "reviewReason",
+                        "type": "textarea",
+                        "name": "reason",
+                        "required": true
+                    }
+                ]
             }
         }
     ],

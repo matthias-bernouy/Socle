@@ -73,16 +73,12 @@
         "selection": {
             "opens": "templateDetail"
         },
-        "actions": [
-            {
-                "id": "newTemplate",
-                "label": "New template",
-                "tone": "primary",
-                "selection": {
-                    "opens": "templateDetail"
-                }
-            }
-        ]
+        "actions": [],
+        "create": {
+            "viewId": "templateDetail",
+            "presentation": "page",
+            "label": "New template"
+        }
     },
     {
         "$include": "template-detail/root.json"
