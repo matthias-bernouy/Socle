@@ -58,7 +58,9 @@ export async function runDashboardWidgetAction(
             showToast(`${action.action} downloaded`, { type: "success" });
         }
     } catch (error) {
-        finishAction();
+        if (finishAction() === "stale") {
+            return;
+        }
         showToast(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
     }
 }

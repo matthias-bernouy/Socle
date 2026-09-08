@@ -1,3 +1,4 @@
+import { reloadSource } from "@bernouy/components";
 import "../../detail/boundDetail";
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import {
@@ -20,23 +21,6 @@ describe("dashboard deep links", () => {
         globalThis.fetch = realFetch;
     });
 
-    test("keeps pending actions current across action-owned view fallbacks", () => {
-        for (const fallback of [
-            (view: DashboardViewInternals) => view.reloadDetail("productDetail", "product-1"),
-            (view: DashboardViewInternals) => view.openDetail("productDetail", "product-1"),
-            (view: DashboardViewInternals) => view.clearDetail(),
-        ]) {
-            const component = dashboardViewInternals();
-            const finishFirst = component.detailResource.beginAction();
-            const finishSecond = component.detailResource.beginAction();
-
-            expect(finishFirst()).toBe("reload");
-            fallback(component);
-
-            expect(finishSecond()).toBe("reload");
-        }
-    });
-
     test("keeps the newest dashboard definitions when reloads resolve out of order", async () => {
         const responses: Array<(response: Response) => void> = [];
         globalThis.fetch = (() =>
@@ -44,8 +28,12 @@ describe("dashboard deep links", () => {
         const component = dashboardViewInternals();
 
         await mountDefinitions(component);
-        const first = component.reloadDefinitions();
-        const second = component.reloadDefinitions();
+        const first = reloadSource(
+            (component as unknown as HTMLElement).querySelector("[data-dashboard-list-source]")!,
+        );
+        const second = reloadSource(
+            (component as unknown as HTMLElement).querySelector("[data-dashboard-list-source]")!,
+        );
         responses.at(-1)!(Response.json(groupsWithFirstDashboard("new-dashboard")));
         await second;
         responses[0]!(Response.json(groupsWithFirstDashboard("stale-dashboard")));
@@ -84,14 +72,14 @@ describe("dashboard deep links", () => {
 
         await mountDefinitions(component);
         component.detailSelection = { collection: "removedDetail", row: "removed-1" };
-        await component.reloadDefinitions();
+        await reloadSource((component as unknown as HTMLElement).querySelector("[data-dashboard-list-source]")!);
 
         expect(component.detailSelection).toBeNull();
         expect(new URL(window.location.href).searchParams.has("collection")).toBeFalse();
         expect(new URL(window.location.href).searchParams.has("row")).toBeFalse();
     });
 
-    test("keeps an invalidating action current when definitions replace its form", async () => {
+    test("invalidates an action when refreshed definitions remove its detail", async () => {
         const component = dashboardViewInternals();
         component.groups = actionDefinitionGroups(true);
         component.detailSelection = { collection: "createForm", row: "__new__" };
@@ -100,11 +88,11 @@ describe("dashboard deep links", () => {
 
         await mountDefinitions(component);
         component.detailSelection = { collection: "createForm", row: "__new__" };
-        const finish = component.detailResource.beginAction();
-        await component.reloadDefinitions();
+        const finish = component.actionScope.beginAction();
+        await reloadSource((component as unknown as HTMLElement).querySelector("[data-dashboard-list-source]")!);
 
         expect(component.detailSelection).toBeNull();
-        expect(finish()).toBe("reuse");
+        expect(finish()).toBe("stale");
         component.openDetail("createdDetail", "created-1");
         expect(component.detailSelection).toEqual({ collection: "createdDetail", row: "created-1" });
     });

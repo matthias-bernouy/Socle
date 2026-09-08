@@ -7,12 +7,6 @@ export type DetailSelection = {
     row: string;
 };
 
-export type DetailResourceOverride = DetailSelection & {
-    sourceId: string;
-    dashboardId: string;
-    resource: unknown;
-};
-
 export type RenderContext = {
     group: DashboardSourceGroup;
     groups?: readonly DashboardSourceGroup[];
@@ -20,7 +14,6 @@ export type RenderContext = {
     selectedRows: ReadonlyMap<string, string>;
     drafts: ReadonlyMap<string, Record<string, unknown>>;
     filters?: ReadonlyMap<string, Readonly<Record<string, string>>>;
-    detailResource?: DetailResourceOverride | null;
 };
 
 export type RelationTableWidget = {

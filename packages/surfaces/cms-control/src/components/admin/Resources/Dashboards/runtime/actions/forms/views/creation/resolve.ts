@@ -19,7 +19,7 @@ export function resolveDetailView(
     }
     return {
         widget,
-        context: { ...context, group, dashboard, detailResource: null, drafts: new Map(), selectedRows: new Map() },
+        context: { ...context, group, dashboard, drafts: new Map(), selectedRows: new Map() },
     };
 }
 

@@ -6,7 +6,7 @@ import {
     formatDashboardDate,
     formatDashboardMoney,
 } from "cms-control/components/admin/Resources/Dashboards/domain/formatting";
-import { detailResource, productDashboard, renderContext, simpleDetailWidget, waitFor } from "./fixtures";
+import { productDashboard, renderContext, simpleDetailWidget, waitFor } from "./fixtures";
 import { setupDashboardWidgetSelectionTests } from "./setup";
 
 setupDashboardWidgetSelectionTests();
@@ -16,14 +16,8 @@ function mount(fields: DashboardField[], resource: unknown): HTMLElement {
     const widget = { ...simpleDetailWidget(), main: [{ id: "general", title: "General", fields }] };
     const selection = { collection: widget.id, row: "product-1" };
     const core = document.createElement("cms-binding-core");
-    mountDashboardWidgets(
-        core,
-        [widget] as never[],
-        renderContext(dashboard, detailResource(dashboard, selection, resource)),
-        "root",
-        new Map(),
-        selection,
-    );
+    mountDashboardWidgets(core, [widget] as never[], renderContext(dashboard, selection), "root", new Map(), selection);
+    setSourceData(core.querySelector("cms-dashboard-w-detail")!, resource);
     document.body.append(core);
     return core.querySelector("cms-dashboard-w-detail")!;
 }

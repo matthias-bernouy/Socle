@@ -3,14 +3,11 @@ import definitions from "cms-control/static/admin/_content/sources/_runtime/defi
 import { route } from "../../api";
 import type { DashboardSourceGroup } from "../../types";
 
-type Completion = { resolve: () => void; reject: (error: Error) => void };
-
 /** Definitions describe widget composition; the page binding owns their read lifecycle. */
 export class DashboardDefinitions {
     private stop: (() => void) | undefined;
-    private pending: Completion[] = [];
 
-    connect(host: HTMLElement, accept: (groups: DashboardSourceGroup[], render: boolean) => void): void {
+    connect(host: HTMLElement, accept: (groups: DashboardSourceGroup[]) => void): void {
         let source = host.querySelector<HTMLElement>("[data-dashboard-list-source]");
         if (!source) {
             const template = document.createElement("template");
@@ -32,41 +29,21 @@ export class DashboardDefinitions {
             };
         });
         this.stop = observeSource(source, (state) => {
-            if (state.disposed) {
-                this.complete(new Error("Dashboard definitions were disconnected"));
-            } else if (state.error || state.refreshError) {
-                this.complete(new Error(String(state.message ?? "Dashboard definitions could not be loaded")));
-            } else if (!state.refreshing && (state.loaded || state.empty) && Array.isArray(state.data)) {
-                accept(state.data, this.pending.length === 0);
-                this.complete();
+            if (
+                !state.disposed &&
+                !state.error &&
+                !state.refreshError &&
+                !state.refreshing &&
+                (state.loaded || state.empty) &&
+                Array.isArray(state.data)
+            ) {
+                accept(state.data);
             }
-        });
-    }
-
-    reload(host: HTMLElement): Promise<void> {
-        if (!host.isConnected || !this.stop) {
-            return Promise.reject(new Error("Dashboard definitions are unavailable"));
-        }
-        return new Promise((resolve, reject) => {
-            this.pending.push({ resolve, reject });
-            host.ownerDocument.dispatchEvent(new Event("dashboard:definitions-changed"));
         });
     }
 
     disconnect(): void {
         this.stop?.();
         this.stop = undefined;
-        this.complete(new Error("Dashboard definitions were disconnected"));
-    }
-
-    private complete(error?: Error): void {
-        const pending = this.pending.splice(0);
-        for (const completion of pending) {
-            if (error) {
-                completion.reject(error);
-            } else {
-                completion.resolve();
-            }
-        }
     }
 }

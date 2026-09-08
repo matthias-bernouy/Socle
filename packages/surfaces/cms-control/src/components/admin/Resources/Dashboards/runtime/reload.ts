@@ -5,20 +5,6 @@ export function detailReloadEvent(sourceId: string, dashboardId: string, collect
 function encodePart(value: string): string {
     return encodeURIComponent(value);
 }
-/** Refresh a retained collection through its existing binding source. */
-export function reloadCollection(root: HTMLElement, widgetId: string): void {
-    const widget = Array.from(root.querySelectorAll<HTMLElement>("[data-widget-id]")).find(
-        (element) => element.dataset.widgetId === widgetId,
-    );
-    const source = widget?.matches("[cms-source][cms-reload-on]")
-        ? widget
-        : widget?.querySelector("[cms-source][cms-reload-on]");
-    const event = source?.getAttribute("cms-reload-on");
-    if (event) {
-        root.ownerDocument.dispatchEvent(new Event(event));
-    }
-}
-
 /** Delegate retries from the stable dashboard host, including cloned nested sources. */
 export function retryDashboardSource(event: Event): void {
     const button = event

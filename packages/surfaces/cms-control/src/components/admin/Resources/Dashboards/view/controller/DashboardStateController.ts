@@ -1,7 +1,7 @@
 import { Component } from "@bernouy/components/base";
 import type { DashboardDto } from "@bernouy/cms-dashboards";
 import { replaceSelectionUrl, type DashboardSelection } from "../../api";
-import { DetailResourceState, type DetailSelection, validDetailSelection } from "../../domain";
+import { DashboardActionScope, type DetailSelection, validDetailSelection } from "../../domain";
 import { isDashboardExampleMode } from "../../navigation/mode";
 import type { DashboardSourceGroup } from "../../types";
 
@@ -12,7 +12,7 @@ export abstract class DashboardStateController extends Component {
     protected detailSelection: DetailSelection | null = null;
     protected readonly tabState = new Map<string, number>();
     protected readonly drafts = new Map<string, Record<string, unknown>>();
-    protected readonly detailResource = new DetailResourceState();
+    protected readonly actionScope = new DashboardActionScope();
     private readonly dashboardFilterState = new Map<string, Map<string, Record<string, string>>>();
 
     constructor(css: string, template: string) {
@@ -22,34 +22,27 @@ export abstract class DashboardStateController extends Component {
     protected abstract renderDashboard(): void;
 
     protected disconnectState(): void {
-        this.detailResource.clear();
+        this.actionScope.invalidate();
         this.dashboardFilterState.clear();
     }
 
-    protected ensureDashboardSelection(invalidateActions = true): void {
-        const clearDetailResource = (): void => {
-            if (invalidateActions) {
-                this.detailResource.clear();
-            } else {
-                this.detailResource.clearResource();
-            }
-        };
+    protected ensureDashboardSelection(): void {
         const group = this.activeGroup();
         if (!group) {
-            clearDetailResource();
+            this.actionScope.invalidate();
             this.selectedDashboard = "";
             this.detailSelection = null;
             return;
         }
         const dashboard = group.dashboards.find((candidate) => candidate.id === this.selectedDashboard);
         if (!dashboard) {
-            clearDetailResource();
+            this.actionScope.invalidate();
             this.selectedDashboard = group.dashboards[0]?.id ?? "";
             this.detailSelection = null;
             return;
         }
         if (this.detailSelection && !validDetailSelection(dashboard, this.detailSelection)) {
-            clearDetailResource();
+            this.actionScope.invalidate();
             this.detailSelection = null;
             if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
                 replaceSelectionUrl(this.selection());
@@ -78,15 +71,15 @@ export abstract class DashboardStateController extends Component {
     }
 
     protected syncFromSelection(selection: DashboardSelection): void {
-        this.detailResource.clear();
+        this.actionScope.invalidate();
         this.selectedSource = selection.source;
         this.selectedDashboard = selection.dashboard;
         this.detailSelection =
             selection.collection && selection.row ? { collection: selection.collection, row: selection.row } : null;
     }
 
-    protected invalidateDetailResource(): void {
-        this.detailResource.clear();
+    protected invalidateActions(): void {
+        this.actionScope.invalidate();
     }
 
     protected dashboardFilters(): ReadonlyMap<string, Readonly<Record<string, string>>> {
@@ -114,7 +107,7 @@ export abstract class DashboardStateController extends Component {
         const dashboard = this.activeDashboard();
         const detail = { collection, row };
         if (!dashboard || !validDetailSelection(dashboard, detail)) {
-            this.detailResource.clearResource();
+            this.actionScope.invalidate();
             this.detailSelection = null;
             if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
                 replaceSelectionUrl(this.selection());
@@ -122,8 +115,8 @@ export abstract class DashboardStateController extends Component {
             this.renderDashboard();
             return;
         }
-        if (!this.detailResource.matches(dashboard.source, dashboard.id, collection, row)) {
-            this.detailResource.clearResource();
+        if (this.detailSelection?.collection !== collection || this.detailSelection.row !== row) {
+            this.actionScope.invalidate();
         }
         this.detailSelection = detail;
         if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
@@ -133,19 +126,12 @@ export abstract class DashboardStateController extends Component {
     }
 
     protected clearDetail(): void {
-        this.detailResource.clearResource();
+        this.actionScope.invalidate();
         this.detailSelection = null;
         if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
             replaceSelectionUrl(this.selection());
         }
         this.renderDashboard();
-    }
-
-    protected setDetailResource(collection: string, row: string, resource: unknown): void {
-        const dashboard = this.activeDashboard();
-        if (dashboard) {
-            this.detailResource.set(dashboard.source, dashboard.id, collection, row, resource);
-        }
     }
 
     private dashboardFilterKey(): string {

@@ -1,7 +1,7 @@
 import { ActionForms } from "../../runtime/actions/forms";
 import { DashboardDefinitions } from "./definitions";
 import { defaultDashboardSource, type DashboardSelection } from "../../api";
-import { detailReloadEvent, reloadCollection } from "../../runtime/reload";
+import { detailReloadEvent } from "../../runtime/reload";
 import type { DashboardSourceGroup } from "../../types";
 import type { DashboardViewActionContext } from "../actions";
 import { renderDashboardShell, renderExampleShell } from "../rendering";
@@ -17,7 +17,7 @@ export class DashboardViewController extends DashboardStateController {
             this.renderDashboard();
             return;
         }
-        this.definitions.connect(this, (groups, render) => {
+        this.definitions.connect(this, (groups) => {
             this.groups = groups;
             const embeddedDashboard = this.getAttribute("dashboard-id");
             if (embeddedDashboard) {
@@ -28,11 +28,8 @@ export class DashboardViewController extends DashboardStateController {
             } else {
                 this.selectedSource ||= defaultDashboardSource(groups);
             }
-            this.detailResource.clearResource();
-            this.ensureDashboardSelection(render);
-            if (render) {
-                this.renderDashboard();
-            }
+            this.ensureDashboardSelection();
+            this.renderDashboard();
         });
     }
 
@@ -40,14 +37,6 @@ export class DashboardViewController extends DashboardStateController {
         this.actionForms.disconnect();
         this.definitions.disconnect();
         this.disconnectState();
-    }
-
-    protected async reloadDefinitions(): Promise<void> {
-        if (this.hasAttribute("external")) {
-            window.dispatchEvent(new CustomEvent("cms-dashboard-workspace:reload"));
-            return;
-        }
-        await this.definitions.reload(this);
     }
 
     protected renderDashboard(): void {
@@ -73,7 +62,6 @@ export class DashboardViewController extends DashboardStateController {
             this.detailSelection,
             this.tabState,
             this.drafts,
-            dashboard ? this.detailResource.current(dashboard.source, dashboard.id, this.detailSelection) : null,
             this.groups,
             this.dashboardFilters(),
         );
@@ -101,10 +89,7 @@ export class DashboardViewController extends DashboardStateController {
             detail: this.detailSelection,
             drafts: this.drafts,
             filters: this.dashboardFilters(),
-            render: () => this.renderDashboard(),
-            reloadDefinitions: () => this.reloadDefinitions(),
             reload: (collection, row) => this.reloadDetail(collection, row),
-            reloadCollection: (widgetId) => reloadCollection(this, widgetId),
             acknowledgeDetailFields: (collection, row, fields) => {
                 const target = Array.from(this.querySelectorAll<DashboardWDetail>("cms-dashboard-w-detail")).find(
                     (node) => node.dataset.widgetId === collection && (node.dataset.rowKey ?? "") === row,
@@ -117,7 +102,6 @@ export class DashboardViewController extends DashboardStateController {
                 );
                 target?.restoreField(field, submitted, previous);
             },
-            clearDetail: () => this.clearDetail(),
             openDetail: (collection, row) => this.openDetail(collection, row),
             navigateDetail: (collection, row) => {
                 const detail = this.querySelector<DashboardWDetail>("cms-dashboard-w-detail");
@@ -131,18 +115,13 @@ export class DashboardViewController extends DashboardStateController {
                 }
                 this.openDetail(collection, row);
             },
-            setDetailResource: (collection, row, resource) => this.setDetailResource(collection, row, resource),
-            actionCoordinator: this.detailResource,
+            actionCoordinator: this.actionScope,
         };
     }
 
     private reloadDetail(collection: string, row: string): void {
         const dashboard = this.activeDashboard();
         if (!dashboard) {
-            return;
-        }
-        if (this.detailResource.clearResource()) {
-            this.renderDashboard();
             return;
         }
         document.dispatchEvent(new CustomEvent(detailReloadEvent(dashboard.source, dashboard.id, collection, row)));

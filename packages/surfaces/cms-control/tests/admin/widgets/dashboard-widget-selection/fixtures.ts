@@ -81,20 +81,7 @@ export function productDetailWidget() {
     };
 }
 
-export function detailResource(
-    dashboard: DashboardDto,
-    selection: { collection: string; row: string },
-    resource: unknown,
-) {
-    return {
-        sourceId: dashboard.source,
-        dashboardId: dashboard.id,
-        ...selection,
-        resource,
-    };
-}
-
-export function renderContext(dashboard: DashboardDto, detailResourceOverride: ReturnType<typeof detailResource>) {
+export function renderContext(dashboard: DashboardDto, selection: { collection: string; row: string }) {
     return {
         group: {
             source: {
@@ -109,9 +96,8 @@ export function renderContext(dashboard: DashboardDto, detailResourceOverride: R
             dashboards: [dashboard],
         },
         dashboard,
-        selectedRows: new Map([[detailResourceOverride.collection, detailResourceOverride.row]]),
+        selectedRows: new Map([[selection.collection, selection.row]]),
         drafts: new Map(),
-        detailResource: detailResourceOverride,
     } as unknown as Parameters<typeof mountDashboardWidgets>[2];
 }
 

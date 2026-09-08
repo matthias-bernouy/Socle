@@ -31251,14 +31251,6 @@ w13c-lateral-menu {
   function encodePart(value2) {
     return encodeURIComponent(value2);
   }
-  function reloadCollection(root, widgetId) {
-    const widget = Array.from(root.querySelectorAll("[data-widget-id]")).find((element) => element.dataset.widgetId === widgetId);
-    const source2 = widget?.matches("[cms-source][cms-reload-on]") ? widget : widget?.querySelector("[cms-source][cms-reload-on]");
-    const event = source2?.getAttribute("cms-reload-on");
-    if (event) {
-      root.ownerDocument.dispatchEvent(new Event(event));
-    }
-  }
   function retryDashboardSource(event) {
     const button = event.composedPath().find((node) => node instanceof HTMLElement && node.hasAttribute("data-dashboard-source-retry"));
     const source2 = button?.closest("[cms-source][cms-reload-on]");
@@ -31268,71 +31260,21 @@ w13c-lateral-menu {
     }
   }
 
-  // src/components/admin/Resources/Dashboards/domain/detailResource.ts
-  class DetailResourceState {
-    value = null;
+  // src/components/admin/Resources/Dashboards/domain/actionScope.ts
+  class DashboardActionScope {
     generation = 0;
-    batch = null;
-    current(sourceId, dashboardId, detail) {
-      if (!this.value) {
-        return null;
-      }
-      const matchesDashboard = this.value.sourceId === sourceId && this.value.dashboardId === dashboardId;
-      const matchesDetail = detail ? this.value.collection === detail.collection && this.value.row === detail.row : this.value.row === "";
-      if (!matchesDashboard || !matchesDetail) {
-        this.clear();
-        return null;
-      }
-      return this.value;
-    }
-    set(sourceId, dashboardId, collection, row, resource) {
-      if (resource === undefined || resource === null) {
-        this.clearResource();
-        return;
-      }
-      this.value = { sourceId, dashboardId, collection, row, resource };
-    }
-    matches(sourceId, dashboardId, collection, row) {
-      return this.value?.sourceId === sourceId && this.value.dashboardId === dashboardId && this.value.collection === collection && this.value.row === row;
-    }
-    clear() {
-      const hadValue = this.clearResource();
+    invalidate() {
       this.generation += 1;
-      return hadValue;
-    }
-    clearResource() {
-      const hadValue = this.value !== null;
-      this.value = null;
-      return hadValue;
     }
     beginAction() {
-      let batch = this.batch;
-      if (!batch || batch.generation !== this.generation) {
-        batch = { active: 0, generation: this.generation, overlapped: false };
-        this.batch = batch;
-      } else if (batch.active > 0) {
-        batch.overlapped = true;
-      }
-      batch.active += 1;
+      const generation = this.generation;
       let finished = false;
       return () => {
-        if (finished) {
+        if (finished || generation !== this.generation) {
           return "stale";
         }
         finished = true;
-        batch.active -= 1;
-        const isCurrent = batch.generation === this.generation;
-        const isLast = batch.active === 0;
-        if (isLast && this.batch === batch) {
-          this.batch = null;
-        }
-        if (!isCurrent) {
-          return "stale";
-        }
-        if (!batch.overlapped) {
-          return "reuse";
-        }
-        return "reload";
+        return "current";
       };
     }
   }
@@ -37556,7 +37498,7 @@ slot { display: contents; }
   // src/components/admin/Resources/Dashboards/view/actions/outcome.ts
   function once(finish) {
     let completion;
-    return () => completion ??= finish?.() ?? "reuse";
+    return () => completion ??= finish?.() ?? "current";
   }
 
   // src/components/admin/Resources/Dashboards/view/actions/nestedMedia.ts
@@ -37677,7 +37619,9 @@ slot { display: contents; }
         Nh(`${action.action} downloaded`, { type: "success" });
       }
     } catch (error) {
-      finishAction();
+      if (finishAction() === "stale") {
+        return;
+      }
       Nh(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
     }
   }
@@ -37792,7 +37736,6 @@ slot { display: contents; }
   // src/components/admin/Resources/Dashboards/view/controller/definitions.ts
   class DashboardDefinitions {
     stop;
-    pending = [];
     connect(host, accept) {
       let source2 = host.querySelector("[data-dashboard-list-source]");
       if (!source2) {
@@ -37810,39 +37753,14 @@ slot { display: contents; }
         };
       });
       this.stop = pb(source2, (state) => {
-        if (state.disposed) {
-          this.complete(new Error("Dashboard definitions were disconnected"));
-        } else if (state.error || state.refreshError) {
-          this.complete(new Error(String(state.message ?? "Dashboard definitions could not be loaded")));
-        } else if (!state.refreshing && (state.loaded || state.empty) && Array.isArray(state.data)) {
-          accept(state.data, this.pending.length === 0);
-          this.complete();
+        if (!state.disposed && !state.error && !state.refreshError && !state.refreshing && (state.loaded || state.empty) && Array.isArray(state.data)) {
+          accept(state.data);
         }
-      });
-    }
-    reload(host) {
-      if (!host.isConnected || !this.stop) {
-        return Promise.reject(new Error("Dashboard definitions are unavailable"));
-      }
-      return new Promise((resolve, reject) => {
-        this.pending.push({ resolve, reject });
-        host.ownerDocument.dispatchEvent(new Event("dashboard:definitions-changed"));
       });
     }
     disconnect() {
       this.stop?.();
       this.stop = undefined;
-      this.complete(new Error("Dashboard definitions were disconnected"));
-    }
-    complete(error) {
-      const pending = this.pending.splice(0);
-      for (const completion of pending) {
-        if (error) {
-          completion.reject(error);
-        } else {
-          completion.resolve();
-        }
-      }
     }
   }
 
@@ -38680,12 +38598,6 @@ slot { display: contents; }
   // src/components/admin/Resources/Dashboards/runtime/mounting/detail.ts
   function detailElement2(widget, context, detail) {
     const rowKey = detail?.row ?? "";
-    const directResource = matchingDetailResource(widget, context, rowKey);
-    if (directResource) {
-      const element2 = detailContent(widget, context, rowKey, directResource);
-      attachDetailSource(element2, widget, context, rowKey);
-      return element2;
-    }
     const element = detailContent(widget, context, rowKey);
     attachDetailSource(element, widget, context, rowKey);
     return element;
@@ -38700,7 +38612,7 @@ slot { display: contents; }
     element.setAttribute("cms-source", wrapper.getAttribute("cms-source") ?? "");
     element.setAttribute("cms-reload-on", wrapper.getAttribute("cms-reload-on"));
   }
-  function detailContent(widget, context, rowKey, directResource = null) {
+  function detailContent(widget, context, rowKey) {
     const element = new DashboardWDetail;
     element.dataset.widgetId = widget.id;
     element.id = formId();
@@ -38714,9 +38626,6 @@ slot { display: contents; }
     composeLookupCreation(element, widget, context);
     composeMediaForms(element, widget, context);
     composeDetailOperations(element, widget, context);
-    if (directResource !== null) {
-      publishDetailResource(element, widget, directResource.resource);
-    }
     element.setAttribute("data-row-key", rowKey);
     element.setAttribute("data-source-id", context.dashboard.source);
     for (const relationWidget of widget.relationWidgets ?? []) {
@@ -38730,19 +38639,6 @@ slot { display: contents; }
     }
     return element;
   }
-  function matchingDetailResource(widget, context, row) {
-    const resource = context.detailResource;
-    return resource && resource.resource !== null && resource.resource !== undefined && resource.sourceId === context.dashboard.source && resource.dashboardId === context.dashboard.id && resource.collection === widget.id && resource.row === row ? resource : null;
-  }
-  function publishDetailResource(element, widget, resource) {
-    if (widget.source.itemPath) {
-      const data = {};
-      setValueAt(data, widget.source.itemPath, resource);
-      cd(element, data);
-    } else {
-      cd(element, resource);
-    }
-  }
 
   // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/creation/resolve.ts
   function resolveDetailView(ref, context) {
@@ -38755,7 +38651,7 @@ slot { display: contents; }
     }
     return {
       widget,
-      context: { ...context, group, dashboard, detailResource: null, drafts: new Map, selectedRows: new Map }
+      context: { ...context, group, dashboard, drafts: new Map, selectedRows: new Map }
     };
   }
   function findDetail(widgets, id2) {
@@ -38933,7 +38829,6 @@ slot { display: contents; }
       contexts2.set(root, context);
       return false;
     }
-    const previousResource = contexts2.get(root)?.detailResource;
     Object.assign(contexts2.get(root), context);
     const visit = (items) => {
       for (const widget of items) {
@@ -38953,18 +38848,6 @@ slot { display: contents; }
           const url = next.getAttribute("cms-source");
           if (source2 && url && source2.getAttribute("cms-source") !== url) {
             source2.setAttribute("cms-source", url);
-          }
-        } else if (widget.widget === "w-detail") {
-          const target2 = Array.from(root.querySelectorAll("cms-dashboard-w-detail")).find((node) => node.dataset.widgetId === widget.id);
-          const resource = context.detailResource;
-          if (!resource || resource.collection !== widget.id || resource.row !== (detail?.row ?? "") || resource.sourceId !== context.dashboard.source || resource.dashboardId !== context.dashboard.id || resource.resource == null) {
-            if (target2 && previousResource?.collection === widget.id && previousResource.resource != null) {
-              target2.ownerDocument.dispatchEvent(new Event(target2.getAttribute("cms-reload-on")));
-            }
-            continue;
-          }
-          if (target2) {
-            publishDetailResource(target2, widget, resource.resource);
           }
         }
       }
@@ -39069,7 +38952,7 @@ slot { display: contents; }
   }
 
   // src/components/admin/Resources/Dashboards/view/rendering.ts
-  function renderDashboardShell(root, group, dashboard, detail, tabState, drafts, detailResource = null, groups = group ? [group] : [], filters = new Map) {
+  function renderDashboardShell(root, group, dashboard, detail, tabState, drafts, groups = group ? [group] : [], filters = new Map) {
     query4(root, "[data-empty]").hidden = Boolean(group);
     query4(root, "[data-source-empty]").hidden = !group || Boolean(dashboard);
     query4(root, "[data-dashboard-head]").hidden = !dashboard;
@@ -39085,7 +38968,7 @@ slot { display: contents; }
       selectedRows.set(detail.collection, detail.row);
     }
     const widgets = widgetsForSelection(dashboard, detail, group.dashboardRelationProjections ?? []);
-    mountDashboardWidgets(query4(root, "[data-widgets]"), widgets, { group, groups, dashboard, selectedRows, drafts, filters, detailResource }, "root", tabState, detail);
+    mountDashboardWidgets(query4(root, "[data-widgets]"), widgets, { group, groups, dashboard, selectedRows, drafts, filters }, "root", tabState, detail);
   }
   function renderExampleShell(root, selectedRow) {
     query4(root, "[data-empty]").hidden = true;
@@ -39109,39 +38992,32 @@ slot { display: contents; }
     detailSelection = null;
     tabState = new Map;
     drafts = new Map;
-    detailResource = new DetailResourceState;
+    actionScope = new DashboardActionScope;
     dashboardFilterState = new Map;
     constructor(css, template6) {
       super({ css, template: template6 });
     }
     disconnectState() {
-      this.detailResource.clear();
+      this.actionScope.invalidate();
       this.dashboardFilterState.clear();
     }
-    ensureDashboardSelection(invalidateActions = true) {
-      const clearDetailResource = () => {
-        if (invalidateActions) {
-          this.detailResource.clear();
-        } else {
-          this.detailResource.clearResource();
-        }
-      };
+    ensureDashboardSelection() {
       const group = this.activeGroup();
       if (!group) {
-        clearDetailResource();
+        this.actionScope.invalidate();
         this.selectedDashboard = "";
         this.detailSelection = null;
         return;
       }
       const dashboard = group.dashboards.find((candidate) => candidate.id === this.selectedDashboard);
       if (!dashboard) {
-        clearDetailResource();
+        this.actionScope.invalidate();
         this.selectedDashboard = group.dashboards[0]?.id ?? "";
         this.detailSelection = null;
         return;
       }
       if (this.detailSelection && !validDetailSelection(dashboard, this.detailSelection)) {
-        clearDetailResource();
+        this.actionScope.invalidate();
         this.detailSelection = null;
         if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
           replaceSelectionUrl(this.selection());
@@ -39165,13 +39041,13 @@ slot { display: contents; }
       };
     }
     syncFromSelection(selection) {
-      this.detailResource.clear();
+      this.actionScope.invalidate();
       this.selectedSource = selection.source;
       this.selectedDashboard = selection.dashboard;
       this.detailSelection = selection.collection && selection.row ? { collection: selection.collection, row: selection.row } : null;
     }
-    invalidateDetailResource() {
-      this.detailResource.clear();
+    invalidateActions() {
+      this.actionScope.invalidate();
     }
     dashboardFilters() {
       return this.dashboardFilterState.get(this.dashboardFilterKey()) ?? new Map;
@@ -39196,7 +39072,7 @@ slot { display: contents; }
       const dashboard = this.activeDashboard();
       const detail = { collection, row };
       if (!dashboard || !validDetailSelection(dashboard, detail)) {
-        this.detailResource.clearResource();
+        this.actionScope.invalidate();
         this.detailSelection = null;
         if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
           replaceSelectionUrl(this.selection());
@@ -39204,8 +39080,8 @@ slot { display: contents; }
         this.renderDashboard();
         return;
       }
-      if (!this.detailResource.matches(dashboard.source, dashboard.id, collection, row)) {
-        this.detailResource.clearResource();
+      if (this.detailSelection?.collection !== collection || this.detailSelection.row !== row) {
+        this.actionScope.invalidate();
       }
       this.detailSelection = detail;
       if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
@@ -39214,18 +39090,12 @@ slot { display: contents; }
       this.renderDashboard();
     }
     clearDetail() {
-      this.detailResource.clearResource();
+      this.actionScope.invalidate();
       this.detailSelection = null;
       if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
         replaceSelectionUrl(this.selection());
       }
       this.renderDashboard();
-    }
-    setDetailResource(collection, row, resource) {
-      const dashboard = this.activeDashboard();
-      if (dashboard) {
-        this.detailResource.set(dashboard.source, dashboard.id, collection, row, resource);
-      }
     }
     dashboardFilterKey() {
       return `${this.selectedSource}\x00${this.selectedDashboard}`;
@@ -39241,7 +39111,7 @@ slot { display: contents; }
         this.renderDashboard();
         return;
       }
-      this.definitions.connect(this, (groups, render) => {
+      this.definitions.connect(this, (groups) => {
         this.groups = groups;
         const embeddedDashboard = this.getAttribute("dashboard-id");
         if (embeddedDashboard) {
@@ -39250,24 +39120,14 @@ slot { display: contents; }
         } else {
           this.selectedSource ||= defaultDashboardSource(groups);
         }
-        this.detailResource.clearResource();
-        this.ensureDashboardSelection(render);
-        if (render) {
-          this.renderDashboard();
-        }
+        this.ensureDashboardSelection();
+        this.renderDashboard();
       });
     }
     disconnectBoundSource() {
       this.actionForms.disconnect();
       this.definitions.disconnect();
       this.disconnectState();
-    }
-    async reloadDefinitions() {
-      if (this.hasAttribute("external")) {
-        window.dispatchEvent(new CustomEvent("cms-dashboard-workspace:reload"));
-        return;
-      }
-      await this.definitions.reload(this);
     }
     renderDashboard() {
       if (!this.querySelector("[data-widgets]")) {
@@ -39284,7 +39144,7 @@ slot { display: contents; }
       }
       const group = this.activeGroup();
       const dashboard = this.activeDashboard();
-      renderDashboardShell(this.shadowRoot, group, dashboard, this.detailSelection, this.tabState, this.drafts, dashboard ? this.detailResource.current(dashboard.source, dashboard.id, this.detailSelection) : null, this.groups, this.dashboardFilters());
+      renderDashboardShell(this.shadowRoot, group, dashboard, this.detailSelection, this.tabState, this.drafts, this.groups, this.dashboardFilters());
     }
     setExternalContext(groups, selection) {
       this.groups = structuredClone(groups);
@@ -39306,10 +39166,7 @@ slot { display: contents; }
         detail: this.detailSelection,
         drafts: this.drafts,
         filters: this.dashboardFilters(),
-        render: () => this.renderDashboard(),
-        reloadDefinitions: () => this.reloadDefinitions(),
         reload: (collection, row) => this.reloadDetail(collection, row),
-        reloadCollection: (widgetId) => reloadCollection(this, widgetId),
         acknowledgeDetailFields: (collection, row, fields) => {
           const target2 = Array.from(this.querySelectorAll("cms-dashboard-w-detail")).find((node) => node.dataset.widgetId === collection && (node.dataset.rowKey ?? "") === row);
           target2?.acknowledgeSavedFields(fields);
@@ -39318,7 +39175,6 @@ slot { display: contents; }
           const target2 = Array.from(this.querySelectorAll("cms-dashboard-w-detail")).find((node) => node.dataset.widgetId === collection && (node.dataset.rowKey ?? "") === row);
           target2?.restoreField(field2, submitted, previous);
         },
-        clearDetail: () => this.clearDetail(),
         openDetail: (collection, row) => this.openDetail(collection, row),
         navigateDetail: (collection, row) => {
           const detail = this.querySelector("cms-dashboard-w-detail");
@@ -39332,17 +39188,12 @@ slot { display: contents; }
           }
           this.openDetail(collection, row);
         },
-        setDetailResource: (collection, row, resource) => this.setDetailResource(collection, row, resource),
-        actionCoordinator: this.detailResource
+        actionCoordinator: this.actionScope
       };
     }
     reloadDetail(collection, row) {
       const dashboard = this.activeDashboard();
       if (!dashboard) {
-        return;
-      }
-      if (this.detailResource.clearResource()) {
-        this.renderDashboard();
         return;
       }
       document.dispatchEvent(new CustomEvent(detailReloadEvent(dashboard.source, dashboard.id, collection, row)));
@@ -39644,7 +39495,7 @@ p {
       if (event.detail.dashboard) {
         this.selectedDashboard = event.detail.dashboard;
       }
-      this.invalidateDetailResource();
+      this.invalidateActions();
       this.detailSelection = { collection: event.detail.collection, row: event.detail.rowKey };
       if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
         pushSelectionUrl(this.selection());
@@ -39652,7 +39503,7 @@ p {
       this.renderDashboard();
     };
     onWidgetBack = () => {
-      this.invalidateDetailResource();
+      this.invalidateActions();
       this.clearDetail();
     };
     onWidgetAction = (event) => {
@@ -39661,7 +39512,7 @@ p {
         return;
       }
       if (event.detail.target) {
-        this.invalidateDetailResource();
+        this.invalidateActions();
         this.detailSelection = { collection: event.detail.target, row: "__new__" };
         pushSelectionUrl(this.selection());
         this.renderDashboard();

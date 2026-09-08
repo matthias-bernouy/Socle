@@ -104,7 +104,7 @@ export class DashboardView extends DashboardViewController {
         if (event.detail.dashboard) {
             this.selectedDashboard = event.detail.dashboard;
         }
-        this.invalidateDetailResource();
+        this.invalidateActions();
         this.detailSelection = { collection: event.detail.collection, row: event.detail.rowKey };
         if (!this.isExampleMode() && !this.hasAttribute("embedded")) {
             pushSelectionUrl(this.selection());
@@ -113,7 +113,7 @@ export class DashboardView extends DashboardViewController {
     };
 
     private onWidgetBack = (): void => {
-        this.invalidateDetailResource();
+        this.invalidateActions();
         this.clearDetail();
     };
 
@@ -123,7 +123,7 @@ export class DashboardView extends DashboardViewController {
             return;
         }
         if (event.detail.target) {
-            this.invalidateDetailResource();
+            this.invalidateActions();
             this.detailSelection = { collection: event.detail.target, row: "__new__" };
             pushSelectionUrl(this.selection());
             this.renderDashboard();

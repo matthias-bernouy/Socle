@@ -1,5 +1,5 @@
 import type { DashboardDto } from "@bernouy/cms-dashboards";
-import { widgetsForSelection, type DetailResourceOverride, type DetailSelection } from "../domain";
+import { widgetsForSelection, type DetailSelection } from "../domain";
 import { renderIcon } from "../navigation/icons";
 import type { DashboardSourceGroup } from "../types";
 import { mountDashboardWidgetExample } from "../widgets/example";
@@ -12,7 +12,6 @@ export function renderDashboardShell(
     detail: DetailSelection | null,
     tabState: Map<string, number>,
     drafts: ReadonlyMap<string, Record<string, unknown>>,
-    detailResource: DetailResourceOverride | null = null,
     groups: readonly DashboardSourceGroup[] = group ? [group] : [],
     filters: ReadonlyMap<string, Readonly<Record<string, string>>> = new Map(),
 ): void {
@@ -34,7 +33,7 @@ export function renderDashboardShell(
     mountDashboardWidgets(
         query(root, "[data-widgets]"),
         widgets,
-        { group, groups, dashboard, selectedRows, drafts, filters, detailResource },
+        { group, groups, dashboard, selectedRows, drafts, filters },
         "root",
         tabState,
         detail,

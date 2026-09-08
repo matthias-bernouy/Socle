@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { DashboardNav } from "cms-control/components/admin/Resources/Dashboards/navigation/DashboardNav";
 import { DashboardView } from "cms-control/components/admin/Resources/Dashboards/view/DashboardView";
 import { DASHBOARD_SELECTION_EVENT } from "cms-control/components/admin/Resources/Dashboards/api";
-import { DetailResourceState } from "cms-control/components/admin/Resources/Dashboards/domain";
+import { DashboardActionScope } from "cms-control/components/admin/Resources/Dashboards/domain";
 import { groups, selectedDashboard } from "./fixtures";
 const originalFetch = globalThis.fetch;
 
@@ -43,7 +43,7 @@ describe("dashboard deep links", () => {
     test("invalidates pending action resources on navigation and disconnect", () => {
         const component = new DashboardView();
         document.body.append(component);
-        const resources = (component as unknown as { detailResource: DetailResourceState }).detailResource;
+        const resources = (component as unknown as { actionScope: DashboardActionScope }).actionScope;
         const finishNavigation = resources.beginAction();
 
         window.dispatchEvent(

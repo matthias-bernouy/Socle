@@ -1,19 +1,12 @@
 import { describe, expect, test } from "bun:test";
 import { mountDashboardWidgets } from "cms-control/components/admin/Resources/Dashboards/runtime/mounting/mount";
-import {
-    detailResource,
-    productDashboard,
-    productDetailWidget,
-    renderContext,
-    simpleDetailWidget,
-    waitFor,
-} from "./fixtures";
+import { productDashboard, productDetailWidget, renderContext, simpleDetailWidget, waitFor } from "./fixtures";
 import { setupDashboardWidgetSelectionTests } from "./setup";
 
 setupDashboardWidgetSelectionTests();
 
 describe("dashboard widget selection", () => {
-    test("mounts a matching action resource without refetching the main detail", async () => {
+    test("reads the common detail once and loads its dependent lookups and relations", async () => {
         const resource = {
             id: "product-1",
             title: "Updated product",
@@ -46,7 +39,7 @@ describe("dashboard widget selection", () => {
         mountDashboardWidgets(
             root,
             [widget] as never[],
-            renderContext(dashboard, detailResource(dashboard, selection, resource)),
+            renderContext(dashboard, selection),
             "root",
             new Map(),
             selection,
@@ -67,98 +60,40 @@ describe("dashboard widget selection", () => {
         expect(detail.hasAttribute("data-source-json")).toBe(false);
         expect(detail.querySelector('[data-field-control="title"]')).not.toBeNull();
         expect(detail.querySelector('[data-schema-key="material"]')).not.toBeNull();
-        expect(requests.some((url) => url.includes("/getProduct"))).toBeFalse();
+        expect(requests.filter((url) => url.includes("/getProduct"))).toHaveLength(1);
         expect(requests.filter((url) => url.includes("/brands"))).toHaveLength(1);
         expect(requests.filter((url) => url.includes("/categorySchema"))).toHaveLength(1);
         expect(requests.filter((url) => url.startsWith("/api/relations/page"))).toHaveLength(1);
     });
 
-    test("restores the bound source on the same detail host after clearing an action resource", async () => {
+    test("retains the same detail and fields without another read when its context is reconciled", async () => {
         let requests = 0;
         globalThis.fetch = (async () => {
             requests += 1;
-            return Response.json({ item: { id: "product-1", title: "Reloaded" } });
+            return Response.json({ id: "product-1", title: "Loaded" });
         }) as unknown as typeof fetch;
         const dashboard = productDashboard();
         const widget = simpleDetailWidget();
         const selection = { collection: "productDetail", row: "product-1" };
         const root = document.createElement("cms-binding-core");
         const tabs = new Map<string, number>();
-        mountDashboardWidgets(
-            root,
-            [widget] as never[],
-            renderContext(dashboard, detailResource(dashboard, selection, { id: "product-1", title: "Saved" })),
-            "root",
-            tabs,
-            selection,
-        );
+        const mount = () =>
+            mountDashboardWidgets(
+                root,
+                [widget] as never[],
+                renderContext(dashboard, selection),
+                "root",
+                tabs,
+                selection,
+            );
+        mount();
         document.body.append(root);
+        await waitFor(() => Boolean(root.querySelector('[data-field-control="title"]')) && requests === 1);
         const detail = root.querySelector("cms-dashboard-w-detail");
-        mountDashboardWidgets(
-            root,
-            [widget] as never[],
-            renderContext(dashboard, detailResource(dashboard, selection, null)),
-            "root",
-            tabs,
-            selection,
-        );
-        await waitFor(() => requests === 1);
+        const title = root.querySelector('[data-field-control="title"]');
+        mount();
         expect(root.querySelector("cms-dashboard-w-detail")).toBe(detail);
-        expect(root.querySelector("[cms-source*='/getProduct']")).not.toBeNull();
-    });
-
-    test("keeps the source request when an action resource is null", async () => {
-        let requests = 0;
-        globalThis.fetch = (async () => {
-            requests += 1;
-            return Response.json(null);
-        }) as unknown as typeof fetch;
-        const dashboard = productDashboard();
-        const widget = simpleDetailWidget();
-        const selection = { collection: "productDetail", row: "product-1" };
-        const root = document.createElement("cms-binding-core");
-        mountDashboardWidgets(
-            root,
-            [widget] as never[],
-            renderContext(dashboard, detailResource(dashboard, selection, null)),
-            "root",
-            new Map(),
-            selection,
-        );
-        document.body.append(root);
-
-        await waitFor(() => requests === 1);
-
-        expect(root.querySelector("[cms-source*='/getProduct']")).not.toBeNull();
+        expect(root.querySelector('[data-field-control="title"]')).toBe(title);
         expect(requests).toBe(1);
-    });
-
-    test("keeps the source wrapper when the action resource does not match", () => {
-        const dashboard = productDashboard();
-        const widget = simpleDetailWidget();
-        const selection = { collection: "productDetail", row: "product-1" };
-        const mismatch = {
-            ...detailResource(dashboard, selection, { id: "private-product" }),
-            sourceId: "another-source",
-            row: "product-2",
-        };
-        const root = document.createElement("cms-binding-core");
-        mountDashboardWidgets(
-            root,
-            [widget] as never[],
-            renderContext(dashboard, mismatch),
-            "root",
-            new Map(),
-            selection,
-        );
-
-        const wrapper = root.querySelector<HTMLElement>("[cms-source*='/getProduct']")!;
-        const detail = wrapper.closest<HTMLElement>("cms-dashboard-w-detail")!;
-        expect(wrapper.getAttribute("cms-source")).toBe(
-            "/.cms/sources/products/getProduct?id=product-1 as dashboardData",
-        );
-        expect(detail.hasAttribute("data-source-json")).toBe(false);
-        expect(wrapper.querySelector("[cms-bind-value=dashboardData]")).toBeNull();
-        expect(wrapper.querySelector("[data-field-control]")).not.toBeNull();
     });
 });

@@ -1,5 +1,5 @@
 import { DashboardView } from "cms-control/components/admin/Resources/Dashboards/view/DashboardView";
-import { DetailResourceState } from "cms-control/components/admin/Resources/Dashboards/domain";
+import { DashboardActionScope } from "cms-control/components/admin/Resources/Dashboards/domain";
 import type { DashboardSourceGroup } from "cms-control/components/admin/Resources/Dashboards/types";
 
 export const selectedDashboard = "commerce-configuration";
@@ -23,12 +23,11 @@ export const groups: DashboardSourceGroup[] = [
 
 export type DashboardViewInternals = {
     clearDetail: () => void;
-    detailResource: DetailResourceState;
+    actionScope: DashboardActionScope;
     detailSelection: { collection: string; row: string } | null;
     groups: DashboardSourceGroup[];
     openDetail: (collection: string, row: string) => void;
     reloadDetail: (collection: string, row: string) => void;
-    reloadDefinitions: () => Promise<void>;
     selectedDashboard: string;
     selectedSource: string;
 };

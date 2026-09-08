@@ -1,23 +1,14 @@
-import type { SubmitAction } from "cms-control/components/admin/Resources/Dashboards/runtime/actions/forms";
-import { configureDetail, mountDetail, setSourceData } from "../detail/boundDetail";
+import { describe, expect, test } from "bun:test";
+import { configureDetail, mountDetail, setSourceData } from "../../detail/boundDetail";
 import type { DashboardWDetail } from "cms-control/components/admin/Resources/Dashboards/widgets/w-detail/WDetail";
 import type { DetailWidget } from "cms-control/components/admin/Resources/Dashboards/widgets/w-detail/runtime/fieldState";
-import { afterEach, describe, expect, test } from "bun:test";
-import type { DashboardDto } from "@bernouy/cms-dashboards";
-import { detailKey } from "../../../../src/components/admin/Resources/Dashboards/domain";
-import { executeDashboardMediaAction } from "../../../../src/components/admin/Resources/Dashboards/runtime/actions";
-import type { DashboardSourceGroup } from "../../../../src/components/admin/Resources/Dashboards/types";
-import { runDashboardMediaAction } from "../../../../src/components/admin/Resources/Dashboards/view/actions";
-import { setupDashboardActionTests } from "../../widgets/dashboard-table-actions/setup";
-
-const realFetch = globalThis.fetch;
+import { detailKey } from "cms-control/components/admin/Resources/Dashboards/domain";
+import { executeDashboardMediaAction } from "cms-control/components/admin/Resources/Dashboards/runtime/actions";
+import { runDashboardMediaAction } from "cms-control/components/admin/Resources/Dashboards/view/actions";
+import { setupDashboardActionTests } from "../../../widgets/dashboard-table-actions/setup";
+import { dashboard, group, uploadSubmission } from "./fixtures";
 
 setupDashboardActionTests();
-
-afterEach(() => {
-    globalThis.fetch = realFetch;
-    document.body.replaceChildren();
-});
 
 describe("dashboard nested media actions", () => {
     test("uploads a list card image and maps the endpoint result to its file endpoint", async () => {
@@ -86,7 +77,6 @@ describe("dashboard nested media actions", () => {
                 },
             ],
         ]);
-        let renders = 0;
 
         await runDashboardMediaAction(
             {
@@ -95,11 +85,7 @@ describe("dashboard nested media actions", () => {
                 dashboard: dashboard(),
                 detail: { collection: "questionDetail", row: "question-ref" },
                 drafts,
-                render: () => {
-                    renders += 1;
-                },
                 reload: () => {},
-                clearDetail: () => {},
                 openDetail: () => {},
             },
             {
@@ -118,7 +104,6 @@ describe("dashboard nested media actions", () => {
             widget,
         );
 
-        expect(renders).toBe(0);
         expect(drafts.get(key)).toMatchObject({
             type: "choice",
             presentation: "image-grid",
@@ -130,83 +115,3 @@ describe("dashboard nested media actions", () => {
         ]);
     });
 });
-
-function dashboard(): DashboardDto {
-    return {
-        id: "forms",
-        source: "forms",
-        views: [
-            {
-                widget: "w-detail",
-                id: "questionDetail",
-                source: { endpoint: "manageQuestion", params: { ref: "$selection.id" } },
-                main: [
-                    {
-                        id: "choices",
-                        title: "Choices",
-                        fields: [
-                            {
-                                id: "imageOptions",
-                                label: "Images",
-                                path: "options",
-                                type: "reorderable-list",
-                                itemKey: "key",
-                                fields: [
-                                    {
-                                        id: "image",
-                                        label: "Image",
-                                        path: "image",
-                                        type: "media",
-                                        item: { idPath: "mediaId", urlPath: "url", altPath: "alt" },
-                                        actions: {
-                                            upload: {
-                                                endpoint: "uploadChoiceImage",
-                                                params: { ref: "$resource.ref" },
-                                            },
-                                        },
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
-    };
-}
-
-function group(): DashboardSourceGroup {
-    return {
-        source: {
-            urn: "urn:forms",
-            id: "forms",
-            name: "Forms",
-            endpointCount: 2,
-            dashboardCount: 1,
-            readonly: false,
-        },
-        endpoints: [
-            {
-                endpointId: "manageQuestion",
-                method: "GET",
-                targetUrl: "https://forms.test/question",
-                params: [{ name: "ref", in: "query", type: "string" }],
-            },
-            {
-                endpointId: "uploadChoiceImage",
-                method: "POST",
-                targetUrl: "https://forms.test/image",
-                params: [{ name: "ref", in: "query", type: "string" }],
-            },
-        ],
-        dashboards: [],
-    };
-}
-
-// The runtime test checks upload arguments; browser tests exercise native file form submission.
-const uploadSubmission: SubmitAction = async ({ url, method, file }) => {
-    const body = new FormData();
-    body.set("file", file!);
-    const response = await fetch(url, { method, body });
-    return response.json();
-};

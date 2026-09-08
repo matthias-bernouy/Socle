@@ -11,10 +11,7 @@ export type DashboardViewActionContext = {
     detail: DetailSelection | null;
     drafts: Map<string, Record<string, unknown>>;
     filters?: ReadonlyMap<string, Readonly<Record<string, string>>>;
-    render: () => void;
-    reloadDefinitions?: () => Promise<void>;
     reload: (collection: string, row: string) => void;
-    reloadCollection?: (widgetId: string) => void;
     acknowledgeDetailFields?: (collection: string, row: string, fields: Record<string, unknown>) => void;
     restoreDetailField?: (
         collection: string,
@@ -23,9 +20,7 @@ export type DashboardViewActionContext = {
         submitted: unknown,
         previous: unknown,
     ) => void;
-    clearDetail: () => void;
     openDetail: (collection: string, row: string) => void;
     navigateDetail?: (collection: string, row: string) => void;
-    setDetailResource?: (collection: string, row: string, resource: unknown) => void;
     actionCoordinator?: { beginAction: () => () => DashboardActionCompletion };
 };

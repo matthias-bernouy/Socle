@@ -2,8 +2,6 @@ import { composeDetailOperations } from "../actions/forms/views/operations";
 import { composeMediaForms } from "../actions/forms/views/media";
 import { formId } from "../actions/forms/views/composition";
 import { composeLookupCreation } from "../actions/forms/views/creation";
-import { setSourceData } from "@bernouy/components";
-import { setValueAt } from "../expressions";
 import { composeDetail } from "../../widgets/w-detail/binding/composition";
 import type { DetailSelection, RenderContext, RuntimeDetailWidget } from "../../domain";
 import { DashboardWDetail } from "../../widgets/w-detail/WDetail";
@@ -18,12 +16,6 @@ export function detailElement(
     detail: DetailSelection | null,
 ): HTMLElement {
     const rowKey = detail?.row ?? "";
-    const directResource = matchingDetailResource(widget, context, rowKey);
-    if (directResource) {
-        const element = detailContent(widget, context, rowKey, directResource);
-        attachDetailSource(element, widget, context, rowKey);
-        return element;
-    }
     const element = detailContent(widget, context, rowKey);
     attachDetailSource(element, widget, context, rowKey);
     return element;
@@ -54,12 +46,7 @@ export function attachDetailSource(
     element.setAttribute("cms-reload-on", wrapper.getAttribute("cms-reload-on")!);
 }
 
-function detailContent(
-    widget: RuntimeDetailWidget,
-    context: RenderContext,
-    rowKey: string,
-    directResource: NonNullable<RenderContext["detailResource"]> | null = null,
-): HTMLElement {
+function detailContent(widget: RuntimeDetailWidget, context: RenderContext, rowKey: string): HTMLElement {
     const element = new DashboardWDetail();
     element.dataset.widgetId = widget.id;
     element.id = formId();
@@ -75,9 +62,6 @@ function detailContent(
     composeLookupCreation(element, widget, context);
     composeMediaForms(element, widget, context);
     composeDetailOperations(element, widget, context);
-    if (directResource !== null) {
-        publishDetailResource(element, widget, directResource.resource);
-    }
     element.setAttribute("data-row-key", rowKey);
     element.setAttribute("data-source-id", context.dashboard.source);
     for (const relationWidget of widget.relationWidgets ?? []) {
@@ -92,27 +76,4 @@ function detailContent(
         }
     }
     return element;
-}
-
-function matchingDetailResource(widget: RuntimeDetailWidget, context: RenderContext, row: string) {
-    const resource = context.detailResource;
-    return resource &&
-        resource.resource !== null &&
-        resource.resource !== undefined &&
-        resource.sourceId === context.dashboard.source &&
-        resource.dashboardId === context.dashboard.id &&
-        resource.collection === widget.id &&
-        resource.row === row
-        ? resource
-        : null;
-}
-
-export function publishDetailResource(element: DashboardWDetail, widget: RuntimeDetailWidget, resource: unknown): void {
-    if (widget.source.itemPath) {
-        const data: Record<string, unknown> = {};
-        setValueAt(data, widget.source.itemPath, resource);
-        setSourceData(element, data);
-    } else {
-        setSourceData(element, resource);
-    }
 }

@@ -20,7 +20,6 @@ describe("dashboard detail main widgets", () => {
                 dashboard,
                 selectedRows: new Map(),
                 drafts: new Map(),
-                detailResource: { ...detail, sourceId: "forms", dashboardId: "forms", resource: { title: "Intro" } },
             },
             "root",
             new Map(),
