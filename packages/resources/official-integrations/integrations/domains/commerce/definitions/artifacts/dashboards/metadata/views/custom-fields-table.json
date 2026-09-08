@@ -73,19 +73,14 @@
                 "format": "badge"
             }
         ],
-        "actions": [
-            {
-                "id": "createCustomField",
-                "label": "Create metadata",
-                "tone": "primary",
-                "placement": "primary",
-                "selection": {
-                    "opens": "customFieldDetail"
-                }
-            }
-        ],
+        "actions": [],
         "selection": {
             "opens": "customFieldDetail"
+        },
+        "create": {
+            "viewId": "customFieldDetail",
+            "presentation": "page",
+            "label": "Create metadata"
         }
     }
 ]

@@ -29,11 +29,8 @@
             {
                 "id": "reorderBrands",
                 "label": "Reorder brands",
-                "endpoint": {
-                    "endpoint": "reorderBrands",
-                    "body": {
-                        "ids": "$value"
-                    }
+                "form": {
+                    "endpoint": "reorderBrands"
                 }
             }
         ],
@@ -77,11 +74,8 @@
             {
                 "id": "reorderCategories",
                 "label": "Reorder categories",
-                "endpoint": {
-                    "endpoint": "reorderCategories",
-                    "body": {
-                        "ids": "$value"
-                    }
+                "form": {
+                    "endpoint": "reorderCategories"
                 }
             }
         ],

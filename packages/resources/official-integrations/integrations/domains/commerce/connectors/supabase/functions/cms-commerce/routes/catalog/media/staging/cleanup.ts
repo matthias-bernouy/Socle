@@ -4,18 +4,20 @@ import { rpc } from "../../../../core/rest.ts";
 import { productMediaBucket } from "../constants.ts";
 import { deleteStorageImage } from "../storage.ts";
 
-export async function cleanupProductImages(
+export async function cleanupImages(
+    resourceKind: "product" | "offer",
     sessionId: string | null,
     ownerId: string,
     mediaIds: number[] | null = null,
 ): Promise<void> {
-    const result = await rpc("claim_product_media_cleanup", {
+    const result = await rpc("claim_media_cleanup", {
+        p_resource_kind: resourceKind,
         p_session_id: sessionId,
         p_owner_id: ownerId,
         p_media_ids: mediaIds,
     });
     if (!isRecord(result) || !Array.isArray(result.items)) {
-        throw new HttpError(502, "product image cleanup returned an invalid response");
+        throw new HttpError(502, "image cleanup returned an invalid response");
     }
     for (const item of result.items) {
         if (
@@ -27,10 +29,11 @@ export async function cleanupProductImages(
             !item.storagePath.startsWith(`upload-sessions/${item.sessionId}/`) ||
             !Number.isSafeInteger(item.mediaId)
         ) {
-            throw new HttpError(502, "product image cleanup returned an invalid location");
+            throw new HttpError(502, "image cleanup returned an invalid location");
         }
         await deleteStorageImage(productMediaBucket, item.storagePath);
-        await rpc("finish_product_media_cleanup", {
+        await rpc("finish_media_cleanup", {
+            p_resource_kind: resourceKind,
             p_session_id: item.sessionId,
             p_owner_id: ownerId,
             p_media_id: item.mediaId,

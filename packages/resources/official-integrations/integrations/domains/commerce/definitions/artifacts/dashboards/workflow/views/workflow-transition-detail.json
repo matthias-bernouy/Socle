@@ -12,26 +12,7 @@
             "path": "action",
             "fallback": "New workflow transition"
         },
-        "actions": [
-            {
-                "id": "saveWorkflowTransition",
-                "label": "Save transition",
-                "tone": "primary",
-                "placement": "primary",
-                "endpoint": {
-                    "endpoint": "upsertWorkflowTransition",
-                    "body": {
-                        "fromState": "$field.fromState",
-                        "action": "$field.action",
-                        "actorKind": "$field.actorKind",
-                        "toState": "$field.toState"
-                    }
-                },
-                "after": {
-                    "resource": "$result"
-                }
-            }
-        ],
+        "actions": [],
         "main": [
             {
                 "id": "workflowTransitionFields",
@@ -49,14 +30,16 @@
                             "valuePath": "code",
                             "labelPath": "label",
                             "subtitlePath": "phase"
-                        }
+                        },
+                        "name": "fromState"
                     },
                     {
                         "id": "action",
                         "label": "Action",
                         "path": "action",
                         "type": "text",
-                        "required": true
+                        "required": true,
+                        "name": "action"
                     },
                     {
                         "id": "actorKind",
@@ -73,7 +56,8 @@
                                 "value": "seller",
                                 "label": "Seller (core actions only)"
                             }
-                        ]
+                        ],
+                        "name": "actorKind"
                     },
                     {
                         "id": "toState",
@@ -87,10 +71,19 @@
                             "valuePath": "code",
                             "labelPath": "label",
                             "subtitlePath": "phase"
-                        }
+                        },
+                        "name": "toState"
                     }
                 ]
             }
-        ]
+        ],
+        "save": {
+            "endpoint": "upsertWorkflowTransition",
+            "label": "Save transition",
+            "idPath": "id"
+        },
+        "create": {
+            "label": "Create"
+        }
     }
 ]

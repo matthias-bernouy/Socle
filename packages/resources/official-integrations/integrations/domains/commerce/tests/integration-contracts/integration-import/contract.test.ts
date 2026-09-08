@@ -111,7 +111,10 @@ describe("commerce 1.0.0 contract", () => {
         expect(result.artifacts).not.toContainEqual(
             expect.objectContaining({ type: "dashboard-view", id: "commerce-dashboard" }),
         );
-        expect(endpointUrns).toHaveLength(175);
+        expect(endpointUrns).toHaveLength(179);
+        expect(endpointUrns).toEqual(
+            expect.arrayContaining(["urn:commerce:stageProductImage", "urn:commerce:discardStagedProductImages"]),
+        );
         expect(endpointUrns).not.toEqual(
             expect.arrayContaining(["urn:commerce:variants", "urn:commerce:variant", "urn:commerce:upsertVariant"]),
         );

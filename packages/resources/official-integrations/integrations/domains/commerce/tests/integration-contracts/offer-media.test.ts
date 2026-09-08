@@ -39,7 +39,7 @@ describe("commerce offer media contract", () => {
         }
     });
 
-    test("wires the offer image editor to the admin operations", async () => {
+    test("stages offer images for the shared Save without immediate attachment mutations", async () => {
         const definition = await commerceDefinitionWithDeferredDashboards<RecordValue>();
         const dashboard = definition.artifacts.find((artifact: RecordValue) =>
             artifact.view?.id.endsWith("-offers"),
@@ -49,10 +49,19 @@ describe("commerce offer media contract", () => {
         const field = section.fields.find((candidate: RecordValue) => candidate.id === "media");
 
         expect(field).toMatchObject({ type: "media", multiple: true, path: "media" });
-        expect(field.item).toEqual({ idPath: "media.id", urlPath: "media.url", altPath: "media.alt" });
-        expect(field.actions.upload.endpoint).toBe("uploadOfferImage");
-        expect(field.actions.replace.endpoint).toBe("replaceOfferImage");
-        expect(field.actions.remove.endpoint).toBe("removeOfferImage");
-        expect(field.actions.reorder.endpoint).toBe("reorderOfferImages");
+        expect(field.item).toEqual({
+            idPath: "media.id",
+            urlPath: "media.url",
+            altPath: "media.alt",
+            endpoint: "offerImage",
+        });
+        expect(field).toMatchObject({
+            persist: "save",
+            name: "mediaIds",
+            staging: { sessionField: "uploadSessionId" },
+        });
+        expect(field.actions).toEqual({ upload: { endpoint: "stageOfferImage" } });
+        expect(detail.save.endpoint).toBe("upsertOffer");
+        expect(detail.create.label).toBe("Create offer");
     });
 });

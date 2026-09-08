@@ -15,45 +15,26 @@
                 "item": {
                     "idPath": "media.id",
                     "urlPath": "media.url",
-                    "altPath": "media.alt"
+                    "altPath": "media.alt",
+                    "endpoint": "offerImage"
                 },
                 "actions": {
                     "upload": {
-                        "endpoint": "uploadOfferImage",
-                        "params": {
-                            "offerId": "$resource.id"
-                        }
-                    },
-                    "replace": {
-                        "endpoint": "replaceOfferImage",
-                        "params": {
-                            "offerId": "$resource.id",
-                            "mediaId": "$media.previousItem.id"
-                        }
-                    },
-                    "remove": {
-                        "endpoint": "removeOfferImage",
-                        "params": {
-                            "offerId": "$resource.id",
-                            "mediaId": "$media.item.id"
-                        }
-                    },
-                    "reorder": {
-                        "endpoint": "reorderOfferImages",
-                        "params": {
-                            "offerId": "$resource.id"
-                        },
-                        "body": {
-                            "mediaIds": "$media.valueIds"
-                        }
+                        "endpoint": "stageOfferImage"
                     }
+                },
+                "name": "mediaIds",
+                "persist": "save",
+                "valueType": "number",
+                "staging": {
+                    "sessionField": "uploadSessionId"
                 }
             }
         ]
     },
     {
         "id": "offerPricing",
-        "title": "Pricing and review",
+        "title": "Pricing",
         "fields": [
             {
                 "id": "acceptedPriceAmount",
@@ -64,7 +45,8 @@
                 "allowDecimals": {
                     "value": "$resource.wholeUnitPrices",
                     "equals": false
-                }
+                },
+                "empty": "null"
             },
             {
                 "id": "currency",
@@ -72,35 +54,6 @@
                 "path": "currency",
                 "type": "text",
                 "required": true
-            },
-            {
-                "id": "minimumAmount",
-                "label": "Minimum price",
-                "path": "priceRule.minimumAmount",
-                "type": "money",
-                "currencyPath": "currency",
-                "allowDecimals": {
-                    "value": "$resource.wholeUnitPrices",
-                    "equals": false
-                }
-            },
-            {
-                "id": "maximumAmount",
-                "label": "Maximum price",
-                "path": "priceRule.maximumAmount",
-                "type": "money",
-                "currencyPath": "currency",
-                "allowDecimals": {
-                    "value": "$resource.wholeUnitPrices",
-                    "equals": false
-                }
-            },
-            {
-                "id": "reviewReason",
-                "label": "Review note",
-                "path": "reviewReason",
-                "type": "textarea",
-                "rows": 3
             }
         ]
     }

@@ -14,58 +14,37 @@
     "status": {
         "path": "fieldType"
     },
-    "actions": [
-        {
-            "id": "saveCustomField",
-            "label": "Save metadata",
-            "tone": "primary",
-            "placement": "primary",
-            "endpoint": {
-                "endpoint": "upsertCustomField",
-                "body": {
-                    "entityType": "$field.entityType",
-                    "key": "$field.key",
-                    "label": "$field.label",
-                    "fieldType": "$field.fieldType",
-                    "options": "$field.options",
-                    "unit": "$field.unit",
-                    "required": "$field.required",
-                    "selfEditable": "$field.selfEditable",
-                    "adminEditable": "$field.adminEditable",
-                    "publicReadable": "$field.publicReadable",
-                    "showInDashboardTable": "$field.showInDashboardTable",
-                    "position": "$field.position",
-                    "enabled": "$field.enabled"
-                }
-            },
-            "after": {
-                "resource": "$result"
-            }
-        },
-        {
-            "id": "deleteCustomField",
-            "label": "Delete metadata",
-            "icon": "trash",
-            "tone": "danger",
-            "placement": "more",
-            "confirm": "Delete this metadata definition?",
-            "visibleWhen": {
-                "value": "$field.key",
-                "notEquals": ""
-            },
-            "endpoint": {
-                "endpoint": "deleteCustomField",
-                "params": {
-                    "entityType": "$resource.entityType",
-                    "key": "$resource.key"
-                }
-            }
-        }
-    ],
+    "actions": [],
     "main": {
         "$include": "main.json"
     },
     "aside": {
         "$include": "aside.json"
+    },
+    "save": {
+        "endpoint": "upsertCustomField",
+        "label": "Save metadata",
+        "idPath": "id"
+    },
+    "delete": {
+        "endpoint": "deleteCustomField",
+        "confirm": "Delete this metadata definition?",
+        "hiddenFields": [
+            {
+                "name": "entityType",
+                "value": "$resource.entityType",
+                "type": "string"
+            },
+            {
+                "name": "key",
+                "value": "$resource.key",
+                "type": "string"
+            }
+        ],
+        "label": "Delete metadata",
+        "tone": "danger"
+    },
+    "create": {
+        "label": "Create"
     }
 }

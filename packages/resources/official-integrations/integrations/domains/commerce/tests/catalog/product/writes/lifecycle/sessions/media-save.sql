@@ -17,7 +17,7 @@ begin
         raise exception 'test: minimal product must be a hidden draft';
     end if;
     v_other := (commerce.upsert_product(null, '{"slug":"staged-other","title":"Other"}')->>'id')::bigint;
-    v_one := (commerce.stage_product_media(v_session, 'admin-a', not exists(select 1 from commerce.product_upload_sessions where id=v_session), jsonb_build_object(
+    v_one := (commerce.stage_media('product', v_session, 'admin-a', not exists(select 1 from commerce.media_upload_sessions where id=v_session), jsonb_build_object(
         'storageBucket', 'commerce-media', 'storagePath', 'upload-sessions/' || v_session || '/one.png',
         'mimeType', 'image/png', 'fileSize', 100, 'originalFilename', 'one.png', 'width', 1, 'height', 1
     ))->>'media_id')::bigint;
@@ -27,7 +27,7 @@ begin
     exception when others then
         if sqlerrm not like 'validation: product image is unavailable%' then raise; end if;
     end;
-    perform commerce.complete_product_media_upload(v_session, 'admin-a', v_one);
+    perform commerce.complete_media_upload('product', v_session, 'admin-a', v_one);
     if exists (select 1 from commerce.product_media where product_id = v_id)
         or (select version from commerce.products where id = v_id) <> 1 then
         raise exception 'test: staging changed the product';
@@ -41,11 +41,11 @@ begin
     exception when others then
         if sqlerrm not like 'validation: product image is unavailable%' then raise; end if;
     end;
-    v_two := (commerce.stage_product_media(v_session, 'admin-a', not exists(select 1 from commerce.product_upload_sessions where id=v_session), jsonb_build_object(
+    v_two := (commerce.stage_media('product', v_session, 'admin-a', not exists(select 1 from commerce.media_upload_sessions where id=v_session), jsonb_build_object(
         'storageBucket', 'commerce-media', 'storagePath', 'upload-sessions/' || v_session || '/two.png',
         'mimeType', 'image/png', 'fileSize', 100, 'originalFilename', 'two.png', 'width', 1, 'height', 1
     ))->>'media_id')::bigint;
-    perform commerce.complete_product_media_upload(v_session, 'admin-a', v_two);
+    perform commerce.complete_media_upload('product', v_session, 'admin-a', v_two);
     begin
         perform commerce.upsert_product(v_id, jsonb_build_object('uploadSessionId', v_session, 'internalCmsUserId', 'admin-a',
             'title', 'Invalid', 'status', 'invalid', 'mediaIds', jsonb_build_array(v_two, v_one)
@@ -54,7 +54,7 @@ begin
     exception when check_violation then null;
     end;
     if exists (select 1 from commerce.product_media where product_id = v_id)
-        or (select count(*) from commerce.product_media_uploads where session_id = v_session) <> 2 then
+        or (select count(*) from commerce.media_uploads where session_id = v_session) <> 2 then
         raise exception 'test: failed save partially committed media';
     end if;
     v_result := commerce.upsert_product(v_id, jsonb_build_object('uploadSessionId', v_session, 'internalCmsUserId', 'admin-a',
@@ -62,14 +62,14 @@ begin
     ), 1);
     v_version := (v_result->>'version')::integer;
     if (select media_id from commerce.product_media where product_id = v_id and is_main) <> v_two
-        or exists (select 1 from commerce.product_media_uploads where session_id = v_session) then
+        or exists (select 1 from commerce.media_uploads where session_id = v_session) then
         raise exception 'test: save did not attach images in the requested order';
     end if;
     begin
-        perform commerce.claim_product_media_cleanup(v_session, 'admin-a', jsonb_build_array(v_one));
+        perform commerce.claim_media_cleanup('product', v_session, 'admin-a', jsonb_build_array(v_one));
         raise exception 'test: saved media was discarded';
     exception when others then
-        if sqlerrm not like 'conflict: only pending product images%' then raise; end if;
+        if sqlerrm not like 'conflict: only pending images%' then raise; end if;
     end;
     begin
         perform commerce.upsert_product(v_id, jsonb_build_object('uploadSessionId', v_session, 'internalCmsUserId', 'admin-a', 'mediaIds', '[]'::jsonb), 1);

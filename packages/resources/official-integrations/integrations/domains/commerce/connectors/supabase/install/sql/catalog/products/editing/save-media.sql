@@ -6,8 +6,8 @@ declare
     v_max integer;
 begin
     if p_session_id is not null then
-        perform commerce.lock_product_upload_session(p_session_id, p_owner_id);
-        update commerce.product_upload_sessions set product_id = p_product_id
+        perform commerce.lock_media_upload_session('product', p_session_id, p_owner_id);
+        update commerce.media_upload_sessions set product_id = p_product_id
         where id = p_session_id and (product_id is null or product_id = p_product_id);
         if not found then raise exception 'conflict: upload session belongs to another product'; end if;
     end if;
@@ -26,12 +26,12 @@ begin
         or array_position(v_ids, null) is not null then
         raise exception 'validation: invalid product image selection';
     end if;
-    perform media_id from commerce.product_media_uploads where session_id = p_session_id order by media_id for update;
+    perform media_id from commerce.media_uploads where session_id = p_session_id order by media_id for update;
     if exists (
         select 1 from unnest(v_ids) candidate(media_id) where not exists (
             select 1 from commerce.product_media where product_id = p_product_id and media_id = candidate.media_id
         ) and not exists (
-            select 1 from commerce.product_media_uploads
+            select 1 from commerce.media_uploads
             where session_id = p_session_id and media_id = candidate.media_id and state = 'ready' and expires_at > now()
         )
     ) then raise exception 'validation: product image is unavailable or belongs to another product'; end if;
@@ -42,7 +42,7 @@ begin
     insert into commerce.product_media (product_id, media_id, sort_order, is_main)
     select p_product_id, id, position - 1, position = 1 from unnest(v_ids) with ordinality selected(id, position)
     on conflict (product_id, media_id) do update set sort_order = excluded.sort_order, is_main = excluded.is_main;
-    delete from commerce.product_media_uploads where session_id = p_session_id and media_id = any(v_ids);
+    delete from commerce.media_uploads where session_id = p_session_id and media_id = any(v_ids);
     -- Saved originals retain their audit record and bytes; only abandoned uploads are collected.
     update commerce.media media set detached_at = now()
     where id = any(v_removed) and detached_at is null

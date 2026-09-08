@@ -95,7 +95,7 @@ export async function getWorkflowTransition(request: Request): Promise<Response>
     if (!row) {
         throw new HttpError(404, "workflow transition not found");
     }
-    return json(camelize(row));
+    return json({ ...(camelize(row) as JsonRecord), id: `${fromState}:${action}:${actorKind}` });
 }
 
 export async function upsertWorkflowTransition(request: Request): Promise<Response> {
@@ -106,5 +106,5 @@ export async function upsertWorkflowTransition(request: Request): Promise<Respon
         p_actor_kind: requiredText(body.actorKind, "actorKind"),
         p_to_state: requiredText(body.toState, "toState"),
     });
-    return json(camelize(result));
+    return json({ ...(camelize(result) as JsonRecord), id: `${body.fromState}:${body.action}:${body.actorKind}` });
 }

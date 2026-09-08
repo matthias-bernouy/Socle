@@ -12,20 +12,7 @@
             "invalidatesSchema": true
         },
         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/custom-field",
-        "params": [
-            {
-                "name": "entityType",
-                "in": "query",
-                "type": "string",
-                "required": true
-            },
-            {
-                "name": "key",
-                "in": "query",
-                "type": "string",
-                "required": true
-            }
-        ],
+        "params": [],
         "headers": [
             {
                 "name": "authorization",
@@ -59,6 +46,21 @@
                     ]
                 }
             }
-        ]
+        ],
+        "body": {
+            "type": "object",
+            "properties": {
+                "entityType": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "entityType",
+                "key"
+            ]
+        }
     }
 ]

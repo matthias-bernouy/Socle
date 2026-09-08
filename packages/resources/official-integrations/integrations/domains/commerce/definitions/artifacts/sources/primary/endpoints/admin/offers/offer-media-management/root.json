@@ -120,5 +120,11 @@
                 }
             }
         ]
+    },
+    {
+        "$include": "stage-offer-image.json"
+    },
+    {
+        "$include": "discard-staged-offer-images.json"
     }
 ]

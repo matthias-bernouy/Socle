@@ -57,13 +57,10 @@
             "file": "products/sync-product-variant-matrix.sql"
         },
         {
-            "file": "products/editing/stage-media.sql"
+            "file": "products/editing/creation.sql"
         },
         {
             "file": "products/editing/save-media.sql"
-        },
-        {
-            "file": "products/editing/cleanup-media.sql"
         },
         {
             "file": "products/editing/metadata-patch.sql"

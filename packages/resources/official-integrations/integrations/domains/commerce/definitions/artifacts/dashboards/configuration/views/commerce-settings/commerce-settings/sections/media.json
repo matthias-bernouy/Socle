@@ -7,28 +7,36 @@
             "label": "Minimum product images",
             "path": "productImageMinCount",
             "type": "number",
-            "required": true
+            "required": true,
+            "name": "productImageMinCount",
+            "valueType": "number"
         },
         {
             "id": "productImageMaxCount",
             "label": "Maximum product images",
             "path": "productImageMaxCount",
             "type": "number",
-            "required": true
+            "required": true,
+            "name": "productImageMaxCount",
+            "valueType": "number"
         },
         {
             "id": "offerImageMinCount",
             "label": "Minimum offer images",
             "path": "offerImageMinCount",
             "type": "number",
-            "required": true
+            "required": true,
+            "name": "offerImageMinCount",
+            "valueType": "number"
         },
         {
             "id": "offerImageMaxCount",
             "label": "Maximum offer images",
             "path": "offerImageMaxCount",
             "type": "number",
-            "required": true
+            "required": true,
+            "name": "offerImageMaxCount",
+            "valueType": "number"
         }
     ]
 }

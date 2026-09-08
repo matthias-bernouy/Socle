@@ -1,3 +1,4 @@
+import { stageImage, discardStagedImages } from "../routes/catalog/media/staging/routes.ts";
 import { methodNotAllowed } from "../core/http.ts";
 import { requireCmsAdmin } from "../core/auth.ts";
 import { getOffer, listOffers, reviewOffer, upsertOffer } from "../routes/offer/index.ts";
@@ -61,6 +62,12 @@ export async function handleAdminMarketplaceRoute(route: string, request: Reques
     }
     if (route === "/admin/offer/review") {
         return request.method === "POST" ? await reviewOffer(request) : methodNotAllowed("POST");
+    }
+    if (route === "/admin/offer/image/stage") {
+        return request.method === "POST" ? await stageImage(request, "offer") : methodNotAllowed("POST");
+    }
+    if (route === "/admin/offer/images/discard") {
+        return request.method === "POST" ? await discardStagedImages(request, "offer") : methodNotAllowed("POST");
     }
     if (route === "/admin/offer/image") {
         if (request.method === "GET") {

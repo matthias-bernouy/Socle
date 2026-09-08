@@ -3,6 +3,7 @@
     "transaction": "atomic",
     "entries": [
         { "manifest": "foundation/manifest.json" },
+        { "manifest": "marketplace/media/staging/manifest.json" },
         { "manifest": "catalog/manifest.json" },
         { "manifest": "marketplace/manifest.json" },
         { "manifest": "finance/manifest.json" },

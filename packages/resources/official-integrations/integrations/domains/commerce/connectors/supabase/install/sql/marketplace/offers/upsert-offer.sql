@@ -19,7 +19,23 @@ declare
     v_seller_id bigint;
     v_product_id bigint;
     v_variant_id bigint;
+    v_session_id uuid := nullif(p_payload->>'uploadSessionId', '')::uuid;
+    v_owner_id text := nullif(p_payload->>'internalCmsUserId', '');
+    v_token uuid := nullif(p_payload->>'creationToken', '')::uuid;
+    v_receipt commerce.offer_creation_receipts%rowtype;
+    v_hash text := md5((p_payload - 'internalCmsUserId')::text);
 begin
+    if p_offer_id is null and v_token is not null then
+        if v_owner_id is null then raise exception 'validation: creation owner is required'; end if;
+        perform pg_advisory_xact_lock(hashtextextended('offer:' || v_owner_id || ':' || v_token, 0));
+        select * into v_receipt from commerce.offer_creation_receipts where owner_id = v_owner_id and token = v_token;
+        if found then
+            if v_receipt.payload_hash <> v_hash then raise exception 'conflict: creation token was already used with different values'; end if;
+            select * into v_offer from commerce.offers where id = v_receipt.offer_id;
+            return to_jsonb(v_offer);
+        end if;
+    end if;
+    if v_session_id is not null then perform commerce.lock_media_upload_session('offer', v_session_id, v_owner_id); end if;
     select * into v_settings from commerce.settings where id = 'default' for share;
     if p_payload ? 'acceptedPriceAmount' then
         perform commerce.assert_offer_price_increment(
@@ -175,6 +191,18 @@ begin
         returning * into v_offer;
         insert into commerce.offer_events (offer_id, event_type, actor_kind, actor_id)
         values (v_offer.id, 'details_updated', 'admin', coalesce(nullif(p_admin_id, ''), 'cms-admin'));
+    end if;
+    if p_payload ? 'mediaIds' then
+        perform commerce.save_offer_media(v_offer.id, p_payload->'mediaIds', v_session_id, v_owner_id);
+        if v_offer.workflow_state <> 'draft' and (
+            select count(*) from commerce.offer_media where offer_id = v_offer.id
+        ) < v_settings.offer_image_min_count then
+            raise exception 'validation: a submitted offer must keep at least % images', v_settings.offer_image_min_count;
+        end if;
+    end if;
+    if p_offer_id is null and v_token is not null then
+        insert into commerce.offer_creation_receipts(owner_id, token, payload_hash, offer_id)
+        values (v_owner_id, v_token, v_hash, v_offer.id);
     end if;
     return to_jsonb(v_offer);
 end;

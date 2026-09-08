@@ -2,14 +2,7 @@
     "endpointId": "reviewSeller",
     "method": "POST",
     "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/seller/review",
-    "params": [
-        {
-            "name": "id",
-            "in": "query",
-            "type": "string",
-            "required": true
-        }
-    ],
+    "params": [],
     "headers": [
         {
             "name": "authorization",
@@ -30,6 +23,9 @@
     "body": {
         "type": "object",
         "properties": {
+            "id": {
+                "type": "number"
+            },
             "status": {
                 "type": "string"
             },
@@ -41,6 +37,7 @@
             }
         },
         "required": [
+            "id",
             "status",
             "expectedVersion"
         ]

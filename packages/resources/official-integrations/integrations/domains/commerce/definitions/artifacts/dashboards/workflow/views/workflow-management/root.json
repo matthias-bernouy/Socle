@@ -34,19 +34,14 @@
                 "format": "badge"
             }
         ],
-        "actions": [
-            {
-                "id": "createWorkflowState",
-                "label": "Create state",
-                "tone": "primary",
-                "placement": "primary",
-                "selection": {
-                    "opens": "workflowStateDetail"
-                }
-            }
-        ],
+        "actions": [],
         "selection": {
             "opens": "workflowStateDetail"
+        },
+        "create": {
+            "viewId": "workflowStateDetail",
+            "presentation": "page",
+            "label": "Create state"
         }
     },
     {
@@ -83,19 +78,14 @@
                 "format": "badge"
             }
         ],
-        "actions": [
-            {
-                "id": "createWorkflowTransition",
-                "label": "Create transition",
-                "tone": "primary",
-                "placement": "primary",
-                "selection": {
-                    "opens": "workflowTransitionDetail"
-                }
-            }
-        ],
+        "actions": [],
         "selection": {
             "opens": "workflowTransitionDetail"
+        },
+        "create": {
+            "viewId": "workflowTransitionDetail",
+            "presentation": "page",
+            "label": "Create transition"
         }
     },
     {

@@ -39,7 +39,7 @@ describe("Commerce retained original contract", () => {
     test("makes remove and replacement non-destructive and detached downloads fail closed", async () => {
         const schema = await loadSupabaseSchemaSql(commerceRoot, "install/sql/schema.manifest.json");
 
-        expect(schema).not.toMatch(/delete from commerce\.media/i);
+        expect(schema).not.toMatch(/delete from commerce\.media\b/i);
         expect(schema).toContain("set detached_at = coalesce(detached_at, now())");
         expect(schema).toContain("and media.detached_at is null");
         expect(schema).toContain("get_product_media_download_context");

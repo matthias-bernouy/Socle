@@ -2,14 +2,7 @@
     "endpointId": "reviewOffer",
     "method": "POST",
     "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/offer/review",
-    "params": [
-        {
-            "name": "id",
-            "in": "query",
-            "type": "string",
-            "required": true
-        }
-    ],
+    "params": [],
     "headers": [
         {
             "name": "authorization",
@@ -30,6 +23,9 @@
     "body": {
         "type": "object",
         "properties": {
+            "id": {
+                "type": "number"
+            },
             "action": {
                 "type": "string"
             },
@@ -47,6 +43,7 @@
             }
         },
         "required": [
+            "id",
             "action",
             "expectedVersion"
         ]

@@ -95,6 +95,7 @@ const createdTransition = {
         created_at: createdAt,
     },
     dto: {
+        id: "quality_review:complete_review:admin",
         fromState: "quality_review",
         action: "complete_review",
         actorKind: "admin",
@@ -127,6 +128,7 @@ const createdCustomField = {
         updated_at: updatedAt,
     },
     dto: {
+        id: "product:weight",
         entityType: "product",
         key: "weight",
         label: "Weight",

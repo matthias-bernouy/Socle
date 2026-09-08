@@ -20,19 +20,35 @@
             "label": "Verify seller",
             "tone": "primary",
             "placement": "primary",
-            "endpoint": {
+            "form": {
                 "endpoint": "reviewSeller",
-                "params": {
-                    "id": "$resource.id"
-                },
-                "body": {
-                    "status": "verified",
-                    "reason": "$field.reviewReason",
-                    "expectedVersion": "$resource.version"
-                }
-            },
-            "after": {
-                "resource": "$result"
+                "hiddenFields": [
+                    {
+                        "name": "id",
+                        "value": "$resource.id",
+                        "type": "number"
+                    },
+                    {
+                        "name": "expectedVersion",
+                        "value": "$resource.version",
+                        "type": "number"
+                    },
+                    {
+                        "name": "status",
+                        "value": "verified",
+                        "type": "string"
+                    }
+                ],
+                "fields": [
+                    {
+                        "id": "reason",
+                        "name": "reason",
+                        "label": "Review reason",
+                        "path": "reviewReason",
+                        "type": "textarea",
+                        "rows": 3
+                    }
+                ]
             }
         },
         {
@@ -40,20 +56,36 @@
             "label": "Suspend seller",
             "tone": "danger",
             "placement": "more",
-            "confirm": "Suspend this seller?",
-            "endpoint": {
+            "form": {
                 "endpoint": "reviewSeller",
-                "params": {
-                    "id": "$resource.id"
-                },
-                "body": {
-                    "status": "suspended",
-                    "reason": "$field.reviewReason",
-                    "expectedVersion": "$resource.version"
-                }
-            },
-            "after": {
-                "resource": "$result"
+                "hiddenFields": [
+                    {
+                        "name": "id",
+                        "value": "$resource.id",
+                        "type": "number"
+                    },
+                    {
+                        "name": "expectedVersion",
+                        "value": "$resource.version",
+                        "type": "number"
+                    },
+                    {
+                        "name": "status",
+                        "value": "suspended",
+                        "type": "string"
+                    }
+                ],
+                "fields": [
+                    {
+                        "id": "reason",
+                        "name": "reason",
+                        "label": "Review reason",
+                        "path": "reviewReason",
+                        "type": "textarea",
+                        "rows": 3
+                    }
+                ],
+                "confirm": "Suspend this seller?"
             }
         }
     ],
@@ -86,13 +118,6 @@
                     "label": "CMS user id",
                     "path": "cmsUserId",
                     "type": "readonly"
-                },
-                {
-                    "id": "reviewReason",
-                    "label": "Review reason",
-                    "path": "reviewReason",
-                    "type": "textarea",
-                    "rows": 3
                 }
             ]
         }

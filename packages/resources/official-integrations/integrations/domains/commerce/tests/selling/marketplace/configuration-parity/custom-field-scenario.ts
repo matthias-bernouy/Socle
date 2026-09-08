@@ -17,7 +17,7 @@ export const customFieldScenario: ParityScenario = {
         entity_type: "eq.product",
         key: "eq.weight",
     },
-    omittedKeys: ["id", "created_at", "updated_at"],
+    omittedKeys: ["created_at", "updated_at"],
     missingError: "custom field not found",
     changes: [
         customFieldChange(fixturePairs.customField[0], "Weight", null, false, false, false, 3),

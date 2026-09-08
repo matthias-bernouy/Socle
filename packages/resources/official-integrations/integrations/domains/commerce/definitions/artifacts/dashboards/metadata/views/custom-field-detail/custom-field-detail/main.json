@@ -30,21 +30,24 @@
                         "value": "order",
                         "label": "Order"
                     }
-                ]
+                ],
+                "name": "entityType"
             },
             {
                 "id": "key",
                 "label": "Key",
                 "path": "key",
                 "type": "text",
-                "required": true
+                "required": true,
+                "name": "key"
             },
             {
                 "id": "label",
                 "label": "Label",
                 "path": "label",
                 "type": "text",
-                "required": true
+                "required": true,
+                "name": "label"
             },
             {
                 "id": "fieldType",
@@ -69,7 +72,8 @@
                         "value": "enum",
                         "label": "Select"
                     }
-                ]
+                ],
+                "name": "fieldType"
             },
             {
                 "id": "options",
@@ -80,7 +84,8 @@
                 "visibleWhen": {
                     "value": "$field.fieldType",
                     "equals": "enum"
-                }
+                },
+                "name": "options"
             },
             {
                 "id": "unit",
@@ -90,13 +95,17 @@
                 "visibleWhen": {
                     "value": "$field.fieldType",
                     "equals": "number"
-                }
+                },
+                "name": "unit"
             },
             {
                 "id": "position",
                 "label": "Position",
                 "path": "position",
-                "type": "text"
+                "type": "number",
+                "name": "position",
+                "valueType": "number",
+                "empty": "omit"
             }
         ]
     }

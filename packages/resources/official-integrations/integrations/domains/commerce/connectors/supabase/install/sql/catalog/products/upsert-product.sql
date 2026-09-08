@@ -32,7 +32,7 @@ begin
             return to_jsonb(v_product);
         end if;
     end if;
-    if v_session_id is not null then perform commerce.lock_product_upload_session(v_session_id, v_owner_id); end if;
+    if v_session_id is not null then perform commerce.lock_media_upload_session('product', v_session_id, v_owner_id); end if;
     select * into v_settings from commerce.settings where id = 'default' for share;
     if p_payload ? 'variantAxes' then
         select coalesce(jsonb_agg(axis->>'fieldKey'), '[]'::jsonb) into v_axis_field_keys

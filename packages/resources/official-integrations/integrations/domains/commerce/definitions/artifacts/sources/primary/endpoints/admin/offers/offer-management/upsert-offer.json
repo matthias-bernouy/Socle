@@ -2,13 +2,7 @@
     "endpointId": "upsertOffer",
     "method": "POST",
     "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-commerce/admin/offer",
-    "params": [
-        {
-            "name": "id",
-            "in": "query",
-            "type": "string"
-        }
-    ],
+    "params": [],
     "headers": [
         {
             "name": "authorization",
@@ -24,6 +18,13 @@
                 "from": "computed",
                 "ref": "userID"
             }
+        },
+        {
+            "name": "x-cms-user-role",
+            "source": {
+                "from": "computed",
+                "ref": "userRole"
+            }
         }
     ],
     "body": {
@@ -33,13 +34,16 @@
                 "type": "number"
             },
             "sellerId": {
-                "type": "string"
+                "type": "number",
+                "nullable": true
             },
             "productId": {
-                "type": "string"
+                "type": "number",
+                "nullable": true
             },
             "variantId": {
-                "type": "string"
+                "type": "number",
+                "nullable": true
             },
             "slug": {
                 "type": "string"
@@ -60,7 +64,8 @@
                 "type": "string"
             },
             "acceptedPriceAmount": {
-                "type": "number"
+                "type": "number",
+                "nullable": true
             },
             "currency": {
                 "type": "string"
@@ -69,10 +74,26 @@
                 "type": "string"
             },
             "quantityAvailable": {
-                "type": "number"
+                "type": "number",
+                "nullable": true
             },
             "metadata": {
                 "type": "object"
+            },
+            "id": {
+                "type": "number"
+            },
+            "uploadSessionId": {
+                "type": "string"
+            },
+            "creationToken": {
+                "type": "string"
+            },
+            "mediaIds": {
+                "type": "array",
+                "items": {
+                    "type": "number"
+                }
             }
         }
     },

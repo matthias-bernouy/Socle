@@ -9,7 +9,8 @@
                 "label": "Policy name",
                 "path": "activePolicy.name",
                 "type": "text",
-                "required": true
+                "required": true,
+                "name": "name"
             },
             {
                 "id": "policyKey",
@@ -57,7 +58,8 @@
                         "value": "seller",
                         "label": "Seller"
                     }
-                ]
+                ],
+                "name": "shippingBeneficiary"
             }
         ]
     },
@@ -83,7 +85,8 @@
                         "value": "merchandise_and_shipping",
                         "label": "Merchandise and shipping"
                     }
-                ]
+                ],
+                "name": "sellerFeeBasis"
             },
             {
                 "id": "sellerFeeRateBps",
@@ -93,7 +96,9 @@
                 "required": true,
                 "min": 0,
                 "max": 10000,
-                "step": 1
+                "step": 1,
+                "name": "sellerFeeRateBps",
+                "valueType": "number"
             },
             {
                 "id": "sellerFeeFixedAmount",
@@ -102,7 +107,9 @@
                 "type": "number",
                 "required": true,
                 "min": 0,
-                "step": 1
+                "step": 1,
+                "name": "sellerFeeFixedAmount",
+                "valueType": "number"
             },
             {
                 "id": "sellerFeeMinimumAmount",
@@ -110,7 +117,10 @@
                 "path": "activePolicy.sellerCommission.minimumAmount",
                 "type": "number",
                 "min": 0,
-                "step": 1
+                "step": 1,
+                "name": "sellerFeeMinimumAmount",
+                "valueType": "number",
+                "empty": "omit"
             },
             {
                 "id": "sellerFeeMaximumAmount",
@@ -118,7 +128,10 @@
                 "path": "activePolicy.sellerCommission.maximumAmount",
                 "type": "number",
                 "min": 0,
-                "step": 1
+                "step": 1,
+                "name": "sellerFeeMaximumAmount",
+                "valueType": "number",
+                "empty": "omit"
             },
             {
                 "id": "sellerFeeRefundPolicy",
@@ -131,7 +144,8 @@
                         "value": "never",
                         "label": "Never"
                     }
-                ]
+                ],
+                "name": "sellerFeeRefundPolicy"
             }
         ]
     }

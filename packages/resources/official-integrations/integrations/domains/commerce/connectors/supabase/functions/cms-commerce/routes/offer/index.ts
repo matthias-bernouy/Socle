@@ -1,3 +1,5 @@
+import { newOffer, newSellerOffer } from "./defaults.ts";
+import { sessionId, uploadOwner } from "../catalog/media/staging/session.ts";
 import { cmsUserId, optionalCmsUserId } from "../../core/auth.ts";
 import { HttpError } from "../../core/errors.ts";
 import { json } from "../../core/http.ts";
@@ -10,26 +12,13 @@ export { listOffers } from "./read-model/list.ts";
 
 export async function getOffer(request: Request, scope: "public" | "admin" | "self"): Promise<Response> {
     const url = new URL(request.url);
-    if (url.searchParams.get("id") === "__new__" && scope !== "public") {
-        return json({
-            id: null,
-            productId: null,
-            variantId: null,
-            slug: "",
-            title: "",
-            description: "",
-            conditionCode: "good",
-            publicationStatus: "draft",
-            workflowState: "draft",
-            acceptedPriceAmount: null,
-            currency: "eur",
-            availability: "available",
-            quantityAvailable: null,
-            metadata: {},
-            media: [],
-            mainImageMediaId: null,
-            version: 1,
-        });
+    if (scope === "self" && url.searchParams.get("id") === "__new__") {
+        return json(newSellerOffer());
+    }
+    if (scope === "admin" && !url.searchParams.get("id") && !url.searchParams.get("slug")) {
+        const response = json(await newOffer());
+        response.headers.set("cache-control", "private, no-store");
+        return response;
     }
     const id = optionalId(url.searchParams.get("id"));
     const slug = text(url.searchParams.get("slug"));
@@ -93,7 +82,37 @@ export async function submitMyOfferPrice(request: Request): Promise<Response> {
 export async function upsertOffer(request: Request): Promise<Response> {
     const url = new URL(request.url);
     const body = await readJsonObject(request);
-    const offerId = optionalId(url.searchParams.get("id"));
+    delete body.internalCmsUserId;
+    if (body.uploadSessionId || body.creationToken) {
+        body.internalCmsUserId = uploadOwner(request);
+        if (body.uploadSessionId) {
+            body.uploadSessionId = sessionId(body.uploadSessionId);
+        }
+        if (body.creationToken) {
+            body.creationToken = sessionId(body.creationToken);
+        }
+    }
+    const bodyId = body.id === undefined || body.id === null || body.id === "" ? null : integer(body.id, "id", true)!;
+    const queryId = optionalId(url.searchParams.get("id"));
+    if (bodyId !== null && queryId !== null && bodyId !== queryId) {
+        throw new HttpError(400, "body.id and query id must identify the same offer");
+    }
+    const offerId = bodyId ?? queryId;
+    if (offerId === null) {
+        const title = requiredText(body.title, "title");
+        if (!text(body.slug)) {
+            const base =
+                title
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, "-")
+                    .replace(/^-+|-+$/g, "")
+                    .slice(0, 110)
+                    .replace(/-+$/g, "") || "offer";
+            body.slug = `${base}-${body.creationToken ?? crypto.randomUUID()}`;
+        }
+    }
     const result = await rpc("upsert_offer", {
         p_offer_id: offerId,
         p_payload: body,
@@ -104,10 +123,9 @@ export async function upsertOffer(request: Request): Promise<Response> {
 }
 
 export async function reviewOffer(request: Request): Promise<Response> {
-    const url = new URL(request.url);
     const body = await readJsonObject(request);
     const result = await rpc("review_offer", {
-        p_offer_id: integer(url.searchParams.get("id"), "id", true),
+        p_offer_id: integer(body.id, "id", true),
         p_action: requiredText(body.action, "action"),
         p_admin_id: optionalCmsUserId(request),
         p_expected_version: integer(body.expectedVersion, "expectedVersion", true),

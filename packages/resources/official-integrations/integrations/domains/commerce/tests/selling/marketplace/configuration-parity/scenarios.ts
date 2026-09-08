@@ -130,7 +130,7 @@ export const coreParityScenarios: readonly ParityScenario[] = [
             action: "eq.complete_review",
             actor_kind: "eq.admin",
         },
-        omittedKeys: ["id", "updatedAt", "created_at"],
+        omittedKeys: ["updatedAt", "created_at"],
         missingError: "workflow transition not found",
         changes: [
             {

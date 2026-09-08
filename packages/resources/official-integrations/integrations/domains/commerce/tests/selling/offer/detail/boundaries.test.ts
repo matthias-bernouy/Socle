@@ -12,13 +12,13 @@ import { managedOfferResponse, managedOfferState } from "./fixtures";
 installCommerceTestEnvironment();
 
 describe("commerce offer detail boundaries", () => {
-    test("returns the same local new-offer template without user identity or database work", async () => {
+    test("preserves the seller new-offer template while admin creation uses an absent id", async () => {
         const seller = await requestCommerce("/me/offer?id=__new__");
         const admin = await requestCommerce("/admin/offer?id=__new__", { userRole: null });
 
-        expect({ seller: seller.status, admin: admin.status }).toEqual({ seller: 200, admin: 200 });
+        expect({ seller: seller.status, admin: admin.status }).toEqual({ seller: 200, admin: 400 });
         expect(await seller.json()).toEqual(newOfferTemplate);
-        expect(await admin.json()).toEqual(newOfferTemplate);
+        expect(await admin.json()).toEqual({ error: "id or slug is required" });
         expect(capturedFetches()).toEqual([]);
     });
 

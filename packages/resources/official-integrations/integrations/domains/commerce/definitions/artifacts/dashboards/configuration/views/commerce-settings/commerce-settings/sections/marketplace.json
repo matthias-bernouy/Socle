@@ -21,14 +21,16 @@
                     "value": "hybrid",
                     "label": "Hybrid"
                 }
-            ]
+            ],
+            "name": "mode"
         },
         {
             "id": "defaultCurrency",
             "label": "Default currency",
             "path": "defaultCurrency",
             "type": "text",
-            "required": true
+            "required": true,
+            "name": "defaultCurrency"
         },
         {
             "id": "requireVerifiedSeller",
@@ -44,7 +46,9 @@
                     "value": "false",
                     "label": "No"
                 }
-            ]
+            ],
+            "name": "requireVerifiedSeller",
+            "valueType": "boolean"
         },
         {
             "id": "offerModeration",
@@ -60,7 +64,8 @@
                     "value": "always",
                     "label": "Always"
                 }
-            ]
+            ],
+            "name": "offerModeration"
         },
         {
             "id": "sellerCanPublish",
@@ -76,7 +81,9 @@
                     "value": "false",
                     "label": "No"
                 }
-            ]
+            ],
+            "name": "sellerCanPublish",
+            "valueType": "boolean"
         }
     ]
 }

@@ -33,19 +33,14 @@
                 "format": "badge"
             }
         ],
-        "actions": [
-            {
-                "id": "createCondition",
-                "label": "Create condition",
-                "tone": "primary",
-                "placement": "primary",
-                "selection": {
-                    "opens": "conditionDetail"
-                }
-            }
-        ],
+        "actions": [],
         "selection": {
             "opens": "conditionDetail"
+        },
+        "create": {
+            "viewId": "conditionDetail",
+            "presentation": "page",
+            "label": "Create condition"
         }
     },
     {
@@ -61,27 +56,7 @@
             "path": "label",
             "fallback": "New offer condition"
         },
-        "actions": [
-            {
-                "id": "saveCondition",
-                "label": "Save condition",
-                "tone": "primary",
-                "placement": "primary",
-                "endpoint": {
-                    "endpoint": "upsertOfferCondition",
-                    "body": {
-                        "code": "$field.code",
-                        "label": "$field.label",
-                        "description": "$field.description",
-                        "position": "$field.position",
-                        "enabled": "$field.enabled"
-                    }
-                },
-                "after": {
-                    "resource": "$result"
-                }
-            }
-        ],
+        "actions": [],
         "main": [
             {
                 "id": "conditionFields",
@@ -92,27 +67,33 @@
                         "label": "Code",
                         "path": "code",
                         "type": "text",
-                        "required": true
+                        "required": true,
+                        "name": "code"
                     },
                     {
                         "id": "label",
                         "label": "Label",
                         "path": "label",
                         "type": "text",
-                        "required": true
+                        "required": true,
+                        "name": "label"
                     },
                     {
                         "id": "description",
                         "label": "Description",
                         "path": "description",
                         "type": "textarea",
-                        "rows": 3
+                        "rows": 3,
+                        "name": "description"
                     },
                     {
                         "id": "position",
                         "label": "Position",
                         "path": "position",
-                        "type": "text"
+                        "type": "number",
+                        "name": "position",
+                        "valueType": "number",
+                        "empty": "omit"
                     },
                     {
                         "id": "enabled",
@@ -128,10 +109,20 @@
                                 "value": "false",
                                 "label": "No"
                             }
-                        ]
+                        ],
+                        "name": "enabled",
+                        "valueType": "boolean"
                     }
                 ]
             }
-        ]
+        ],
+        "save": {
+            "endpoint": "upsertOfferCondition",
+            "label": "Save condition",
+            "idPath": "code"
+        },
+        "create": {
+            "label": "Create condition"
+        }
     }
 ]

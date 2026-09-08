@@ -12,7 +12,7 @@ export function registerPolicyDashboardTest(): void {
         const detail = settingsTabs.tabs
             .flatMap((tab: any) => tab.children)
             .find((view: any) => view.id === "protectedC2cPolicySettings");
-        const action = detail.actions.find((candidate: any) => candidate.id === "publishProtectedC2cPolicyRevision");
+        const action = detail.save;
         const endpoint = source.endpoints.find((candidate: any) => candidate.endpointId === "createC2cPolicyRevision");
         const fields = detail.main.flatMap((section: any) => section.fields);
         const fieldById = Object.fromEntries(fields.map((field: any) => [field.id, field]));
@@ -22,12 +22,15 @@ export function registerPolicyDashboardTest(): void {
         expect(action).toMatchObject({
             label: "Publish new protected C2C policy revision",
             confirm: expect.stringContaining("new protected C2C financial policy revision"),
-            endpoint: {
-                endpoint: "createC2cPolicyRevision",
-                body: { expectedSettingsVersion: "$resource.settings.version" },
-            },
+            endpoint: "createC2cPolicyRevision",
+            hiddenFields: [{ name: "expectedSettingsVersion", value: "$resource.settings.version", type: "number" }],
         });
-        expect(Object.keys(action.endpoint.body).sort()).toEqual(
+        expect(
+            [
+                ...fields.filter((field: any) => field.type !== "readonly").map((field: any) => field.name),
+                ...action.hiddenFields.map((field: any) => field.name),
+            ].sort(),
+        ).toEqual(
             endpoint.body.required
                 .concat([
                     "buyerFeeMinimumAmount",
@@ -39,7 +42,7 @@ export function registerPolicyDashboardTest(): void {
                 ])
                 .sort(),
         );
-        expect(JSON.stringify(action.endpoint.body)).not.toMatch(/PolicyId|activeC2c/i);
+        expect(JSON.stringify(action.hiddenFields)).not.toMatch(/PolicyId|activeC2c/i);
         expect(fieldById.costEstimatesConfigured).toMatchObject({ type: "checkbox" });
         expect(fieldById.subsidyOverride).toMatchObject({ type: "checkbox" });
         for (const id of [

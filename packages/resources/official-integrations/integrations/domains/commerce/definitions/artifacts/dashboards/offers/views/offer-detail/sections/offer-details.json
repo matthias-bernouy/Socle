@@ -6,8 +6,7 @@
             "id": "slug",
             "label": "Slug",
             "path": "slug",
-            "type": "text",
-            "required": true
+            "type": "text"
         },
         {
             "id": "title",
@@ -40,7 +39,9 @@
                 "labelPath": "displayName",
                 "subtitlePath": "verificationStatus",
                 "selected": "$resource.seller"
-            }
+            },
+            "valueType": "number",
+            "empty": "null"
         },
         {
             "id": "productId",
@@ -59,7 +60,9 @@
                 "labelPath": "title",
                 "subtitlePath": "slug",
                 "selected": "$resource.product"
-            }
+            },
+            "valueType": "number",
+            "empty": "null"
         },
         {
             "id": "variantId",
@@ -78,7 +81,9 @@
                 "labelPath": "title",
                 "subtitlePath": "sku",
                 "selected": "$resource.variant"
-            }
+            },
+            "valueType": "number",
+            "empty": "null"
         },
         {
             "id": "conditionCode",

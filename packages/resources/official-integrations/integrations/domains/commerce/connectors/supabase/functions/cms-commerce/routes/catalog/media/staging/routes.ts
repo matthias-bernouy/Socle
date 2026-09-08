@@ -6,16 +6,17 @@ import { productMediaBucket } from "../constants.ts";
 import { readCommerceImage } from "../request.ts";
 import { uploadStorageImage } from "../storage.ts";
 import { sessionId, signedPreview, uploadOwner } from "./session.ts";
-import { cleanupProductImages } from "./cleanup.ts";
+import { cleanupImages } from "./cleanup.ts";
 
-export async function stageProductImage(request: Request): Promise<Response> {
+export async function stageImage(request: Request, resourceKind: "product" | "offer"): Promise<Response> {
     const owner = uploadOwner(request);
     const previousSession = sessionId(new URL(request.url).searchParams.get("sessionId"));
     const uploadSession = previousSession ?? crypto.randomUUID();
-    await cleanupProductImages(previousSession, owner);
+    await cleanupImages(resourceKind, previousSession, owner);
     const image = await readCommerceImage(request);
     const storagePath = `upload-sessions/${uploadSession}/${crypto.randomUUID()}${image.extension}`;
-    const result = await rpc("stage_product_media", {
+    const result = await rpc("stage_media", {
+        p_resource_kind: resourceKind,
         p_session_id: uploadSession,
         p_owner_id: owner,
         p_create_session: !previousSession,
@@ -30,20 +31,21 @@ export async function stageProductImage(request: Request): Promise<Response> {
         },
     });
     if (!isRecord(result) || typeof result.media_id !== "number") {
-        throw new HttpError(502, "stage_product_media returned an invalid response");
+        throw new HttpError(502, "stage_media returned an invalid response");
     }
     let previewUrl: string;
     try {
         await uploadStorageImage(productMediaBucket, storagePath, image.file);
         previewUrl = await signedPreview(request, productMediaBucket, storagePath);
-        await rpc("complete_product_media_upload", {
+        await rpc("complete_media_upload", {
+            p_resource_kind: resourceKind,
             p_session_id: uploadSession,
             p_owner_id: owner,
             p_media_id: result.media_id,
         });
     } catch (error) {
         try {
-            await cleanupProductImages(uploadSession, owner, [result.media_id]);
+            await cleanupImages(resourceKind, uploadSession, owner, [result.media_id]);
         } catch {
             // The persisted cleanup claim remains retryable; never delete an unclaimed original.
         }
@@ -61,7 +63,7 @@ export async function stageProductImage(request: Request): Promise<Response> {
     });
 }
 
-export async function discardStagedProductImages(request: Request): Promise<Response> {
+export async function discardStagedImages(request: Request, resourceKind: "product" | "offer"): Promise<Response> {
     const body = await readJsonObject(request);
     const owner = uploadOwner(request);
     const uploadSession = sessionId(body.sessionId);
@@ -72,6 +74,6 @@ export async function discardStagedProductImages(request: Request): Promise<Resp
         throw new HttpError(422, "mediaIds must be an array of at most 100 ids");
     }
     const mediaIds = body.mediaIds.map((value) => integer(value, "mediaIds", true)!);
-    await cleanupProductImages(uploadSession, owner, mediaIds);
+    await cleanupImages(resourceKind, uploadSession, owner, mediaIds);
     return json({ ok: true });
 }

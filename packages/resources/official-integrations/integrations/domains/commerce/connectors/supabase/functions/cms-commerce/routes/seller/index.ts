@@ -138,10 +138,9 @@ export async function getSeller(request: Request): Promise<Response> {
 }
 
 export async function reviewSeller(request: Request): Promise<Response> {
-    const url = new URL(request.url);
     const body = await readJsonObject(request);
     const result = await rpc("review_seller", {
-        p_seller_id: integer(url.searchParams.get("id"), "id", true),
+        p_seller_id: integer(body.id, "id", true),
         p_status: requiredText(body.status, "status"),
         p_admin_id: optionalCmsUserId(request),
         p_reason: text(body.reason) ?? null,

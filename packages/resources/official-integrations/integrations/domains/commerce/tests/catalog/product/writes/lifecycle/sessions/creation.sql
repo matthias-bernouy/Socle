@@ -11,11 +11,11 @@ declare
     v_count bigint;
 begin
     select count(*) into v_count from commerce.products;
-    v_media := (commerce.stage_product_media(v_session, 'admin-a', true, jsonb_build_object(
+    v_media := (commerce.stage_media('product', v_session, 'admin-a', true, jsonb_build_object(
         'storageBucket', 'commerce-media', 'storagePath', 'upload-sessions/' || v_session || '/new.png',
         'mimeType', 'image/png', 'fileSize', 100, 'originalFilename', 'new.png', 'width', 1, 'height', 1
     ))->>'media_id')::bigint;
-    perform commerce.complete_product_media_upload(v_session, 'admin-a', v_media);
+    perform commerce.complete_media_upload('product', v_session, 'admin-a', v_media);
     if (select count(*) from commerce.products) <> v_count then raise exception 'test: upload created a product'; end if;
     if commerce.get_product_media_download_context(v_media)->>'state' <> 'not_found'
         or commerce.get_product_media_download_context(v_media, v_session, 'admin-b')->>'state' <> 'not_found'
@@ -23,7 +23,7 @@ begin
         raise exception 'test: preview ownership was not enforced';
     end if;
     begin
-        perform commerce.claim_product_media_cleanup(v_session, 'admin-b', jsonb_build_array(v_media));
+        perform commerce.claim_media_cleanup('product', v_session, 'admin-b', jsonb_build_array(v_media));
         raise exception 'test: another administrator could discard this session';
     exception when others then
         if sqlerrm <> 'not_found: upload session' then raise; end if;
@@ -53,7 +53,7 @@ begin
         if sqlerrm not like 'conflict: creation token%' then raise; end if;
     end;
     -- The open form can upload again after Save, into the same owned session.
-    perform commerce.stage_product_media(v_session, 'admin-a', false, jsonb_build_object(
+    perform commerce.stage_media('product', v_session, 'admin-a', false, jsonb_build_object(
         'storageBucket', 'commerce-media', 'storagePath', 'upload-sessions/' || v_session || '/later.png',
         'mimeType', 'image/png', 'fileSize', 100, 'originalFilename', 'later.png', 'width', 1, 'height', 1
     ));

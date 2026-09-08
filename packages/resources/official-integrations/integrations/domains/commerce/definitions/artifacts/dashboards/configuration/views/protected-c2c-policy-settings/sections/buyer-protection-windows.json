@@ -11,7 +11,9 @@
                 "required": true,
                 "min": 1,
                 "max": 1440,
-                "step": 1
+                "step": 1,
+                "name": "paymentWindowMinutes",
+                "valueType": "number"
             },
             {
                 "id": "sellerHandoffHours",
@@ -21,7 +23,9 @@
                 "required": true,
                 "min": 1,
                 "max": 720,
-                "step": 1
+                "step": 1,
+                "name": "sellerHandoffHours",
+                "valueType": "number"
             },
             {
                 "id": "scanGraceHours",
@@ -31,7 +35,9 @@
                 "required": true,
                 "min": 1,
                 "max": 720,
-                "step": 1
+                "step": 1,
+                "name": "scanGraceHours",
+                "valueType": "number"
             },
             {
                 "id": "claimWindowHours",
@@ -41,7 +47,9 @@
                 "required": true,
                 "min": 1,
                 "max": 720,
-                "step": 1
+                "step": 1,
+                "name": "claimWindowHours",
+                "valueType": "number"
             },
             {
                 "id": "sellerResponseHours",
@@ -51,7 +59,9 @@
                 "required": true,
                 "min": 1,
                 "max": 720,
-                "step": 1
+                "step": 1,
+                "name": "sellerResponseHours",
+                "valueType": "number"
             },
             {
                 "id": "returnShipHours",
@@ -61,7 +71,9 @@
                 "required": true,
                 "min": 1,
                 "max": 2160,
-                "step": 1
+                "step": 1,
+                "name": "returnShipHours",
+                "valueType": "number"
             },
             {
                 "id": "financeReviewThresholdAmount",
@@ -70,7 +82,9 @@
                 "type": "number",
                 "required": true,
                 "min": 0,
-                "step": 1
+                "step": 1,
+                "name": "financeReviewThresholdAmount",
+                "valueType": "number"
             },
             {
                 "id": "dualApprovalThresholdAmount",
@@ -79,7 +93,9 @@
                 "type": "number",
                 "required": true,
                 "min": 0,
-                "step": 1
+                "step": 1,
+                "name": "dualApprovalThresholdAmount",
+                "valueType": "number"
             }
         ]
     }

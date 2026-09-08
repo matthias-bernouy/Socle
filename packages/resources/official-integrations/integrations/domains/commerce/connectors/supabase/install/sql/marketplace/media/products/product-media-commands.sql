@@ -84,9 +84,9 @@ as $$
               select 1 from commerce.product_media link
               where link.media_id = media.id
           ) or exists (
-              select 1 from commerce.product_media_uploads pending
-              join commerce.product_upload_sessions session on session.id = pending.session_id
-              where session.id = p_session_id and session.owner_id = p_owner_id and session.expires_at > now()
+              select 1 from commerce.media_uploads pending
+              join commerce.media_upload_sessions session on session.id = pending.session_id
+              where session.resource_kind = 'product' and session.id = p_session_id and session.owner_id = p_owner_id and session.expires_at > now()
                   and pending.media_id = media.id and pending.state = 'ready' and pending.expires_at > now()
           ))
     ), jsonb_build_object('state', 'not_found'));

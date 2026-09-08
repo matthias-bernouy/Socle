@@ -7,7 +7,9 @@
                 "id": "costEstimatesConfigured",
                 "label": "Cost estimates configured",
                 "path": "activePolicy.fee.costEstimatesConfigured",
-                "type": "checkbox"
+                "type": "checkbox",
+                "name": "costEstimatesConfigured",
+                "valueType": "boolean"
             },
             {
                 "id": "estimatedStripeCostAmount",
@@ -16,7 +18,9 @@
                 "type": "number",
                 "required": true,
                 "min": 0,
-                "step": 1
+                "step": 1,
+                "name": "estimatedStripeCostAmount",
+                "valueType": "number"
             },
             {
                 "id": "estimatedCarrierCostAmount",
@@ -25,7 +29,9 @@
                 "type": "number",
                 "required": true,
                 "min": 0,
-                "step": 1
+                "step": 1,
+                "name": "estimatedCarrierCostAmount",
+                "valueType": "number"
             },
             {
                 "id": "platformRiskReserveContributionAmount",
@@ -34,7 +40,9 @@
                 "type": "number",
                 "required": true,
                 "min": 0,
-                "step": 1
+                "step": 1,
+                "name": "platformRiskReserveContributionAmount",
+                "valueType": "number"
             },
             {
                 "id": "configuredMinimumMarginAmount",
@@ -43,13 +51,17 @@
                 "type": "number",
                 "required": true,
                 "min": 0,
-                "step": 1
+                "step": 1,
+                "name": "configuredMinimumMarginAmount",
+                "valueType": "number"
             },
             {
                 "id": "subsidyOverride",
                 "label": "Audited subsidy override",
                 "path": "activePolicy.fee.subsidyOverride",
-                "type": "checkbox"
+                "type": "checkbox",
+                "name": "subsidyOverride",
+                "valueType": "boolean"
             },
             {
                 "id": "subsidyReason",
@@ -60,7 +72,8 @@
                 "visibleWhen": {
                     "value": "$field.subsidyOverride",
                     "equals": true
-                }
+                },
+                "name": "subsidyReason"
             },
             {
                 "id": "subsidyMaximumDeficitAmount",
@@ -72,7 +85,10 @@
                 "visibleWhen": {
                     "value": "$field.subsidyOverride",
                     "equals": true
-                }
+                },
+                "name": "subsidyMaximumDeficitAmount",
+                "valueType": "number",
+                "empty": "omit"
             }
         ]
     }

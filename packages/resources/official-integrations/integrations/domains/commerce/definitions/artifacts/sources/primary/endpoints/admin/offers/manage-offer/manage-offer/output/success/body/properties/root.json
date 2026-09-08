@@ -4,7 +4,8 @@
         "nullable": true
     },
     "sellerId": {
-        "type": "number"
+        "type": "number",
+        "nullable": true
     },
     "productId": {
         "type": "number",
@@ -60,7 +61,8 @@
         "type": "object"
     },
     "version": {
-        "type": "number"
+        "type": "number",
+        "nullable": true
     },
     "createdAt": {
         "type": "string"
@@ -93,7 +95,8 @@
             "verificationStatus": {
                 "type": "string"
             }
-        }
+        },
+        "nullable": true
     },
     "product": {
         "type": "object",
@@ -113,7 +116,8 @@
             "visibility": {
                 "type": "string"
             }
-        }
+        },
+        "nullable": true
     },
     "variant": {
         "type": "object",
@@ -139,5 +143,8 @@
     },
     "priceProposals": {
         "$include": "price-proposals.json"
+    },
+    "creationToken": {
+        "type": "string"
     }
 }

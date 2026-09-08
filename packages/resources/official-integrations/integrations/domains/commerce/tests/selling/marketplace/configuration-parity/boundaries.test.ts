@@ -82,12 +82,18 @@ describe("commerce configuration post-action boundaries", () => {
         } as const;
 
         for (const scenario of scenarios) {
-            const action = findById(definition, scenario.actionId);
+            const widgetId = {
+                saveCondition: "conditionDetail",
+                saveWorkflowState: "workflowStateDetail",
+                saveWorkflowTransition: "workflowTransitionDetail",
+                saveCustomField: "customFieldDetail",
+            }[scenario.actionId];
+            const action = findById(definition, widgetId!);
             expect(action).toBeDefined();
-            expect(action?.endpoint).toMatchObject({
+            expect(action?.save).toMatchObject({
                 endpoint: endpoints[scenario.actionId as keyof typeof endpoints],
             });
-            expect(action?.after).toEqual({ resource: "$result" });
+            expect(action?.actions).toEqual([]);
         }
     });
 });

@@ -1,49 +1,68 @@
 [
     {
-        "id": "saveOffer",
-        "label": "Save offer",
-        "tone": "primary",
-        "placement": "primary",
-        "endpoint": {
-            "endpoint": "upsertOffer",
-            "params": {
-                "id": "$resource.id"
-            },
-            "body": {
-                "expectedVersion": "$resource.version",
-                "sellerId": "$field.sellerId",
-                "productId": "$field.productId",
-                "variantId": "$field.variantId",
-                "slug": "$field.slug",
-                "title": "$field.title",
-                "description": "$field.description",
-                "conditionCode": "$field.conditionCode",
-                "publicationStatus": "$field.publicationStatus",
-                "workflowState": "$field.workflowState",
-                "acceptedPriceAmount": "$field.acceptedPriceAmount",
-                "currency": "$field.currency",
-                "availability": "$field.availability",
-                "quantityAvailable": "$field.quantityAvailable"
-            }
-        }
-    },
-    {
         "id": "requestPrice",
         "label": "Request seller price",
         "tone": "primary",
         "placement": "more",
-        "endpoint": {
+        "form": {
             "endpoint": "reviewOffer",
-            "params": {
-                "id": "$resource.id"
-            },
-            "body": {
-                "action": "request_price",
-                "expectedVersion": "$resource.version",
-                "minimumAmount": "$field.minimumAmount",
-                "maximumAmount": "$field.maximumAmount",
-                "reason": "$field.reviewReason"
-            }
+            "hiddenFields": [
+                {
+                    "name": "id",
+                    "value": "$resource.id",
+                    "type": "number"
+                },
+                {
+                    "name": "expectedVersion",
+                    "value": "$resource.version",
+                    "type": "number"
+                },
+                {
+                    "name": "action",
+                    "value": "request_price",
+                    "type": "string"
+                }
+            ],
+            "fields": [
+                {
+                    "id": "minimumAmount",
+                    "name": "minimumAmount",
+                    "path": "priceRule.minimumAmount",
+                    "label": "Minimum price",
+                    "type": "money",
+                    "required": true,
+                    "currencyPath": "currency",
+                    "allowDecimals": {
+                        "value": "$resource.wholeUnitPrices",
+                        "equals": false
+                    }
+                },
+                {
+                    "id": "maximumAmount",
+                    "name": "maximumAmount",
+                    "path": "priceRule.maximumAmount",
+                    "label": "Maximum price",
+                    "type": "money",
+                    "required": true,
+                    "currencyPath": "currency",
+                    "allowDecimals": {
+                        "value": "$resource.wholeUnitPrices",
+                        "equals": false
+                    }
+                },
+                {
+                    "id": "reason",
+                    "name": "reason",
+                    "label": "Review note",
+                    "path": "reviewReason",
+                    "type": "textarea",
+                    "rows": 3
+                }
+            ]
+        },
+        "visibleWhen": {
+            "value": "$resource.id",
+            "notEquals": null
         }
     },
     {
@@ -51,16 +70,39 @@
         "label": "Approve offer",
         "tone": "primary",
         "placement": "more",
-        "endpoint": {
+        "form": {
             "endpoint": "reviewOffer",
-            "params": {
-                "id": "$resource.id"
-            },
-            "body": {
-                "action": "approve",
-                "expectedVersion": "$resource.version",
-                "reason": "$field.reviewReason"
-            }
+            "hiddenFields": [
+                {
+                    "name": "id",
+                    "value": "$resource.id",
+                    "type": "number"
+                },
+                {
+                    "name": "expectedVersion",
+                    "value": "$resource.version",
+                    "type": "number"
+                },
+                {
+                    "name": "action",
+                    "value": "approve",
+                    "type": "string"
+                }
+            ],
+            "fields": [
+                {
+                    "id": "reason",
+                    "name": "reason",
+                    "label": "Review note",
+                    "path": "reviewReason",
+                    "type": "textarea",
+                    "rows": 3
+                }
+            ]
+        },
+        "visibleWhen": {
+            "value": "$resource.id",
+            "notEquals": null
         }
     },
     {
@@ -68,17 +110,40 @@
         "label": "Reject offer",
         "tone": "danger",
         "placement": "more",
-        "confirm": "Reject this offer?",
-        "endpoint": {
+        "form": {
             "endpoint": "reviewOffer",
-            "params": {
-                "id": "$resource.id"
-            },
-            "body": {
-                "action": "reject",
-                "expectedVersion": "$resource.version",
-                "reason": "$field.reviewReason"
-            }
+            "hiddenFields": [
+                {
+                    "name": "id",
+                    "value": "$resource.id",
+                    "type": "number"
+                },
+                {
+                    "name": "expectedVersion",
+                    "value": "$resource.version",
+                    "type": "number"
+                },
+                {
+                    "name": "action",
+                    "value": "reject",
+                    "type": "string"
+                }
+            ],
+            "fields": [
+                {
+                    "id": "reason",
+                    "name": "reason",
+                    "label": "Review note",
+                    "path": "reviewReason",
+                    "type": "textarea",
+                    "rows": 3
+                }
+            ],
+            "confirm": "Reject this offer?"
+        },
+        "visibleWhen": {
+            "value": "$resource.id",
+            "notEquals": null
         }
     }
 ]

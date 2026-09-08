@@ -147,6 +147,7 @@ export async function productFixture(
                     "reorderCategories",
                     "stageProductImage",
                     "archiveProduct",
+                    "reviewOffer",
                 ].map((endpointId) => ({
                     endpointId,
                     method: "POST",

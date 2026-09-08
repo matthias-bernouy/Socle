@@ -101,7 +101,7 @@ export async function getCustomField(request: Request): Promise<Response> {
     if (!row) {
         throw new HttpError(404, "custom field not found");
     }
-    return json(camelize(row));
+    return json({ ...(camelize(row) as JsonRecord), id: `${entityType}:${key}` });
 }
 
 export async function upsertCustomField(request: Request): Promise<Response> {
@@ -157,13 +157,19 @@ export async function upsertCustomField(request: Request): Promise<Response> {
         p_enabled: booleanValue(body.enabled, "enabled") ?? true,
         p_unit: unit,
     });
-    return json(camelize(result));
+    return json({ ...(camelize(result) as JsonRecord), id: `${entityType}:${key}` });
 }
 
 export async function deleteCustomField(request: Request): Promise<Response> {
     const url = new URL(request.url);
-    const entityType = text(url.searchParams.get("entityType"));
-    const key = text(url.searchParams.get("key"));
+    const body = request.body ? await readJsonObject(request) : {};
+    const queryEntity = text(url.searchParams.get("entityType"));
+    const queryKey = text(url.searchParams.get("key"));
+    const entityType = text(body.entityType) ?? queryEntity;
+    const key = text(body.key) ?? queryKey;
+    if ((queryEntity && entityType !== queryEntity) || (queryKey && key !== queryKey)) {
+        throw new HttpError(400, "body and query custom field identities disagree");
+    }
     if (!entityType || !key) {
         throw new HttpError(400, "entityType and key are required");
     }

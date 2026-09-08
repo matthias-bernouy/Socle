@@ -57,13 +57,13 @@ describe("product creation and private upload sessions", () => {
     test("allocates the first session lazily and returns a signed common media descriptor", async () => {
         setRestResponder(async (request) => {
             const path = new URL(request.url).pathname;
-            if (path.endsWith("/claim_product_media_cleanup")) {
+            if (path.endsWith("/claim_media_cleanup")) {
                 return jsonResponse({ items: [] });
             }
-            if (path.endsWith("/stage_product_media")) {
+            if (path.endsWith("/stage_media")) {
                 return jsonResponse({ media_id: 12 });
             }
-            if (path.endsWith("/complete_product_media_upload")) {
+            if (path.endsWith("/complete_media_upload")) {
                 return jsonResponse({ ok: true });
             }
             if (path.includes("/object/sign/")) {

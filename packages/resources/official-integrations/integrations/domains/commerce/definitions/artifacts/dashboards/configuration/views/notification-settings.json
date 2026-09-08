@@ -35,7 +35,8 @@
                             "value": "disabled",
                             "label": "Disabled"
                         }
-                    ]
+                    ],
+                    "name": "mode"
                 },
                 {
                     "id": "updatedAt",
@@ -47,21 +48,9 @@
             ]
         }
     ],
-    "actions": [
-        {
-            "id": "saveNotificationSettings",
-            "label": "Save notification settings",
-            "tone": "primary",
-            "placement": "primary",
-            "endpoint": {
-                "endpoint": "updateNotificationConfiguration",
-                "body": {
-                    "mode": "$field.mode"
-                }
-            },
-            "after": {
-                "resource": "$result"
-            }
-        }
-    ]
+    "actions": [],
+    "save": {
+        "endpoint": "updateNotificationConfiguration",
+        "label": "Save notification settings"
+    }
 }

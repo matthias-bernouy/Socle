@@ -89,9 +89,38 @@
                     "id": "quantityAvailable",
                     "label": "Available quantity",
                     "path": "quantityAvailable",
-                    "type": "text"
+                    "type": "number",
+                    "empty": "null"
                 }
             ]
         }
-    ]
+    ],
+    "save": {
+        "endpoint": "upsertOffer",
+        "label": "Save offer",
+        "hiddenFields": [
+            {
+                "name": "id",
+                "value": "$resource.id",
+                "type": "number",
+                "empty": "omit"
+            },
+            {
+                "name": "expectedVersion",
+                "value": "$resource.version",
+                "type": "number",
+                "empty": "omit"
+            },
+            {
+                "name": "creationToken",
+                "value": "$resource.creationToken",
+                "type": "string",
+                "empty": "omit"
+            }
+        ]
+    },
+    "create": {
+        "label": "Create offer",
+        "title": "New offer"
+    }
 }

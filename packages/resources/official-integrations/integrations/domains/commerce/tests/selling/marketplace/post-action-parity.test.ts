@@ -96,9 +96,9 @@ describe("commerce marketplace post-action parity", () => {
                 new URL(request.url).pathname.endsWith("/rpc/review_seller") ? jsonResponse(row) : jsonResponse([row]),
             );
 
-            const mutation = await requestCommerce("/admin/seller/review?id=184", {
+            const mutation = await requestCommerce("/admin/seller/review", {
                 userId: "admin-user",
-                body: { status: scenario.status, reason: "manual review", expectedVersion: 4 },
+                body: { id: 184, status: scenario.status, reason: "manual review", expectedVersion: 4 },
             });
             const saved = await mutation.json();
             const detail = await requestCommerce("/admin/seller?id=184");

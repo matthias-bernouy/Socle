@@ -7,11 +7,11 @@ declare
     v_media bigint;
 begin
     v_id := (commerce.upsert_product(null, jsonb_build_object('slug', 'media-race-' || gen_random_uuid(), 'title', 'Race'))->>'id')::bigint;
-    v_media := (commerce.stage_product_media(v_session, 'admin-a', not exists(select 1 from commerce.product_upload_sessions where id=v_session), jsonb_build_object(
+    v_media := (commerce.stage_media('product', v_session, 'admin-a', not exists(select 1 from commerce.media_upload_sessions where id=v_session), jsonb_build_object(
         'storageBucket', 'commerce-media', 'storagePath', 'upload-sessions/' || v_session || '/race.png',
         'mimeType', 'image/png', 'fileSize', 100, 'originalFilename', 'race.png', 'width', 1, 'height', 1
     ))->>'media_id')::bigint;
-    perform commerce.complete_product_media_upload(v_session, 'admin-a', v_media);
+    perform commerce.complete_media_upload('product', v_session, 'admin-a', v_media);
     insert into product_media_race_test.target values(v_id, v_media, v_session);
 end;
 $$;
@@ -26,7 +26,7 @@ begin
         v_result := commerce.upsert_product(v_target.product_id,
             jsonb_build_object('mediaIds', jsonb_build_array(v_target.media_id), 'uploadSessionId', v_target.session_id, 'internalCmsUserId', 'admin-a'), 1);
     else
-        v_result := commerce.claim_product_media_cleanup(v_target.session_id, 'admin-a',
+        v_result := commerce.claim_media_cleanup('product', v_target.session_id, 'admin-a',
             jsonb_build_array(v_target.media_id));
     end if;
     return jsonb_build_object('ok', true, 'saved', p_save, 'result', v_result);
@@ -38,7 +38,7 @@ create extension if not exists dblink;
 select dblink_connect('media_save', 'dbname=' || current_database());
 select dblink_connect('media_discard', 'dbname=' || current_database());
 begin;
-select id from commerce.product_upload_sessions where id = (select session_id from product_media_race_test.target) for update;
+select id from commerce.media_upload_sessions where id = (select session_id from product_media_race_test.target) for update;
 select dblink_send_query('media_save', 'select product_media_race_test.run(true)');
 select dblink_send_query('media_discard', 'select product_media_race_test.run(false)');
 commit;
@@ -53,7 +53,7 @@ begin
     end if;
     if exists (
         select 1 from commerce.product_media saved
-        join commerce.product_media_uploads pending on pending.media_id = saved.media_id
+        join commerce.media_uploads pending on pending.media_id = saved.media_id
         where pending.state = 'deleting'
     ) then raise exception 'test: cleanup claimed a saved original'; end if;
 end;

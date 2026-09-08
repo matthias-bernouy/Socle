@@ -17,7 +17,9 @@
                         "value": "false",
                         "label": "No"
                     }
-                ]
+                ],
+                "name": "required",
+                "valueType": "boolean"
             },
             {
                 "id": "selfEditable",
@@ -33,7 +35,9 @@
                         "value": "false",
                         "label": "No"
                     }
-                ]
+                ],
+                "name": "selfEditable",
+                "valueType": "boolean"
             },
             {
                 "id": "adminEditable",
@@ -49,7 +53,9 @@
                         "value": "false",
                         "label": "No"
                     }
-                ]
+                ],
+                "name": "adminEditable",
+                "valueType": "boolean"
             },
             {
                 "id": "publicReadable",
@@ -65,7 +71,9 @@
                         "value": "false",
                         "label": "No"
                     }
-                ]
+                ],
+                "name": "publicReadable",
+                "valueType": "boolean"
             },
             {
                 "id": "showInDashboardTable",
@@ -81,7 +89,9 @@
                         "value": "false",
                         "label": "No"
                     }
-                ]
+                ],
+                "name": "showInDashboardTable",
+                "valueType": "boolean"
             },
             {
                 "id": "enabled",
@@ -97,7 +107,9 @@
                         "value": "false",
                         "label": "No"
                     }
-                ]
+                ],
+                "name": "enabled",
+                "valueType": "boolean"
             }
         ]
     }

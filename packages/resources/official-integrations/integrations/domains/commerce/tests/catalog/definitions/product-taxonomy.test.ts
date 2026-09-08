@@ -112,8 +112,8 @@ describe("commerce taxonomy dashboard definition", () => {
         expect(brands.reorderable).toEqual({ action: "reorderBrands" });
         expect(categories.reorderable).toEqual({ action: "reorderCategories" });
         expect(details.every((detail: any) => detail.aside[0].fields[0].id === "status")).toBeTrue();
-        expect(categories.actions.find((action: any) => action.id === "reorderCategories").endpoint.body).toEqual({
-            ids: "$value",
+        expect(categories.actions.find((action: any) => action.id === "reorderCategories").form).toEqual({
+            endpoint: "reorderCategories",
         });
         expect(
             details.find((detail: any) => detail.id === "categoryDetail").main[0].fields.map((field: any) => field.id),
@@ -165,11 +165,7 @@ describe("commerce taxonomy dashboard definition", () => {
                 empty: "omit",
             });
         }
-        expect(customField.actions.find((action: any) => action.id === "deleteCustomField")).toMatchObject({
-            tone: "danger",
-            placement: "more",
-            icon: "trash",
-        });
+        expect(customField.delete).toMatchObject({ endpoint: "deleteCustomField", confirm: expect.any(String) });
         expect(customField.aside[0].id).toBe("customFieldAccess");
     });
 
