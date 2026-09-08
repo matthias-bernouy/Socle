@@ -8,7 +8,13 @@ export type DashboardExpr = string;
 
 export type DashboardRequestTarget =
     | { endpoint: string; management?: never }
-    | { endpoint?: never; management: { installationId: string; operation: "settings" } };
+    | {
+          endpoint?: never;
+          management: { installationId: string } & (
+              | { operation: "settings"; actionId?: never }
+              | { operation: "action"; actionId: string }
+          );
+      };
 
 export type DashboardEndpointRef = DashboardRequestTarget & {
     sourceId?: string;

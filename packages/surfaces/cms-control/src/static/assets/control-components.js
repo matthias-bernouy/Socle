@@ -20183,6 +20183,10 @@ input {
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Pickers/PageLink/Internals/PageLinkState.ts
   class PageLinkState extends HTMLElement {
+    static formAssociated = true;
+    internals;
+    defaultValue = "";
+    formDisabled = false;
     pages = [];
     mode = "page";
     currentValue = "";
@@ -20194,12 +20198,24 @@ input {
     elements;
     constructor(template2) {
       super();
+      this.internals = this.attachInternals();
       const shadowRoot = this.attachShadow({ mode: "open" });
       shadowRoot.append(template2.content.cloneNode(true));
       this.elements = queryPageLinkElements(shadowRoot);
     }
     static get observedAttributes() {
-      return ["label", "hint", "value", "allow-page", "allow-external", "allow-media", "media-accept", "disabled"];
+      return [
+        "label",
+        "hint",
+        "value",
+        "allow-page",
+        "allow-external",
+        "allow-media",
+        "media-accept",
+        "disabled",
+        "required",
+        "name"
+      ];
     }
     attributeChangedCallback() {
       if (!this.shadowRoot || this.reflectingValue) {
@@ -20214,10 +20230,13 @@ input {
     set value(value) {
       this.currentValue = value;
       this.reflectValue(value);
+      this.syncFormValue();
       this.render();
     }
     syncFromAttributes() {
       this.currentValue = this.getAttribute("value") ?? "";
+      this.defaultValue = this.currentValue;
+      this.syncFormValue();
       this.mode = modeForLinkValue(this.currentValue, this.modeOptions());
     }
     setValue(value) {
@@ -20226,6 +20245,7 @@ input {
       }
       this.currentValue = value;
       this.reflectValue(value);
+      this.syncFormValue();
       this.renderPages();
       this.renderSummary();
       this.renderMediaFile();
@@ -20280,7 +20300,28 @@ input {
       return document.querySelector('meta[name="basePath"]')?.content ?? "";
     }
     get disabled() {
-      return this.hasAttribute("disabled");
+      return this.formDisabled || this.hasAttribute("disabled");
+    }
+    get form() {
+      return this.internals.form;
+    }
+    formResetCallback() {
+      this.value = this.defaultValue;
+    }
+    formStateRestoreCallback(state) {
+      if (typeof state === "string") {
+        this.value = state;
+      }
+    }
+    formDisabledCallback(disabled) {
+      this.formDisabled = disabled;
+      this.syncFormValue();
+      this.render();
+    }
+    syncFormValue() {
+      this.internals.setFormValue(this.disabled ? null : this.currentValue);
+      const missing = !this.disabled && this.hasAttribute("required") && !this.currentValue;
+      this.internals.setValidity(missing ? { valueMissing: true } : {}, missing ? "Select a page." : "", this.elements.searchInput);
     }
     modeOptions() {
       return {
@@ -31713,7 +31754,7 @@ w13c-lateral-menu {
   }
   function sourceUrl(sourceId, ref, vars) {
     if (ref.management) {
-      const url2 = new URL(route2("/api/integrations/management/settings"), window.location.origin);
+      const url2 = new URL(route2(`/api/integrations/management/${ref.management.operation}`), window.location.origin);
       url2.searchParams.set("id", ref.management.installationId);
       return url2;
     }
@@ -34255,7 +34296,11 @@ slot {
     form.setAttribute("id", formId());
     form.setAttribute("cms-source", `${sourceUrl(sourceId, operation, {}).href} as operationResult`);
     form.setAttribute("cms-source-method", operation.management ? "POST" : endpoint.method);
-    for (const field2 of operation.hiddenFields ?? []) {
+    const fields = [...operation.hiddenFields ?? []];
+    if (operation.management?.operation === "action") {
+      fields.push({ name: "actionId", type: "string", value: operation.management.actionId });
+    }
+    for (const field2 of fields) {
       const input = document.createElement("input");
       input.type = "hidden";
       input.name = field2.name;

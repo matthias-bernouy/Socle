@@ -44,6 +44,16 @@ export function installDom(): void {
             <body></body>
         </html>
     `);
+    // Linkedom does not implement form-associated custom elements; browser tests cover native behavior.
+    HTMLElement.prototype.attachInternals = function () {
+        return {
+            setFormValue() {},
+            setValidity() {},
+            get form() {
+                return null;
+            },
+        } as unknown as ElementInternals;
+    };
     Object.assign(globalThis, {
         document,
         customElements,

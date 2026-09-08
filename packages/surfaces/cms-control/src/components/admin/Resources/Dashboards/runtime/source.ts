@@ -64,7 +64,7 @@ async function sendDownloadResponse(
 
 export function sourceUrl(sourceId: string, ref: DashboardEndpointRef, vars: RuntimeVars): URL {
     if (ref.management) {
-        const url = new URL(route("/api/integrations/management/settings"), window.location.origin);
+        const url = new URL(route(`/api/integrations/management/${ref.management.operation}`), window.location.origin);
         url.searchParams.set("id", ref.management.installationId);
         return url;
     }

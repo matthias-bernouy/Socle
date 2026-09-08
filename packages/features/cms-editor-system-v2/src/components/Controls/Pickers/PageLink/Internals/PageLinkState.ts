@@ -5,6 +5,10 @@ import { openPageLinkMediaPicker } from "../pageLinkMediaPicker";
 import type { MediaAccept } from "@bernouy/cms-content/editor";
 
 export abstract class PageLinkState extends HTMLElement {
+    static formAssociated = true;
+    private readonly internals: ElementInternals;
+    private defaultValue = "";
+    private formDisabled = false;
     protected pages: PageRef[] = [];
     protected mode: LinkMode = "page";
     protected currentValue = "";
@@ -17,13 +21,25 @@ export abstract class PageLinkState extends HTMLElement {
 
     constructor(template: HTMLTemplateElement) {
         super();
+        this.internals = this.attachInternals();
         const shadowRoot = this.attachShadow({ mode: "open" });
         shadowRoot.append(template.content.cloneNode(true));
         this.elements = queryPageLinkElements(shadowRoot);
     }
 
     static get observedAttributes(): string[] {
-        return ["label", "hint", "value", "allow-page", "allow-external", "allow-media", "media-accept", "disabled"];
+        return [
+            "label",
+            "hint",
+            "value",
+            "allow-page",
+            "allow-external",
+            "allow-media",
+            "media-accept",
+            "disabled",
+            "required",
+            "name",
+        ];
     }
 
     attributeChangedCallback(): void {
@@ -41,11 +57,14 @@ export abstract class PageLinkState extends HTMLElement {
     set value(value: string) {
         this.currentValue = value;
         this.reflectValue(value);
+        this.syncFormValue();
         this.render();
     }
 
     protected syncFromAttributes(): void {
         this.currentValue = this.getAttribute("value") ?? "";
+        this.defaultValue = this.currentValue;
+        this.syncFormValue();
         this.mode = modeForLinkValue(this.currentValue, this.modeOptions());
     }
 
@@ -55,6 +74,7 @@ export abstract class PageLinkState extends HTMLElement {
         }
         this.currentValue = value;
         this.reflectValue(value);
+        this.syncFormValue();
         this.renderPages();
         this.renderSummary();
         this.renderMediaFile();
@@ -125,7 +145,37 @@ export abstract class PageLinkState extends HTMLElement {
     }
 
     protected get disabled(): boolean {
-        return this.hasAttribute("disabled");
+        return this.formDisabled || this.hasAttribute("disabled");
+    }
+
+    get form(): HTMLFormElement | null {
+        return this.internals.form;
+    }
+
+    formResetCallback(): void {
+        this.value = this.defaultValue;
+    }
+
+    formStateRestoreCallback(state: string | File | FormData): void {
+        if (typeof state === "string") {
+            this.value = state;
+        }
+    }
+
+    formDisabledCallback(disabled: boolean): void {
+        this.formDisabled = disabled;
+        this.syncFormValue();
+        this.render();
+    }
+
+    private syncFormValue(): void {
+        this.internals.setFormValue(this.disabled ? null : this.currentValue);
+        const missing = !this.disabled && this.hasAttribute("required") && !this.currentValue;
+        this.internals.setValidity(
+            missing ? { valueMissing: true } : {},
+            missing ? "Select a page." : "",
+            this.elements.searchInput,
+        );
     }
 
     private modeOptions() {

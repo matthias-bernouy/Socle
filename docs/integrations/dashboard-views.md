@@ -41,7 +41,13 @@ HTTP method. Optional `sourceId` targets another authorized source. GET and Save
 need not share a path or response shape. `valuesPath` prefixes editable names,
 while technical fields retain their own names. `confirm` prompts before Save.
 Native form operations currently have no `management` target; existing
-integration management actions use their separate contract.
+integration management uses explicit request targets. Settings target
+`management: { installationId, operation: "settings" }`. A named action target
+uses `management: { installationId, operation: "action", actionId }` and
+`valuesPath: "input"`; its technical revision uses `name: "input[expectedVersion]"`.
+The composer contributes the declared scalar `actionId` once. The server still
+resolves secret/page references and invokes the integration's declared function.
+Management actions cannot be used as GET data sources.
 
 A field's submission name defaults to its data path. Optional `name` overrides
 it; nested paths become bracket names, such as `metadata[weight]`. Names cannot
@@ -209,3 +215,14 @@ with the draft changes on Save. Published versions retain their own associations
 Questions have an internal stable identity separate from the editable answer
 key. Existing questions retain their original reference on first save; newly
 created questions use a UUID. Renaming does not invalidate a subsequent GET.
+
+
+Consent uses the same detail for creation and publication. Its native save sends
+`{ contextKey?, expectedRevision, values: { contextKey?, enabled, documents? } }`.
+Creation reads defaults with revision `new`, then opens the returned
+`values.contextKey`. Existing context identity is technical and readonly.
+Disabling omits hidden document controls and preserves existing evidence.
+Stripe Connect publication uses a named management action so published-page
+resolution and immutable snapshot verification remain on the server.
+The shared page picker is form-associated: `value`, `name`, required validation,
+reset and disabled fieldsets work with native forms and typed binding submission.

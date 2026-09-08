@@ -13,7 +13,11 @@ const page = {
 };
 const snapshotUrl = "https://delivery.example/.cms/content/published-page-snapshot?id=terms-page";
 const document = { key: "terms", label: "Terms", consentText: "I accept the Terms", enabled: true, page: "/terms" };
-const input = { contextKey: "buyer_checkout", enabled: true, expectedRevision: "741:(0,1)", documents: [document] };
+const input = {
+    contextKey: "buyer_checkout",
+    expectedRevision: "741:(0,1)",
+    values: { enabled: true, documents: [document] },
+};
 const resolvedPages = { "documents.0.page": { ...page, publishedSnapshotUrl: snapshotUrl } };
 beforeEach(() => {
     calls.length = 0;
@@ -68,7 +72,13 @@ describe("Consent settings published page boundary", () => {
     test("publishes the resolved CMS page and optimistic revision, ignoring a browser snapshot URL", async () => {
         const response = await management({
             operation: "save-settings",
-            input: { ...input, documents: [{ ...document, publishedSnapshotUrl: "https://attacker.test" }] },
+            input: {
+                ...input,
+                values: {
+                    ...input.values,
+                    documents: [{ ...document, publishedSnapshotUrl: "https://attacker.test" }],
+                },
+            },
             resolvedPages,
         });
         expect(response.status).toBe(200);
@@ -99,6 +109,21 @@ describe("Consent settings published page boundary", () => {
             expect(calls).toHaveLength(0);
         },
     );
+    test("creates an inactive policy from defaults without fetching a page", async () => {
+        const response = await management({
+            operation: "save-settings",
+            input: { expectedRevision: "new", values: { contextKey: "draft_policy", enabled: false } },
+        });
+        expect(response.status).toBe(200);
+        expect(calls).toHaveLength(1);
+        expect(calls[0]!.url).toEndWith("/rpc/publish_consent_context");
+        expect(await calls[0]!.json()).toMatchObject({ p_context_key: "draft_policy", p_expected_revision: "new" });
+    });
+    test("rejects incomplete settings instead of implicitly disabling a policy", async () => {
+        const response = await management({ operation: "save-settings", input: { ...input, values: {} } });
+        expect(response.status).toBe(400);
+        expect(calls).toHaveLength(0);
+    });
     test("requires administrator identity before network work", async () => {
         expect((await management({ operation: "save-settings", input, resolvedPages }, "")).status).toBe(401);
         expect(calls).toHaveLength(0);
@@ -114,7 +139,10 @@ describe("Consent settings published page boundary", () => {
         expect(await response.json()).toEqual({ error: "CONSENT_CONTEXT_REVISION_CHANGED" });
     });
     test("disables an existing policy without requiring its page to remain published", async () => {
-        const response = await management({ operation: "save-settings", input: { ...input, enabled: false } });
+        const response = await management({
+            operation: "save-settings",
+            input: { ...input, values: { ...input.values, enabled: false } },
+        });
         expect(response.status).toBe(200);
         expect(calls).toHaveLength(1);
         expect(calls[0]!.url).toEndWith("/rpc/disable_consent_context");

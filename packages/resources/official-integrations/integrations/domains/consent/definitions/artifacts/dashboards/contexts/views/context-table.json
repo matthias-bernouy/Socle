@@ -10,21 +10,42 @@
         },
         "rowKey": "id",
         "columns": [
-            { "id": "contextKey", "label": "Context", "path": "contextKey", "primary": true },
-            { "id": "status", "label": "Status", "path": "status", "format": "badge" },
-            { "id": "documentCount", "label": "Active documents", "path": "documentCount" },
-            { "id": "revision", "label": "Revision", "path": "revision" },
-            { "id": "updatedAt", "label": "Updated", "path": "updatedAt", "format": "date" }
-        ],
-        "actions": [
             {
-                "id": "createContext",
-                "label": "Create policy",
-                "tone": "primary",
-                "placement": "primary",
-                "selection": { "opens": "newConsentContext" }
+                "id": "contextKey",
+                "label": "Context",
+                "path": "contextKey",
+                "primary": true
+            },
+            {
+                "id": "status",
+                "label": "Status",
+                "path": "status",
+                "format": "badge"
+            },
+            {
+                "id": "documentCount",
+                "label": "Active documents",
+                "path": "documentCount"
+            },
+            {
+                "id": "revision",
+                "label": "Revision",
+                "path": "revision"
+            },
+            {
+                "id": "updatedAt",
+                "label": "Updated",
+                "path": "updatedAt",
+                "format": "date"
             }
         ],
-        "selection": { "opens": "consentContext" }
+        "selection": {
+            "opens": "consentContext"
+        },
+        "create": {
+            "viewId": "consentContext",
+            "presentation": "page",
+            "label": "Create policy"
+        }
     }
 ]

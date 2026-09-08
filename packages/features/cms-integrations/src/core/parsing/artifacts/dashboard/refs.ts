@@ -27,18 +27,26 @@ export function parseDataRef(value: Record<string, unknown>, name: string): Dash
 
 export function parseEndpointRef(value: Record<string, unknown>, name: string): DashboardEndpointRef {
     if (value.management !== undefined) {
-        if (!isRecord(value.management) || value.management.operation !== "settings") {
-            throw new IntegrationInputError(`${name}.management`, "must declare a settings operation");
+        if (!isRecord(value.management) || !["settings", "action"].includes(String(value.management.operation))) {
+            throw new IntegrationInputError(`${name}.management`, "must declare settings or a named action");
         }
         for (const key of ["endpoint", "sourceId", "params", "body"]) {
             if (Object.hasOwn(value, key)) {
                 throw new IntegrationInputError(`${name}.${key}`, "cannot be combined with management");
             }
         }
+        if (value.management.operation === "settings" && value.management.actionId !== undefined) {
+            throw new IntegrationInputError(`${name}.management.actionId`, "requires action");
+        }
         return {
             management: {
                 installationId: requiredText(value.management.installationId, `${name}.management.installationId`),
-                operation: "settings",
+                ...(value.management.operation === "action"
+                    ? {
+                          operation: "action" as const,
+                          actionId: requiredText(value.management.actionId, `${name}.management.actionId`),
+                      }
+                    : { operation: "settings" as const }),
             },
         };
     }

@@ -27,6 +27,9 @@ export function validateDataRef(
         return;
     }
     validateEndpointRef(dashboard, ref, path, source, errors);
+    if (ref.management?.operation === "action") {
+        errors.push(`${path}.management actions cannot be used as a data source`);
+    }
     validatePath("itemsPath", ref.itemsPath, path, errors);
     validatePath("itemPath", ref.itemPath, path, errors);
     validatePath("totalPath", ref.totalPath, path, errors);
@@ -69,8 +72,10 @@ export function validateEndpointRef(
             return;
         }
         validateRequiredId(`${path}.management.installationId`, ref.management.installationId, errors);
-        if (ref.management.operation !== "settings") {
-            errors.push(`${path}.management.operation must be settings`);
+        if (ref.management.operation === "action") {
+            validateRequiredId(`${path}.management.actionId`, ref.management.actionId, errors);
+        } else if (ref.management.operation !== "settings" || ref.management.actionId !== undefined) {
+            errors.push(`${path}.management must declare settings or a named action`);
         }
         for (const key of ["endpoint", "sourceId", "params", "body"]) {
             if (Object.hasOwn(ref, key)) {

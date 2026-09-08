@@ -178,16 +178,14 @@ describe("Consent integration contract", () => {
         expect(JSON.stringify(afterInstallation)).not.toContain("documents");
         expect(dashboard).toMatchObject({ type: "dashboard-view" });
         expect(detail[0]).toMatchObject({ widget: "w-detail", id: "consentContext" });
-        expect(detail[0].actions[0].management).toEqual({
-            installationId: "consent",
-            action: "save-settings",
-            body: {
-                contextKey: "$resource.contextKey",
-                enabled: "$field.enabled",
-                expectedRevision: "$resource.revision",
-                documents: "$field.documents",
-            },
+        expect(detail[0].save.management).toEqual({ installationId: "consent", operation: "settings" });
+        expect(detail[0].save.valuesPath).toBe("values");
+        expect(detail[0].save.hiddenFields).toContainEqual({
+            name: "expectedRevision",
+            type: "string",
+            value: "$resource.revision",
         });
+        expect(detail[0].create).toEqual({});
         expect(JSON.stringify(detail)).toContain("page-link");
         expect(JSON.stringify(detail)).toContain("reorderable-list");
         expect(bootstrap).toContain("on conflict (context_key) do nothing");

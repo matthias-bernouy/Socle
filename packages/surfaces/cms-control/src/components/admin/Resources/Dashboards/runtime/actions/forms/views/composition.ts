@@ -27,7 +27,11 @@ export function configureForm(form: HTMLFormElement, operation: DashboardFormOpe
     form.setAttribute("id", formId());
     form.setAttribute("cms-source", `${sourceUrl(sourceId, operation, {}).href} as operationResult`);
     form.setAttribute("cms-source-method", operation.management ? "POST" : endpoint!.method);
-    for (const field of operation.hiddenFields ?? []) {
+    const fields = [...(operation.hiddenFields ?? [])];
+    if (operation.management?.operation === "action") {
+        fields.push({ name: "actionId", type: "string", value: operation.management.actionId });
+    }
+    for (const field of fields) {
         const input = document.createElement("input");
         input.type = "hidden";
         input.name = field.name;

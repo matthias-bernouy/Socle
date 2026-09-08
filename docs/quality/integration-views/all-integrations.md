@@ -23,23 +23,23 @@ Readonly details and GET downloads/navigation retain their existing contracts.
 Mossa, Ulvia and the two Commerce Mondial Relay extensions have no detail forms
 to migrate. Newsletter's subscription export remains a GET download.
 
-## Deferred work and reasons
+## Remaining compatibility cleanup
 
-| Case | Why a direct migration is unsafe | Required follow-up |
-| --- | --- | --- |
-| Consent details and Stripe Connect seller terms | These call integration management actions, rather than source form endpoints. Publishing also owns immutable legal snapshots | Migrate legal actions to independent native forms while preserving publication semantics; the settings target is now standardized separately |
+All official JSON mutations now use native Save/Delete/independent forms.
+Forms child creation/deletion keeps its list buttons and navigates using returned
+references. Delivery projection recovery submits exactly one checked row and
+retries failed reads without repeating a mutation. Consent creation/publication
+and Stripe Connect seller terms use native management forms; page resolution,
+revision checks and immutable snapshots remain server responsibilities.
 
-No official dashboard action still submits a structured body through `sendSourceJson`.
-Forms child creation/deletion and Mondial Relay projection recovery now use native
-independent forms. Forms keeps its list buttons and navigates using the returned
-reference. Delivery submits exactly one checked row and retries a failed read
-without repeating the completed mutation. Consent and Stripe Connect legal actions
-still use management transport; binary downloads remain independent. Generic
-legacy definitions and examples still accept endpoint bodies.
+Only two legacy endpoint actions remain, both binary downloads: Newsletter
+subscription export and Commerce Stripe claim evidence. Their Blob/header
+transport remains necessary. The unused general JSON action fallback and its
+old resource-replacement mappings can now be removed after migrating fixtures.
 
-The old action runtime cannot yet be deleted. An empty legacy-source-action list
-alone does not prove a migration is complete: integration management actions
-must also be inventoried.
+Publication verification covers creation of an inactive Consent policy, disabling,
+resolved documents, conflicts, native page-picker form values and repeated save.
+The browser checks retain field nodes and positions across a delayed publication.
 
 ## Validation baseline
 

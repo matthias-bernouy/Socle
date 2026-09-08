@@ -15,28 +15,6 @@
         "status": {
             "path": "status"
         },
-        "actions": [
-            {
-                "id": "publishContext",
-                "label": "Publish configuration",
-                "tone": "primary",
-                "placement": "primary",
-                "confirm": "Publish a new immutable policy revision? Disabling preserves all existing evidence.",
-                "after": {
-                    "resource": "$result"
-                },
-                "management": {
-                    "installationId": "consent",
-                    "action": "save-settings",
-                    "body": {
-                        "contextKey": "$resource.contextKey",
-                        "enabled": "$field.enabled",
-                        "expectedRevision": "$resource.revision",
-                        "documents": "$field.documents"
-                    }
-                }
-            }
-        ],
         "main": [
             {
                 "id": "policy",
@@ -44,10 +22,26 @@
                 "description": "Publishing verifies each current page snapshot before atomically activating its immutable version.",
                 "fields": [
                     {
+                        "id": "newContextKey",
+                        "label": "Stable context key",
+                        "path": "contextKey",
+                        "name": "contextKey",
+                        "type": "text",
+                        "required": true,
+                        "visibleWhen": {
+                            "value": "$resource.revision",
+                            "equals": "new"
+                        }
+                    },
+                    {
                         "id": "contextKey",
                         "label": "Stable context key",
                         "path": "contextKey",
-                        "type": "readonly"
+                        "type": "readonly",
+                        "visibleWhen": {
+                            "value": "$resource.revision",
+                            "notEquals": "new"
+                        }
                     },
                     {
                         "id": "enabled",
@@ -143,6 +137,30 @@
                     }
                 ]
             }
-        ]
+        ],
+        "create": {},
+        "save": {
+            "management": {
+                "installationId": "consent",
+                "operation": "settings"
+            },
+            "valuesPath": "values",
+            "idPath": "values.contextKey",
+            "label": "Publish configuration",
+            "confirm": "Publish a new immutable policy revision? Disabling preserves all existing evidence.",
+            "hiddenFields": [
+                {
+                    "name": "contextKey",
+                    "type": "string",
+                    "value": "$resource.contextKey",
+                    "empty": "omit"
+                },
+                {
+                    "name": "expectedRevision",
+                    "type": "string",
+                    "value": "$resource.revision"
+                }
+            ]
+        }
     }
 ]

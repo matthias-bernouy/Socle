@@ -12,30 +12,6 @@
         "status": {
             "path": "status"
         },
-        "actions": [
-            {
-                "id": "publishMarketplaceTerms",
-                "label": "Publish seller terms",
-                "tone": "primary",
-                "placement": "primary",
-                "confirm": "Publish this immutable seller terms version? Existing seller acceptances remain attached to their original version.",
-                "after": {
-                    "resource": "$result"
-                },
-                "management": {
-                    "installationId": "stripe-connect",
-                    "action": "action",
-                    "actionId": "publish-seller-terms",
-                    "body": {
-                        "expectedVersion": "$resource.revision",
-                        "documentKey": "$field.documentKey",
-                        "label": "$field.label",
-                        "consentText": "$field.consentText",
-                        "page": "$field.page"
-                    }
-                }
-            }
-        ],
         "main": [
             {
                 "id": "document",
@@ -101,6 +77,23 @@
                     }
                 ]
             }
-        ]
+        ],
+        "save": {
+            "management": {
+                "installationId": "stripe-connect",
+                "operation": "action",
+                "actionId": "publish-seller-terms"
+            },
+            "valuesPath": "input",
+            "label": "Publish seller terms",
+            "confirm": "Publish this immutable seller terms version? Existing seller acceptances remain attached to their original version.",
+            "hiddenFields": [
+                {
+                    "name": "input[expectedVersion]",
+                    "type": "string",
+                    "value": "$resource.revision"
+                }
+            ]
+        }
     }
 ]

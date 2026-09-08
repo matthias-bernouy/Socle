@@ -20,22 +20,30 @@ export async function manageConsent(request: Request): Promise<Response> {
     if (body.operation !== "save-settings") {
         throw new HttpError(400, "unsupported Consent management operation");
     }
-    const documents = resolveDocuments(input.documents, body.resolvedPages, input.enabled === true);
+    if (!isRecord(input.values) || typeof input.values.enabled !== "boolean") {
+        throw new HttpError(400, "Consent settings require values with a boolean enabled field");
+    }
+    const values = {
+        ...input.values,
+        contextKey: input.contextKey ?? input.values.contextKey,
+        expectedRevision: input.expectedRevision,
+    };
+    const documents = resolveDocuments(values.documents, body.resolvedPages, values.enabled === true);
     const response = await publishContext(
         new Request(request.url, {
             method: "POST",
             headers: request.headers,
-            body: JSON.stringify({ ...input, documents }),
+            body: JSON.stringify({ ...values, documents }),
         }),
     );
     if (!response.ok) {
         return response;
     }
-    const values: unknown = await response.json();
-    if (!isRecord(values)) {
+    const saved: unknown = await response.json();
+    if (!isRecord(saved)) {
         throw new HttpError(502, "invalid Consent settings response");
     }
-    return settingsResponse(values);
+    return settingsResponse(saved);
 }
 
 function resolveDocuments(documents: unknown, pages: unknown, required: boolean): unknown {

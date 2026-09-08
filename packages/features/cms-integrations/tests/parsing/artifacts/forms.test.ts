@@ -220,3 +220,15 @@ test("preserves explicit navigation identities and rejects invalid paths", () =>
         ).toThrow();
     }
 });
+
+test("parses native named management save targets without a mapped JSON body", () => {
+    const save = {
+        management: { installationId: "provider", operation: "action", actionId: "publish" },
+        valuesPath: "input",
+        hiddenFields: [{ name: "input[expectedVersion]", type: "string", value: "$resource.revision" }],
+    };
+    expect(parseWidget(detail({ save }), "view")).toMatchObject({ save });
+    expect(() =>
+        parseWidget(detail({ save: { ...save, management: { ...save.management, actionId: "" } } }), "view"),
+    ).toThrow();
+});
