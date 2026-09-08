@@ -46,6 +46,8 @@ implementation notes live in each package's `AGENTS.md`.
 - [Integration view refactor](../REFACTOR_INTEGRATIONS_VIEW.md) records the staged
   detail-shell and form refactor, with its [baseline and target contracts](./quality/integration-views/step-1.md)
   and [generic forms/binding validation](./quality/integration-views/step-3.md).
+  [Remaining integration migrations](./quality/integration-views/all-integrations.md)
+  records the migrated views, validation and deferred contracts.
 - [Commerce Notifications](../NOTIFICATIONS.md) documents the native,
   replaceable buyer notification queue, template contract, and delivery modes.
 - [Scheduled Triggers](../SCHEDULED_TRIGGERS_PLAN.md) documents declarative
