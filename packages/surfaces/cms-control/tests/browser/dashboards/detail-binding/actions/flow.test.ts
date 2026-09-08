@@ -25,22 +25,22 @@ test("conditional action groups promote buttons, preserve open-menu focus and co
         const buttons = detail.locator("p9r-button[data-action]");
         await advanced.waitFor();
         expect(await detail.getAttribute("data-declarative")).not.toBeNull();
-        expect(await buttons.allTextContents()).toEqual(["Save choices", "Refresh", "Export"]);
+        expect(await buttons.allTextContents()).toEqual(["Refresh", "Export"]);
         expect(await menu.count()).toBe(0);
         await advanced.check();
-        expect(await buttons.allTextContents()).toEqual(["Save choices", "Review", "Refresh"]);
+        expect(await buttons.allTextContents()).toEqual(["Review", "Refresh", "Export"]);
         await menu.getByRole("button", { name: "More actions" }).click();
         expect(
             await menu
                 .locator("p9r-action-menu-section")
                 .evaluateAll((nodes) => nodes.map((node) => node.getAttribute("label"))),
-        ).toEqual(["Exports", "Maintenance"]);
+        ).toEqual(["Maintenance", "Exports"]);
         expect(
             await menu
                 .locator("p9r-action-menu-item")
                 .evaluateAll((nodes) => nodes.map((node) => node.textContent?.trim())),
-        ).toEqual(["Export", "Preview", "Archive", "Remove"]);
-        expect(await menu.locator('svg[slot="icon"]').count()).toBe(4);
+        ).toEqual(["Archive", "Remove", "Preview"]);
+        expect(await menu.locator('svg[slot="icon"]').count()).toBe(3);
         const remove = menu.getByRole("menuitem", { name: "Remove", exact: true });
         await remove.focus();
         const original = await remove.elementHandle();
@@ -88,17 +88,11 @@ test("conditional action groups promote buttons, preserve open-menu focus and co
         page.once("dialog", (dialog) => dialog.dismiss());
         await remove.click();
         expect(fixture.saved).toHaveLength(1);
-        await menu.getByRole("button", { name: "More actions" }).click();
-        page.once("dialog", (dialog) => dialog.accept());
-        const removed = page.waitForResponse((response) => response.url().endsWith("/save"));
-        await remove.click();
-        await removed;
+        await advanced.uncheck();
+        await page.getByRole("button", { name: "Save choices", exact: true }).click();
         await page.waitForFunction(() => document.querySelector("cms-dashboard-w-detail p9r-action-menu") === null);
-        await page.reload();
-        await advanced.waitFor();
-        expect(await advanced.isChecked()).toBe(false);
-        expect(await menu.count()).toBe(0);
-        expect(fixture.saved).toEqual([{ name: "  Persisted  ", advanced: true }, { advanced: "false" }]);
+        expect(fixture.saved).toHaveLength(2);
+        expect(fixture.saved[1]).toMatchObject({ advanced: false });
         expect(errors).toEqual([]);
     } finally {
         await browser.close();

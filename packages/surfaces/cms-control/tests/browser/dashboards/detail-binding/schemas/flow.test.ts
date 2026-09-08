@@ -37,7 +37,9 @@ test("dynamic schema validates typed fields, preserves opaque metadata and persi
         expect(await schema.locator('[data-schema-key="constructor"]').count()).toBe(0);
         await save.click();
         expect(fixture.saved).toHaveLength(0);
-        expect(await schema.locator('[data-schema-key="condition"]').getAttribute("invalid")).not.toBeNull();
+        expect(
+            await page.locator("[data-detail-save]").evaluate((form) => (form as HTMLFormElement).checkValidity()),
+        ).toBe(false);
         await choose(condition, "Used");
         await weight.fill("");
         await save.click();

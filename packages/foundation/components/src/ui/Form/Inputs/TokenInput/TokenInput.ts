@@ -14,6 +14,7 @@ export class TokenInput extends Component {
     static formAssociated = true;
     static readonly observedAttributes = [
         "value",
+        "name",
         "label",
         "aria-label",
         "placeholder",
@@ -146,7 +147,7 @@ export class TokenInput extends Component {
     }
 
     private syncDisplay(): void {
-        this.view.syncDisplay(this.value, this.selected, this.options, this.removeValue);
+        this.view.syncDisplay(this.value, this.selected, this.options, this.removeValue, this.getAttribute("name"));
         if (this.selected.length > 0) {
             this.showValidationMessage = false;
         }

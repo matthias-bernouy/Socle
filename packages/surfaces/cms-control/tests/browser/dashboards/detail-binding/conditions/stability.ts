@@ -16,23 +16,22 @@ export async function checkPendingSaveAndReadFailure(
     const response = page.waitForResponse((result) => result.url().endsWith("/save"));
     await save.click();
     await request;
-    await name.fill("Newer unsaved name");
-    await price.fill("23,45");
-    await price.evaluate((node: HTMLInputElement) => node.setSelectionRange(1, 3));
+    expect(
+        await name.evaluate(
+            (node) =>
+                !node.dispatchEvent(new InputEvent("beforeinput", { bubbles: true, composed: true, cancelable: true })),
+        ),
+    ).toBe(true);
     const box = await detail.boundingBox();
     release();
     await response;
     await frames(page);
+    await page.locator('[data-detail-save][aria-busy="true"]').waitFor({ state: "hidden" });
     expect(await detail.boundingBox()).toEqual(box);
-    expect(await name.inputValue()).toBe("Newer unsaved name");
-    expect(await price.inputValue()).toBe("23,45");
-    expect(
-        await price.evaluate((node: HTMLInputElement) => [
-            (node.getRootNode() as ShadowRoot).activeElement === node,
-            node.selectionStart,
-            node.selectionEnd,
-        ]),
-    ).toEqual([true, 1, 3]);
+    expect(await name.inputValue()).toBe("Second name");
+    await name.fill("Newer unsaved name");
+    await price.fill("23,45");
+    await price.evaluate((node: HTMLInputElement) => node.setSelectionRange(1, 3));
     fixture.failRead();
     const failed = page.waitForResponse((result) => result.url().endsWith("/item") && result.status() === 503);
     await detail.evaluate((node) => document.dispatchEvent(new Event(node.getAttribute("cms-reload-on")!)));

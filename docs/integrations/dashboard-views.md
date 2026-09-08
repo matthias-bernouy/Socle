@@ -226,3 +226,17 @@ Stripe Connect publication uses a named management action so published-page
 resolution and immutable snapshot verification remain on the server.
 The shared page picker is form-associated: `value`, `name`, required validation,
 reset and disabled fieldsets work with native forms and typed binding submission.
+
+### Removed action compatibility
+
+Actions submit mutations through `form`; a shared detail save uses `save`.
+Legacy `action.management`, mutation `action.endpoint` and `after.resource`
+declarations are rejected. `action.endpoint` remains available with `download`
+for binary responses. Successful writes reread the common source instead of
+merging a response into a separate resource cache.
+
+Token fields use native repeated form entries (`name="tags[]"`), including an
+empty array in typed JSON. The token input's ordinary `.value` remains its CSV
+string; existing plain-name native forms retain that format. Schema field
+submission uses the same draft reader as validation so hidden or opaque metadata
+is preserved, including when the schema service is unavailable.

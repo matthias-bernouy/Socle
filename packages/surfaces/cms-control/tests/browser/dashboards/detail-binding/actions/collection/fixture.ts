@@ -48,7 +48,7 @@ export async function mountCollection(page: Page) {
         if (request.resourceType() === "document") {
             await route.fulfill({
                 contentType: "text/html",
-                body: '<!doctype html><link rel="stylesheet" href="/style.css"><cms-binding-core><w13c-fixed-admin-layout><cms-dashboards-admin></cms-dashboards-admin></w13c-fixed-admin-layout></cms-binding-core><script src="/control.js"></script>',
+                body: '<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="/style.css"><cms-binding-core><w13c-fixed-admin-layout><cms-dashboards-admin></cms-dashboards-admin></w13c-fixed-admin-layout></cms-binding-core><script src="/control.js"></script>',
             });
         } else if (path === "/control.js") {
             await route.fulfill({ contentType: "text/javascript", body: bundle });

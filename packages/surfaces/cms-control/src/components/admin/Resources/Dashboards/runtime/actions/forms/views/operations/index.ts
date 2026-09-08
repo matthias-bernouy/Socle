@@ -1,7 +1,7 @@
 import { detailFormActions } from "./declarations";
 import { hasMissingTechnicalFields } from "../technicalFields";
 import { matchesDashboardVisibility, resolveExpression, valueAt } from "../../../../expressions";
-import { readSourceData, showToast } from "@bernouy/components";
+import { readSourceData, reloadSource, showToast } from "@bernouy/components";
 import { OPERATION_AWAITING_READ, trackOperationCompletion } from "./completion";
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import type { RenderContext } from "../../../../../domain";
@@ -59,6 +59,15 @@ export function composeDetailOperations(
             }
         });
         const capture = trackOperationCompletion(host, formId!, (body, rowKey) => {
+            if (action.section && operation.refresh !== "none" && !action.after?.opens) {
+                const source = host.querySelector(`[data-widget-id="${action.section}"] [cms-source]`);
+                if (source) {
+                    // The parent read acknowledged the write; the list owns its read error and retry UI.
+                    void reloadSource(source).catch(() =>
+                        showToast("The operation completed, but its list could not be reloaded.", { type: "warning" }),
+                    );
+                }
+            }
             host.querySelector(`[id="${modalId}"]`)?.removeAttribute("open");
             const currentForm = host.querySelector<HTMLFormElement>(`[id="${formId}"]`);
             if (currentForm) {

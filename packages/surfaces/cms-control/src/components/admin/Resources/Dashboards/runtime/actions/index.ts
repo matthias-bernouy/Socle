@@ -1,4 +1,3 @@
-import { submitEndpoint } from "./forms/endpoint";
 import type { SubmitAction } from "./forms";
 import type { DashboardDto, DashboardEndpointRef } from "@bernouy/cms-dashboards";
 import type { DetailSelection } from "../../domain";
@@ -30,7 +29,6 @@ export async function executeDashboardAction(
     draft: Record<string, unknown>,
     currentResource: unknown,
     groups: DashboardSourceGroup[] = [group],
-    submit?: SubmitAction,
 ): Promise<DashboardActionResult> {
     const widget = findDetailWidget(dashboard.views, detail.collection);
     if (!widget) {
@@ -40,7 +38,7 @@ export async function executeDashboardAction(
     if (!action) {
         throw new Error(`Dashboard action "${actionId}" was not found`);
     }
-    if (!action.endpoint && !action.management && !action.selection) {
+    if (!action.endpoint && !action.selection) {
         throw new Error(`Dashboard action "${actionId}" does not declare an endpoint`);
     }
     const resource = requireDetailResource(currentResource);
@@ -48,17 +46,11 @@ export async function executeDashboardAction(
     if (!matchesDashboardVisibility(action.visibleWhen, { resource, fields })) {
         throw new Error(`Dashboard action "${actionId}" is not available in the current state`);
     }
-    return executeEndpointAction(
-        group,
-        groups,
-        action,
-        {
-            selection: { id: detail.row },
-            resource,
-            fields,
-        },
-        submit,
-    );
+    return executeEndpointAction(group, groups, action, {
+        selection: { id: detail.row },
+        resource,
+        fields,
+    });
 }
 
 export async function executeDashboardTableAction(
@@ -70,33 +62,26 @@ export async function executeDashboardTableAction(
     groups: DashboardSourceGroup[] = [group],
     filters: Readonly<Record<string, string>> = {},
     detail?: DetailSelection,
-    submit?: SubmitAction,
 ): Promise<DashboardActionResult> {
     const action = findCollectionAction(dashboard.views, actionId, widgetId);
     if (!action) {
         throw new Error(`Dashboard table action "${actionId}" was not found`);
     }
-    if (!action.endpoint && !action.management && !action.selection) {
+    if (!action.endpoint && !action.selection) {
         throw new Error(`Dashboard table action "${actionId}" does not declare an endpoint`);
     }
-    return executeEndpointAction(
-        group,
-        groups,
-        action,
-        {
-            filters: { ...filters },
-            value,
-            ...(detail
-                ? {
-                      selection: {
-                          id: detail.row,
-                          [detail.collection]: { id: detail.row },
-                      },
-                  }
-                : {}),
-        },
-        submit,
-    );
+    return executeEndpointAction(group, groups, action, {
+        filters: { ...filters },
+        value,
+        ...(detail
+            ? {
+                  selection: {
+                      id: detail.row,
+                      [detail.collection]: { id: detail.row },
+                  },
+              }
+            : {}),
+    });
 }
 
 export async function executeDashboardMediaAction(
@@ -122,33 +107,18 @@ export async function executeDashboardMediaAction(
     const fields = { ...fieldValues(widget, resource), ...draft, ...(media.fields ?? {}) };
     const mediaVars = mediaActionVars(media);
     const files = media.files ?? (media.file ? [media.file] : []);
-    const results = !files.length
-        ? [
-              await submitEndpoint(
-                  group.source.id,
-                  ref,
-                  endpointMethod(group, groups, ref),
-                  {
-                      resource,
-                      fields,
-                      media: mediaVars,
-                  },
-                  submit,
-              ),
-          ]
-        : await Promise.all(
-              files.map((file) => {
-                  if (!submit) {
-                      throw new Error("Uploads require a page-owned action form");
-                  }
-                  return submit({
-                      url: sourceUrl(group.source.id, ref, { resource, fields, media: mediaVars }).href,
-                      method: endpointMethod(group, groups, ref),
-                      fields: {},
-                      file,
-                  });
-              }),
-          );
+    if (!files.length || !submit || ref.body || !["upload", "replace"].includes(media.action)) {
+        throw new Error("Media mutations require a native file upload; save ordering and removal with the detail.");
+    }
+    const results = await Promise.all(
+        files.map((file) =>
+            submit({
+                url: sourceUrl(group.source.id, ref, { resource, fields, media: mediaVars }).href,
+                method: endpointMethod(group, groups, ref),
+                file,
+            }),
+        ),
+    );
     const item = target.parent ? resultMediaItem(results[0], target.field, group.source.id) : undefined;
     return { handled: true, nested: Boolean(target.parent), results, ...(item ? { item } : {}) };
 }

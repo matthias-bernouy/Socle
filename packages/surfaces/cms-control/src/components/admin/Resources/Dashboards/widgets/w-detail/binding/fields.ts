@@ -42,7 +42,8 @@ export function fieldElement(field: DashboardField, root: string, form?: { value
         control.setAttribute("label", field.label);
         control.setAttribute("data-field-control", field.id);
         if (form && !(field.type === "table" && !field.editable)) {
-            control.setAttribute("name", submissionName(field.name ?? field.path, form.valuesPath));
+            const name = submissionName(field.name ?? field.path, form.valuesPath);
+            control.setAttribute("name", field.type === "tokens" && !name.endsWith("[]") ? `${name}[]` : name);
             if (field.empty) {
                 control.setAttribute("cms-form-empty", field.empty);
             }

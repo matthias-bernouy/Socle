@@ -2,7 +2,7 @@ import { parseActionForm } from "./forms";
 import { isSafeDashboardExpression, type DashboardAction } from "@bernouy/cms-dashboards";
 import { IntegrationInputError } from "../../../errors";
 import { isRecord, text } from "../../definition/values";
-import { requiredText, parseStringMap } from "../common";
+import { requiredText } from "../common";
 import { parseEndpointRef } from "./refs";
 import { parseVisibilityRule } from "./visibility";
 
@@ -20,6 +20,12 @@ function parseAction(value: unknown, name: string): DashboardAction {
     if (value.endpoint !== undefined && !isRecord(value.endpoint)) {
         throw new IntegrationInputError(`${name}.endpoint`, "must be an object");
     }
+    if (value.management !== undefined) {
+        throw new IntegrationInputError(`${name}.management`, "is obsolete: use a native form management target");
+    }
+    if (value.endpoint !== undefined && !value.download) {
+        throw new IntegrationInputError(`${name}.endpoint`, "is only supported for downloads: use form for mutations");
+    }
     if (value.after !== undefined && !isRecord(value.after)) {
         throw new IntegrationInputError(`${name}.after`, "must be an object");
     }
@@ -32,9 +38,6 @@ function parseAction(value: unknown, name: string): DashboardAction {
             ? { placement: parseActionPlacement(value.placement, `${name}.placement`)! }
             : {}),
         ...(text(value.section) ? { section: text(value.section)! } : {}),
-        ...(value.management !== undefined
-            ? { management: parseManagementAction(value.management, `${name}.management`) }
-            : {}),
         ...(value.form !== undefined ? { form: parseActionForm(value.form, `${name}.form`) } : {}),
         ...(value.endpoint !== undefined ? { endpoint: parseEndpointRef(value.endpoint, `${name}.endpoint`) } : {}),
         ...(value.download !== undefined ? { download: parseActionDownload(value.download, `${name}.download`) } : {}),
@@ -56,25 +59,10 @@ export function parseSelection(value: Record<string, unknown>): { opens?: string
 }
 
 function parseActionAfter(value: Record<string, unknown>, name: string): NonNullable<DashboardAction["after"]> {
-    const hasOpens = Object.hasOwn(value, "opens");
-    const hasResource = Object.hasOwn(value, "resource");
-    const opens = hasOpens ? requiredText(value.opens, `${name}.opens`) : undefined;
-    const row = text(value.row);
-    const resource = hasResource ? requiredText(value.resource, `${name}.resource`) : undefined;
-    if (row && !opens) {
-        throw new IntegrationInputError(`${name}.row`, "requires opens");
+    if (Object.hasOwn(value, "resource")) {
+        throw new IntegrationInputError(`${name}.resource`, "is obsolete: reload the common source");
     }
-    if (!hasOpens && !hasResource) {
-        throw new IntegrationInputError(name, "must declare opens or resource");
-    }
-    if (resource && !isSafeDashboardExpression(resource, ["result"])) {
-        throw new IntegrationInputError(`${name}.resource`, "must be a safe $result expression");
-    }
-    return {
-        ...(opens ? { opens } : {}),
-        ...(row ? { row } : {}),
-        ...(resource ? { resource } : {}),
-    };
+    return { opens: requiredText(value.opens, `${name}.opens`), ...(text(value.row) ? { row: text(value.row)! } : {}) };
 }
 
 function parseActionDownload(value: unknown, name: string): NonNullable<DashboardAction["download"]> {
@@ -107,22 +95,6 @@ function parseActionPlacement(value: unknown, name: string): DashboardAction["pl
         return value;
     }
     throw new IntegrationInputError(name, "must be primary, secondary, or more");
-}
-
-function parseManagementAction(value: unknown, name: string): NonNullable<DashboardAction["management"]> {
-    if (!isRecord(value) || (value.action !== "save-settings" && value.action !== "action")) {
-        throw new IntegrationInputError(name, "must declare save-settings or action management action");
-    }
-    if (value.action === "save-settings" && value.actionId !== undefined) {
-        throw new IntegrationInputError(name, "actionId requires action");
-    }
-    return {
-        installationId: requiredText(value.installationId, `${name}.installationId`),
-        ...(value.action === "action"
-            ? ({ action: "action", actionId: requiredText(value.actionId, `${name}.actionId`) } as const)
-            : ({ action: "save-settings" } as const)),
-        ...(value.body !== undefined ? { body: parseStringMap(value.body, `${name}.body`) } : {}),
-    };
 }
 
 function parseActionSelection(value: unknown, name: string): NonNullable<DashboardAction["selection"]> {

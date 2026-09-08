@@ -1,15 +1,14 @@
-import { observeSource, setSourceContext, type BindingRequestResult } from "@bernouy/components";
+import { observeSource, type BindingRequestResult } from "@bernouy/components";
 import template from "cms-control/static/admin/_content/sources/_runtime/action-form.html" with { type: "text" };
 
 export type ActionSubmission = {
     url: string;
     method: string;
-    fields: Record<string, string>;
-    file?: File;
+    file: File;
 };
 export type SubmitAction = (submission: ActionSubmission) => Promise<unknown>;
 
-/** Own the lifetime of action forms; the page core owns their requests and results. */
+/** Own native multipart uploads; the page binding owns requests and results. */
 export class ActionForms {
     private readonly pending = new Set<() => void>();
 
@@ -24,8 +23,6 @@ export class ActionForms {
         const form = fragment.content.firstElementChild as HTMLFormElement;
         form.setAttribute("cms-source", `${submission.url} as result`);
         form.setAttribute("cms-source-method", submission.method);
-        const fields = Object.entries(submission.fields).map(([name, value]) => ({ name, value }));
-        setSourceContext(form, () => ({ submissionFields: fields, submissionFile: Boolean(submission.file) }));
         return new Promise((resolve, reject) => {
             let settled = false;
             let started = false;
@@ -89,24 +86,4 @@ export class ActionForms {
             cancel();
         }
     }
-}
-
-/** Accept legacy scalar payloads while rejecting unsafe form member names. */
-export function stringFields(body: unknown): Record<string, string> | null {
-    if (!body || typeof body !== "object" || Array.isArray(body)) {
-        return null;
-    }
-    const entries = Object.entries(body);
-    if (
-        entries.some(
-            ([name, value]) =>
-                !/^[A-Za-z0-9_-]+$/.test(name) ||
-                ["__proto__", "constructor", "prototype", "_charset_"].includes(name) ||
-                (name in HTMLFormElement.prototype && !["id", "name"].includes(name)) ||
-                typeof value !== "string",
-        )
-    ) {
-        return null;
-    }
-    return Object.fromEntries(entries);
 }

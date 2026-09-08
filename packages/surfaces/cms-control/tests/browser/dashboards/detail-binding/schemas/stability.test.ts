@@ -30,7 +30,7 @@ test("schema arrival preserves a draft and its selection in an existing field", 
     }
 }, 15_000);
 
-test("schema drafts survive detail refreshes and overlapping save edits without moving the scrolling pane", async () => {
+test("schema drafts survive detail refreshes and saves lock overlapping edits without moving the scrolling pane", async () => {
     const browser = await chromium.launch();
     try {
         const page = await browser.newPage({ viewport: { width: 390, height: 700 } });
@@ -90,7 +90,7 @@ test("schema drafts survive detail refreshes and overlapping save edits without 
         const saved = page.waitForResponse((response) => response.url().endsWith("/save"));
         await page.getByRole("button", { name: "Save choices", exact: true }).click();
         await saving;
-        await serial.fill("Newer schema draft");
+        await serial.fill("Blocked overlapping edit");
         await serial.evaluate((node: HTMLInputElement) => node.setSelectionRange(2, 8));
         const box = await serial.boundingBox();
         const scroll = await main.evaluate((node) => node.scrollTop);
@@ -98,7 +98,7 @@ test("schema drafts survive detail refreshes and overlapping save edits without 
         await saved;
         for (let frame = 0; frame < 5; frame += 1) {
             await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
-            expect(await state(serial)).toEqual(["Newer schema draft", true, 2, 8]);
+            expect(await state(serial)).toEqual(["First schema draft", true, 2, 8]);
             expect(await serial.boundingBox()).toEqual(box);
             expect(await main.evaluate((node) => node.scrollTop)).toBe(scroll);
         }
@@ -108,7 +108,7 @@ test("schema drafts survive detail refreshes and overlapping save edits without 
         await second;
         await page.reload();
         await serial.waitFor();
-        expect(await serial.inputValue()).toBe("Newer schema draft");
+        expect(await serial.inputValue()).toBe("First schema draft");
         expect(await notes.inputValue()).toBe("Keep the bottom draft");
         expect(fixture.saved).toHaveLength(2);
     } finally {

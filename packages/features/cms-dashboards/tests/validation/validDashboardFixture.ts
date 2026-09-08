@@ -46,10 +46,9 @@ export const validDashboard = (): Dashboard => ({
                     label: "Save changes",
                     placement: "primary",
                     tone: "primary",
-                    endpoint: {
+                    form: {
                         endpoint: "updateProduct",
-                        params: { productId: "$resource.id" },
-                        body: { title: "$field.title", status: "$field.status" },
+                        hiddenFields: [{ name: "productId", type: "string", value: "$resource.id" }],
                     },
                 },
                 {
@@ -58,7 +57,10 @@ export const validDashboard = (): Dashboard => ({
                     placement: "more",
                     section: "Other actions",
                     tone: "danger",
-                    endpoint: { endpoint: "deleteProduct", params: { productId: "$resource.id" } },
+                    form: {
+                        endpoint: "deleteProduct",
+                        hiddenFields: [{ name: "productId", type: "string", value: "$resource.id" }],
+                    },
                 },
             ],
             main: [

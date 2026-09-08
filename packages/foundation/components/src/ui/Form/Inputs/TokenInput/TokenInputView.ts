@@ -82,9 +82,23 @@ export class TokenInputView {
         }
     }
 
-    syncDisplay(value: string, selected: string[], options: ComboOption[], onRemove: (value: string) => void): void {
+    syncDisplay(
+        value: string,
+        selected: string[],
+        options: ComboOption[],
+        onRemove: (value: string) => void,
+        name: string | null,
+    ): void {
         this.tokens?.replaceChildren(...tokenLabels(selected, options).map((item) => tokenElement(item, onRemove)));
-        this.internals.setFormValue(value);
+        if (name?.endsWith("[]")) {
+            const values = new FormData();
+            for (const item of selected) {
+                values.append(name, item);
+            }
+            this.internals.setFormValue(values, value);
+        } else {
+            this.internals.setFormValue(value);
+        }
     }
 
     syncValidity(host: HTMLElement, selectedCount: number, showMessage: boolean): void {

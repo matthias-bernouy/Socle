@@ -4,7 +4,7 @@ import { applySourceOverlays } from "@bernouy/cms-sources";
 import { dashboard, source, sourceOverlay } from "./sourceOverlayDashboardFixtures";
 
 describe("dashboard source overlay fields", () => {
-    test("adds dashboard columns, detail fields, and action body bindings", () => {
+    test("adds dashboard columns, detail fields, and native save fields", () => {
         const enrichedDashboard = applyDashboardSourceOverlays(dashboard, [sourceOverlay]);
         const table = enrichedDashboard.views[0] as Extract<Dashboard["views"][number], { widget: "w-table" }>;
         const detail = enrichedDashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;
@@ -17,10 +17,8 @@ describe("dashboard source overlay fields", () => {
             path: "metadata.company",
             type: "text",
         });
-        expect(detail.actions?.[0]?.endpoint?.body).toMatchObject({
-            displayName: "$field.displayName",
-            "metadata.company": "$field.company",
-        });
+        expect(detail.save?.endpoint).toBe("createUserPersonalInformation");
+        expect(detail.actions).toBeUndefined();
 
         const enrichedSource = applySourceOverlays(source, [sourceOverlay]);
         expect(validateDashboard(enrichedDashboard, { source: enrichedSource })).toEqual([]);

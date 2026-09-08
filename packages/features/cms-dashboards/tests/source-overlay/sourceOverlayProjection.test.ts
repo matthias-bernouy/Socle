@@ -66,7 +66,9 @@ describe("dashboard source overlay projections", () => {
     test("renders output-only overlay fields as readonly dashboard fields", () => {
         const readonlyDashboard = {
             ...dashboard,
-            views: dashboard.views.map((view) => (view.widget === "w-detail" ? { ...view, actions: [] } : view)),
+            views: dashboard.views.map((view) =>
+                view.widget === "w-detail" ? { ...view, actions: [], save: undefined } : view,
+            ),
         } as Dashboard;
         const enriched = applyDashboardSourceOverlays(readonlyDashboard, [sourceOverlay]);
         const detail = enriched.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;

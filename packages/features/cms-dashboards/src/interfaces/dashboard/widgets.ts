@@ -26,10 +26,6 @@ export type DashboardAction = {
     section?: string;
     endpoint?: DashboardEndpointRef;
     form?: DashboardActionForm;
-    management?: { installationId: string; body?: Record<string, DashboardExpr> } & (
-        | { action: "save-settings"; actionId?: never }
-        | { action: "action"; actionId: string }
-    );
     download?: {
         filename?: string;
     };
@@ -37,7 +33,6 @@ export type DashboardAction = {
     after?: {
         opens?: string;
         row?: DashboardExpr;
-        resource?: DashboardExpr;
     };
     confirm?: string;
     visibleWhen?: DashboardVisibilityRule;

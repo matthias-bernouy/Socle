@@ -1,4 +1,3 @@
-import { requestBindingData, type BindingRequestResult } from "@bernouy/components";
 import type { DashboardDataRef, DashboardEndpointRef } from "@bernouy/cms-dashboards";
 import { route } from "../api";
 import { arrayAt, resolveBody, resolveParams, type RuntimeVars } from "./expressions";
@@ -9,24 +8,6 @@ export function requireDetailResource(resource: unknown): unknown {
         throw new Error("The detail is not loaded. Wait for it to load before trying again.");
     }
     return resource;
-}
-
-export async function sendSourceJson(
-    sourceId: string,
-    ref: DashboardEndpointRef,
-    method: string,
-    vars: RuntimeVars,
-): Promise<unknown> {
-    const body = resolveBody(ref.body, vars);
-    const response = await requestBindingData(sourceUrl(sourceId, ref, vars).href, {
-        method,
-        headers:
-            body === undefined
-                ? { Accept: "application/json" }
-                : { Accept: "application/json", "Content-Type": "application/json" },
-        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-    });
-    return responseJson(response);
 }
 
 export async function sendSourceDownload(
@@ -79,16 +60,6 @@ export function sourceUrl(sourceId: string, ref: DashboardEndpointRef, vars: Run
         url.searchParams.set(key, value);
     }
     return url;
-}
-
-function responseJson(response: BindingRequestResult): unknown {
-    if (!response.ok) {
-        if (response.statusText === "Aborted") {
-            throw new DOMException("Aborted", "AbortError");
-        }
-        throw new Error(response.message || `Source request failed (${response.status})`);
-    }
-    return response.body;
 }
 
 function filenameFromDisposition(value: string | null): string | undefined {

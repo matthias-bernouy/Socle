@@ -83,3 +83,51 @@ test("static combobox and token choices survive saves and reloads with typed arr
         await browser.close();
     }
 }, 20_000);
+
+test("optional tokens submit empty arrays and retain native repeated-value/reset semantics", async () => {
+    const browser = await chromium.launch();
+    try {
+        const page = await browser.newPage();
+        page.setDefaultTimeout(5000);
+        const fixture = await installReadonlyRoutes(page, bundle, styles, {
+            fields: [{ id: "tags", path: "tags", type: "tokens", label: "Tags", options: [] }],
+            resource: { tags: [] },
+        });
+        await page.goto("http://cms.test/admin/sources?source=store&dashboard=summary");
+        const tags = page.locator('[data-field-control="tags"]');
+        await tags.waitFor();
+        const submitted = page.waitForResponse((response) => response.url().endsWith("/save"));
+        await page.getByRole("button", { name: "Save choices", exact: true }).click();
+        await submitted;
+        expect(fixture.saved).toEqual([{ tags: [] }]);
+        expect(
+            await page.evaluate(() => {
+                const form = document.createElement("form");
+                form.innerHTML =
+                    '<p9r-token-input name="tags[]" value="one,two"></p9r-token-input><p9r-token-input name="legacy" value="one,two"></p9r-token-input>';
+                document.body.append(form);
+                const input = form.firstElementChild as HTMLElement & { value: string };
+                const initial = [...new FormData(form).entries()];
+                input.value = "three";
+                const changed = new FormData(form).getAll("tags[]");
+                form.reset();
+                const reset = new FormData(form).getAll("tags[]");
+                input.setAttribute("disabled", "");
+                const disabled = new FormData(form).getAll("tags[]");
+                form.remove();
+                return { initial, changed, reset, disabled };
+            }),
+        ).toEqual({
+            initial: [
+                ["tags[]", "one"],
+                ["tags[]", "two"],
+                ["legacy", "one,two"],
+            ],
+            changed: ["three"],
+            reset: ["one", "two"],
+            disabled: [],
+        });
+    } finally {
+        await browser.close();
+    }
+}, 15_000);

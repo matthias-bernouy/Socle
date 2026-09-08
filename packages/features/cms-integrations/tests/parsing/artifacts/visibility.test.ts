@@ -69,7 +69,7 @@ function visibilityDefinition(visibleWhen: unknown) {
                             widget: "w-detail",
                             id: "settingsDetail",
                             source: { endpoint: "setting" },
-                            actions: [{ id: "save", label: "Save", endpoint: { endpoint: "save" }, visibleWhen }],
+                            actions: [{ id: "save", label: "Save", form: { endpoint: "save" }, visibleWhen }],
                             main: [
                                 {
                                     id: "general",

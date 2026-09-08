@@ -69,23 +69,15 @@ export async function installReadonlyRoutes(
                   ...dashboard,
                   views: dashboard.views.map((view) => ({
                       ...view,
-                      actions: [
+                      save: { endpoint: "save", label: "Save choices" },
+                      actions: choices.actions ?? [],
+                      main: [
                           {
-                              id: "save",
-                              label: "Save choices",
-                              endpoint: {
-                                  endpoint: "save",
-                                  body: Object.fromEntries(
-                                      choices.fields
-                                          .filter((field) => field.type !== "readonly")
-                                          .map((field) => [field.id, `$field.${field.id}`]),
-                                  ),
-                              },
-                              after: { resource: "$result" },
+                              id: "general",
+                              title: "General",
+                              fields: choices.fields.map((field) => ({ ...field, name: field.id })),
                           },
-                          ...(choices.actions ?? []),
                       ],
-                      main: [{ id: "general", title: "General", fields: choices.fields }],
                   })),
               })),
           }

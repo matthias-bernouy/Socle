@@ -1,3 +1,4 @@
+import { moneyFieldContext } from "../../runtime/mapping/money";
 import { itemsFrom } from "../../runtime/source";
 import { valueAt } from "../../runtime/expressions";
 import { readSourceData, refreshSourceContext, setSourceContext } from "@bernouy/components";
@@ -33,6 +34,17 @@ export function tableShell(widget: TableWidget, filters: Record<string, string> 
         return {
             tableFilters: state.values,
             detailResource: resource,
+            tableOperations: Object.fromEntries(
+                (widget.actions ?? [])
+                    .filter((action) => action.form)
+                    .map((action) => {
+                        const fields = action.form!.fields ?? [];
+                        const values = Object.fromEntries(
+                            fields.map((field) => [field.id, valueAt(resource, field.path)]),
+                        );
+                        return [action.id, { resource, resourceMoney: moneyFieldContext(fields, resource, values) }];
+                    }),
+            ),
             detailRow: resource,
             detailSelection: { id: resource ? selected[0] : undefined },
         };

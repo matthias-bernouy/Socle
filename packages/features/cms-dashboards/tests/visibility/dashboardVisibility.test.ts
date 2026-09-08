@@ -35,7 +35,7 @@ describe("dashboard visibility", () => {
         dashboard.views[0]!.actions!.push({
             id: "invalid",
             label: "Invalid",
-            endpoint: { endpoint: "save" },
+            form: { endpoint: "save" },
             visibleWhen: false,
         } as unknown as DashboardAction);
         dashboard.views.push({
@@ -48,7 +48,7 @@ describe("dashboard visibility", () => {
                 {
                     id: "refresh",
                     label: "Refresh",
-                    endpoint: { endpoint: "refresh" },
+                    form: { endpoint: "refresh" },
                     visibleWhen: null as unknown as DashboardVisibilityRule,
                 },
             ],

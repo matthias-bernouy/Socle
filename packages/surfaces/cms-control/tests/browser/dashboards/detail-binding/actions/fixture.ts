@@ -30,8 +30,6 @@ export function installActionRoutes(page: Page, bundle: string, styles: string) 
                 section: "Maintenance",
                 visibleWhen: advanced,
                 confirm: "Remove the test flag?",
-                endpoint: { endpoint: "save", body: { advanced: "false" } },
-                after: { resource: "$result" },
             },
             {
                 id: "preview",

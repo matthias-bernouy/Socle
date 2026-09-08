@@ -57,17 +57,10 @@ export const dashboard: Dashboard = {
             widget: "w-detail",
             id: "accountDetail",
             source: { endpoint: "getAccountByUserId", params: { userId: "$selection.id" } },
-            actions: [
-                {
-                    id: "save",
-                    label: "Save",
-                    endpoint: {
-                        endpoint: "createUserPersonalInformation",
-                        params: { userId: "$resource.userId" },
-                        body: { displayName: "$field.displayName" },
-                    },
-                },
-            ],
+            save: {
+                endpoint: "createUserPersonalInformation",
+                hiddenFields: [{ name: "userId", type: "string", value: "$resource.userId" }],
+            },
             main: [
                 {
                     id: "accountFields",

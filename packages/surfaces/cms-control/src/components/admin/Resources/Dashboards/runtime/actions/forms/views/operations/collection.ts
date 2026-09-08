@@ -1,9 +1,10 @@
+import { WIDGET_ROW_SELECT_EVENT, emitWidgetEvent } from "../../../../../widgets/shared";
 import { readSourceData, showToast } from "@bernouy/components";
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import type { RenderContext } from "../../../../../domain";
 import type { DashboardWTable } from "../../../../../widgets/w-table/WTable";
 import { itemsFrom } from "../../../../source";
-import { valueAt } from "../../../../expressions";
+import { resolveExpression, valueAt } from "../../../../expressions";
 import { formId } from "../composition";
 import { hasMissingTechnicalFields } from "../technicalFields";
 import { operationModal } from "../modal";
@@ -21,7 +22,7 @@ export function composeTableOperations(
             continue;
         }
         const operation = { label: action.label, tone: action.tone, confirm: action.confirm, ...action.form };
-        const { modal, form, opener } = operationModal(operation, context, "detailResource");
+        const { modal, form, opener } = operationModal(operation, context, `tableOperations.${action.id}.resource`);
         const confirmation = Boolean(operation.confirm || operation.fields?.length);
         const trigger = confirmation ? opener : form.querySelector<HTMLElement>('[type="submit"]')!;
         trigger.slot = "actions";
@@ -33,9 +34,21 @@ export function composeTableOperations(
         if (operation.refresh !== "none") {
             form.setAttribute("cms-source-success-reload", `#${table.id}`);
         }
-        const capture = trackOperationCompletion(table, form.id, () => {
+        let selectedKey = "";
+        const capture = trackOperationCompletion(table, form.id, (body) => {
             table.querySelector(`[id="${modal.id}"]`)?.removeAttribute("open");
             showToast("Operation completed", { type: "success" });
+            if (action.after?.opens) {
+                const row = action.after.row
+                    ? resolveExpression(action.after.row, { result: body, selection: { id: selectedKey } })
+                    : selectedKey;
+                if ((typeof row === "string" || typeof row === "number") && String(row)) {
+                    emitWidgetEvent(table, WIDGET_ROW_SELECT_EVENT, {
+                        collection: action.after.opens,
+                        rowKey: String(row),
+                    });
+                }
+            }
         });
         table.addEventListener(
             "submit",
@@ -64,6 +77,7 @@ export function composeTableOperations(
                     );
                     return;
                 }
+                selectedKey = keys[0]!;
                 capture();
             },
             true,

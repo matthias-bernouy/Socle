@@ -15,9 +15,9 @@ const children: DashboardWidget = {
             label: "Clear questions",
             confirm: "Clear test questions?",
             tone: "danger",
-            endpoint: { endpoint: "clear" },
+            form: { endpoint: "clear" },
         },
-        { id: "reorder", label: "Reorder", endpoint: { endpoint: "reorder", body: { ids: "$value" } } },
+        { id: "reorder", label: "Reorder", form: { endpoint: "reorder" } },
     ],
 };
 const parent: DashboardWidget = {
@@ -25,14 +25,7 @@ const parent: DashboardWidget = {
     id: "parent",
     source: { endpoint: "parent" },
     title: { path: "name" },
-    actions: [
-        {
-            id: "save",
-            label: "Save section",
-            endpoint: { endpoint: "saveParent", body: { name: "$field.name", note: "$field.note" } },
-            after: { resource: "$result" },
-        },
-    ],
+    save: { endpoint: "saveParent", label: "Save section" },
     main: [
         {
             id: "heading",
@@ -102,14 +95,11 @@ export const dashboard: DashboardDto = {
                     fields: [{ id: "name", path: "name", label: "Name", type: "text", required: true }],
                 },
             ],
-            actions: [
-                {
-                    id: "saveChild",
-                    label: "Save question",
-                    endpoint: { endpoint: "saveChild", body: { id: "$selection.id", name: "$field.name" } },
-                    after: { resource: "$result" },
-                },
-            ],
+            save: {
+                endpoint: "saveChild",
+                label: "Save question",
+                hiddenFields: [{ name: "id", type: "string", value: "$resource.id" }],
+            },
         },
     ],
 };

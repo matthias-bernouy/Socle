@@ -4,7 +4,7 @@ import {
     type SourceOverlayDashboardField,
     type SourceOverlayField,
 } from "@bernouy/cms-sources";
-import type { DashboardAction, DashboardField, DashboardSection, DashboardWidget } from "../../interfaces/Dashboard";
+import type { DashboardField, DashboardSection, DashboardWidget } from "../../interfaces/Dashboard";
 import { dashboardField, editableFields, joinedPath, normalizedTargetPath, overlayFieldId } from "./fieldHelpers";
 
 type DetailWidget = Extract<DashboardWidget, { widget: "w-detail" }>;
@@ -19,9 +19,8 @@ export function applyDetailSourceOverlay(
     const outputTargets = (overlay.output ?? []).filter((target) => target.endpointId === widget.source.endpoint);
     const inputTargets = (overlay.input ?? []).filter(
         (target) =>
-            (widget.save?.endpoint === target.endpointId &&
-                (!widget.save.sourceId || widget.save.sourceId === overlay.sourceId)) ||
-            (widget.actions ?? []).some((action) => action.endpoint?.endpoint === target.endpointId),
+            widget.save?.endpoint === target.endpointId &&
+            (!widget.save.sourceId || widget.save.sourceId === overlay.sourceId),
     );
     let next: DetailWidget = {
         ...widget,
@@ -32,7 +31,6 @@ export function applyDetailSourceOverlay(
     };
     next = {
         ...next,
-        actions: addOverlayActionBodies(next.actions, overlay),
         main: addOverlayDetailTargets(next.main, overlay, outputTargets, inputTargets),
         ...(next.aside ? { aside: applyDashboardFieldOverrides(next.aside, overlay, dashboardId, widget.id) } : {}),
     };
@@ -164,33 +162,4 @@ function dashboardFieldOverride(
         return null;
     }
     return { ...field, ...override.field } as DashboardField;
-}
-
-function addOverlayActionBodies(
-    actions: DashboardAction[] | undefined,
-    overlay: SourceOverlay,
-): DashboardAction[] | undefined {
-    if (!actions?.length) {
-        return actions;
-    }
-    return actions.map((action) => {
-        if (!action.endpoint) {
-            return action;
-        }
-        const target = (overlay.input ?? []).find((input) => input.endpointId === action.endpoint!.endpoint);
-        if (!target) {
-            return action;
-        }
-        const fields = editableFields(overlay.fields, target.editable);
-        if (!fields.length) {
-            return action;
-        }
-
-        const body = { ...(action.endpoint.body ?? {}) };
-        const pathPrefix = normalizedTargetPath(target.path);
-        for (const field of fields) {
-            body[joinedPath(pathPrefix, sourceOverlayFieldPath(field))] = `$field.${overlayFieldId(field, pathPrefix)}`;
-        }
-        return { ...action, endpoint: { ...action.endpoint, body } };
-    });
 }

@@ -22,7 +22,7 @@ const legacyView = (): Dashboard => ({
             source: { endpoint: "listOrders" },
             rowKey: "id",
             columns: [{ id: "id", label: "ID", path: "id" }],
-            actions: [{ id: "refund", label: "Refund", endpoint: { endpoint: "refundOrder" } }],
+            actions: [{ id: "refund", label: "Refund", form: { endpoint: "refundOrder" } }],
         },
     ],
 });

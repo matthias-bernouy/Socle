@@ -89,18 +89,22 @@ test("manifest and dashboard contracts parse declared management actions and rej
     const action = {
         id: "publish",
         label: "Publish",
-        management: {
-            installationId: definition.kind,
-            action: "action",
-            actionId: "publish",
-            body: { page: "$field.page" },
+        form: {
+            management: { installationId: definition.kind, operation: "action", actionId: "publish" },
+            valuesPath: "input",
         },
     };
-    expect(parseActions([action], "actions")[0]?.management).toEqual(action.management);
+    expect(parseActions([action], "actions")[0]?.form).toEqual(action.form);
     expect(() =>
-        parseActions([{ ...action, management: { ...action.management, actionId: undefined } }], "actions"),
+        parseActions(
+            [{ ...action, form: { management: { installationId: definition.kind, operation: "action" } } }],
+            "actions",
+        ),
     ).toThrow("actionId");
     expect(() =>
-        parseActions([{ ...action, management: { ...action.management, action: "save-settings" } }], "actions"),
-    ).toThrow("actionId");
+        parseActions(
+            [{ id: "old", label: "Old", management: { installationId: definition.kind, action: "save-settings" } }],
+            "actions",
+        ),
+    ).toThrow("obsolete");
 });

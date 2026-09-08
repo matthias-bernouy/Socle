@@ -51,18 +51,12 @@ describe("dashboard endpoint references", () => {
         expect(validateDashboard(dashboard, { source })).toEqual([]);
     });
 
-    test("validates dotted action body paths against same-source endpoint bodies", () => {
+    test("native form operations reject mapped request bodies, including dotted paths", () => {
         const dashboard = baseDashboard();
         const action = dashboard.views[0]!.actions![0]!;
-        action.endpoint!.body = {
-            title: "$field.title",
-            "metadata.company": "$field.company",
-        };
-        expect(validateDashboard(dashboard, { source })).toEqual([]);
-
-        action.endpoint!.body = { "metadata.missing": "$field.company" };
-        expect(validateDashboard(dashboard, { source })).toContain(
-            'views.0.actions.0.endpoint.body.metadata.missing is not declared by endpoint "urn:offers:updateOffer"',
+        Object.assign(action.form!, { body: { "metadata.company": "$field.company" } });
+        expect(validateDashboard(dashboard, { source }).join(" ")).toContain(
+            "body is not supported by form operations",
         );
     });
 });
@@ -80,10 +74,9 @@ function baseDashboard(): Dashboard {
                     {
                         id: "save",
                         label: "Save",
-                        endpoint: {
+                        form: {
                             endpoint: "updateOffer",
-                            params: { id: "$resource.id" },
-                            body: { title: "$field.title" },
+                            hiddenFields: [{ name: "id", type: "string", value: "$resource.id" }],
                         },
                     },
                 ],

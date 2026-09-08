@@ -58,7 +58,7 @@ export async function installTableRoutes(page: Page, bundle: string, styles: str
         } else if (endpoint === "save") {
             const body = route.request().postDataJSON();
             writes.push(body);
-            const id = body.id === "__new__" ? String(items.length + 1) : body.id;
+            const id = !body.id ? String(items.length + 1) : body.id;
             const resource = {
                 id,
                 name: String(body.name).trim(),

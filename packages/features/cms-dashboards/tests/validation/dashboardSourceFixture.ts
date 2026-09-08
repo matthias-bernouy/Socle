@@ -2,7 +2,7 @@ import type { Source, SourceEndpoint } from "@bernouy/cms-sources";
 
 const endpoint = (endpointId: string, inputParams: string[] = []): SourceEndpoint => ({
     urn: `urn:products:${endpointId}`,
-    method: "GET",
+    method: /^(update|delete|create|upload|remove|reorder)/.test(endpointId) ? "POST" : "GET",
     targetUrl: `https://example.com/${endpointId}`,
     input: {
         params: inputParams.map((name) => ({ name, in: "query", schema: { type: "string" } })),

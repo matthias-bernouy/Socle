@@ -42,7 +42,7 @@ export const dashboard: DashboardDto = {
                     label: "Clear products",
                     tone: "danger",
                     confirm: "Clear test products?",
-                    endpoint: { endpoint: "clear" },
+                    form: { endpoint: "clear" },
                 },
             ],
         },
@@ -58,14 +58,12 @@ export const dashboard: DashboardDto = {
                     fields: [{ id: "name", label: "Name", path: "name", type: "text", required: true }],
                 },
             ],
-            actions: [
-                {
-                    id: "save",
-                    label: "Save product",
-                    endpoint: { endpoint: "save", body: { id: "$selection.id", name: "$field.name" } },
-                    after: { resource: "$result" },
-                },
-            ],
+            create: {},
+            save: {
+                endpoint: "save",
+                label: "Save product",
+                hiddenFields: [{ name: "id", type: "string", value: "$resource.id", empty: "omit" }],
+            },
         },
     ],
 };

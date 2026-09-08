@@ -87,7 +87,7 @@ test("nested sections, tabs and detail navigation preserve their desktop/mobile 
     }
 }, 25_000);
 
-test("a pending parent keeps nested navigation hidden while independent reads run in parallel", async () => {
+test("a pending parent keeps its nested controls hidden until its form is ready", async () => {
     const baseline = process.env.CMS_NESTED_BASELINE;
     const captures = process.env.CMS_NESTED_CAPTURES;
     if (captures) {
@@ -106,7 +106,7 @@ test("a pending parent keeps nested navigation hidden while independent reads ru
             const release = fixture.holdParent();
             const children = page.waitForResponse((response) => response.url().endsWith("/children"));
             await page.goto("http://cms.test/admin/sources?source=forms&dashboard=forms");
-            await children;
+            expect(fixture.reads.some((path) => path.endsWith("/children"))).toBe(false);
             const parent = page.locator('cms-dashboard-w-detail[data-widget-id="parent"]');
             const list = parent.locator("cms-dashboard-w-navigation-list");
             expect(await list.isVisible()).toBe(false);
@@ -118,6 +118,7 @@ test("a pending parent keeps nested navigation hidden while independent reads ru
                 }
             }
             release();
+            await children;
             await parent.locator('[data-field-control="name"]').waitFor();
             await list.locator("cms-dashboard-w-navigation-item").last().waitFor();
             expect(fixture.reads.filter((path) => path.endsWith("/children"))).toHaveLength(1);

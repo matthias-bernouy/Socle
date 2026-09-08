@@ -3,7 +3,7 @@
 The current official integrations remain at `1.0.0`. Supported detail saves,
 creation and operations use the [shared form contract](../../integrations/dashboard-views.md).
 Product, Offer, Brand, Category and Seller migrations are included. The legacy
-runtime remains required by the consumers listed below.
+JSON action transport and response-to-resource mappings have been removed.
 
 ## Migrated scope
 
@@ -23,7 +23,7 @@ Readonly details and GET downloads/navigation retain their existing contracts.
 Mossa, Ulvia and the two Commerce Mondial Relay extensions have no detail forms
 to migrate. Newsletter's subscription export remains a GET download.
 
-## Remaining compatibility cleanup
+## Native actions and retained binary transport
 
 All official JSON mutations now use native Save/Delete/independent forms.
 Forms child creation/deletion keeps its list buttons and navigates using returned
@@ -32,14 +32,51 @@ retries failed reads without repeating a mutation. Consent creation/publication
 and Stripe Connect seller terms use native management forms; page resolution,
 revision checks and immutable snapshots remain server responsibilities.
 
-Only two legacy endpoint actions remain, both binary downloads: Newsletter
+Only two endpoint actions remain, both binary downloads: Newsletter
 subscription export and Commerce Stripe claim evidence. Their Blob/header
-transport remains necessary. The unused general JSON action fallback and its
-old resource-replacement mappings can now be removed after migrating fixtures.
+transport remains necessary. The general JSON action fallback (`sendSourceJson`), old management actions and
+`after.resource` mappings have been removed. Validation rejects those declarations;
+fixtures now exercise native forms. Multipart image uploads retain a small bound
+file form, while downloads retain their Blob/header handling.
 
 Publication verification covers creation of an inactive Consent policy, disabling,
 resolved documents, conflicts, native page-picker form values and repeated save.
 The browser checks retain field nodes and positions across a delayed publication.
+
+## Final native-action cleanup verification
+
+The cleanup passed 162 contract/component tests and 88 Control admin tests.
+A further 31 browser regression tests passed across 25 files run in separate
+processes: typed choices and empty arrays, lookups, schema failures and hidden
+metadata, conditional fields, nested navigation, table CRUD and desktop/mobile
+layouts. Native operation/publication coverage passed 13 tests together; the
+image upload/replacement test timed out in that batch and passed in isolation.
+A larger grouped browser run also stalled; isolated success does not establish
+that the grouped test harness is reliable.
+
+The final `check:all` passed 8/8, with zero UI-contract errors and 62 warnings
+(previously 63). The remaining Dashboard network finding is the binary download
+request. Directory fanout has no blocking errors. The PageLink native-form state
+implementation remains one cohesive file despite its file-size advisory.
+
+On local Courtside, real browser actions created a form, section and question,
+saved and reread the question, deleted it, and returned to its parent. The saved
+input retained its node and geometry; no browser errors occurred. The owned form
+was deleted afterward. Consent, Stripe Connect and Delivery views were reread and
+screenshots inspected. Legal publication mutations were covered with provider
+and browser fixtures, without publishing a new real policy or contacting Stripe.
+Local view snapshots and the Consent provider were updated; production was not
+modified.
+
+## Follow-up cleanup
+
+The action context still carries callbacks with no runtime consumer
+(`reloadDefinitions`, `reloadCollection`, `setDetailResource`, `clearDetail`,
+`render`). Its old direct-resource mounting/cache path can be reviewed separately;
+media operations still require draft restoration and stale-response protection,
+so the action coordinator must not be removed wholesale. The browser harness also
+needs investigation of its grouped-run lifecycle before making one large Bun
+invocation the validation reference.
 
 ## Validation baseline
 
@@ -52,7 +89,7 @@ failed reread/retry, desktop/mobile screenshots and stable control geometry.
 The combined browser run passed 34 of 35 tests; a navigation test timed out.
 All three navigation tests passed in isolation afterward. Keep this grouped-run
 instability visible rather than reporting a fully green browser batch.
-`check:all` remains 8/8 with 63 existing UI-contract warnings. The Forms endpoint
+That baseline had `check:all` at 8/8 with 63 UI-contract warnings. The Forms endpoint
 JSON stays grouped as one cohesive declaration despite the file-size advisory.
 
 

@@ -9,7 +9,7 @@ export function detailDashboard(visibleWhen: DashboardVisibilityRule): Dashboard
                 widget: "w-detail",
                 id: "settingsDetail",
                 source: { endpoint: "setting" },
-                actions: [{ id: "save", label: "Save", endpoint: { endpoint: "save" } }],
+                actions: [{ id: "save", label: "Save", form: { endpoint: "save" } }],
                 main: [
                     {
                         id: "general",

@@ -18,16 +18,20 @@ test("nested detail navigation saves, retries and handles child actions once wit
         page.on("pageerror", (error) => errors.push(error.message));
         const fixture = await installNestedRoutes(page, bundle, styles);
         const releaseInitial = fixture.holdParent();
-        const childrenRequested = page.waitForRequest((request) => request.url().endsWith("/children"));
+        const childrenRequested = page.waitForRequest((request) =>
+            new URL(request.url()).pathname.endsWith("/children"),
+        );
         await page.goto("http://cms.test/admin/sources?source=forms&dashboard=forms");
-        await childrenRequested;
+
         const parent = page.locator('cms-dashboard-w-detail[data-widget-id="parent"]');
         const list = parent.locator("cms-dashboard-w-navigation-list");
         const rows = list.locator("cms-dashboard-w-navigation-item");
         const name = parent.locator('[data-field-control="name"] input');
         expect(await list.isVisible()).toBe(false);
         expect(await name.count()).toBe(0);
+        expect(fixture.reads.some((path) => path.includes("/children"))).toBe(false);
         releaseInitial();
+        await childrenRequested;
         await rows.last().waitFor();
         await name.waitFor();
         expect(await parent.getAttribute("data-declarative")).not.toBeNull();
@@ -36,20 +40,19 @@ test("nested detail navigation saves, retries and handles child actions once wit
             true,
         );
         await name.fill("");
-        let dialogs = 0;
-        page.once("dialog", async (dialog) => {
-            dialogs += 1;
-            await dialog.dismiss();
-        });
         await list.getByRole("button", { name: "Clear questions", exact: true }).click();
-        expect(dialogs).toBe(1);
+        const modal = parent.locator("p9r-modal[open]");
+        await modal.getByRole("button", { name: "Clear questions", exact: true }).click();
+        await modal.press("Escape");
         expect(fixture.writes).toHaveLength(0);
         await name.fill("  Edited section  ");
         await page.getByRole("tab", { name: "Information", exact: true }).click();
         await page.getByText("Nested information", { exact: true }).waitFor();
         await page.getByRole("tab", { name: "Edit", exact: true }).click();
         expect(await name.inputValue()).toBe("  Edited section  ");
-        expect(fixture.reads.filter((path) => path.endsWith("/children"))).toHaveLength(1);
+        expect(
+            fixture.reads.filter((path) => new URL(path, "http://cms.test").pathname.endsWith("/children")),
+        ).toHaveLength(1);
         const saved = page.waitForResponse((response) => response.url().endsWith("/saveParent"));
         await parent.getByRole("button", { name: "Save section", exact: true }).click();
         await saved;
@@ -61,13 +64,15 @@ test("nested detail navigation saves, retries and handles child actions once wit
                 document.querySelector('[data-field-control="name"]')?.shadowRoot?.querySelector("input")?.value ===
                 "Edited section",
         );
-        expect(fixture.reads.filter((path) => path.endsWith("/children"))).toHaveLength(1);
+        expect(
+            fixture.reads.filter((path) => new URL(path, "http://cms.test").pathname.endsWith("/children")),
+        ).toHaveLength(1);
         await page.reload();
         await rows.last().waitFor();
         expect(await name.inputValue()).toBe("Edited section");
         await checkNestedStability(page, fixture);
         const reorder = page.waitForResponse((response) => response.url().endsWith("/reorder"));
-        const reordered = page.waitForResponse((response) => response.url().endsWith("/children"));
+        const reordered = page.waitForResponse((response) => new URL(response.url()).pathname.endsWith("/children"));
         await rows.first().locator("[data-handle]").dragTo(rows.last());
         await reorder;
         await reordered;
@@ -100,16 +105,15 @@ test("nested detail navigation saves, retries and handles child actions once wit
         expect(await rows.first().getAttribute("title")).toBe("Edited question");
         await page.goto("http://cms.test/admin/sources?source=forms&dashboard=forms&collection=parent&row=section-1");
         await rows.last().waitFor();
-        expect(fixture.reads.some((path) => path.endsWith("/children?context=section-1"))).toBe(true);
-        page.once("dialog", async (dialog) => {
-            dialogs += 1;
-            await dialog.accept();
-        });
+        expect(
+            fixture.reads.some((path) => new URL(path, "http://cms.test").searchParams.get("context") === "section-1"),
+        ).toBe(true);
         const cleared = page.waitForResponse((response) => response.url().endsWith("/clear"));
         await list.getByRole("button", { name: "Clear questions", exact: true }).click();
+        await parent.locator("p9r-modal[open]").getByRole("button", { name: "Clear questions", exact: true }).click();
         await cleared;
         await list.getByText("No items.", { exact: true }).waitFor();
-        expect(dialogs).toBe(2);
+
         expect(fixture.writes.filter((write) => write.endpoint === "clear")).toHaveLength(1);
         await page.reload();
         await list.getByText("No items.", { exact: true }).waitFor();

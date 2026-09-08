@@ -4196,7 +4196,7 @@ footer slot[name="footer"]::slotted(button:hover) {
     filter: brightness(0.9);
 }
 `;
-  var Gr = `@media (prefers-reduced-motion: no-preference) {
+  var Wr = `@media (prefers-reduced-motion: no-preference) {
     dialog {
         transition:
             transform var(--transition-speed) var(--transition-curve),
@@ -4242,7 +4242,7 @@ footer slot[name="footer"]::slotted(button:hover) {
     }
 }
 `;
-  var Wr = (t) => {
+  var Gr = (t) => {
     t.dispatchEvent(new CustomEvent("open", { bubbles: true, composed: true }));
   };
   var Jr = (t) => {
@@ -4264,7 +4264,7 @@ footer slot[name="footer"]::slotted(button:hover) {
       t.removeAttribute("open");
     Jr(t);
   };
-  var Yc = Qr + Yr + Gr;
+  var Yc = Qr + Yr + Wr;
 
   class oo extends d {
     _dialog;
@@ -4313,7 +4313,7 @@ footer slot[name="footer"]::slotted(button:hover) {
         this._dialog.showModal();
       if (!this.hasAttribute("open"))
         this.setAttribute("open", "");
-      Wr(this);
+      Gr(this);
     }
     showModal() {
       this.show();
@@ -7995,7 +7995,7 @@ p9r-tag:hover {
       a.setAttribute("color", "primary"), a.setAttribute("part", "chip"), a.setAttribute("role", "listitem"), a.textContent = o, a.title = `Remove ${o}`, a.setAttribute("aria-label", `Remove ${o}`), a.addEventListener("click", () => r(n)), t.appendChild(a);
     });
   };
-  var Gn = (t, e, i, r, o, n) => {
+  var Wn = (t, e, i, r, o, n) => {
     if (!t || !e)
       return;
     if (i.length === 0) {
@@ -8024,7 +8024,7 @@ p9r-tag:hover {
     if (e)
       e.setAttribute("aria-expanded", "false"), e.removeAttribute("aria-activedescendant");
   };
-  var Wn = (t, e, i) => {
+  var Gn = (t, e, i) => {
     let r = t.filter((o) => !e.includes(o.value));
     if (i === "")
       return r.slice(0, 8);
@@ -8051,7 +8051,7 @@ p9r-tag:hover {
       i._input.value = "";
     } else
       i._tags = [o], i._input.value = o, Zt(i._liveRegion, `${o} selected`);
-    i._activeIndex = -1, Qt(t), Gt(t);
+    i._activeIndex = -1, Qt(t), Wt(t);
   };
   var ea = (t, e) => {
     let i = C(t), r = e.trim();
@@ -8083,13 +8083,13 @@ p9r-tag:hover {
   };
   var $e = (t, e) => {
     let i = C(t), o = (t.getAttribute("mode") || "multiple") === "multiple" ? i._tags : [];
-    i._suggestions = Wn(i._allSuggestions, o, e), i._activeIndex = -1, Yt(t);
+    i._suggestions = Gn(i._allSuggestions, o, e), i._activeIndex = -1, Yt(t);
   };
   var Yt = (t) => {
     let e = C(t);
-    Gn(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (i) => bt(t, i));
+    Wn(e._suggestionsEl, e._input, e._suggestions, e._activeIndex, e._uid, (i) => bt(t, i));
   };
-  var Gt = (t) => {
+  var Wt = (t) => {
     let e = C(t);
     Re(e._suggestionsEl, e._input), e._activeIndex = -1;
   };
@@ -8099,7 +8099,7 @@ p9r-tag:hover {
     $e(t, e.value.trim().toLowerCase());
   };
   var na = (t) => {
-    setTimeout(() => Gt(t), 150);
+    setTimeout(() => Wt(t), 150);
   };
   var aa = (t, e) => {
     if (!e)
@@ -8130,7 +8130,7 @@ p9r-tag:hover {
           bt(t, a);
       }
     } else if (i.key === "Escape")
-      i.preventDefault(), Gt(t);
+      i.preventDefault(), Wt(t);
     else if (i.key === "Backspace" && e.value === "" && r === "multiple")
       ra(t);
     else if (i.key === "," && r === "multiple") {
@@ -8513,7 +8513,7 @@ p9r-tag:hover {
     else
       t.removeAttribute("aria-describedby");
   };
-  var Ge = (t, e, i, r, o, n, a) => {
+  var We = (t, e, i, r, o, n, a) => {
     lp(t, i), dp(t, e), cp(t, e), up(t, e), pp(t, e), hp(t, e), bp(t, e), Ue(t, r, n, o), Xe(t, r), Ze(t, e), Qe(t, n, a, r, o), Ye(e, r, n);
   };
   var pa = (t, e, i, r, o) => {
@@ -8566,7 +8566,7 @@ p9r-tag:hover {
       this._textarea = t.querySelector("textarea"), this._label = t.querySelector(".label"), this._hint = t.querySelector(".hint"), this._meta = t.querySelector(".meta"), this._counter = t.querySelector(".counter"), this._count = t.querySelector(".count"), this._max = t.querySelector(".max");
     }
     connectedCallback() {
-      ["value", "disabled", "required"].forEach((e) => p(this, e)), this._textarea?.addEventListener("input", this._onInput), this._textarea?.addEventListener("change", this._onChange), this.addEventListener("invalid", this._onInvalid), Ge(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
+      ["value", "disabled", "required"].forEach((e) => p(this, e)), this._textarea?.addEventListener("input", this._onInput), this._textarea?.addEventListener("change", this._onChange), this.addEventListener("invalid", this._onInvalid), We(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
       let t = this.getAttribute("value");
       if (t !== null)
         this.value = t;
@@ -8590,7 +8590,7 @@ p9r-tag:hover {
       else if (t === "autosize")
         ft(this, this._textarea);
       else
-        Ge(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
+        We(this, this._textarea, this._label, this._hint, this._meta, this._counter, this._max);
       this._syncValidity();
     }
     get value() {
@@ -8790,7 +8790,7 @@ input:hover:not(:disabled) {
     color: var(--text-main, #1e293b);
 }
 `;
-  function We(t, e, i, r) {
+  function Ge(t, e, i, r) {
     t.dispatchEvent(new CustomEvent("change", { bubbles: true, composed: true, detail: { value: e, values: i, created: r } }));
   }
 
@@ -8912,8 +8912,14 @@ input:hover:not(:disabled) {
       if (this.labelRow)
         this.labelRow.hidden = o === "" && !r && !t.querySelector('[slot="label-actions"]');
     }
-    syncDisplay(t, e, i, r) {
-      this.tokens?.replaceChildren(...ya(e, i).map((o) => wa(o, r))), this.internals.setFormValue(t);
+    syncDisplay(t, e, i, r, o) {
+      if (this.tokens?.replaceChildren(...ya(e, i).map((n) => wa(n, r))), o?.endsWith("[]")) {
+        let n = new FormData;
+        for (let a of e)
+          n.append(o, a);
+        this.internals.setFormValue(n, t);
+      } else
+        this.internals.setFormValue(t);
     }
     syncValidity(t, e, i) {
       if (!this.input)
@@ -8966,7 +8972,7 @@ input:hover:not(:disabled) {
 
   class Ea extends d {
     static formAssociated = true;
-    static observedAttributes = ["value", "label", "aria-label", "placeholder", "hint", "hint-level", "invalid", "required", "disabled", "creatable", "api", "resource"];
+    static observedAttributes = ["value", "name", "label", "aria-label", "placeholder", "hint", "hint-level", "invalid", "required", "disabled", "creatable", "api", "resource"];
     view;
     remoteOptions;
     options = [];
@@ -9043,7 +9049,7 @@ input:hover:not(:disabled) {
         this.renderList(this.query);
     }
     syncDisplay() {
-      if (this.view.syncDisplay(this.value, this.selected, this.options, this.removeValue), this.selected.length > 0)
+      if (this.view.syncDisplay(this.value, this.selected, this.options, this.removeValue, this.getAttribute("name")), this.selected.length > 0)
         this.showValidationMessage = false;
       this.view.syncAttributes(this, this.disabled, this.selected.length, this.hasAttribute("creatable") && this.options.length > 0), this.view.syncValidity(this, this.selected.length, this.showValidationMessage);
     }
@@ -9061,12 +9067,12 @@ input:hover:not(:disabled) {
         this.selected.push(t.value);
       if (this.view.input)
         this.view.input.value = "";
-      this.activeIndex = -1, this.syncDisplay(), this.hideList(), We(this, this.value, this.values, t.kind === "create");
+      this.activeIndex = -1, this.syncDisplay(), this.hideList(), Ge(this, this.value, this.values, t.kind === "create");
     };
     removeValue = (t) => {
       if (!t)
         return;
-      this.selected = this.selected.filter((e) => e !== t), this.syncDisplay(), We(this, this.value, this.values, false), this.view.input?.focus();
+      this.selected = this.selected.filter((e) => e !== t), this.syncDisplay(), Ge(this, this.value, this.values, false), this.view.input?.focus();
     };
     onCreate(t) {
       if (t.preventDefault(), this.query)
@@ -10444,7 +10450,7 @@ input:hover:not(:disabled) {
     </span>
 </button>
 `;
-  var Ga = `:host {
+  var Wa = `:host {
     display: block;
     padding: 0 6px;
 }
@@ -10525,11 +10531,11 @@ input:hover:not(:disabled) {
 }
 `;
 
-  class Wa extends d {
+  class Ga extends d {
     _control;
     _iconSlot;
     constructor() {
-      super({ css: Ga, template: Ya });
+      super({ css: Wa, template: Ya });
       this._control = this.shadowRoot?.querySelector(".item") ?? null, this._iconSlot = this.shadowRoot?.querySelector('slot[name="icon"]') ?? null;
     }
     static get observedAttributes() {
@@ -11664,7 +11670,7 @@ p {
   };
   var xh = js + $s;
 
-  class Gs extends d {
+  class Ws extends d {
     _sortTrigger;
     _filterBtn;
     _filterPopover;
@@ -11691,7 +11697,7 @@ p {
     _onWindowClick = () => Ys(this._filterBtn, this._filterPopover);
     _stopPropagation = (t) => t.stopPropagation();
   }
-  var Ws = `<slot></slot>
+  var Gs = `<slot></slot>
 `;
   var Js = `:host {
   display: table-row;
@@ -11756,7 +11762,7 @@ p {
       return ["href"];
     }
     constructor() {
-      super({ css: Js, template: Ws });
+      super({ css: Js, template: Gs });
     }
     connectedCallback() {
       for (let t of ["href", "target"])
@@ -12946,10 +12952,10 @@ p {
   var rb = ["auto", "submit", "change"];
   var w = "cms-bind-stop";
   var g = "cms-ready";
-  function Gl(t) {
+  function Wl(t) {
     return ib.includes(t ?? "");
   }
-  function Wl(t) {
+  function Gl(t) {
     return rb.includes(t ?? "");
   }
   var O = "cms-params:change";
@@ -12964,10 +12970,10 @@ p {
   function ed(t) {
     return /@\{\s*[A-Za-z0-9_.-]+\s*\}/.test(t);
   }
-  function G() {
+  function W() {
     return new URLSearchParams(typeof location > "u" ? "" : location.search);
   }
-  function id(t, e = G()) {
+  function id(t, e = W()) {
     return t.replace(ob, (i, r) => encodeURIComponent(e.get(r) ?? ""));
   }
   function rd(t, e = document) {
@@ -12975,7 +12981,7 @@ p {
     return t.replace(ab, (r, o) => encodeURIComponent(i.get(o) ?? ""));
   }
   function ui(t, e) {
-    let i = G();
+    let i = W();
     if (e === "")
       i.delete(t);
     else
@@ -12983,7 +12989,7 @@ p {
     let r = i.toString();
     history.replaceState(history.state, "", location.pathname + (r ? `?${r}` : "") + location.hash), document.dispatchEvent(new Event("cms-params:change"));
   }
-  function W(t, e = document) {
+  function G(t, e = document) {
     return pi(e).get(t.trim()) ?? "";
   }
   function oe(t, e, i = document) {
@@ -13045,7 +13051,7 @@ p {
     reflect() {
       if (this.timer)
         return;
-      let t = W(this.key, this.el.ownerDocument), e = this.el;
+      let t = G(this.key, this.el.ownerDocument), e = this.el;
       if (e.type === "checkbox") {
         let i = t !== "" && t === (e.value || "true");
         if (e.checked !== i)
@@ -13128,7 +13134,7 @@ p {
     reflect() {
       if (this.timer)
         return;
-      let t = G().get(this.key) ?? "", e = this.el;
+      let t = W().get(this.key) ?? "", e = this.el;
       if (e.type === "checkbox") {
         let i = t !== "" && t === (e.value || "true");
         if (e.checked !== i)
@@ -13245,7 +13251,7 @@ p {
   var mi = "cms-source:reload";
   function x(t) {
     let e = t.getAttribute(yt);
-    return Wl(e) ? e : "auto";
+    return Gl(e) ? e : "auto";
   }
   function dd(t, e) {
     let i = t.ownerDocument, r = x(t), o = new Set([...r === "auto" ? [mi] : [], ...ub(t)]), n = (s) => {
@@ -14427,12 +14433,12 @@ p {
     let i = Fb(t);
     if (!i)
       return;
-    let r = {}, o = G();
+    let r = {}, o = W();
     for (let [n, a] of Object.entries(i))
       if (a.from === "queryParam")
         r[n] = o.get(a.name) ?? "";
       else if (a.from === "state")
-        r[n] = W(a.name, e);
+        r[n] = G(a.name, e);
       else
         r[n] = a.value;
     return Object.keys(r).length ? r : undefined;
@@ -14528,10 +14534,10 @@ p {
     t.append(i, String(o));
   }
   var Nb = /^[A-Za-z0-9_-]+(?:\[[A-Za-z0-9_-]+\])+$/;
-  var Wd = new Set(["__proto__", "constructor", "prototype"]);
+  var Gd = new Set(["__proto__", "constructor", "prototype"]);
   function Jd(t, e, i) {
     let r = e.endsWith("[]"), o = r ? e.slice(0, -2) : e, n = Db(o);
-    if (r && /^[A-Za-z0-9_-]+$/.test(o) && !Wd.has(o))
+    if (r && /^[A-Za-z0-9_-]+$/.test(o) && !Gd.has(o))
       ji(t, o, i, true);
     else if (!n || !Rb(t, n, i, r))
       ji(t, e, i);
@@ -14540,11 +14546,11 @@ p {
     if (!Nb.test(t))
       return null;
     let e = [t.slice(0, t.indexOf("[")), ...Array.from(t.matchAll(/\[([^\]]+)\]/g), (i) => i[1])];
-    return e.some((i) => Wd.has(i)) ? null : e;
+    return e.some((i) => Gd.has(i)) ? null : e;
   }
   function Rb(t, e, i, r) {
     let o = e[0], n = t[o];
-    if (n !== undefined && !Gd(n))
+    if (n !== undefined && !Wd(n))
       return false;
     let a = n ?? Object.create(null);
     if (n === undefined)
@@ -14552,7 +14558,7 @@ p {
     let s = a;
     for (let l of e.slice(1, -1)) {
       let c = s[l];
-      if (c !== undefined && !Gd(c))
+      if (c !== undefined && !Wd(c))
         return false;
       let u = c ?? Object.create(null);
       s[l] = u, s = u;
@@ -14568,7 +14574,7 @@ p {
     else
       t[e] = [o, i];
   }
-  function Gd(t) {
+  function Wd(t) {
     return typeof t === "object" && t !== null && Object.getPrototypeOf(t) === null;
   }
   function tc(t) {
@@ -14656,11 +14662,16 @@ p {
     }
   }
   function rc(t) {
-    let e = {}, i = new Set;
-    for (let r of tc(t)) {
-      let o = ec(r);
-      if (o !== undefined)
-        ic(e, r.getAttribute("name"), me(o, new Set), i);
+    let e = {}, i = new Set, r, o = new Set;
+    for (let n of tc(t)) {
+      let a = n.getAttribute("name"), s = ec(n), l = a.endsWith("[]") && n.localName.includes("-") && typeof s === "string";
+      if (l && o.has(a))
+        continue;
+      if (l)
+        o.add(a), r ??= new t.ownerDocument.defaultView.FormData(t);
+      let c = l ? r.getAll(a) : s;
+      if (c !== undefined)
+        ic(e, n.getAttribute("name"), me(c, new Set), i);
     }
     return me(e, new Set);
   }
@@ -14933,12 +14944,12 @@ p {
     let s = n.generation(), l = () => o.isConnected && nt.get(o) === n && n.url() === a && n.generation() === s;
     return { source: o, current: l, reload: () => l() ? n.reload(t) : Promise.resolve(false) };
   }
-  var Gi = new WeakSet;
+  var Wi = new WeakSet;
   var uc = ["beforeinput", "click", "keydown", "pointerdown", "mousedown", "touchstart", "paste", "cut", "drop", "dragstart", "wheel", "submit"];
   function pc(t, e) {
-    if (Gi.has(t))
+    if (Wi.has(t))
       return null;
-    Gi.add(t);
+    Wi.add(t);
     let i = t.getAttribute("aria-busy");
     t.setAttribute("aria-busy", "true");
     let r = (n) => t.contains(n) || e.contains(n) || n.form === e, o = (n) => {
@@ -14955,7 +14966,7 @@ p {
     for (let n of uc)
       t.ownerDocument.addEventListener(n, o, { capture: true, passive: false });
     return () => {
-      if (Gi.delete(t), i === null)
+      if (Wi.delete(t), i === null)
         t.removeAttribute("aria-busy");
       else
         t.setAttribute("aria-busy", i);
@@ -15445,15 +15456,15 @@ p {
     }
   }
   var bc = "cms-binding-cloak";
-  var Gb = `${f}{display:contents}[${h}]:not([${g}]){visibility:hidden}`;
+  var Wb = `${f}{display:contents}[${h}]:not([${g}]){visibility:hidden}`;
   function mc(t) {
     if (t.getElementById(bc))
       return;
     let e = t.createElement("style");
-    e.id = bc, e.textContent = Gb, (t.head ?? t.documentElement).appendChild(e);
+    e.id = bc, e.textContent = Wb, (t.head ?? t.documentElement).appendChild(e);
   }
   var fc = {};
-  function Wb(t) {
+  function Gb(t) {
     fc = t;
   }
 
@@ -15505,7 +15516,7 @@ p {
     }
     _sourceStateForce() {
       let t = this.getAttribute(ee);
-      return Gl(t) ? t : undefined;
+      return Wl(t) ? t : undefined;
     }
     _revealInertSources() {
       V(this), queueMicrotask(() => {
@@ -28768,13 +28779,13 @@ w13c-lateral-menu {
     return Lr2.includes(t ?? "");
   }
   var D2 = "cms-params:change";
-  var E3 = "cms-state:change";
+  var O2 = "cms-state:change";
   var Zr2 = new RegExp("#\\{\\s*([A-Za-z0-9_][A-Za-z0-9_.:-]*)\\s*\\}", "g");
-  var Nr = new RegExp("#\\{\\s*[A-Za-z0-9_][A-Za-z0-9_.:-]*\\s*\\}");
-  var Jr2 = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
+  var Jr2 = new RegExp("#\\{\\s*[A-Za-z0-9_][A-Za-z0-9_.:-]*\\s*\\}");
+  var Nr = /@\{\s*([A-Za-z0-9_.-]+)\s*\}/g;
   var bi2 = new WeakMap;
   function gi2(t) {
-    return Nr.test(t);
+    return Jr2.test(t);
   }
   function Fi2(t) {
     return /@\{\s*[A-Za-z0-9_.-]+\s*\}/.test(t);
@@ -28787,7 +28798,7 @@ w13c-lateral-menu {
   }
   function Ci2(t, i = document) {
     let r = Ft2(i);
-    return t.replace(Jr2, (n, o) => encodeURIComponent(r.get(o) ?? ""));
+    return t.replace(Nr, (n, o) => encodeURIComponent(r.get(o) ?? ""));
   }
   function ki2(t, i) {
     let r = j2();
@@ -28846,12 +28857,12 @@ w13c-lateral-menu {
         console.warn(`${l2}: no key - set ${l2}="<key>" or a name attribute`, this.el);
         return;
       }
-      this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), this.el.ownerDocument.addEventListener(E3, this.onState);
+      this.reflect(), this.el.addEventListener("input", this.onInput), this.el.addEventListener("change", this.onChange), this.el.ownerDocument.addEventListener(O2, this.onState);
       let t = this.el.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
       this.childObserver = new t(this.onChildren), this.childObserver.observe(this.el, { childList: true });
     }
     dispose() {
-      if (this.el.removeEventListener("input", this.onInput), this.el.removeEventListener("change", this.onChange), this.el.ownerDocument.removeEventListener(E3, this.onState), this.childObserver?.disconnect(), this.childObserver = null, this.timer)
+      if (this.el.removeEventListener("input", this.onInput), this.el.removeEventListener("change", this.onChange), this.el.ownerDocument.removeEventListener(O2, this.onState), this.childObserver?.disconnect(), this.childObserver = null, this.timer)
         clearTimeout(this.timer);
       if (this.reflectTimer)
         clearTimeout(this.reflectTimer);
@@ -29006,7 +29017,7 @@ w13c-lateral-menu {
     return false;
   }
   var qr2 = /^\s*([\s\S]+?)\s+as\s+([A-Za-z_$][\w$]*)\s*$/;
-  function O2(t) {
+  function A3(t) {
     return b(t).url;
   }
   function b(t) {
@@ -29023,12 +29034,12 @@ w13c-lateral-menu {
     if (n)
       i.addEventListener(D2, r), i.defaultView?.addEventListener?.("popstate", r);
     if (o)
-      i.addEventListener(E3, r);
+      i.addEventListener(O2, r);
     return () => {
       if (n)
         i.removeEventListener(D2, r), i.defaultView?.removeEventListener?.("popstate", r);
       if (o)
-        i.removeEventListener(E3, r);
+        i.removeEventListener(O2, r);
     };
   }
   var Vi2 = "cms-reload-on";
@@ -29037,7 +29048,7 @@ w13c-lateral-menu {
     let i = t.getAttribute(q);
     return li2(i) ? i : "auto";
   }
-  function Ai2(t, i) {
+  function Ei2(t, i) {
     let r = t.ownerDocument, n = S2(t), o = new Set([...n === "auto" ? [kt2] : [], ...Yr2(t)]), e = (s2) => {
       if (s2.type !== kt2 || s2.target === r || s2.target === t)
         i.onReload();
@@ -29052,7 +29063,7 @@ w13c-lateral-menu {
         s2?.removeEventListener(f3, a);
       };
     }
-    let u2 = $i2(O2(t.getAttribute(h2) ?? ""), r, i.onReactiveUrlChange);
+    let u2 = $i2(A3(t.getAttribute(h2) ?? ""), r, i.onReactiveUrlChange);
     return () => {
       for (let s2 of o)
         r.removeEventListener(s2, e);
@@ -29071,10 +29082,10 @@ w13c-lateral-menu {
   function Y2(t) {
     return H2.get(t)?.value;
   }
-  function Ei2(t, i) {
-    H2.set(t, { value: i, local: Pt2(t) && O2(t.getAttribute("cms-source") ?? "") === "" });
-  }
   function Oi2(t, i) {
+    H2.set(t, { value: i, local: Pt2(t) && A3(t.getAttribute("cms-source") ?? "") === "" });
+  }
+  function Ai2(t, i) {
     return xt2.set(t, i), H2.get(t);
   }
   function zi2(t) {
@@ -29155,9 +29166,9 @@ w13c-lateral-menu {
   }
   var G2 = ["src", "srcset", "sizes", "media", "width", "height"];
   var st2 = "data-cms-network-inert";
-  var Ni2 = "img,picture,source";
+  var Ji2 = "img,picture,source";
   function K(t, i) {
-    if (!Ji2(t))
+    if (!Ni2(t))
       return t.getAttribute(i);
     let r = ft2(i);
     if (t.hasAttribute(r))
@@ -29170,14 +29181,14 @@ w13c-lateral-menu {
   function Vt2(t) {
     return t?.includes("{{") ?? false;
   }
-  function Ji2(t) {
+  function Ni2(t) {
     return t.matches("img,picture,source");
   }
   var Rr2 = ["src", "srcset"];
   var vr2 = ["sizes", "media"];
   var Ir = "template";
   function L2(t) {
-    let i = qi2(t, Ni2), r = new Set;
+    let i = qi2(t, Ji2), r = new Set;
     for (let n of i.filter((o) => o.localName === "picture")) {
       let o = [n, ...Array.from(n.querySelectorAll("img,source")).filter((e) => e.closest("picture") === n)];
       if (o.forEach((e) => r.add(e)), o.some(Qi2))
@@ -29212,7 +29223,7 @@ w13c-lateral-menu {
     return [...typeof t.matches === "function" && t.matches(i) ? [t] : [], ...Array.from(t.querySelectorAll(i))];
   }
 
-  class At2 {
+  class Et2 {
     start;
     end;
     sites;
@@ -29235,7 +29246,7 @@ w13c-lateral-menu {
     }
   }
 
-  class Et2 {
+  class Ot2 {
     sites;
     constructor(t) {
       this.sites = t;
@@ -29275,10 +29286,10 @@ w13c-lateral-menu {
     let r = i.indexOf("."), n = r === -1 ? i : i.slice(0, r), o = r === -1 ? "" : i.slice(r + 1);
     for (let e = t;e; e = e.parent) {
       if (e.vars && n in e.vars)
-        return { found: true, value: Wi(e.vars[n], o) };
+        return { found: true, value: Wi2(e.vars[n], o) };
       let u2 = e.value;
       if (Yi2(u2) && n in u2)
-        return { found: true, value: Wi(u2[n], o) };
+        return { found: true, value: Wi2(u2[n], o) };
     }
     return tn2;
   }
@@ -29288,7 +29299,7 @@ w13c-lateral-menu {
       return i.value;
     return i;
   }
-  function Wi(t, i) {
+  function Wi2(t, i) {
     if (i === "")
       return t;
     let r = t;
@@ -29302,11 +29313,11 @@ w13c-lateral-menu {
   function Yi2(t) {
     return t !== null && typeof t === "object";
   }
-  var Gi2 = Ot2();
+  var Gi = At2();
   function v2(t, i) {
-    return Object.hasOwn(i, t) ? i[t] : Object.hasOwn(Gi2, t) ? Gi2[t] : undefined;
+    return Object.hasOwn(i, t) ? i[t] : Object.hasOwn(Gi, t) ? Gi[t] : undefined;
   }
-  function Ot2(t) {
+  function At2(t) {
     let i = t?.trim() || undefined;
     return { dateLong: (r) => on2(r, i), minorCurrency: (r, n) => en2(r, n, i), urlencode: (r) => encodeURIComponent(r == null ? "" : String(r)) };
   }
@@ -29750,18 +29761,18 @@ w13c-lateral-menu {
       or2(u2, [...i, s2], { skipCondition: false, skipRepeat: false, submitBoundary: e }, r, n, o);
     });
   }
-  var N2;
+  var J2;
   function er2(t, i) {
-    let r = N2;
-    N2 = t;
+    let r = J2;
+    J2 = t;
     try {
       i();
     } finally {
-      N2 = r;
+      J2 = r;
     }
   }
   function ur(t) {
-    return Boolean(N2 && (N2.contains(t) || t.form === N2));
+    return Boolean(J2 && (J2.contains(t) || t.form === J2));
   }
   function sr2(t, i, r) {
     let n = t.ownerDocument.defaultView;
@@ -29881,7 +29892,7 @@ w13c-lateral-menu {
     }
   }
 
-  class Nt2 {
+  class Jt2 {
     start;
     end;
     spec;
@@ -29938,7 +29949,7 @@ w13c-lateral-menu {
     }
   }
 
-  class Jt2 {
+  class Nt2 {
     start;
     end;
     expression;
@@ -29981,11 +29992,11 @@ w13c-lateral-menu {
     }
     for (let { item: d3, node: c } of f3) {
       let y2 = Xt2(c, `cms-repeat ${d3.spec.path}`);
-      n.push(new Nt2(y2.start, y2.end, d3.spec, d3.template, d3.rootCondition));
+      n.push(new Jt2(y2.start, y2.end, d3.spec, d3.template, d3.rootCondition));
     }
     for (let { item: d3, node: c } of a) {
       let y2 = Xt2(c, `cms-html ${d3.expression}`);
-      n.push(new Jt2(y2.start, y2.end, d3.expression));
+      n.push(new Nt2(y2.start, y2.end, d3.expression));
     }
     return [...n, ...o];
   }
@@ -30037,11 +30048,11 @@ w13c-lateral-menu {
         let s2 = at(t);
         e.attributes = e.attributes.filter((f3) => !f3.boolean || C2(f3.template, s2));
       }
-      let u2 = new Et2(Qt2(t, e, r));
+      let u2 = new Ot2(Qt2(t, e, r));
       return u2.update(i), u2;
     }
     mount(t, i, r = null) {
-      let n = t.ownerDocument ?? document, o = n.createComment("cms-region start"), e = n.createComment("cms-region end"), u2 = this.executableTemplate.cloneNode(true), s2 = new At2(o, e, Qt2(u2, this.plan, this.filters));
+      let n = t.ownerDocument ?? document, o = n.createComment("cms-region start"), e = n.createComment("cms-region end"), u2 = this.executableTemplate.cloneNode(true), s2 = new Et2(o, e, Qt2(u2, this.plan, this.filters));
       return s2.update(i), t.insertBefore(o, r), t.insertBefore(u2, r), t.insertBefore(e, r), s2;
     }
     cloneRaw() {
@@ -30138,7 +30149,7 @@ w13c-lateral-menu {
     return r ? { [r]: i } : {};
   }
 
-  class Wt {
+  class Wt2 {
     el;
     renderer;
     options;
@@ -30245,7 +30256,7 @@ w13c-lateral-menu {
     return typeof t === "object" && t !== null && !Array.isArray(t);
   }
   var Yt2 = "cms-source:success";
-  var Gt2 = "cms-source:failed";
+  var Gt = "cms-source:failed";
   var Kt = "cms-source:refresh-failed";
   function _(t) {
     let i = new FormData(t);
@@ -30425,11 +30436,16 @@ w13c-lateral-menu {
     }
   }
   function kr2(t) {
-    let i = {}, r = new Set;
-    for (let n of Fr(t)) {
-      let o = wr2(n);
-      if (o !== undefined)
-        Cr2(i, n.getAttribute("name"), mt2(o, new Set), r);
+    let i = {}, r = new Set, n, o = new Set;
+    for (let e of Fr(t)) {
+      let u2 = e.getAttribute("name"), s2 = wr2(e), f3 = u2.endsWith("[]") && e.localName.includes("-") && typeof s2 === "string";
+      if (f3 && o.has(u2))
+        continue;
+      if (f3)
+        o.add(u2), n ??= new t.ownerDocument.defaultView.FormData(t);
+      let a = f3 ? n.getAll(u2) : s2;
+      if (a !== undefined)
+        Cr2(i, e.getAttribute("name"), mt2(a, new Set), r);
     }
     return mt2(i, new Set);
   }
@@ -30528,19 +30544,19 @@ w13c-lateral-menu {
       n.set("Content-Type", "application/json"), o.body = r.body;
     else if (r.kind === "formData")
       o.body = r.body;
-    return { ...await An2(r.url, o), form: t };
+    return { ...await En2(r.url, o), form: t };
   }
-  async function An2(t, i = {}) {
+  async function En2(t, i = {}) {
     try {
-      let r = await fetch(t, i), n = await En2(r);
-      return { ok: r.ok, status: r.status, statusText: r.statusText, body: n, message: r.ok ? "" : On2(r, n) };
+      let r = await fetch(t, i), n = await On2(r);
+      return { ok: r.ok, status: r.status, statusText: r.statusText, body: n, message: r.ok ? "" : An2(r, n) };
     } catch (r) {
       if (r?.name === "AbortError")
         return { ok: false, status: 0, statusText: "Aborted", body: null, message: "Aborted" };
       return { ok: false, status: 0, statusText: "Network Error", body: null, message: r instanceof Error ? r.message : String(r) };
     }
   }
-  async function En2(t) {
+  async function On2(t) {
     if (t.status === 204)
       return null;
     let i = await t.clone().text().catch(() => "");
@@ -30552,7 +30568,7 @@ w13c-lateral-menu {
       return t.headers.get("content-type")?.includes("application/json") ? null : i;
     }
   }
-  function On2(t, i) {
+  function An2(t, i) {
     if (i && typeof i === "object" && "error" in i && typeof i.error === "string")
       return i.error;
     if (i && typeof i === "object" && "message" in i && typeof i.message === "string")
@@ -30603,7 +30619,7 @@ w13c-lateral-menu {
       return i.toString();
     }
     dispatchResult(t) {
-      let i = t.ok ? Yt2 : Gt2, r = t.ok ? zn : Dn2, n = { bubbles: true, composed: true, detail: t };
+      let i = t.ok ? Yt2 : Gt, r = t.ok ? zn : Dn2, n = { bubbles: true, composed: true, detail: t };
       this.element.dispatchEvent(new CustomEvent(i, n)), this.element.dispatchEvent(new CustomEvent(r, n));
     }
     publish(t) {
@@ -30674,11 +30690,11 @@ w13c-lateral-menu {
     let i = Object.getPrototypeOf(t);
     return i === Object.prototype || i === null;
   }
-  var J2 = new WeakMap;
+  var N2 = new WeakMap;
   function $r(t, i) {
-    return J2.set(t, i), () => {
-      if (J2.get(t) === i)
-        J2.delete(t);
+    return N2.set(t, i), () => {
+      if (N2.get(t) === i)
+        N2.delete(t);
     };
   }
   function Vr2(t) {
@@ -30687,18 +30703,18 @@ w13c-lateral-menu {
       return null;
     if (!/^#[A-Za-z_][\w:.-]*$/.test(i))
       throw Error("cms-source-success-reload must identify one source by #id.");
-    let r = t.closest(p3), n = r ? Array.from(r.querySelectorAll("[id]")).filter((a) => a.getAttribute("id") === i.slice(1) && a.closest(p3) === r) : [], o = n.length === 1 ? n[0] : null, e = o ? J2.get(o) : undefined;
+    let r = t.closest(p3), n = r ? Array.from(r.querySelectorAll("[id]")).filter((a) => a.getAttribute("id") === i.slice(1) && a.closest(p3) === r) : [], o = n.length === 1 ? n[0] : null, e = o ? N2.get(o) : undefined;
     if (!o || !e || o.closest(p3) !== r || !o.hasAttribute(h2) || S2(o) !== "auto")
       throw Error("cms-source-success-reload requires one active read source in the same binding core.");
     let u2 = e.url();
     if (!u2)
       throw Error("cms-source-success-reload requires a source URL.");
-    let s2 = e.generation(), f3 = () => o.isConnected && J2.get(o) === e && e.url() === u2 && e.generation() === s2;
+    let s2 = e.generation(), f3 = () => o.isConnected && N2.get(o) === e && e.url() === u2 && e.generation() === s2;
     return { source: o, current: f3, reload: () => f3() ? e.reload(t) : Promise.resolve(false) };
   }
   var ri2 = new WeakSet;
-  var Ar2 = ["beforeinput", "click", "keydown", "pointerdown", "mousedown", "touchstart", "paste", "cut", "drop", "dragstart", "wheel", "submit"];
-  function Er2(t, i) {
+  var Er2 = ["beforeinput", "click", "keydown", "pointerdown", "mousedown", "touchstart", "paste", "cut", "drop", "dragstart", "wheel", "submit"];
+  function Or2(t, i) {
     if (ri2.has(t))
       return null;
     ri2.add(t);
@@ -30715,14 +30731,14 @@ w13c-lateral-menu {
         return;
       e.preventDefault(), e.stopImmediatePropagation();
     };
-    for (let e of Ar2)
+    for (let e of Er2)
       t.ownerDocument.addEventListener(e, o, { capture: true, passive: false });
     return () => {
       if (ri2.delete(t), r === null)
         t.removeAttribute("aria-busy");
       else
         t.setAttribute("aria-busy", r);
-      for (let e of Ar2)
+      for (let e of Er2)
         t.ownerDocument.removeEventListener(e, o, true);
     };
   }
@@ -30742,7 +30758,7 @@ w13c-lateral-menu {
       let n = Vr2(t), o = i.capture(r);
       if (!o)
         return null;
-      let e = n || t.getAttribute(ot2) === "typed-json", u2 = e ? Er2(n?.source ?? t, o.form) : null;
+      let e = n || t.getAttribute(ot2) === "typed-json", u2 = e ? Or2(n?.source ?? t, o.form) : null;
       if (e && !u2)
         return null;
       return new lt2(i, o, n, u2);
@@ -30814,7 +30830,7 @@ w13c-lateral-menu {
       this.options = r;
       this.formOwned = it2(t, t.ownerDocument) !== null && S2(t) !== "auto", this.submission = this.formOwned ? new ii2(t, i) : null;
       let n = this.formOwned ? Zi2(t) : Li2(t);
-      this.renderer = new qt(t, n, this.filters, { inPlace: this.formOwned }), this.presenter = new Wt(t, n, this.renderer, { ...this.options, setSourceStatus: (o, e) => {
+      this.renderer = new qt(t, n, this.filters, { inPlace: this.formOwned }), this.presenter = new Wt2(t, n, this.renderer, { ...this.options, setSourceStatus: (o, e) => {
         this.status = e, this.options.setSourceStatus?.(o, e);
       } });
     }
@@ -30835,8 +30851,8 @@ w13c-lateral-menu {
       this.stopContext = hr(this.el, () => {
         this.renderer.refreshContext(), this.afterRender();
       });
-      let t = S2(this.el) === "auto" ? Oi2(this.el, (i) => this.acceptData(i)) : undefined;
-      if (this.stopListeners = Ai2(this.el, { onReload: this.onReload, onReactiveUrlChange: this.onReactiveUrlChange, onSubmit: this.onSubmit, onChange: this.onChange }), t && !this.options.sourceStateForce)
+      let t = S2(this.el) === "auto" ? Ai2(this.el, (i) => this.acceptData(i)) : undefined;
+      if (this.stopListeners = Ei2(this.el, { onReload: this.onReload, onReactiveUrlChange: this.onReactiveUrlChange, onSubmit: this.onSubmit, onChange: this.onChange }), t && !this.options.sourceStateForce)
         this.acceptData(t.value);
       else if (S2(this.el) === "auto" || this.options.sourceStateForce)
         this.run();
@@ -30918,7 +30934,7 @@ w13c-lateral-menu {
       return this.acceptData(n ? St2(Y2(this.el), u2.data) : u2.data, t?.acknowledge), true;
     }
     acceptData(t, i) {
-      this.abort?.abort(), this.abort = null, Ei2(this.el, t), this.hasData = true;
+      this.abort?.abort(), this.abort = null, Oi2(this.el, t), this.hasData = true;
       let r = b(this.el.getAttribute(h2) ?? "");
       this.lastUrl = B2(r.url, this.el.ownerDocument), this.dataUrl = this.lastUrl, er2(i, () => this.presenter.data(r.alias, t)), this.afterRender();
     }
@@ -31089,7 +31105,7 @@ w13c-lateral-menu {
       return true;
     }
     hasSourceInput(t) {
-      return O2(t.getAttribute(h2) ?? "").trim() !== "" || S2(t) === "auto" && Pt2(t);
+      return A3(t.getAttribute(h2) ?? "").trim() !== "" || S2(t) === "auto" && Pt2(t);
     }
   }
 
@@ -31724,15 +31740,6 @@ w13c-lateral-menu {
     }
     return resource;
   }
-  async function sendSourceJson(sourceId, ref, method, vars) {
-    const body = resolveBody(ref.body, vars);
-    const response = await ac(sourceUrl(sourceId, ref, vars).href, {
-      method,
-      headers: body === undefined ? { Accept: "application/json" } : { Accept: "application/json", "Content-Type": "application/json" },
-      ...body === undefined ? {} : { body: JSON.stringify(body) }
-    });
-    return responseJson(response);
-  }
   async function sendSourceDownload(sourceId, ref, method, vars) {
     const response = await sendDownloadResponse(sourceId, ref, method, vars, "*/*");
     if (!response.ok) {
@@ -31766,15 +31773,6 @@ w13c-lateral-menu {
       url.searchParams.set(key, value2);
     }
     return url;
-  }
-  function responseJson(response) {
-    if (!response.ok) {
-      if (response.statusText === "Aborted") {
-        throw new DOMException("Aborted", "AbortError");
-      }
-      throw new Error(response.message || `Source request failed (${response.status})`);
-    }
-    return response.body;
   }
   function filenameFromDisposition(value2) {
     const match = value2?.match(/filename="?([^";]+)"?/i);
@@ -34409,7 +34407,7 @@ slot {
 <span data-schema-state="empty">No dynamic fields are configured.</span>
 <div data-schema-state="ready">
     <cms-dashboard-schema-row data-schema-row>
-        <p9r-input cms-condition="schemaRow.text" type="{{ schemaRow.inputType }}"
+        <p9r-input cms-condition="schemaRow.text" type="{{ schemaRow.inputType }}" step="any"
             data-schema-key="{{ schemaRow.id }}" label="{{ schemaRow.label }}" value="{{ schemaRow.value }}"
             cms-bind-boolean-required="schemaRow.required"></p9r-input>
         <p9r-select cms-condition="schemaRow.select" data-schema-key="{{ schemaRow.id }}"
@@ -34521,15 +34519,8 @@ slot { display: contents; }
       return this.internals.form;
     }
     get value() {
-      const result = {};
-      for (const input of Array.from(this.querySelectorAll("[data-schema-key]:not([disabled]):not([readonly])"))) {
-        const key = input.dataset.schemaKey;
-        if (["__proto__", "constructor", "prototype"].includes(key)) {
-          throw new Error("Invalid metadata field key.");
-        }
-        result[key] = typeof input.checked === "boolean" ? input.checked : input.value === "" ? null : input.getAttribute("type") === "number" ? Number(input.value) : input.value;
-      }
-      return result;
+      const detail = this.closest("cms-dashboard-w-detail");
+      return detail?.currentFieldValues()[this.dataset.fieldControl ?? ""] ?? {};
     }
     constructor() {
       super({ css: field_default, template: '<div class="grid"><slot></slot></div>' });
@@ -36632,7 +36623,8 @@ slot { display: contents; }
       control.setAttribute("label", field2.label);
       control.setAttribute("data-field-control", field2.id);
       if (form && !(field2.type === "table" && !field2.editable)) {
-        control.setAttribute("name", submissionName(field2.name ?? field2.path, form.valuesPath));
+        const name = submissionName(field2.name ?? field2.path, form.valuesPath);
+        control.setAttribute("name", field2.type === "tokens" && !name.endsWith("[]") ? `${name}[]` : name);
         if (field2.empty) {
           control.setAttribute("cms-form-empty", field2.empty);
         }
@@ -37073,6 +37065,11 @@ slot { display: contents; }
       return {
         tableFilters: state.values,
         detailResource: resource,
+        tableOperations: Object.fromEntries((widget.actions ?? []).filter((action) => action.form).map((action) => {
+          const fields = action.form.fields ?? [];
+          const values = Object.fromEntries(fields.map((field2) => [field2.id, valueAt(resource, field2.path)]));
+          return [action.id, { resource, resourceMoney: moneyFieldContext(fields, resource, values) }];
+        })),
         detailRow: resource,
         detailSelection: { id: resource ? selected2[0] : undefined }
       };
@@ -37358,141 +37355,14 @@ slot { display: contents; }
     return element;
   }
 
-  // src/static/admin/_content/sources/_runtime/action-form.html
-  var action_form_default = `<form hidden data-dashboard-action-form cms-source-trigger="submit" cms-source-inherit-query="false" cms-source-success-reset="false">
-    <input type="hidden" cms-repeat="submissionFields as field" name="{{ field.name }}" value="{{ field.value }}">
-    <input type="file" name="file" data-submission-file cms-condition="submissionFile">
-</form>
-`;
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/index.ts
-  class ActionForms {
-    host;
-    pending = new Set;
-    constructor(host) {
-      this.host = host;
-    }
-    submit = (submission) => {
-      if (!this.host.isConnected || !this.host.closest("cms-binding-core")) {
-        return Promise.reject(new Error("The action form is not connected to page binding"));
-      }
-      const fragment2 = document.createElement("template");
-      fragment2.innerHTML = action_form_default;
-      const form = fragment2.content.firstElementChild;
-      form.setAttribute("cms-source", `${submission.url} as result`);
-      form.setAttribute("cms-source-method", submission.method);
-      const fields = Object.entries(submission.fields).map(([name, value2]) => ({ name, value: value2 }));
-      jd(form, () => ({ submissionFields: fields, submissionFile: Boolean(submission.file) }));
-      return new Promise((resolve, reject) => {
-        let settled = false;
-        let started = false;
-        let stop;
-        const finish = (error, body) => {
-          if (settled) {
-            return;
-          }
-          settled = true;
-          stop?.();
-          this.pending.delete(cancel);
-          form.remove();
-          if (error) {
-            reject(error);
-          } else {
-            resolve(body);
-          }
-        };
-        const cancel = () => finish(new DOMException("The action form was disconnected", "AbortError"));
-        const result = (event) => {
-          if (event.target !== form) {
-            return;
-          }
-          const detail = event.detail;
-          finish(detail.ok ? undefined : new Error(detail.message || `Request failed (${detail.status})`), detail.body);
-        };
-        form.addEventListener("cms-source:success", result);
-        form.addEventListener("cms-source:failed", result);
-        this.pending.add(cancel);
-        stop = pb(form, (state) => {
-          if (state.disposed) {
-            cancel();
-          } else if (!started) {
-            started = true;
-            queueMicrotask(() => {
-              if (settled || !form.isConnected) {
-                return;
-              }
-              try {
-                if (submission.file) {
-                  const transfer = new DataTransfer;
-                  transfer.items.add(submission.file);
-                  form.querySelector("[data-submission-file]").files = transfer.files;
-                }
-                form.requestSubmit();
-              } catch (error) {
-                finish(error instanceof Error ? error : new Error(String(error)));
-              }
-            });
-          }
-        });
-        this.host.append(form);
-      });
-    };
-    disconnect() {
-      for (const cancel of [...this.pending]) {
-        cancel();
-      }
-    }
-  }
-  function stringFields(body) {
-    if (!body || typeof body !== "object" || Array.isArray(body)) {
-      return null;
-    }
-    const entries = Object.entries(body);
-    if (entries.some(([name, value2]) => !/^[A-Za-z0-9_-]+$/.test(name) || ["__proto__", "constructor", "prototype", "_charset_"].includes(name) || (name in HTMLFormElement.prototype) && !["id", "name"].includes(name) || typeof value2 !== "string")) {
-      return null;
-    }
-    return Object.fromEntries(entries);
-  }
-
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/endpoint.ts
-  async function submitEndpoint(sourceId, ref, method, vars, submit) {
-    const fields = stringFields(resolveBody(ref.body, vars));
-    return submit && fields && ["POST", "PUT", "PATCH", "DELETE"].includes(method) ? submit({ url: sourceUrl(sourceId, ref, vars).href, method, fields }) : sendSourceJson(sourceId, ref, method, vars);
-  }
-
-  // src/components/admin/Resources/Integrations/management/api.ts
-  async function managementRequest(id2, operation, body) {
-    const url = `${route(`/api/integrations/management/${operation}`)}?id=${encodeURIComponent(id2)}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-    if (!response.ok) {
-      const detail = await response.json().catch(() => null);
-      throw new Error(detail?.error ?? `Request failed (HTTP ${response.status})`);
-    }
-    return response.json();
-  }
-
   // src/components/admin/Resources/Dashboards/runtime/actions/endpoint.ts
-  async function executeEndpointAction(group, groups, action, vars, submit) {
+  async function executeEndpointAction(group, groups, action, vars) {
     if (action.selection?.row !== undefined) {
       const row = resolveExpression(action.selection.row, vars);
       if (!action.selection.opens || typeof row !== "string" && typeof row !== "number" || !String(row).trim() || typeof row === "number" && !Number.isFinite(row)) {
         throw new Error("The navigation target is unavailable. Reload the detail before trying again.");
       }
       return { kind: "navigation", collection: action.selection.opens, row: String(row) };
-    }
-    if (action.management) {
-      const management = action.management;
-      const input = resolveBody(management.body, vars) ?? vars.fields ?? {};
-      const result = management.action === "action" && management.actionId && Object.keys(input).length === 0 && submit ? await submit({
-        url: `${route2("/api/integrations/management/action")}?id=${encodeURIComponent(management.installationId)}`,
-        method: "POST",
-        fields: { actionId: management.actionId }
-      }) : await managementRequest(management.installationId, management.action === "action" ? "action" : "settings", management.action === "action" ? { actionId: management.actionId, input } : input);
-      return { kind: "value", value: result.values, ...actionMeta(group, groups, action) };
     }
     if (!action.endpoint) {
       throw new Error(`Dashboard action "${action.id}" does not declare an endpoint`);
@@ -37503,15 +37373,10 @@ slot { display: contents; }
       return {
         kind: "download",
         blob: download.blob,
-        filename: action.download.filename ?? download.filename ?? `${action.id}.download`,
-        ...actionMeta(group, groups, action)
+        filename: action.download.filename ?? download.filename ?? `${action.id}.download`
       };
     }
-    return {
-      kind: "value",
-      value: await submitEndpoint(group.source.id, action.endpoint, method, vars, submit),
-      ...actionMeta(group, groups, action)
-    };
+    throw new Error(`Dashboard action "${action.id}" must submit its native form`);
   }
   function endpointMethod(group, groups, ref) {
     if (ref.management) {
@@ -37524,16 +37389,6 @@ slot { display: contents; }
       throw new Error(`Dashboard endpoint "${sourceId}:${ref.endpoint}" was not found`);
     }
     return endpoint.method;
-  }
-  function actionMeta(group, groups, action) {
-    return {
-      ...action.after ? { after: action.after } : {},
-      ...action.endpoint && endpointInvalidatesSchema(group, groups, action.endpoint) ? { invalidatesSchema: true } : {}
-    };
-  }
-  function endpointInvalidatesSchema(group, groups, ref) {
-    const sourceId = ref.sourceId ?? group.source.id;
-    return groups.find((candidate) => candidate.source.id === sourceId)?.endpoints.find((endpoint) => endpoint.endpointId === ref.endpoint)?.effects?.invalidatesSchema === true;
   }
 
   // src/components/admin/Resources/Dashboards/runtime/actions/widgets.ts
@@ -37605,7 +37460,7 @@ slot { display: contents; }
   }
 
   // src/components/admin/Resources/Dashboards/runtime/actions/index.ts
-  async function executeDashboardAction(group, dashboard, detail, actionId, draft, currentResource, groups = [group], submit) {
+  async function executeDashboardAction(group, dashboard, detail, actionId, draft, currentResource, groups = [group]) {
     const widget = findDetailWidget(dashboard.views, detail.collection);
     if (!widget) {
       throw new Error(`Dashboard action target "${detail.collection}" was not found`);
@@ -37614,7 +37469,7 @@ slot { display: contents; }
     if (!action) {
       throw new Error(`Dashboard action "${actionId}" was not found`);
     }
-    if (!action.endpoint && !action.management && !action.selection) {
+    if (!action.endpoint && !action.selection) {
       throw new Error(`Dashboard action "${actionId}" does not declare an endpoint`);
     }
     const resource = requireDetailResource(currentResource);
@@ -37626,14 +37481,14 @@ slot { display: contents; }
       selection: { id: detail.row },
       resource,
       fields
-    }, submit);
+    });
   }
-  async function executeDashboardTableAction(group, dashboard, actionId, widgetId, value2, groups = [group], filters = {}, detail, submit) {
+  async function executeDashboardTableAction(group, dashboard, actionId, widgetId, value2, groups = [group], filters = {}, detail) {
     const action = findCollectionAction(dashboard.views, actionId, widgetId);
     if (!action) {
       throw new Error(`Dashboard table action "${actionId}" was not found`);
     }
-    if (!action.endpoint && !action.management && !action.selection) {
+    if (!action.endpoint && !action.selection) {
       throw new Error(`Dashboard table action "${actionId}" does not declare an endpoint`);
     }
     return executeEndpointAction(group, groups, action, {
@@ -37645,7 +37500,7 @@ slot { display: contents; }
           [detail.collection]: { id: detail.row }
         }
       } : {}
-    }, submit);
+    });
   }
   async function executeDashboardMediaAction(group, dashboard, detail, media2, draft, groups = [group], submit) {
     const widget = findDetailWidget(dashboard.views, detail.collection);
@@ -37662,23 +37517,14 @@ slot { display: contents; }
     const fields = { ...fieldValues(widget, resource), ...draft, ...media2.fields ?? {} };
     const mediaVars = mediaActionVars(media2);
     const files = media2.files ?? (media2.file ? [media2.file] : []);
-    const results = !files.length ? [
-      await submitEndpoint(group.source.id, ref, endpointMethod(group, groups, ref), {
-        resource,
-        fields,
-        media: mediaVars
-      }, submit)
-    ] : await Promise.all(files.map((file) => {
-      if (!submit) {
-        throw new Error("Uploads require a page-owned action form");
-      }
-      return submit({
-        url: sourceUrl(group.source.id, ref, { resource, fields, media: mediaVars }).href,
-        method: endpointMethod(group, groups, ref),
-        fields: {},
-        file
-      });
-    }));
+    if (!files.length || !submit || ref.body || !["upload", "replace"].includes(media2.action)) {
+      throw new Error("Media mutations require a native file upload; save ordering and removal with the detail.");
+    }
+    const results = await Promise.all(files.map((file) => submit({
+      url: sourceUrl(group.source.id, ref, { resource, fields, media: mediaVars }).href,
+      method: endpointMethod(group, groups, ref),
+      file
+    })));
     const item = target2.parent ? resultMediaItem(results[0], target2.field, group.source.id) : undefined;
     return { handled: true, nested: Boolean(target2.parent), results, ...item ? { item } : {} };
   }
@@ -37711,92 +37557,6 @@ slot { display: contents; }
   function once(finish) {
     let completion;
     return () => completion ??= finish?.() ?? "reuse";
-  }
-  function postActionResource(after, result) {
-    if (!after?.resource) {
-      return { found: false };
-    }
-    const value2 = resolveExpression(after.resource, { result });
-    return value2 === undefined ? { found: false } : { found: true, value: value2 };
-  }
-  function postActionResourceTarget(declaredAfter, after, actionDetail, detail, actionId, result, resource) {
-    if (declaredAfter?.opens) {
-      return after;
-    }
-    if (!actionDetail || actionId.startsWith("delete")) {
-      return null;
-    }
-    if (detail?.row !== "__new__") {
-      return actionDetail;
-    }
-    const row = postActionCreatedId(result, resource);
-    return row ? { collection: detail.collection, row } : null;
-  }
-  function renderResourceTarget(context, target2, after, detail) {
-    if (after || detail?.row === "__new__") {
-      context.openDetail(target2.collection, target2.row);
-      return;
-    }
-    context.render();
-  }
-  function runPostActionFallback(context, after, detail, actionId, result, resource) {
-    const created = postActionCreatedId(result, resource);
-    if (after) {
-      context.openDetail(after.collection, after.row);
-    } else if (!detail) {
-      context.render();
-    } else if (actionId.startsWith("delete")) {
-      context.clearDetail();
-    } else if (detail.row === "__new__" && created) {
-      context.openDetail(detail.collection, created);
-    } else {
-      context.reload(detail.collection, detail.row);
-    }
-  }
-  function changesPostActionSelection(after, detail, actionId, result, resource) {
-    if (after) {
-      return !detail || after.collection !== detail.collection || after.row !== detail.row;
-    }
-    return Boolean(detail && (actionId.startsWith("delete") || detail.row === "__new__" && postActionCreatedId(result, resource) !== null));
-  }
-  function afterTarget(after, result, detail) {
-    if (!after?.opens) {
-      return null;
-    }
-    const rowValue = after.row === undefined ? createdId(result) : resolveExpression(after.row, {
-      result,
-      ...detail ? { selection: { id: detail.row } } : {}
-    });
-    const row = stringValue(rowValue);
-    return row ? { collection: after.opens, row } : null;
-  }
-  function createdId(value2) {
-    if (!value2 || typeof value2 !== "object" || Array.isArray(value2)) {
-      return null;
-    }
-    const id2 = value2.id;
-    if (typeof id2 === "string" && id2.trim()) {
-      return id2;
-    }
-    if (typeof id2 === "number" && Number.isFinite(id2)) {
-      return String(id2);
-    }
-    return null;
-  }
-  function postActionCreatedId(result, resource) {
-    return createdId(result) ?? (resource.found ? createdId(resource.value) : null);
-  }
-  function stringValue(value2) {
-    if (value2 === null || value2 === undefined) {
-      return "";
-    }
-    if (typeof value2 === "string") {
-      return value2;
-    }
-    if (typeof value2 === "number" || typeof value2 === "boolean") {
-      return String(value2);
-    }
-    return "";
   }
 
   // src/components/admin/Resources/Dashboards/view/actions/nestedMedia.ts
@@ -37905,69 +37665,17 @@ slot { display: contents; }
     const finishAction = once(context.actionCoordinator?.beginAction());
     try {
       const submittedFields = structuredClone({ ...context.drafts.get(key) ?? {}, ...action.fields ?? {} });
-      const result = actionDetail ? await executeDashboardAction(group, dashboard, actionDetail, action.action, submittedFields, action.resource, context.groups ?? [group], context.submit) : await executeDashboardTableAction(group, dashboard, action.action, action.widget, action.value, context.groups ?? [group], context.filters?.get(action.widget ?? "") ?? {}, detail ?? undefined, context.submit);
+      const result = actionDetail ? await executeDashboardAction(group, dashboard, actionDetail, action.action, submittedFields, action.resource, context.groups ?? [group]) : await executeDashboardTableAction(group, dashboard, action.action, action.widget, action.value, context.groups ?? [group], context.filters?.get(action.widget ?? "") ?? {}, detail ?? undefined);
       if (result.kind === "navigation") {
         if (finishAction() !== "stale") {
           (context.navigateDetail ?? context.openDetail)(result.collection, result.row);
         }
         return;
       }
-      let definitionsReloaded = false;
-      if (result.invalidatesSchema && context.reloadDefinitions) {
-        try {
-          await context.reloadDefinitions();
-          definitionsReloaded = true;
-        } catch {
-          Nh(`${action.action} completed, but CMS definitions could not be reloaded`, { type: "warning" });
-        }
-      }
-      const completion = finishAction();
-      if (result.kind === "download") {
+      if (finishAction() !== "stale") {
         downloadBlob(result.blob, result.filename);
         Nh(`${action.action} downloaded`, { type: "success" });
-        if (definitionsReloaded) {
-          context.render();
-        }
-        return;
       }
-      Nh(`${action.action} completed`, { type: "success" });
-      const after = afterTarget(result.after, result.value, actionDetail);
-      const resource = postActionResource(result.after, result.value);
-      if (completion === "stale") {
-        if (definitionsReloaded) {
-          context.render();
-        }
-        return;
-      }
-      if (actionDetail) {
-        const remaining = remainingDraft(context.drafts.get(key) ?? {}, submittedFields);
-        if (Object.keys(remaining).length) {
-          context.drafts.set(key, remaining);
-        } else {
-          context.drafts.delete(key);
-        }
-        context.acknowledgeDetailFields?.(actionDetail.collection, actionDetail.row, submittedFields);
-      }
-      const target2 = postActionResourceTarget(result.after, after, actionDetail, detail, action.action, result.value, resource);
-      if (completion === "reuse" && !result.invalidatesSchema && resource.found && resource.value !== null && target2 && context.setDetailResource) {
-        context.setDetailResource(target2.collection, target2.row, resource.value);
-        renderResourceTarget(context, target2, after, detail);
-        return;
-      }
-      if (definitionsReloaded) {
-        const restoresExplicitTarget = completion === "reload" && after !== null;
-        if (restoresExplicitTarget || changesPostActionSelection(after, detail, action.action, result.value, resource)) {
-          runPostActionFallback(context, after, detail, action.action, result.value, resource);
-        } else {
-          context.render();
-        }
-        return;
-      }
-      if (!actionDetail && !after && action.widget && context.reloadCollection) {
-        context.reloadCollection(action.widget);
-        return;
-      }
-      runPostActionFallback(context, after, detail, action.action, result.value, resource);
     } catch (error) {
       finishAction();
       Nh(error instanceof Error ? error.message : "Dashboard action failed", { type: "error" });
@@ -37987,6 +37695,89 @@ slot { display: contents; }
     link.remove();
     if (typeof URL.revokeObjectURL === "function") {
       window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    }
+  }
+
+  // src/static/admin/_content/sources/_runtime/action-form.html
+  var action_form_default = `<form hidden data-dashboard-action-form cms-source-trigger="submit" cms-source-inherit-query="false" cms-source-success-reset="false">
+    <input type="file" name="file" data-submission-file>
+</form>
+`;
+
+  // src/components/admin/Resources/Dashboards/runtime/actions/forms/index.ts
+  class ActionForms {
+    host;
+    pending = new Set;
+    constructor(host) {
+      this.host = host;
+    }
+    submit = (submission) => {
+      if (!this.host.isConnected || !this.host.closest("cms-binding-core")) {
+        return Promise.reject(new Error("The action form is not connected to page binding"));
+      }
+      const fragment2 = document.createElement("template");
+      fragment2.innerHTML = action_form_default;
+      const form = fragment2.content.firstElementChild;
+      form.setAttribute("cms-source", `${submission.url} as result`);
+      form.setAttribute("cms-source-method", submission.method);
+      return new Promise((resolve, reject) => {
+        let settled = false;
+        let started = false;
+        let stop;
+        const finish = (error, body) => {
+          if (settled) {
+            return;
+          }
+          settled = true;
+          stop?.();
+          this.pending.delete(cancel);
+          form.remove();
+          if (error) {
+            reject(error);
+          } else {
+            resolve(body);
+          }
+        };
+        const cancel = () => finish(new DOMException("The action form was disconnected", "AbortError"));
+        const result = (event) => {
+          if (event.target !== form) {
+            return;
+          }
+          const detail = event.detail;
+          finish(detail.ok ? undefined : new Error(detail.message || `Request failed (${detail.status})`), detail.body);
+        };
+        form.addEventListener("cms-source:success", result);
+        form.addEventListener("cms-source:failed", result);
+        this.pending.add(cancel);
+        stop = pb(form, (state) => {
+          if (state.disposed) {
+            cancel();
+          } else if (!started) {
+            started = true;
+            queueMicrotask(() => {
+              if (settled || !form.isConnected) {
+                return;
+              }
+              try {
+                if (submission.file) {
+                  const transfer = new DataTransfer;
+                  transfer.items.add(submission.file);
+                  form.querySelector("[data-submission-file]").files = transfer.files;
+                }
+                form.requestSubmit();
+              } catch (error) {
+                finish(error instanceof Error ? error : new Error(String(error)));
+              }
+            });
+          }
+        });
+        this.host.append(form);
+      });
+    };
+    disconnect() {
+      for (const cancel of [...this.pending]) {
+        cancel();
+      }
     }
   }
 
@@ -38142,7 +37933,7 @@ slot { display: contents; }
         continue;
       }
       const operation = { label: action.label, tone: action.tone, confirm: action.confirm, ...action.form };
-      const { modal, form, opener } = operationModal(operation, context, "detailResource");
+      const { modal, form, opener } = operationModal(operation, context, `tableOperations.${action.id}.resource`);
       const confirmation = Boolean(operation.confirm || operation.fields?.length);
       const trigger = confirmation ? opener : form.querySelector('[type="submit"]');
       trigger.slot = "actions";
@@ -38154,9 +37945,19 @@ slot { display: contents; }
       if (operation.refresh !== "none") {
         form.setAttribute("cms-source-success-reload", `#${table.id}`);
       }
-      const capture = trackOperationCompletion(table, form.id, () => {
+      let selectedKey = "";
+      const capture = trackOperationCompletion(table, form.id, (body) => {
         table.querySelector(`[id="${modal.id}"]`)?.removeAttribute("open");
         Nh("Operation completed", { type: "success" });
+        if (action.after?.opens) {
+          const row = action.after.row ? resolveExpression(action.after.row, { result: body, selection: { id: selectedKey } }) : selectedKey;
+          if ((typeof row === "string" || typeof row === "number") && String(row)) {
+            emitWidgetEvent(table, WIDGET_ROW_SELECT_EVENT, {
+              collection: action.after.opens,
+              rowKey: String(row)
+            });
+          }
+        }
       });
       table.addEventListener("submit", (event) => {
         if (event.target.id !== form.id) {
@@ -38170,6 +37971,7 @@ slot { display: contents; }
           Nh(table.hasAttribute(OPERATION_AWAITING_READ) ? "The operation completed. Retry the list read before submitting again." : "Select exactly one available row before running this operation.", { type: "warning" });
           return;
         }
+        selectedKey = keys[0];
         capture();
       }, true);
       table.append(trigger, content);
@@ -38217,6 +38019,12 @@ slot { display: contents; }
         }
       });
       const capture = trackOperationCompletion(host, formId2, (body, rowKey) => {
+        if (action.section && operation.refresh !== "none" && !action.after?.opens) {
+          const source2 = host.querySelector(`[data-widget-id="${action.section}"] [cms-source]`);
+          if (source2) {
+            dc(source2).catch(() => Nh("The operation completed, but its list could not be reloaded.", { type: "warning" }));
+          }
+        }
         host.querySelector(`[id="${modalId}"]`)?.removeAttribute("open");
         const currentForm = host.querySelector(`[id="${formId2}"]`);
         if (currentForm) {
@@ -38390,7 +38198,7 @@ slot { display: contents; }
         navigationItems: orderedItems(data, this.host, this.draft)
       }));
       this.form.addEventListener(Yt2, this.success);
-      this.form.addEventListener(Gt2, this.failed);
+      this.form.addEventListener(Gt, this.failed);
       this.form.addEventListener(Kt, this.readFailed);
       this.stop = pb(this.source, (state) => {
         if (this.awaitingRead && (state.loaded || state.empty) && !state.loading && !state.refreshing && !state.error && !state.refreshError) {
@@ -38405,7 +38213,7 @@ slot { display: contents; }
       this.draft = null;
       this.host.removeAttribute("aria-busy");
       this.form.removeEventListener(Yt2, this.success);
-      this.form.removeEventListener(Gt2, this.failed);
+      this.form.removeEventListener(Gt, this.failed);
       this.form.removeEventListener(Kt, this.readFailed);
     }
     submit(order) {
@@ -42228,7 +42036,7 @@ p9r-modal {
       throw new Error(`${label2} is not valid JSON.`);
     }
   }
-  function stringValue2(value2) {
+  function stringValue(value2) {
     return typeof value2 === "string" || typeof value2 === "number" || typeof value2 === "boolean" ? String(value2) : "";
   }
   function labelFromPath(path) {
@@ -42426,11 +42234,11 @@ p9r-modal {
       const items = arrayAt2(response, field2.itemsPath ?? "items");
       select.replaceChildren(option3("", "Select..."));
       for (const item of items) {
-        const value2 = stringValue2(valueAt2(item, field2.valuePath ?? "id"));
+        const value2 = stringValue(valueAt2(item, field2.valuePath ?? "id"));
         if (!value2) {
           continue;
         }
-        const label3 = stringValue2(valueAt2(item, field2.labelPath ?? field2.valuePath ?? "id")) || value2;
+        const label3 = stringValue(valueAt2(item, field2.labelPath ?? field2.valuePath ?? "id")) || value2;
         select.append(option3(value2, label3));
       }
       select.value = String(valueAtDraft(draft, field2.path) ?? "");
@@ -42442,7 +42250,7 @@ p9r-modal {
     const response = await fetchSourceEndpoint(seed.source, seed.endpoint, resolvedParams(seed.params, draft));
     const out = {};
     for (const token of arrayAt2(response, seed.pathsPath)) {
-      const path = typeof token === "string" ? token : stringValue2(valueAt2(token, seed.pathNamePath ?? "name"));
+      const path = typeof token === "string" ? token : stringValue(valueAt2(token, seed.pathNamePath ?? "name"));
       if (!path) {
         continue;
       }
@@ -66804,7 +66612,7 @@ dialog::backdrop {
   }
   define("cms-page-form-controller", PageFormController);
   define("cms-page-copy-source", PageCopySource);
-  Wb({
+  Gb({
     ...dashboardDisplayFilters,
     json: (value3) => value3 === undefined ? undefined : JSON.stringify(value3),
     jsonurl: (value3) => value3 === undefined ? undefined : encodeURIComponent(JSON.stringify(value3)),
@@ -66815,7 +66623,7 @@ dialog::backdrop {
   define("p9r-accordion", gr);
   define("p9r-accordion-item", yr);
   define("p9r-action-menu", Qa);
-  define("p9r-action-menu-item", Wa);
+  define("p9r-action-menu-item", Ga);
   define("p9r-action-menu-section", es);
   define("p9r-alert", Er);
   define("p9r-avatar", Cr);
@@ -66842,7 +66650,7 @@ dialog::backdrop {
   define("p9r-tab-panel", hl);
   define("p9r-table", qs);
   define("p9r-cell", Ds);
-  define("p9r-header-cell", Gs);
+  define("p9r-header-cell", Ws);
   define("p9r-row", il);
   define("p9r-tabs", cl);
   define("p9r-tag", gl);

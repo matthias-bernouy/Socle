@@ -29,10 +29,14 @@ test("CMS user fields share one lazy directory read and persist opaque subjects 
         const save = page.getByRole("button", { name: "Save choices", exact: true });
         await save.click();
         expect(fixture.saved).toHaveLength(0);
-        expect(await user.getAttribute("hint")).toBe("This field is required.");
+        expect(
+            await page.locator("[data-detail-save]").evaluate((form) => (form as HTMLFormElement).checkValidity()),
+        ).toBe(false);
         await page.locator('[data-field-control="name"] input').fill("  Changed  ");
-        expect(await user.getAttribute("hint")).toBe("This field is required.");
-        expect(await user.getAttribute("invalid")).toBe("");
+        expect(
+            await page.locator("[data-detail-save]").evaluate((form) => (form as HTMLFormElement).checkValidity()),
+        ).toBe(false);
+        expect(await user.locator("input").getAttribute("aria-invalid")).toBe("true");
         await user.locator("input").fill("Alice");
         await user.getByRole("option", { name: aliceLabel, exact: true }).click();
         expect(await user.getAttribute("invalid")).toBeNull();

@@ -5,7 +5,6 @@ import { afterEach, expect, test } from "bun:test";
 import type { IntegrationHealthEnvelope } from "@bernouy/cms-integrations";
 import { mountHealth } from "cms-control/components/admin/Resources/Integrations/health/presentation/health";
 import { managementRequest } from "cms-control/components/admin/Resources/Integrations/management/api";
-import { executeEndpointAction } from "cms-control/components/admin/Resources/Dashboards/runtime/actions/endpoint";
 import { navigationContext } from "cms-control/components/admin/Resources/Dashboards/navigation/binding/context";
 import { detail } from "./support";
 
@@ -63,7 +62,7 @@ test("health distinguishes stale ready observations and exposes registered recov
     expect(root.textContent).toContain("No valid service observation");
 });
 
-test("settings save sends expected revision and management dashboard actions unwrap the canonical resource", async () => {
+test("management settings save sends the expected revision", async () => {
     const requests: Array<{ url: string; body: unknown }> = [];
     globalThis.fetch = (async (input, init) => {
         requests.push({ url: String(input), body: JSON.parse(String(init?.body)) });
@@ -74,35 +73,12 @@ test("settings save sends expected revision and management dashboard actions unw
         });
     }) as typeof fetch;
     await managementRequest("commerce", "settings", { values: { country: "FR" }, expectedRevision: "2" });
-    const result = await executeEndpointAction(
-        {} as never,
-        [],
-        {
-            id: "save",
-            label: "Publish",
-            management: {
-                installationId: "consent",
-                action: "save-settings",
-                body: {
-                    contextKey: "$resource.key",
-                    expectedRevision: "$resource.revision",
-                    documents: "$field.documents",
-                },
-            },
-        },
-        { resource: { key: "signup", revision: "2" }, fields: { documents: [{ page: "/terms" }] } },
-    );
     expect(requests).toEqual([
         {
             url: "/api/integrations/management/settings?id=commerce",
             body: { values: { country: "FR" }, expectedRevision: "2" },
         },
-        {
-            url: "/api/integrations/management/settings?id=consent",
-            body: { contextKey: "signup", expectedRevision: "2", documents: [{ page: "/terms" }] },
-        },
     ]);
-    expect(result).toMatchObject({ kind: "value", value: { contextKey: "signup", revision: "3" } });
 });
 
 test("source navigation no longer appends installation management panels", () => {

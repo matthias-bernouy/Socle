@@ -3,7 +3,6 @@ import { validateFormOperation } from "./shared/forms/operation";
 import { validateOperationFields } from "./shared/forms/creation";
 import type { Source } from "@bernouy/cms-sources";
 import type { DashboardAction, DashboardDto, DashboardWidget } from "../../interfaces/Dashboard";
-import { isSafeDashboardExpression } from "../dashboardPaths";
 import { validateEndpointRef } from "./endpointRefs";
 import { isSafeDownloadFilename, isSafeActionAfterExpression, validateRequiredId, validateVisibility } from "./shared";
 
@@ -36,7 +35,13 @@ export function validateAction(
         }
     }
     if (action.form !== undefined) {
-        if (action.endpoint || action.management || action.selection || action.download || action.after?.resource) {
+        if (
+            action.endpoint ||
+            Object.hasOwn(action, "management") ||
+            action.selection ||
+            action.download ||
+            (action.after && Object.hasOwn(action.after, "resource"))
+        ) {
             errors.push(`${path}.form cannot combine endpoint, management, selection, download, or after.resource`);
         }
         validateFormOperation(action.form, `${path}.form`, dashboard, source, errors, action.form?.fields ?? []);
@@ -44,30 +49,17 @@ export function validateAction(
             validateOperationFields(action.form.fields, `${path}.form.fields`, dashboard, source, errors);
         }
     }
-    if (!action.endpoint && !action.selection && !action.management && !action.form) {
+    if (!action.endpoint && !action.selection && !Object.hasOwn(action, "management") && !action.form) {
         errors.push(`${path} must declare endpoint, management, selection, or form`);
     }
-    if (action.management) {
-        validateRequiredId(`${path}.management.installationId`, action.management.installationId, errors);
-        if (!["save-settings", "action"].includes(action.management.action) || action.endpoint || action.download) {
-            errors.push(`${path}.management requires save-settings or action and cannot declare endpoint or download`);
-        }
-        if (action.management.action === "action") {
-            validateRequiredId(`${path}.management.actionId`, action.management.actionId, errors);
-        } else if (action.management.actionId !== undefined) {
-            errors.push(`${path}.management.actionId requires action`);
-        }
-        for (const expression of Object.values(action.management.body ?? {})) {
-            if (
-                expression.startsWith("$") &&
-                !isSafeDashboardExpression(expression, ["row", "resource", "field", "result"])
-            ) {
-                errors.push(`${path}.management.body must use safe expressions`);
-            }
-        }
+    if (Object.hasOwn(action, "management")) {
+        errors.push(`${path}.management is obsolete: use a native form management target`);
     }
     if (action.endpoint) {
         validateEndpointRef(dashboard, action.endpoint, `${path}.endpoint`, source, errors);
+        if (!action.download) {
+            errors.push(`${path}.endpoint is only supported for downloads: use form for mutations`);
+        }
     }
     if (action.download !== undefined) {
         if (!action.endpoint) {
@@ -85,8 +77,8 @@ export function validateAction(
         visibilityFieldIds !== undefined,
     );
     if (action.after) {
-        if (!action.endpoint && !action.management && !action.form) {
-            errors.push(`${path}.after requires endpoint or management`);
+        if (!action.form) {
+            errors.push(`${path}.after requires a native form`);
         }
         validateActionAfter(action, `${path}.after`, dashboard, errors, visibilityFieldIds !== undefined);
     }
@@ -101,9 +93,9 @@ function validateActionAfter(
 ): void {
     const after = action.after!;
     const hasOpens = after.opens !== undefined;
-    const hasResource = after.resource !== undefined;
-    if (!hasOpens && !hasResource) {
-        errors.push(`${path} must declare opens or resource`);
+    const hasResource = Object.hasOwn(after, "resource");
+    if (!hasOpens) {
+        errors.push(`${path} must declare opens`);
     }
     if (hasOpens) {
         validateRequiredId(`${path}.opens`, after.opens, errors);
@@ -118,15 +110,7 @@ function validateActionAfter(
         validateActionAfterExpression(`${path}.row`, after.row, errors);
     }
     if (hasResource) {
-        if (typeof after.resource !== "string" || !isSafeDashboardExpression(after.resource, ["result"])) {
-            errors.push(`${path}.resource must be a safe $result expression`);
-        }
-        if (!hasOpens && !detailAction) {
-            errors.push(`${path}.resource requires after.opens on collection actions`);
-        }
-        if (action.download !== undefined) {
-            errors.push(`${path}.resource is not supported with download`);
-        }
+        errors.push(`${path}.resource is obsolete: reload the common source`);
     }
 }
 

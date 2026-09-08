@@ -51,7 +51,7 @@ test("bound tables submit native filters, select rows, download and persist crea
         await page.reload();
         await name.waitFor();
         expect(await name.inputValue()).toBe("Changed Alpha");
-        await detail.locator("[data-back]").click();
+        await detail.locator("[data-back]:visible").click();
         await rows.last().waitFor();
         expect(await rows.first().textContent()).toContain("Changed Alpha");
         await table.getByRole("button", { name: "New product", exact: true }).click();
@@ -66,18 +66,19 @@ test("bound tables submit native filters, select rows, download and persist crea
         await page.reload();
         await name.waitFor();
         expect(await name.inputValue()).toBe("Delta");
-        expect(fixture.writes).toEqual([
-            { id: "1", name: "  Changed Alpha  " },
-            { id: "__new__", name: "  Delta  " },
-        ]);
-        await detail.locator("[data-back]").click();
+        expect(fixture.writes).toEqual([{ id: "1", name: "  Changed Alpha  " }, { name: "  Delta  " }]);
+        await detail.locator("[data-back]:visible").click();
         await rows.last().waitFor();
-        page.once("dialog", (dialog) => dialog.dismiss());
-        await table.getByRole("button", { name: "Clear products", exact: true }).click();
+        await rows.first().getByRole("checkbox").check();
+        await table.locator("p9r-open-modal").getByRole("button", { name: "Clear products", exact: true }).click();
+        const modal = table.locator("p9r-modal[open]");
+        await modal.getByRole("dialog").waitFor();
+        await page.keyboard.press("Escape");
+        await modal.waitFor({ state: "detached" });
         expect(fixture.clears()).toBe(0);
-        page.once("dialog", (dialog) => dialog.accept());
+        await table.locator("p9r-open-modal").getByRole("button", { name: "Clear products", exact: true }).click();
         const cleared = page.waitForResponse((response) => response.url().endsWith("/clear"));
-        await table.getByRole("button", { name: "Clear products", exact: true }).click();
+        await modal.getByRole("button", { name: "Clear products", exact: true }).click();
         await cleared;
         await table.getByText("No rows.", { exact: true }).waitFor();
         expect(fixture.clears()).toBe(1);

@@ -9,12 +9,14 @@ export async function checkNestedStability(page: Page, fixture: Awaited<ReturnTy
     fixture.failChildren();
     const parentReads = fixture.reads.filter((path) => path.endsWith("/parent")).length;
     const failed = page.waitForResponse(
-        (response) => response.url().endsWith("/children") && response.status() === 503,
+        (response) => new URL(response.url()).pathname.endsWith("/children") && response.status() === 503,
     );
     await source.evaluate((node) => document.dispatchEvent(new Event(node.getAttribute("cms-reload-on")!)));
     await failed;
     await list.locator('p9r-alert[type="error"]').waitFor();
-    const retry = page.waitForResponse((response) => response.url().endsWith("/children") && response.status() === 200);
+    const retry = page.waitForResponse(
+        (response) => new URL(response.url()).pathname.endsWith("/children") && response.status() === 200,
+    );
     await list.getByRole("button", { name: "Retry", exact: true }).click();
     await retry;
     await list.locator('p9r-alert[type="error"]').waitFor({ state: "detached" });
@@ -28,7 +30,9 @@ export async function checkNestedStability(page: Page, fixture: Awaited<ReturnTy
     const box = await list.boundingBox();
     const nav = page.locator("cms-dashboards-nav");
     const navBox = await nav.boundingBox();
-    const childReads = fixture.reads.filter((path) => path.endsWith("/children")).length;
+    const childReads = fixture.reads.filter((path) =>
+        new URL(path, "http://cms.test").pathname.endsWith("/children"),
+    ).length;
     const release = fixture.holdParent();
     const request = page.waitForRequest((request) => request.url().endsWith("/parent"));
     const response = page.waitForResponse((response) => response.url().endsWith("/parent"));
@@ -58,5 +62,7 @@ export async function checkNestedStability(page: Page, fixture: Awaited<ReturnTy
             node.selectionEnd,
         ]),
     ).toEqual([true, 2, 7]);
-    expect(fixture.reads.filter((path) => path.endsWith("/children"))).toHaveLength(childReads);
+    expect(
+        fixture.reads.filter((path) => new URL(path, "http://cms.test").pathname.endsWith("/children")),
+    ).toHaveLength(childReads);
 }

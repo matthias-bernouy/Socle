@@ -127,7 +127,7 @@ test("the local example table binds its products without an endpoint and survive
                 }),
             }),
         ]);
-        await detail.locator("[data-back]").click();
+        await detail.locator("[data-back]:visible").click();
         await table.locator('[column="title"]').filter({ hasText: "Edited lamp" }).click();
         await title.waitFor();
         expect(await title.inputValue()).toBe("Edited lamp");
@@ -146,7 +146,7 @@ test("the local example table binds its products without an endpoint and survive
         expect(await vendor.locator("input").inputValue()).toBe("Acme");
         await tags.getByRole("button", { name: "Remove Custom tag", exact: true }).waitFor();
         expect(await tags.getByRole("button", { name: "Remove Featured", exact: true }).count()).toBe(0);
-        await detail.locator("[data-back]").click();
+        await detail.locator("[data-back]:visible").click();
         await rows.last().waitFor();
         expect(await rows.count()).toBe(4);
         expect(requests.filter((path) => path.startsWith("/api/") || path.startsWith("/.cms/"))).toEqual([]);

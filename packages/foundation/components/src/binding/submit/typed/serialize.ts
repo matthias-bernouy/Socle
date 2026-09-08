@@ -6,8 +6,20 @@ import { setTypedPath } from "./paths";
 export function serializeTypedForm(form: HTMLFormElement): SerializedFormData {
     const data: SerializedFormData = {};
     const assigned = new Set<string>();
+    let native: FormData | undefined;
+    const repeatedCustomNames = new Set<string>();
     for (const control of typedControls(form)) {
-        const value = controlValue(control);
+        const name = control.getAttribute("name")!;
+        const raw = controlValue(control);
+        const customArray = name.endsWith("[]") && control.localName.includes("-") && typeof raw === "string";
+        if (customArray && repeatedCustomNames.has(name)) {
+            continue;
+        }
+        if (customArray) {
+            repeatedCustomNames.add(name);
+            native ??= new form.ownerDocument.defaultView!.FormData(form);
+        }
+        const value = customArray ? native!.getAll(name) : raw;
         if (value !== undefined) {
             setTypedPath(data, control.getAttribute("name")!, cloneJson(value, new Set()), assigned);
         }

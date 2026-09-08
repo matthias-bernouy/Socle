@@ -171,10 +171,10 @@ describe("validateDashboard", () => {
     test("rejects invalid binding expressions", () => {
         const dashboard = validDashboard();
         const detail = dashboard.views[1] as Extract<Dashboard["views"][number], { widget: "w-detail" }>;
-        detail.actions![0]!.endpoint.body = { title: "$bad.title" };
+        detail.actions![0]!.form!.hiddenFields![0]!.value = "$bad.title";
 
         expect(validateDashboard(dashboard, { source })).toContain(
-            "views.1.actions.0.endpoint.body.title has an invalid binding expression",
+            "views.1.actions.0.form.hiddenFields.0.value must use a stable resource or selection expression",
         );
     });
 });
