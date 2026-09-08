@@ -1,3 +1,4 @@
+import { composeTableOperations } from "../actions/forms/views/operations/collection";
 import { composeCreation } from "../actions/forms/views/creation";
 import { retainWidgets } from "./reconcile";
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
@@ -144,6 +145,7 @@ function tableElement(
         requiredSourceParams(context, widget.source),
     );
     const element = tableWithSource(widget, wrapper, filters);
+    composeTableOperations(element, widget, context);
     composeCreation(element, widget, context);
     element.setAttribute("data-selected", context.selectedRows.get(widget.selection?.opens ?? widget.id) ?? "");
     return element;

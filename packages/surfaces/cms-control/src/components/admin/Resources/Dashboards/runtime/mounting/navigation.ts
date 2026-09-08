@@ -22,7 +22,7 @@ export function navigationListShell(widget: NavigationListWidget): DashboardWNav
     template.innerHTML = controls as unknown as string;
     const actionTemplate = template.content.querySelector<HTMLTemplateElement>("[data-navigation-action]")!;
     for (const action of widget.actions ?? []) {
-        if (action.id === widget.reorderable?.action) {
+        if (action.form || action.id === widget.reorderable?.action) {
             continue;
         }
         const button = actionTemplate.content.firstElementChild!.cloneNode(true) as HTMLElement;

@@ -1,3 +1,4 @@
+import { detailFormActions } from "../../../runtime/actions/forms/views/operations/declarations";
 import { mediaUploadSessions } from "../../../runtime/actions/forms/views/media";
 import { sourceUrl } from "../../../runtime/source";
 import { directoryContext } from "../lookups/directoryContext";
@@ -27,7 +28,7 @@ export function bindDetailContext(
     const schemas = schemaContext(host, fields);
     const tables = tableContext(host, fields);
     const choices = reorderableContext(host, fields);
-    const actions = actionLayout((widget.actions ?? []).filter((action) => !action.form));
+    const actions = actionLayout(detailFormActions(widget).filter((action) => !action.form));
     const rules = Object.fromEntries(fields.map((field) => [field.id, field.visibleWhen]));
     setSourceContext(host, () => {
         const source = readSourceData(host);
@@ -79,7 +80,7 @@ export function bindDetailContext(
             detailValues: effective,
             detailResource: resource,
             detailOperations: Object.fromEntries(
-                (widget.actions ?? [])
+                detailFormActions(widget)
                     .filter((action) => action.form)
                     .map((action) => {
                         const operationFields = action.form!.fields ?? [];
@@ -95,7 +96,7 @@ export function bindDetailContext(
             detailSelection: { id: host.dataset.rowKey ?? "" },
             detailRow: resource,
             detailOperationVisibility: Object.fromEntries(
-                (widget.actions ?? []).map((action) => [
+                detailFormActions(widget).map((action) => [
                     action.id,
                     resource != null && matchesDashboardVisibility(action.visibleWhen, { fields: values, resource }),
                 ]),

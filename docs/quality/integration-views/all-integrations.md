@@ -28,14 +28,14 @@ to migrate. Newsletter's subscription export remains a GET download.
 | Case | Why a direct migration is unsafe | Required follow-up |
 | --- | --- | --- |
 | Consent details and Stripe Connect seller terms | These call integration management actions, rather than source form endpoints. Publishing also owns immutable legal snapshots | Migrate legal actions to independent native forms while preserving publication semantics; the settings target is now standardized separately |
-| Forms child creation and question deletion | These still use scalar compatibility actions and navigate to another detail after success | Migrate `createSection`, `createQuestion` and `deleteQuestion` with their destination semantics. Reordering already uses independent native forms |
-| Mondial Relay projection-exception table action | Native independent forms are currently composed for details, not table-row operations | Provide a reusable table operation form host |
 
 No official dashboard action still submits a structured body through `sendSourceJson`.
-The remaining source mutations use scalar compatibility forms: the three Forms
-actions above and Mondial Relay projection recovery. Consent and Stripe Connect
-legal actions use the separate management transport; binary downloads are also
-independent. Generic legacy definitions and examples still accept endpoint bodies.
+Forms child creation/deletion and Mondial Relay projection recovery now use native
+independent forms. Forms keeps its list buttons and navigates using the returned
+reference. Delivery submits exactly one checked row and retries a failed read
+without repeating the completed mutation. Consent and Stripe Connect legal actions
+still use management transport; binary downloads remain independent. Generic
+legacy definitions and examples still accept endpoint bodies.
 
 The old action runtime cannot yet be deleted. An empty legacy-source-action list
 alone does not prove a migration is complete: integration management actions

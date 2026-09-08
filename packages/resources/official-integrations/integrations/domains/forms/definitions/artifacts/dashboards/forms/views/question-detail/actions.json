@@ -14,15 +14,20 @@
         "tone": "danger",
         "placement": "more",
         "confirm": "Delete this question? Existing published versions and responses remain unchanged.",
-        "endpoint": {
-            "endpoint": "deleteQuestion",
-            "body": {
-                "ref": "$resource.ref"
-            }
-        },
         "after": {
             "opens": "sectionDetail",
             "row": "$result.sectionRef"
+        },
+        "form": {
+            "endpoint": "deleteQuestion",
+            "refresh": "none",
+            "hiddenFields": [
+                {
+                    "name": "ref",
+                    "type": "string",
+                    "value": "$resource.ref"
+                }
+            ]
         }
     }
 ]

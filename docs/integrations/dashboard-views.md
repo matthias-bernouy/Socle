@@ -99,6 +99,13 @@ An action's `form` defines its endpoint, technical fields and optional local
 submits directly. These forms live outside the principal form. Their success
 normally rereads the detail; `refresh: "none"` is available when appropriate.
 Unsaved principal edits must be resolved before conflicting operations.
+Nested navigation-list actions use the enclosing detail's persisted resource and
+guard, while their buttons stay in the list header. A form action can declare
+`after: { opens, row: "$result.ref" }` to read its destination after success.
+Table forms use exactly one checked row as `$row`/`$resource`, with its key in
+`$selection.id`; empty, multiple or stale selections cannot submit. Their default
+refresh rereads the table. Failed reads can be retried without resubmitting the
+mutation, retaining existing rows.
 
 Operation-dialog fields currently support text, textarea, number, money,
 checkbox, select, combobox, tokens, secret references and page links. Complex

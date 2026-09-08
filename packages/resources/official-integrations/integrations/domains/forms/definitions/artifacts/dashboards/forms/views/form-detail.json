@@ -116,16 +116,20 @@
                         "label": "Add section",
                         "tone": "primary",
                         "placement": "primary",
-                        "endpoint": {
-                            "endpoint": "createSection",
-                            "body": {
-                                "context": "$selection.formDetail.id"
-                            }
-                        },
                         "after": {
                             "opens": "sectionDetail",
-                            "row": "$result.ref",
-                            "resource": "$result"
+                            "row": "$result.ref"
+                        },
+                        "form": {
+                            "endpoint": "createSection",
+                            "refresh": "none",
+                            "hiddenFields": [
+                                {
+                                    "name": "context",
+                                    "type": "string",
+                                    "value": "$resource.key"
+                                }
+                            ]
                         }
                     },
                     {

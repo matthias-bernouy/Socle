@@ -1,12 +1,13 @@
-import { hasMissingTechnicalFields } from "./technicalFields";
-import { matchesDashboardVisibility, resolveExpression, valueAt } from "../../../expressions";
+import { detailFormActions } from "./declarations";
+import { hasMissingTechnicalFields } from "../technicalFields";
+import { matchesDashboardVisibility, resolveExpression, valueAt } from "../../../../expressions";
 import { readSourceData, showToast } from "@bernouy/components";
-import { OPERATION_AWAITING_READ, trackOperationCompletion } from "./operationCompletion";
+import { OPERATION_AWAITING_READ, trackOperationCompletion } from "./completion";
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
-import type { RenderContext } from "../../../../domain";
-import type { DashboardWDetail } from "../../../../widgets/w-detail/WDetail";
-import { WIDGET_BACK_EVENT, WIDGET_ROW_SELECT_EVENT, emitWidgetEvent } from "../../../../widgets/shared";
-import { operationModal } from "./modal";
+import type { RenderContext } from "../../../../../domain";
+import type { DashboardWDetail } from "../../../../../widgets/w-detail/WDetail";
+import { WIDGET_BACK_EVENT, WIDGET_ROW_SELECT_EVENT, emitWidgetEvent } from "../../../../../widgets/shared";
+import { operationModal } from "../modal";
 
 /** Independent actions never implicitly save the principal form's draft. */
 export function composeDetailOperations(
@@ -14,7 +15,7 @@ export function composeDetailOperations(
     widget: Extract<DashboardWidget, { widget: "w-detail" }>,
     context: RenderContext,
 ): void {
-    const actions = (widget.actions ?? []).flatMap((action) =>
+    const actions = detailFormActions(widget).flatMap((action) =>
         action.form ? [{ ...action, form: action.form, deleting: false }] : [],
     );
     if (widget.delete) {
@@ -31,7 +32,10 @@ export function composeDetailOperations(
         const { modal, form, opener } = operationModal(operation, context, `detailOperations.${action.id}.resource`);
         const confirmation = Boolean(operation.confirm || operation.fields?.length);
         const trigger = confirmation ? opener : form.querySelector<HTMLElement>('[type="submit"]')!;
-        trigger.slot = "bound-actions";
+        const actionHost = action.section
+            ? (host.querySelector<HTMLElement>(`[data-widget-id="${action.section}"]`) ?? host)
+            : host;
+        trigger.slot = actionHost === host ? "bound-actions" : "actions";
         trigger.setAttribute("cms-condition", "detailReady && detailPersisted");
         if (action.visibleWhen) {
             trigger.setAttribute("cms-condition", `detailOperationVisibility.${action.id}`);
@@ -118,6 +122,7 @@ export function composeDetailOperations(
         );
         const content = confirmation ? modal : form;
         content.slot = "footer";
-        host.append(trigger, content);
+        actionHost.append(trigger);
+        host.append(content);
     }
 }

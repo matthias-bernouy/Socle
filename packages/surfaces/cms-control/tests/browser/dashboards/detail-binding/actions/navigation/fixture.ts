@@ -73,6 +73,9 @@ export async function mountForms(page: Page, missingParent = false, reorder = fa
                 return;
             }
             const data: Record<string, unknown> = {
+                createSection: { ref: sectionRef },
+                createQuestion: { ref: questionRef },
+                deleteQuestion: { sectionRef },
                 manageQuestion: {
                     ref: questionRef,
                     sectionRef: missingParent ? null : sectionRef,

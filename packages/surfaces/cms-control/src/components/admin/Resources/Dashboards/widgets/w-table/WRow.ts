@@ -79,11 +79,13 @@ export class DashboardWRow extends HTMLElement {
     connectedCallback(): void {
         this.shadowRoot?.querySelector("[data-check]")?.setAttribute("aria-label", `Select row ${this.rowKey}`);
         this.shadowRoot?.querySelector(".row")?.addEventListener("click", this.onClick);
+        this.shadowRoot?.querySelector("[data-check]")?.addEventListener("change", this.onCheck);
         this.shadowRoot?.querySelector(".row")?.addEventListener("keydown", this.onKeydown);
     }
 
     disconnectedCallback(): void {
         this.shadowRoot?.querySelector(".row")?.removeEventListener("click", this.onClick);
+        this.shadowRoot?.querySelector("[data-check]")?.removeEventListener("change", this.onCheck);
         this.shadowRoot?.querySelector(".row")?.removeEventListener("keydown", this.onKeydown);
     }
 
@@ -95,12 +97,20 @@ export class DashboardWRow extends HTMLElement {
         return this.getAttribute("collection") ?? "";
     }
 
+    get checked(): boolean {
+        return this.shadowRoot?.querySelector<HTMLInputElement>("[data-check]")?.checked ?? false;
+    }
+
     set checked(value: boolean) {
         const input = this.shadowRoot?.querySelector<HTMLInputElement>("[data-check]");
         if (input) {
             input.checked = value;
         }
     }
+
+    private onCheck = (): void => {
+        this.dispatchEvent(new CustomEvent("cms-dashboard-row:check", { bubbles: true }));
+    };
 
     private select(): void {
         if (!this.collection || !this.rowKey) {

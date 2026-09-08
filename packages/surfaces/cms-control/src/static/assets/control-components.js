@@ -31668,6 +31668,14 @@ w13c-lateral-menu {
     return Object.fromEntries(Array.from(owners.get(host) ?? []).map(([id2, upload]) => [id2, upload.sessionId ?? ""]));
   }
 
+  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/operations/declarations.ts
+  function detailFormActions(widget) {
+    return [
+      ...widget.actions ?? [],
+      ...widget.main.flatMap((section) => ("widget" in section) ? (section.actions ?? []).filter((action) => action.form && action.id !== section.reorderable?.action).map((action) => ({ ...action, section: section.id })) : [])
+    ];
+  }
+
   // src/components/admin/Resources/Dashboards/runtime/source.ts
   function requireDetailResource(resource) {
     if (resource === undefined || resource === null) {
@@ -32691,7 +32699,7 @@ w13c-lateral-menu {
     const schemas = schemaContext(host, fields);
     const tables2 = tableContext(host, fields);
     const choices = reorderableContext(host, fields);
-    const actions = actionLayout((widget.actions ?? []).filter((action) => !action.form));
+    const actions = actionLayout(detailFormActions(widget).filter((action) => !action.form));
     const rules = Object.fromEntries(fields.map((field2) => [field2.id, field2.visibleWhen]));
     jd(host, () => {
       const source2 = et(host);
@@ -32738,7 +32746,7 @@ w13c-lateral-menu {
         detailPersisted: !widget.create || host.dataset.rowKey !== "__new__",
         detailValues: effective,
         detailResource: resource,
-        detailOperations: Object.fromEntries((widget.actions ?? []).filter((action) => action.form).map((action) => {
+        detailOperations: Object.fromEntries(detailFormActions(widget).filter((action) => action.form).map((action) => {
           const operationFields = action.form.fields ?? [];
           const operationValues = Object.fromEntries(operationFields.map((field2) => [field2.id, valueAt(resource, field2.path)]));
           return [
@@ -32748,7 +32756,7 @@ w13c-lateral-menu {
         })),
         detailSelection: { id: host.dataset.rowKey ?? "" },
         detailRow: resource,
-        detailOperationVisibility: Object.fromEntries((widget.actions ?? []).map((action) => [
+        detailOperationVisibility: Object.fromEntries(detailFormActions(widget).map((action) => [
           action.id,
           resource != null && matchesDashboardVisibility(action.visibleWhen, { fields: values, resource })
         ])),
@@ -33800,10 +33808,12 @@ p9r-token-input {
     connectedCallback() {
       this.shadowRoot?.querySelector("[data-check]")?.setAttribute("aria-label", `Select row ${this.rowKey}`);
       this.shadowRoot?.querySelector(".row")?.addEventListener("click", this.onClick);
+      this.shadowRoot?.querySelector("[data-check]")?.addEventListener("change", this.onCheck);
       this.shadowRoot?.querySelector(".row")?.addEventListener("keydown", this.onKeydown);
     }
     disconnectedCallback() {
       this.shadowRoot?.querySelector(".row")?.removeEventListener("click", this.onClick);
+      this.shadowRoot?.querySelector("[data-check]")?.removeEventListener("change", this.onCheck);
       this.shadowRoot?.querySelector(".row")?.removeEventListener("keydown", this.onKeydown);
     }
     get rowKey() {
@@ -33812,12 +33822,18 @@ p9r-token-input {
     get collection() {
       return this.getAttribute("collection") ?? "";
     }
+    get checked() {
+      return this.shadowRoot?.querySelector("[data-check]")?.checked ?? false;
+    }
     set checked(value2) {
       const input = this.shadowRoot?.querySelector("[data-check]");
       if (input) {
         input.checked = value2;
       }
     }
+    onCheck = () => {
+      this.dispatchEvent(new CustomEvent("cms-dashboard-row:check", { bubbles: true }));
+    };
     select() {
       if (!this.collection || !this.rowKey) {
         return;
@@ -34098,6 +34114,7 @@ slot {
       this.rowsObserver.observe(this, { childList: true, subtree: true });
       this.shadowRoot.querySelector("[data-select-all]")?.addEventListener("change", this.onSelectAll);
       this.addEventListener("click", this.onClick);
+      this.addEventListener("cms-dashboard-row:check", this.onSelectionChange);
       this.addEventListener("submit", this.onFilterSubmit);
       this.syncPresentation();
     }
@@ -34105,6 +34122,7 @@ slot {
       this.rowsObserver.disconnect();
       this.shadowRoot?.querySelector("[data-select-all]")?.removeEventListener("change", this.onSelectAll);
       this.removeEventListener("click", this.onClick);
+      this.removeEventListener("cms-dashboard-row:check", this.onSelectionChange);
       this.removeEventListener("submit", this.onFilterSubmit);
     }
     syncPresentation() {
@@ -34143,11 +34161,18 @@ slot {
         });
       }
     };
+    get selectedKeys() {
+      return this.rows().filter((row) => row.checked).map((row) => row.rowKey);
+    }
+    onSelectionChange = () => {
+      Vi(this);
+    };
     onSelectAll = (event) => {
       const checked = Boolean(event.target?.checked);
       for (const row of this.rows()) {
         row.checked = checked;
       }
+      this.onSelectionChange();
     };
     onFilterSubmit = (event) => {
       if (!(event.target instanceof HTMLFormElement) || !event.target.hasAttribute("data-filters")) {
@@ -36997,7 +37022,16 @@ slot { display: contents; }
     table.style.setProperty("--dashboard-table-columns", ["46px", ...widget.columns.map((column) => column.width ?? "minmax(7rem, 1fr)")].join(" "));
     const state = { values: filters };
     filterStates.set(table, state);
-    jd(table, () => ({ tableFilters: state.values }));
+    jd(table, () => {
+      const selected2 = table.selectedKeys;
+      const resource = selected2.length === 1 ? itemsFrom(et(table), widget.source).find((row) => String(valueAt(row, widget.rowKey)) === selected2[0]) : undefined;
+      return {
+        tableFilters: state.values,
+        detailResource: resource,
+        detailRow: resource,
+        detailSelection: { id: resource ? selected2[0] : undefined }
+      };
+    });
     for (const column of widget.columns) {
       const header = fragment("column").firstElementChild;
       header.dataset.columnHeader = column.id;
@@ -37005,6 +37039,9 @@ slot { display: contents; }
       table.append(header);
     }
     for (const action of widget.actions ?? []) {
+      if (action.form) {
+        continue;
+      }
       const button = fragment("action").firstElementChild;
       button.dataset.action = action.id;
       button.dataset.widget = widget.id;
@@ -37973,7 +38010,37 @@ slot { display: contents; }
     }
   }
 
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/operationCompletion.ts
+  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/modal.ts
+  function operationModal(operation, context, root) {
+    const modal = formPart("modal");
+    modal.id = formId();
+    const title = operation.title ?? operation.label ?? "Confirm operation";
+    modal.setAttribute("aria-label", title);
+    modal.querySelector('[slot="title"]').textContent = title;
+    const form = modal.querySelector("form");
+    form.dataset.operationForm = "";
+    configureForm(form, operation, context);
+    const stack = form.querySelector("[data-operation-fields]");
+    if (operation.confirm) {
+      const confirmation = document.createElement("p");
+      confirmation.textContent = operation.confirm;
+      stack.append(confirmation);
+    }
+    for (const field2 of operation.fields ?? []) {
+      stack.append(fieldElement(field2, root, operation));
+    }
+    const submit = formPart("submit");
+    setP9rButtonTone(submit, operation.tone ?? "primary");
+    submit.textContent = operation.submitLabel ?? operation.label ?? "Create";
+    stack.append(submit);
+    const opener = formPart("opener");
+    opener.setAttribute("modal-target", modal.id);
+    opener.querySelector("p9r-button").textContent = operation.label ?? title;
+    setP9rButtonTone(opener.querySelector("p9r-button"), operation.tone ?? "secondary");
+    return { modal, form, opener };
+  }
+
+  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/operations/completion.ts
   var OPERATION_AWAITING_READ = "data-operation-awaiting-read";
   function trackOperationCompletion(host, formId2, complete) {
     let submittedScope = "";
@@ -38022,39 +38089,51 @@ slot { display: contents; }
     };
   }
 
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/modal.ts
-  function operationModal(operation, context, root) {
-    const modal = formPart("modal");
-    modal.id = formId();
-    const title = operation.title ?? operation.label ?? "Confirm operation";
-    modal.setAttribute("aria-label", title);
-    modal.querySelector('[slot="title"]').textContent = title;
-    const form = modal.querySelector("form");
-    form.dataset.operationForm = "";
-    configureForm(form, operation, context);
-    const stack = form.querySelector("[data-operation-fields]");
-    if (operation.confirm) {
-      const confirmation = document.createElement("p");
-      confirmation.textContent = operation.confirm;
-      stack.append(confirmation);
+  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/operations/collection.ts
+  function composeTableOperations(table, widget, context) {
+    table.id ||= formId();
+    for (const action of widget.actions ?? []) {
+      if (!action.form) {
+        continue;
+      }
+      const operation = { label: action.label, tone: action.tone, confirm: action.confirm, ...action.form };
+      const { modal, form, opener } = operationModal(operation, context, "detailResource");
+      const confirmation = Boolean(operation.confirm || operation.fields?.length);
+      const trigger = confirmation ? opener : form.querySelector('[type="submit"]');
+      trigger.slot = "actions";
+      if (!confirmation) {
+        trigger.setAttribute("form", form.id);
+      }
+      const content = confirmation ? modal : form;
+      content.slot = "footer";
+      if (operation.refresh !== "none") {
+        form.setAttribute("cms-source-success-reload", `#${table.id}`);
+      }
+      const capture = trackOperationCompletion(table, form.id, () => {
+        table.querySelector(`[id="${modal.id}"]`)?.removeAttribute("open");
+        Nh("Operation completed", { type: "success" });
+      });
+      table.addEventListener("submit", (event) => {
+        if (event.target.id !== form.id) {
+          return;
+        }
+        const keys = table.selectedKeys;
+        const current = keys.length === 1 && itemsFrom(et(table), widget.source).some((row) => String(valueAt(row, widget.rowKey)) === keys[0]);
+        if (!current || hasMissingTechnicalFields(event.target) || table.hasAttribute(OPERATION_AWAITING_READ)) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          Nh(table.hasAttribute(OPERATION_AWAITING_READ) ? "The operation completed. Retry the list read before submitting again." : "Select exactly one available row before running this operation.", { type: "warning" });
+          return;
+        }
+        capture();
+      }, true);
+      table.append(trigger, content);
     }
-    for (const field2 of operation.fields ?? []) {
-      stack.append(fieldElement(field2, root, operation));
-    }
-    const submit = formPart("submit");
-    setP9rButtonTone(submit, operation.tone ?? "primary");
-    submit.textContent = operation.submitLabel ?? operation.label ?? "Create";
-    stack.append(submit);
-    const opener = formPart("opener");
-    opener.setAttribute("modal-target", modal.id);
-    opener.querySelector("p9r-button").textContent = operation.label ?? title;
-    setP9rButtonTone(opener.querySelector("p9r-button"), operation.tone ?? "secondary");
-    return { modal, form, opener };
   }
 
-  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/operations.ts
+  // src/components/admin/Resources/Dashboards/runtime/actions/forms/views/operations/index.ts
   function composeDetailOperations(host, widget, context) {
-    const actions = (widget.actions ?? []).flatMap((action) => action.form ? [{ ...action, form: action.form, deleting: false }] : []);
+    const actions = detailFormActions(widget).flatMap((action) => action.form ? [{ ...action, form: action.form, deleting: false }] : []);
     if (widget.delete) {
       actions.push({ id: "delete", label: widget.delete.label ?? "Delete", form: widget.delete, deleting: true });
     }
@@ -38069,7 +38148,8 @@ slot { display: contents; }
       const { modal, form, opener } = operationModal(operation, context, `detailOperations.${action.id}.resource`);
       const confirmation = Boolean(operation.confirm || operation.fields?.length);
       const trigger = confirmation ? opener : form.querySelector('[type="submit"]');
-      trigger.slot = "bound-actions";
+      const actionHost = action.section ? host.querySelector(`[data-widget-id="${action.section}"]`) ?? host : host;
+      trigger.slot = actionHost === host ? "bound-actions" : "actions";
       trigger.setAttribute("cms-condition", "detailReady && detailPersisted");
       if (action.visibleWhen) {
         trigger.setAttribute("cms-condition", `detailOperationVisibility.${action.id}`);
@@ -38137,7 +38217,8 @@ slot { display: contents; }
       }, true);
       const content = confirmation ? modal : form;
       content.slot = "footer";
-      host.append(trigger, content);
+      actionHost.append(trigger);
+      host.append(content);
     }
   }
 
@@ -38700,7 +38781,7 @@ slot { display: contents; }
     template6.innerHTML = navigation_list_default;
     const actionTemplate = template6.content.querySelector("[data-navigation-action]");
     for (const action of widget.actions ?? []) {
-      if (action.id === widget.reorderable?.action) {
+      if (action.form || action.id === widget.reorderable?.action) {
         continue;
       }
       const button = actionTemplate.content.firstElementChild.cloneNode(true);
@@ -39128,6 +39209,7 @@ slot { display: contents; }
     const filters = { ...context.filters?.get(widget.id) ?? {} };
     const wrapper = sourceWrapper(context.dashboard.source, widget.source, { ...selectionVars(detail), filters }, "dashboardData", requiredSourceParams(context, widget.source));
     const element = tableWithSource(widget, wrapper, filters);
+    composeTableOperations(element, widget, context);
     composeCreation(element, widget, context);
     element.setAttribute("data-selected", context.selectedRows.get(widget.selection?.opens ?? widget.id) ?? "");
     return element;

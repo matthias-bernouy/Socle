@@ -1,4 +1,6 @@
-import { refreshSourceContext, setSourceContext } from "@bernouy/components";
+import { itemsFrom } from "../../runtime/source";
+import { valueAt } from "../../runtime/expressions";
+import { readSourceData, refreshSourceContext, setSourceContext } from "@bernouy/components";
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import { DashboardWTable } from "./WTable";
 import { setP9rButtonLabel, setP9rButtonTone } from "../shared";
@@ -20,7 +22,21 @@ export function tableShell(widget: TableWidget, filters: Record<string, string> 
     );
     const state = { values: filters };
     filterStates.set(table, state);
-    setSourceContext(table, () => ({ tableFilters: state.values }));
+    setSourceContext(table, () => {
+        const selected = table.selectedKeys;
+        const resource =
+            selected.length === 1
+                ? itemsFrom(readSourceData(table), widget.source).find(
+                      (row) => String(valueAt(row, widget.rowKey)) === selected[0],
+                  )
+                : undefined;
+        return {
+            tableFilters: state.values,
+            detailResource: resource,
+            detailRow: resource,
+            detailSelection: { id: resource ? selected[0] : undefined },
+        };
+    });
     for (const column of widget.columns) {
         const header = fragment("column").firstElementChild! as HTMLElement;
         header.dataset.columnHeader = column.id;
@@ -28,6 +44,9 @@ export function tableShell(widget: TableWidget, filters: Record<string, string> 
         table.append(header);
     }
     for (const action of widget.actions ?? []) {
+        if (action.form) {
+            continue;
+        }
         const button = fragment("action").firstElementChild! as HTMLElement;
         button.dataset.action = action.id;
         button.dataset.widget = widget.id;

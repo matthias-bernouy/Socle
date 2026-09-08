@@ -87,16 +87,20 @@
                         "label": "Add question",
                         "tone": "primary",
                         "placement": "primary",
-                        "endpoint": {
-                            "endpoint": "createQuestion",
-                            "body": {
-                                "context": "$selection.sectionDetail.id"
-                            }
-                        },
                         "after": {
                             "opens": "questionDetail",
-                            "row": "$result.ref",
-                            "resource": "$result"
+                            "row": "$result.ref"
+                        },
+                        "form": {
+                            "endpoint": "createQuestion",
+                            "refresh": "none",
+                            "hiddenFields": [
+                                {
+                                    "name": "context",
+                                    "type": "string",
+                                    "value": "$resource.ref"
+                                }
+                            ]
                         }
                     },
                     {

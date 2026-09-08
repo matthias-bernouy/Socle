@@ -66,13 +66,25 @@
                 "tone": "danger",
                 "placement": "primary",
                 "confirm": "Requeue this projection without changing its carrier status?",
-                "endpoint": {
+                "form": {
                     "endpoint": "reviewShipmentProjectionException",
-                    "body": {
-                        "eventId": "$selection.id",
-                        "action": "requeue",
-                        "reason": "Operator requested a safe projection retry from the Delivery dashboard"
-                    }
+                    "hiddenFields": [
+                        {
+                            "name": "eventId",
+                            "type": "string",
+                            "value": "$selection.id"
+                        },
+                        {
+                            "name": "action",
+                            "type": "string",
+                            "value": "requeue"
+                        },
+                        {
+                            "name": "reason",
+                            "type": "string",
+                            "value": "Operator requested a safe projection retry from the Delivery dashboard"
+                        }
+                    ]
                 }
             }
         ]

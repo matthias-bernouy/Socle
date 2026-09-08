@@ -1,3 +1,4 @@
+import { refreshSourceContext } from "@bernouy/components";
 import { Component } from "@bernouy/components/base";
 import { emitWidgetEvent, setText, WIDGET_ACTION_EVENT, WIDGET_FILTER_CHANGE_EVENT } from "../shared";
 import type { DashboardWRow } from "./WRow";
@@ -23,6 +24,7 @@ export class DashboardWTable extends Component {
         this.rowsObserver.observe(this, { childList: true, subtree: true });
         this.shadowRoot!.querySelector("[data-select-all]")?.addEventListener("change", this.onSelectAll);
         this.addEventListener("click", this.onClick);
+        this.addEventListener("cms-dashboard-row:check", this.onSelectionChange);
         this.addEventListener("submit", this.onFilterSubmit);
         this.syncPresentation();
     }
@@ -30,6 +32,7 @@ export class DashboardWTable extends Component {
         this.rowsObserver.disconnect();
         this.shadowRoot?.querySelector("[data-select-all]")?.removeEventListener("change", this.onSelectAll);
         this.removeEventListener("click", this.onClick);
+        this.removeEventListener("cms-dashboard-row:check", this.onSelectionChange);
         this.removeEventListener("submit", this.onFilterSubmit);
     }
     private syncPresentation(): void {
@@ -75,11 +78,20 @@ export class DashboardWTable extends Component {
             });
         }
     };
+    get selectedKeys(): string[] {
+        return this.rows()
+            .filter((row) => row.checked)
+            .map((row) => row.rowKey);
+    }
+    private onSelectionChange = (): void => {
+        refreshSourceContext(this);
+    };
     private onSelectAll = (event: Event): void => {
         const checked = Boolean((event.target as HTMLInputElement | null)?.checked);
         for (const row of this.rows()) {
             row.checked = checked;
         }
+        this.onSelectionChange();
     };
     private onFilterSubmit = (event: Event): void => {
         if (!(event.target instanceof HTMLFormElement) || !event.target.hasAttribute("data-filters")) {
