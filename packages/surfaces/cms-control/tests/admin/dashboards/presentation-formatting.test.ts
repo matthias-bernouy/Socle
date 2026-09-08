@@ -3,9 +3,8 @@ import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import "cms-control/components";
 import { formatDashboardValue } from "cms-control/components/admin/Resources/Dashboards/domain/formatting";
 import { detailData } from "cms-control/components/admin/Resources/Dashboards/runtime/mapping/detail";
-import { tableShell } from "cms-control/components/admin/Resources/Dashboards/widgets/w-table/composition";
+import { tableWithSource } from "cms-control/components/admin/Resources/Dashboards/runtime/mounting/table";
 import {
-    appendSourceContent,
     tableRowsTemplate,
     urlSourceWrapper,
 } from "cms-control/components/admin/Resources/Dashboards/runtime/mounting/mountSource";
@@ -107,11 +106,9 @@ describe("dashboard presentation formats", () => {
             ],
         } satisfies Extract<DashboardWidget, { widget: "w-table" }>;
         const wrapper = urlSourceWrapper("/proposals", "dashboardData");
-        const table = tableShell(widget);
-        table.append(tableRowsTemplate(widget));
-        appendSourceContent(wrapper, table);
+        const table = tableWithSource(widget, wrapper);
         const core = document.createElement("cms-binding-core");
-        core.append(wrapper);
+        core.append(table);
         document.body.append(core);
 
         await waitFor(

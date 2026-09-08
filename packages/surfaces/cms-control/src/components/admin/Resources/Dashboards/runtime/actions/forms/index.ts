@@ -91,7 +91,7 @@ export class ActionForms {
     }
 }
 
-/** Preserve string bodies without hidden-input encoding or DOM member collisions. */
+/** Accept legacy scalar payloads while rejecting unsafe form member names. */
 export function stringFields(body: unknown): Record<string, string> | null {
     if (!body || typeof body !== "object" || Array.isArray(body)) {
         return null;

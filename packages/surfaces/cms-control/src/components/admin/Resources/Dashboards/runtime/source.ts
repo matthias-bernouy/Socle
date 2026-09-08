@@ -1,7 +1,7 @@
 import { requestBindingData, type BindingRequestResult } from "@bernouy/components";
 import type { DashboardDataRef, DashboardEndpointRef } from "@bernouy/cms-dashboards";
 import { route } from "../api";
-import { arrayAt, resolveBody, resolveParams, valueAt, type RuntimeVars } from "./expressions";
+import { arrayAt, resolveBody, resolveParams, type RuntimeVars } from "./expressions";
 
 /** Mutations must use the resource already presented by the bound detail. */
 export function requireDetailResource(resource: unknown): unknown {
@@ -96,8 +96,4 @@ export function itemsFrom(data: unknown, ref: DashboardDataRef): unknown[] {
         return Array.isArray(data) ? data : [];
     }
     return arrayAt(data, ref.itemsPath);
-}
-
-export function itemFrom(data: unknown, ref: DashboardDataRef): unknown {
-    return ref.itemPath ? valueAt(data, ref.itemPath) : data;
 }

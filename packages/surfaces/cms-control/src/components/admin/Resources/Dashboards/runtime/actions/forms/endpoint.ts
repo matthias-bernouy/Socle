@@ -3,7 +3,7 @@ import { resolveBody, type RuntimeVars } from "../../expressions";
 import { sendSourceJson, sourceUrl } from "../../source";
 import { stringFields, type SubmitAction } from ".";
 
-/** Keep typed bodies on their existing path until form binding can preserve them. */
+/** Compatibility for definitions that have not migrated to real editable form controls. */
 export async function submitEndpoint(
     sourceId: string,
     ref: DashboardEndpointRef,

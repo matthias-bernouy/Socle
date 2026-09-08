@@ -54,11 +54,6 @@ function pendingSourceWrapper(): HTMLElement {
     return wrapper;
 }
 
-export function appendSourceContent(wrapper: HTMLElement, content: HTMLElement): void {
-    content.setAttribute("cms-condition", "$source.loaded || $source.empty");
-    wrapper.append(content);
-}
-
 export function tableRowsTemplate(widget: Extract<DashboardWidget, { widget: "w-table" }>): HTMLElement {
     const row = document.createElement("cms-dashboard-w-row");
     row.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);

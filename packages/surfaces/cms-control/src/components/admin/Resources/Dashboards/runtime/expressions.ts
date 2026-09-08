@@ -165,14 +165,3 @@ function setBodyValue(target: Record<string, unknown>, path: string, value: unkn
         throw new Error(`Unsafe dashboard body path "${path}"`);
     }
 }
-
-export function pathLabel(path: string): string {
-    return (
-        path
-            .split(".")
-            .filter(Boolean)
-            .at(-1)
-            ?.replace(/[_-]+/g, " ")
-            .replace(/([a-z0-9])([A-Z])/g, "$1 $2") ?? path
-    );
-}

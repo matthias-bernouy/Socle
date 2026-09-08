@@ -5,10 +5,7 @@ import "cms-control/components";
 import { widgetsForSelection } from "cms-control/components/admin/Resources/Dashboards/domain";
 import type { DashboardSourceGroup } from "cms-control/components/admin/Resources/Dashboards/types";
 import { mountDashboardWidgets } from "cms-control/components/admin/Resources/Dashboards/runtime/mounting/mount";
-import {
-    appendSourceContent,
-    urlSourceWrapper,
-} from "cms-control/components/admin/Resources/Dashboards/runtime/mounting/mountSource";
+import { detailElement } from "cms-control/components/admin/Resources/Dashboards/runtime/mounting/detail";
 
 const realFetch = globalThis.fetch;
 
@@ -18,7 +15,7 @@ afterEach(() => {
 });
 
 describe("dashboard runtime source states", () => {
-    test("keeps editable content unmounted after a failed load and retries safely", async () => {
+    test("keeps detail controls unavailable after a failed load and retries safely", async () => {
         let calls = 0;
         globalThis.fetch = (async () => {
             calls += 1;
@@ -30,44 +27,37 @@ describe("dashboard runtime source states", () => {
 
         const core = document.createElement("cms-binding-core");
         core.addEventListener("click", retryDashboardSource);
-        const wrapper = urlSourceWrapper("/settings", "dashboardData");
-        const editable = document.createElement("section");
-        editable.dataset.editableSettings = "true";
-        editable.innerHTML = '<button type="button">Save settings</button>';
-        appendSourceContent(wrapper, editable);
+        const wrapper = editableDetail("settings");
         core.append(wrapper);
         document.body.append(core);
 
         await waitFor(() => wrapper.querySelector("[role='alert']") !== null);
 
-        expect(wrapper.querySelector("[data-editable-settings]")).toBeNull();
+        expect(wrapper.querySelector('[data-field-control="mode"]')).toBeNull();
         expect(wrapper.textContent).toContain("Unable to load this data");
         expect(wrapper.textContent).toContain("HTTP 503");
         expect(wrapper.textContent).not.toContain("Save settings");
 
         wrapper.querySelector<HTMLButtonElement>("[data-dashboard-source-retry]")!.click();
-        await waitFor(() => wrapper.querySelector("[data-editable-settings]") !== null);
+        await waitFor(() => wrapper.querySelector('[data-field-control="mode"]') !== null);
 
         expect(calls).toBe(2);
         expect(wrapper.querySelector("[role='alert']")).toBeNull();
         expect(wrapper.textContent).toContain("Save settings");
     });
 
-    test("still mounts creation content for an empty successful response", async () => {
+    test("renders editable detail controls for an empty successful response", async () => {
         globalThis.fetch = (async () => Response.json({})) as unknown as typeof fetch;
 
         const core = document.createElement("cms-binding-core");
-        const wrapper = urlSourceWrapper("/new-record", "dashboardData");
-        const creationForm = document.createElement("form");
-        creationForm.dataset.creationForm = "true";
-        appendSourceContent(wrapper, creationForm);
+        const wrapper = editableDetail("new-record");
         core.append(wrapper);
         document.body.append(core);
 
-        await waitFor(() => wrapper.querySelector("[data-creation-form]") !== null);
+        await waitFor(() => wrapper.querySelector('[data-field-control="mode"]') !== null);
 
         expect(wrapper.querySelector("[role='alert']")).toBeNull();
-        expect(wrapper.querySelector("[data-creation-form]")).not.toBeNull();
+        expect(wrapper.querySelector('[data-field-control="mode"]')).not.toBeNull();
     });
 
     test("does not request a widget source while its required selection param is unresolved", async () => {
@@ -399,4 +389,40 @@ async function waitFor(predicate: () => boolean, timeout = 1_000): Promise<void>
         }
         await new Promise((resolve) => setTimeout(resolve, 5));
     }
+}
+
+function editableDetail(endpoint: string): HTMLElement {
+    const dashboard: DashboardDto = { id: "settings", source: "settings", views: [] };
+    const group: DashboardSourceGroup = {
+        source: {
+            urn: "urn:settings",
+            id: "settings",
+            name: "Settings",
+            endpointCount: 2,
+            dashboardCount: 1,
+            readonly: false,
+        },
+        dashboards: [dashboard],
+        endpoints: [
+            { endpointId: endpoint, method: "GET", targetUrl: "https://example.test/settings", params: [] },
+            { endpointId: "saveSettings", method: "POST", targetUrl: "https://example.test/settings", params: [] },
+        ],
+    };
+    return detailElement(
+        {
+            widget: "w-detail",
+            id: "settings",
+            source: { endpoint },
+            main: [
+                {
+                    id: "general",
+                    title: "General",
+                    fields: [{ id: "mode", path: "mode", label: "Mode", type: "text" }],
+                },
+            ],
+            save: { endpoint: "saveSettings", label: "Save settings" },
+        },
+        { group, dashboard, selectedRows: new Map(), drafts: new Map() },
+        null,
+    );
 }
