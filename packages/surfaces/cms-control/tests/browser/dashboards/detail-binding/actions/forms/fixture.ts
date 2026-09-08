@@ -1,7 +1,12 @@
 import type { Page } from "playwright";
 import { dashboard, source, bundle, styles } from "../navigation/definition";
 
-export async function mountEditor(page: Page, collection = "formsTable", row?: string) {
+export async function mountEditor(
+    page: Page,
+    collection = "formsTable",
+    row?: string,
+    prepare?: (state: { question: Record<string, any> }) => Promise<void>,
+) {
     const state = {
         form: {
             id: 1,
@@ -130,6 +135,7 @@ export async function mountEditor(page: Page, collection = "formsTable", row?: s
             await route.fulfill({ json: [] });
         }
     });
+    await prepare?.(state);
     await page.goto(
         `http://cms.test/admin/sources?source=forms&dashboard=forms-forms&collection=${collection}${row ? `&row=${encodeURIComponent(row)}` : ""}`,
     );

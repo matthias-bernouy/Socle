@@ -23,7 +23,7 @@ export async function integrationFixture(page: Page, entry: { widget: any; dashb
         pending: undefined as Promise<void> | undefined,
     };
     if (creation) {
-        state.resource.id = "";
+        state.resource.id = null;
         state.resource.code = "";
         state.resource.key = "";
     }
@@ -84,7 +84,8 @@ export async function integrationFixture(page: Page, entry: { widget: any; dashb
             } else {
                 state.resource.version++;
                 if (creation && !state.resource.id) {
-                    state.resource.id = "created-resource";
+                    const identity = widget.save?.hiddenFields?.find((field: any) => field.value === "$resource.id");
+                    state.resource.id = identity?.type === "number" ? 43 : "created-resource";
                 }
                 if (endpoint === widget.save?.endpoint) {
                     for (const field of [...widget.main, ...(widget.aside ?? [])].flatMap((s: any) => s.fields ?? [])) {

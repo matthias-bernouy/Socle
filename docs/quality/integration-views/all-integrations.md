@@ -68,17 +68,35 @@ and browser fixtures, without publishing a new real policy or contacting Stripe.
 Local view snapshots and the Consent provider were updated; production was not
 modified.
 
-## Follow-up cleanup
+## Action lifecycle cleanup
 
-The action context still carries callbacks with no runtime consumer
-(`reloadDefinitions`, `reloadCollection`, `setDetailResource`, `clearDetail`,
-`render`). Its old direct-resource mounting/cache path can be reviewed separately;
-media operations still require draft restoration and stale-response protection,
-so the action coordinator must not be removed wholesale. The browser harness also
-needs investigation of its grouped-run lifecycle before making one large Bun
-invocation the validation reference.
+The unused action callbacks (`reloadDefinitions`, `reloadCollection`,
+`setDetailResource`, `clearDetail`, `render`) and the direct-resource mounting/cache
+path are removed. Detail data comes from its binding source. A small action scope
+retains only generation invalidation: late uploads/downloads cannot modify drafts
+or emit notifications after navigation or disconnection. Concurrent uploads remain
+independent; media draft restoration is retained.
+
+Definitions refresh through their existing binding source, without an additional
+promise queue or action-owned refresh API. Retained detail controls do not reread
+or remount merely because their rendering context is reconciled.
+
+`bun run test:browser:dashboards` provides a reproducible file-isolated command;
+it reports failures without retries. The low-level grouped Chromium reload/shutdown
+issue remains distinct from this execution strategy.
 
 ## Validation baseline
+
+The action lifecycle cleanup passed 82 focused unit tests. Browser coverage ran
+27 files in isolated processes: 26 passed initially; the remaining creation
+fixture used an empty string where the current Forms contract requires a null
+identity. After correcting that fixture and its returned identity type, all
+seven tests in that file passed (79 distinct browser tests overall). Coverage
+includes independent actions, media, creation, Save, linked detail panels and
+retained control geometry. Local settled reads of Consent, Stripe Connect and
+Delivery reported no read errors and produced screenshots. The build and
+`check:all` passed; 62 UI-contract warnings remain. This does not resolve the
+separate timeout observed when running browser files together in one process.
 
 The Forms follow-up passed 98 dashboard/parsing/provider tests, PostgreSQL
 transaction assertions for settings preservation, and the real local

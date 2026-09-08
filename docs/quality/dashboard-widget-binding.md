@@ -82,3 +82,19 @@ Use disposable records for real local writes and clean only those records.
 Provider operations requiring credentials can use mocks, but report that limit.
 Separate grouped-run timeouts from passing isolated reruns; screenshots alone
 are not evidence of timing stability or complete functional coverage.
+
+### Browser command
+
+After `bun run build`, run `bun run test:browser:dashboards` for all Control
+dashboard browser tests. Optional paths are relative to Control's `tests/browser`:
+
+```sh
+bun run test:browser:dashboards dashboards/detail-binding/actions/forms dashboards/table-binding
+```
+
+The command runs each test file once in a fresh Bun process, in sorted order,
+retaining its own Playwright browser lifecycle. Any assertion failure, nonzero exit
+or 90-second process timeout fails the command. An unmatched filter also fails.
+There are no automatic retries or skipped failures. Direct grouped `bun test`
+invocations have reproduced Chromium reload/shutdown timeouts even when the same
+files pass separately; the underlying grouped-run cause remains unresolved.

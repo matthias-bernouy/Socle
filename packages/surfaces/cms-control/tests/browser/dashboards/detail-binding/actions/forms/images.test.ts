@@ -12,44 +12,47 @@ test("Forms image choices upload and replace assets independently but persist th
     try {
         const page = await browser.newPage({ viewport: { width: 1440, height: 1400 } });
         page.setDefaultTimeout(5000);
-        const state = await mountEditor(page, "questionDetail", "question-ref");
-        state.question.presentation = "image-grid";
-        state.question.options = [
-            { key: "first", label: "First", image: { mediaId: "100", alt: "First image" }, position: 0 },
-            { key: "second", label: "Second", image: null, position: 1 },
-        ];
         const uploads: Array<{ ref: string | null; names: string[] }> = [];
         let failUpload = false;
-        await page.route("**/choiceImage?*", (route) => route.fulfill({ contentType: "image/png", body: png }));
-        await page.route("**/uploadChoiceImage?*", async (route) => {
-            const req = route.request();
-            const form = await new Response(new Uint8Array(req.postDataBuffer()!).buffer, {
-                headers: { "content-type": req.headers()["content-type"]! },
-            }).formData();
-            const files: File[] = [];
-            for (const value of form.values()) {
-                if (typeof value !== "string") {
-                    files.push(value);
+        const state = await mountEditor(page, "questionDetail", "question-ref", async (state) => {
+            state.question.presentation = "image-grid";
+            state.question.options = [
+                { key: "first", label: "First", image: { mediaId: "100", alt: "First image" }, position: 0 },
+                { key: "second", label: "Second", image: null, position: 1 },
+            ];
+            await page.route("**/choiceImage?*", (route) => route.fulfill({ contentType: "image/png", body: png }));
+            await page.route("**/uploadChoiceImage?*", async (route) => {
+                const req = route.request();
+                const form = await new Response(new Uint8Array(req.postDataBuffer()!).buffer, {
+                    headers: { "content-type": req.headers()["content-type"]! },
+                }).formData();
+                const files: File[] = [];
+                for (const value of form.values()) {
+                    if (typeof value !== "string") {
+                        files.push(value);
+                    }
                 }
-            }
-            uploads.push({ ref: new URL(req.url()).searchParams.get("ref"), names: files.map((file) => file.name) });
-            await route.fulfill(
-                failUpload
-                    ? { status: 503, json: { error: "Upload rejected" } }
-                    : {
-                          json: {
-                              ok: true,
-                              mediaId: 100 + uploads.length,
-                              mimeType: "image/png",
-                              fileSize: png.length,
-                              width: 1,
-                              height: 1,
+                uploads.push({
+                    ref: new URL(req.url()).searchParams.get("ref"),
+                    names: files.map((file) => file.name),
+                });
+                await route.fulfill(
+                    failUpload
+                        ? { status: 503, json: { error: "Upload rejected" } }
+                        : {
+                              json: {
+                                  ok: true,
+                                  mediaId: 100 + uploads.length,
+                                  mimeType: "image/png",
+                                  fileSize: png.length,
+                                  width: 1,
+                                  height: 1,
+                              },
                           },
-                      },
-            );
-            failUpload = false;
+                );
+                failUpload = false;
+            });
         });
-        await page.reload();
         const choices = page.locator('[data-field-control="imageOptions"]');
         const rows = choices.locator(".row[data-index]");
         const media = (index: number) => rows.nth(index).locator('[data-item-field="image"]');
