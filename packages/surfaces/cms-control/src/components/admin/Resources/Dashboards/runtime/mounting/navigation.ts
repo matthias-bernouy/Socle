@@ -70,7 +70,7 @@ export function selectionVars(detail: DetailSelection | null): { selection?: Rec
     if (!detail) {
         return {};
     }
-    const selected = { id: detail.row };
+    const selected = { id: detail.row === "__new__" ? undefined : detail.row };
     return {
         selection: {
             ...selected,

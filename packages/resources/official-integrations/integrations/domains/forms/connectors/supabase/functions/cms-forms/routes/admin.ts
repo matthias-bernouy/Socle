@@ -2,7 +2,7 @@ import { requireCmsAdmin } from "../auth.ts";
 import { boundedInteger, HttpError, json, queryText, requestBody } from "../http.ts";
 import { rpcRecord } from "../rest.ts";
 import { formDefinition } from "../validation.ts";
-import { starterDefinition } from "../builder/model.ts";
+import { starterDefinition, requiredText, optionalText } from "../builder/model.ts";
 
 export async function handleAdminRoute(route: string, request: Request): Promise<Response | null> {
     if (!route.startsWith("/admin/")) {
@@ -23,7 +23,7 @@ export async function handleAdminRoute(route: string, request: Request): Promise
     }
     if (route === "/admin/form") {
         requireMethod(request, "GET");
-        if (queryText(url, "key", true) === "__new__") {
+        if (!queryText(url, "key")) {
             return json(newForm());
         }
         const result = await rpcRecord("get_managed_form", { p_form_key: queryText(url, "key", true) });
@@ -50,20 +50,31 @@ export async function handleAdminRoute(route: string, request: Request): Promise
 
 async function saveDraft(request: Request, actor: string): Promise<Record<string, unknown>> {
     const body = await requestBody(request);
-    const definition = formDefinition(body.definition ?? starterDefinition(body.title));
-    definition.title = String(body.title ?? "").trim();
-    return await rpcRecord("save_form_draft", {
-        p_form_key: body.key,
-        p_title: body.title,
-        p_description: body.description ?? null,
+    if (Object.hasOwn(body, "definition")) {
+        throw new HttpError(422, "form settings cannot replace the draft definition");
+    }
+    const id = body.id ?? null;
+    if (id !== null && (typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0)) {
+        throw new HttpError(422, "form id must be a positive integer");
+    }
+    const title = requiredText(body.title, "form title");
+    if (!["public", "authenticated"].includes(String(body.accessMode))) {
+        throw new HttpError(422, "visitor access is not supported");
+    }
+    return await rpcRecord("save_form_settings", {
+        p_form_id: id,
+        p_form_key: id === null ? requiredText(body.key, "form key", 120) : null,
+        p_title: title,
+        p_description: optionalText(body.description) ?? null,
         p_access_mode: body.accessMode,
-        p_definition: definition,
+        p_initial_definition: starterDefinition(title),
         p_actor_id: actor,
     });
 }
 
 function newForm(): Record<string, unknown> {
     return {
+        id: null,
         key: "",
         title: "",
         description: "",

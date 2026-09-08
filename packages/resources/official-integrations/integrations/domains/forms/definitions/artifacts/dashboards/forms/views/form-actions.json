@@ -1,26 +1,5 @@
 [
     {
-        "id": "saveDraft",
-        "label": "Save form",
-        "tone": "primary",
-        "placement": "primary",
-        "endpoint": {
-            "endpoint": "saveFormDraft",
-            "body": {
-                "key": "$field.key",
-                "title": "$field.title",
-                "description": "$field.description",
-                "accessMode": "$field.accessMode",
-                "definition": "$resource.draftDefinition"
-            }
-        },
-        "after": {
-            "opens": "formDetail",
-            "row": "$result.key",
-            "resource": "$result"
-        }
-    },
-    {
         "id": "publishForm",
         "label": "Publish new version",
         "tone": "primary",

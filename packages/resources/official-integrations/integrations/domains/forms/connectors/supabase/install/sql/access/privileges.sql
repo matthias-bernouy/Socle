@@ -22,6 +22,7 @@ grant execute on function forms.get_published_form(text, integer, text) to servi
 grant execute on function forms.get_managed_form(text) to service_role;
 grant execute on function forms.list_managed_forms(text, text, integer, integer) to service_role;
 grant execute on function forms.save_form_draft(text, text, text, text, jsonb, text) to service_role;
+grant execute on function forms.save_form_settings(bigint, text, text, text, text, jsonb, text) to service_role;
 grant execute on function forms.publish_form(text, text) to service_role;
 grant execute on function forms.archive_form(text, text) to service_role;
 grant execute on function forms.list_submissions(text, text, integer, integer) to service_role;

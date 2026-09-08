@@ -97,3 +97,49 @@ begin
     return forms.get_managed_form(p_form_key);
 end;
 $$;
+
+-- Settings never carry a client snapshot of the builder's definition.
+create or replace function forms.save_form_settings(
+    p_form_id bigint,
+    p_form_key text,
+    p_title text,
+    p_description text,
+    p_access_mode text,
+    p_initial_definition jsonb,
+    p_actor_id text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    saved_key text;
+begin
+    if p_form_id is null then
+        if p_initial_definition is null or jsonb_typeof(p_initial_definition) <> 'object' then
+            raise exception 'validation: initial definition must be an object';
+        end if;
+        insert into forms.forms (
+            form_key, title, description, access_mode, draft_definition, created_by, updated_by
+        ) values (
+            p_form_key, btrim(p_title), nullif(btrim(p_description), ''), p_access_mode,
+            p_initial_definition, p_actor_id, p_actor_id
+        ) returning form_key into saved_key;
+    else
+        update forms.forms set
+            title = btrim(p_title),
+            description = nullif(btrim(p_description), ''),
+            access_mode = p_access_mode,
+            draft_definition = jsonb_set(draft_definition, '{title}', to_jsonb(btrim(p_title))),
+            lifecycle_status = 'active',
+            updated_by = p_actor_id
+        where id = p_form_id
+        returning form_key into saved_key;
+        if not found then
+            raise exception 'not_found: form does not exist';
+        end if;
+    end if;
+    return forms.get_managed_form(saved_key);
+end;
+$$;

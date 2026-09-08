@@ -12,7 +12,7 @@ Beyond those earlier views, 22 detail views were fully or partially migrated:
 | Integration | Views | Result |
 | --- | --- | --- |
 | Commerce | General settings, notifications, protected C2C policy, offer condition, custom metadata, workflow state and transition | Native Save; metadata deletion; creation through the detail where supported |
-| Forms | Form, section, submission | Publish/archive independent forms; section Save/Delete; submission review/archive. Principal form draft editing is deferred |
+| Forms | Form, section, submission | Common form creation/Save with atomic metadata updates; publish/archive independent forms; section Save/Delete; submission review/archive |
 | User Account | Account and extra field | Native Save/Delete; extra-field creation and native list reordering |
 | Emailer | Template | Native Save/Create; independent test-email and archive forms |
 | Mondial Relay | Shipment and settings | Independent shipment recovery; native settings Save |
@@ -28,7 +28,6 @@ to migrate. Newsletter's subscription export remains a GET download.
 | Case | Why a direct migration is unsafe | Required follow-up |
 | --- | --- | --- |
 | Consent details and Stripe Connect seller terms | These call integration management actions, rather than source form endpoints. Publishing also owns immutable legal snapshots | Migrate legal actions to independent native forms while preserving publication semantics; the settings target is now standardized separately |
-| Forms creation and principal draft Save | The current operation submits the entire `draftDefinition`. Omitting it falls back to a starter definition and can erase existing sections/questions | Add an atomic metadata-only update contract or a deliberate draft editor contract |
 | Forms question editor | Nested options and image choices still use immediate media writes | Migrate the complex field/media lifecycle before changing its Save/Delete wiring |
 | Forms nested section/question navigation | Creation depends on ancestor selection; controls are nested inside the parent detail | Reordering now uses independent native forms with explicit ancestor identity; migrate the remaining creation actions |
 | Mondial Relay projection-exception table action | Native independent forms are currently composed for details, not table-row operations | Provide a reusable table operation form host |

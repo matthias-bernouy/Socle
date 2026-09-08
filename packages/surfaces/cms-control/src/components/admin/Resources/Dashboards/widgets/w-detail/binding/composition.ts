@@ -76,6 +76,7 @@ export function composeDetail(
                 child.slot = slot;
                 // Its source depends on selection, so fetch it alongside the parent.
                 child.setAttribute("data-detail-ready", "{{ detailReady }}");
+                child.setAttribute("cms-condition", "detailReady && detailPersisted");
                 if (form) {
                     child.removeAttribute("slot");
                     form.querySelector("[data-form-main]")!.append(child);

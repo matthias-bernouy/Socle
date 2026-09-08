@@ -5,15 +5,43 @@
         "access": "admin",
         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-forms/admin/forms",
         "params": [
-            { "name": "q", "in": "query", "type": "string" },
-            { "name": "status", "in": "query", "type": "string" },
-            { "name": "limit", "in": "query", "type": "number" },
-            { "name": "offset", "in": "query", "type": "number" }
+            {
+                "name": "q",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "status",
+                "in": "query",
+                "type": "string"
+            },
+            {
+                "name": "limit",
+                "in": "query",
+                "type": "number"
+            },
+            {
+                "name": "offset",
+                "in": "query",
+                "type": "number"
+            }
         ],
-        "headers": { "$include": "../../shared/admin-headers.json" },
+        "headers": {
+            "$include": "../../shared/admin-headers.json"
+        },
         "output": [
-            { "status": "200", "body": { "$include": "../../schemas/form-list.json" } },
-            { "status": "default", "body": { "$include": "../../schemas/error.json" } }
+            {
+                "status": "200",
+                "body": {
+                    "$include": "../../schemas/form-list.json"
+                }
+            },
+            {
+                "status": "default",
+                "body": {
+                    "$include": "../../schemas/error.json"
+                }
+            }
         ]
     },
     {
@@ -21,11 +49,29 @@
         "method": "GET",
         "access": "admin",
         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-forms/admin/form",
-        "params": [{ "name": "key", "in": "query", "type": "string", "required": true }],
-        "headers": { "$include": "../../shared/admin-headers.json" },
+        "params": [
+            {
+                "name": "key",
+                "in": "query",
+                "type": "string"
+            }
+        ],
+        "headers": {
+            "$include": "../../shared/admin-headers.json"
+        },
         "output": [
-            { "status": "200", "body": { "$include": "../../schemas/form.json" } },
-            { "status": "default", "body": { "$include": "../../schemas/error.json" } }
+            {
+                "status": "200",
+                "body": {
+                    "$include": "../../schemas/form.json"
+                }
+            },
+            {
+                "status": "default",
+                "body": {
+                    "$include": "../../schemas/error.json"
+                }
+            }
         ]
     },
     {
@@ -34,21 +80,48 @@
         "access": "admin",
         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-forms/admin/form/draft",
         "params": [],
-        "headers": { "$include": "../../shared/admin-headers.json" },
+        "headers": {
+            "$include": "../../shared/admin-headers.json"
+        },
         "body": {
             "type": "object",
             "properties": {
-                "key": { "type": "string" },
-                "title": { "type": "string" },
-                "description": { "type": "string", "nullable": true },
-                "accessMode": { "type": "string" },
-                "definition": { "type": "object", "nullable": true }
+                "key": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string",
+                    "nullable": true
+                },
+                "accessMode": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "number",
+                    "nullable": true
+                }
             },
-            "required": ["key", "title", "accessMode"]
+            "required": [
+                "title",
+                "accessMode"
+            ]
         },
         "output": [
-            { "status": "200", "body": { "$include": "../../schemas/form.json" } },
-            { "status": "default", "body": { "$include": "../../schemas/error.json" } }
+            {
+                "status": "200",
+                "body": {
+                    "$include": "../../schemas/form.json"
+                }
+            },
+            {
+                "status": "default",
+                "body": {
+                    "$include": "../../schemas/error.json"
+                }
+            }
         ]
     },
     {
@@ -57,11 +130,33 @@
         "access": "admin",
         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-forms/admin/form/publish",
         "params": [],
-        "headers": { "$include": "../../shared/admin-headers.json" },
-        "body": { "type": "object", "properties": { "key": { "type": "string" } }, "required": ["key"] },
+        "headers": {
+            "$include": "../../shared/admin-headers.json"
+        },
+        "body": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "key"
+            ]
+        },
         "output": [
-            { "status": "200", "body": { "$include": "../../schemas/form.json" } },
-            { "status": "default", "body": { "$include": "../../schemas/error.json" } }
+            {
+                "status": "200",
+                "body": {
+                    "$include": "../../schemas/form.json"
+                }
+            },
+            {
+                "status": "default",
+                "body": {
+                    "$include": "../../schemas/error.json"
+                }
+            }
         ]
     },
     {
@@ -70,11 +165,33 @@
         "access": "admin",
         "targetUrl": "{{connectors.supabase.functionsBaseUrl}}/cms-forms/admin/form/archive",
         "params": [],
-        "headers": { "$include": "../../shared/admin-headers.json" },
-        "body": { "type": "object", "properties": { "key": { "type": "string" } }, "required": ["key"] },
+        "headers": {
+            "$include": "../../shared/admin-headers.json"
+        },
+        "body": {
+            "type": "object",
+            "properties": {
+                "key": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "key"
+            ]
+        },
         "output": [
-            { "status": "200", "body": { "$include": "../../schemas/form.json" } },
-            { "status": "default", "body": { "$include": "../../schemas/error.json" } }
+            {
+                "status": "200",
+                "body": {
+                    "$include": "../../schemas/form.json"
+                }
+            },
+            {
+                "status": "default",
+                "body": {
+                    "$include": "../../schemas/error.json"
+                }
+            }
         ]
     }
 ]

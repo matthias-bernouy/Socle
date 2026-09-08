@@ -36730,6 +36730,7 @@ dd { margin: 0; min-width: 0; }
           const child = navigation(section2);
           child.slot = slot;
           child.setAttribute("data-detail-ready", "{{ detailReady }}");
+          child.setAttribute("cms-condition", "detailReady && detailPersisted");
           if (form) {
             child.removeAttribute("slot");
             form.querySelector("[data-form-main]").append(child);
@@ -38733,7 +38734,7 @@ slot { display: contents; }
     if (!detail) {
       return {};
     }
-    const selected2 = { id: detail.row };
+    const selected2 = { id: detail.row === "__new__" ? undefined : detail.row };
     return {
       selection: {
         ...selected2,

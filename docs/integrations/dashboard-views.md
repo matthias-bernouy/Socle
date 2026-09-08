@@ -185,3 +185,12 @@ secret grants and integration-owned configuration application.
 Navigation reorder forms may include scalar `hiddenFields` for stable parent
 identity. Their names must not overlap the ordered list name (including
 `valuesPath`). Only the list source reloads; the parent Save remains independent.
+
+Forms uses one creation/edit detail. `saveFormDraft` accepts editable metadata
+and an optional numeric `id`; a new form also supplies its stable `key`. It
+rejects client definitions. The private `forms.save_form_settings` operation
+updates metadata and the draft title atomically, preserving sections, questions,
+media reachability and published snapshots. `forms.save_form_draft` remains
+internal to builder operations. The SQL regression in the Forms integration
+under `tests/verification/settings-save.sql` runs inside a caller-owned local
+transaction that must be rolled back.

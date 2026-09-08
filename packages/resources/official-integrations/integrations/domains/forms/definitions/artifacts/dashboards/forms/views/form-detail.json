@@ -32,10 +32,26 @@
                         "required": true
                     },
                     {
+                        "id": "newKey",
+                        "label": "Stable key",
+                        "path": "key",
+                        "name": "key",
+                        "type": "text",
+                        "required": true,
+                        "visibleWhen": {
+                            "value": "$resource.id",
+                            "equals": null
+                        }
+                    },
+                    {
                         "id": "key",
                         "label": "Stable key",
                         "path": "key",
-                        "type": "readonly"
+                        "type": "readonly",
+                        "visibleWhen": {
+                            "value": "$resource.id",
+                            "notEquals": null
+                        }
                     },
                     {
                         "id": "description",
@@ -156,6 +172,20 @@
                     }
                 ]
             }
-        ]
+        ],
+        "create": {},
+        "save": {
+            "endpoint": "saveFormDraft",
+            "idPath": "key",
+            "label": "Save form",
+            "hiddenFields": [
+                {
+                    "name": "id",
+                    "type": "number",
+                    "value": "$resource.id",
+                    "empty": "omit"
+                }
+            ]
+        }
     }
 ]

@@ -1,23 +1,6 @@
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
 import type { Page } from "playwright";
-import { resolveIntegrationDefinitionFile } from "@bernouy/cms-integrations/fs";
-import type { DashboardDto } from "@bernouy/cms-dashboards";
+import { dashboard, source, bundle, styles } from "./definition";
 
-const root = dirname(
-    fileURLToPath(import.meta.resolve("@bernouy/cms-official-integrations/integrations/forms/definition.json")),
-);
-const definition = (await resolveIntegrationDefinitionFile(`${root}/definition.json`, root)) as {
-    artifacts: Array<{
-        type: string;
-        view?: DashboardDto;
-        source?: { endpoints: Array<{ endpointId: string; method: string; params: unknown[] }> };
-    }>;
-};
-const dashboard = definition.artifacts.find((artifact) => artifact.view?.id === "forms-forms")!.view!;
-const source = definition.artifacts.find((artifact) => artifact.type === "source")!.source!;
-const bundle = await Bun.file(resolve("packages/surfaces/cms-control/src/static/assets/control-components.js")).text();
-const styles = await Bun.file(resolve("packages/foundation/components/dist/style.css")).text();
 export const formKey = "contact / é? &test";
 export const sectionRef = "section / é? &test";
 export const questionRef = "question / é? &test";
@@ -110,6 +93,7 @@ export async function mountForms(page: Page, missingParent = false, reorder = fa
                     questionCount: 1,
                 },
                 manageForm: {
+                    id: 1,
                     key: formKey,
                     title: "Contact form",
                     description: "",
