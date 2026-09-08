@@ -78,7 +78,8 @@
                     "opens": "questionDetail"
                 },
                 "reorderable": {
-                    "action": "reorderQuestions"
+                    "action": "reorderQuestions",
+                    "name": "refs"
                 },
                 "actions": [
                     {
@@ -101,12 +102,15 @@
                     {
                         "id": "reorderQuestions",
                         "label": "Reorder questions",
-                        "endpoint": {
+                        "form": {
                             "endpoint": "reorderQuestions",
-                            "body": {
-                                "context": "$selection.sectionDetail.id",
-                                "refs": "$value"
-                            }
+                            "hiddenFields": [
+                                {
+                                    "name": "context",
+                                    "type": "string",
+                                    "value": "$resource.ref"
+                                }
+                            ]
                         }
                     }
                 ]

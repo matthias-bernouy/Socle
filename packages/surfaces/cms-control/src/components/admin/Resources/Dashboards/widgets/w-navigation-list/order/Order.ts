@@ -1,3 +1,4 @@
+import { hasMissingTechnicalFields } from "../../../runtime/actions/forms/views/technicalFields";
 import { orderedItems } from "./items";
 import { observeSource, refreshSourceContext, setSourceContext, showToast } from "@bernouy/components";
 import {
@@ -53,6 +54,10 @@ export class NavigationOrder {
 
     submit(order: string[]): void {
         if (this.busy || !this.form.isConnected) {
+            return;
+        }
+        if (hasMissingTechnicalFields(this.form)) {
+            showToast("The order cannot be saved because its parent identity is unavailable.", { type: "error" });
             return;
         }
         this.draft = order;

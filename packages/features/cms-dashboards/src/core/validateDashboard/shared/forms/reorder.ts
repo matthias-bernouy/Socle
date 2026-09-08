@@ -1,5 +1,5 @@
 import type { DashboardNavigationListWidget } from "../../../../interfaces/dashboard/widgets";
-import { formNameSegments } from "./paths";
+import { formNameSegments, validateFormNames } from "./paths";
 
 export function validateNavigationOrder(widget: DashboardNavigationListWidget, path: string, errors: string[]): void {
     if (!widget.reorderable) {
@@ -16,15 +16,24 @@ export function validateNavigationOrder(widget: DashboardNavigationListWidget, p
     if (widget.reorderable.name !== undefined && (!action.form || !formNameSegments(widget.reorderable.name))) {
         errors.push(`${path}.reorderable.name requires a form and a safe control name`);
     }
+    if (action.form) {
+        validateFormNames(
+            action.form,
+            [{ id: "order", path: "order", name: widget.reorderable.name ?? "ids", type: "tokens", label: "Order" }],
+            `${path}.reorderable.action.form`,
+            errors,
+        );
+    }
     if (
         action.form &&
         (action.form.fields?.length ||
-            action.form.hiddenFields?.length ||
             action.form.confirm ||
             action.confirm ||
             action.after ||
             action.form.refresh === "none")
     ) {
-        errors.push(`${path}.reorderable.action.form submits only the list order and must reload its source`);
+        errors.push(
+            `${path}.reorderable.action.form submits only the list order and technical fields and must reload its source`,
+        );
     }
 }

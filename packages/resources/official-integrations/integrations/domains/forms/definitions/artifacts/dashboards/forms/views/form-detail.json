@@ -91,7 +91,8 @@
                     "opens": "sectionDetail"
                 },
                 "reorderable": {
-                    "action": "reorderSections"
+                    "action": "reorderSections",
+                    "name": "refs"
                 },
                 "actions": [
                     {
@@ -114,12 +115,15 @@
                     {
                         "id": "reorderSections",
                         "label": "Reorder sections",
-                        "endpoint": {
+                        "form": {
                             "endpoint": "reorderSections",
-                            "body": {
-                                "context": "$selection.formDetail.id",
-                                "refs": "$value"
-                            }
+                            "hiddenFields": [
+                                {
+                                    "name": "context",
+                                    "type": "string",
+                                    "value": "$resource.key"
+                                }
+                            ]
                         }
                     }
                 ]

@@ -181,3 +181,7 @@ Integrations own attachment, expiry and cleanup; see [Commerce media](./commerce
 Connection views can use the explicit admin-only management settings target; see
 [Integration management](./management.md). The service retains revision checks,
 secret grants and integration-owned configuration application.
+
+Navigation reorder forms may include scalar `hiddenFields` for stable parent
+identity. Their names must not overlap the ordered list name (including
+`valuesPath`). Only the list source reloads; the parent Save remains independent.

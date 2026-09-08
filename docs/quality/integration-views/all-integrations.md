@@ -30,7 +30,7 @@ to migrate. Newsletter's subscription export remains a GET download.
 | Consent details and Stripe Connect seller terms | These call integration management actions, rather than source form endpoints. Publishing also owns immutable legal snapshots | Migrate legal actions to independent native forms while preserving publication semantics; the settings target is now standardized separately |
 | Forms creation and principal draft Save | The current operation submits the entire `draftDefinition`. Omitting it falls back to a starter definition and can erase existing sections/questions | Add an atomic metadata-only update contract or a deliberate draft editor contract |
 | Forms question editor | Nested options and image choices still use immediate media writes | Migrate the complex field/media lifecycle before changing its Save/Delete wiring |
-| Forms nested section/question navigation | Create/reorder depends on ancestor selection; controls are nested inside the parent detail | Compose independent forms outside the principal form with explicit ancestor identity |
+| Forms nested section/question navigation | Creation depends on ancestor selection; controls are nested inside the parent detail | Reordering now uses independent native forms with explicit ancestor identity; migrate the remaining creation actions |
 | Mondial Relay projection-exception table action | Native independent forms are currently composed for details, not table-row operations | Provide a reusable table operation form host |
 
 The old action runtime cannot yet be deleted. An empty legacy-source-action list

@@ -10,9 +10,12 @@ export async function installNestedRoutes(page: Page, bundle: string, styles: st
         const list = parent.main.find((section: any) => section.widget === "w-navigation-list");
         const reorder = list.actions.find((action: any) => action.id === "reorder");
         delete reorder.endpoint;
-        reorder.form = { endpoint: "reorder" };
+        reorder.form = {
+            endpoint: "reorder",
+            hiddenFields: [{ name: "context", type: "string", value: "$resource.ref" }],
+        };
     }
-    let resource = { name: "Introduction", note: "A note" };
+    let resource = { ref: "section / é? &test", name: "Introduction", note: "A note" };
     let items = ["First", "Second", "Third"].map((name, index) => ({ id: `question-${index + 1}`, name }));
     const writes: { endpoint: string; body: unknown }[] = [];
     const reads: string[] = [];
@@ -67,7 +70,7 @@ export async function installNestedRoutes(page: Page, bundle: string, styles: st
             const body = route.request().postData() ? route.request().postDataJSON() : {};
             writes.push({ endpoint, body });
             if (endpoint === "saveParent") {
-                resource = { name: String(body.name).trim(), note: body.note };
+                resource = { ...resource, name: String(body.name).trim(), note: body.note };
             } else if (endpoint === "saveChild") {
                 items = items.map((item) => (item.id === body.id ? { ...item, name: String(body.name).trim() } : item));
             } else if (endpoint === "reorder") {

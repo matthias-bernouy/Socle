@@ -24,7 +24,6 @@ test("navigation ordering accepts a typed form and validates its bounded automat
     expect(validateDashboard(fixture())).toEqual([]);
     for (const patch of [
         { fields: [{ id: "reason", path: "reason", label: "Reason", type: "text" }] },
-        { hiddenFields: [{ name: "id", type: "string", value: "a" }] },
         { confirm: "Confirm?" },
         { refresh: "none" },
     ]) {
@@ -38,4 +37,18 @@ test("navigation ordering accepts a typed form and validates its bounded automat
         (dashboard.views[0] as DashboardNavigationListWidget).reorderable!.name = name;
         expect(validateDashboard(dashboard).join(" ")).toContain("safe control name");
     }
+});
+
+test("navigation ordering accepts parent identity and rejects collisions with the ordered values", () => {
+    const dashboard = fixture();
+    const form = (dashboard.views[0] as DashboardNavigationListWidget).actions![0]!.form!;
+    form.hiddenFields = [{ name: "context", type: "string", value: "$resource.ref" }];
+    expect(validateDashboard(dashboard)).toEqual([]);
+    for (const name of ["orderedIds", "orderedIds[0]"]) {
+        form.hiddenFields[0]!.name = name;
+        expect(validateDashboard(dashboard).join(" ")).toContain("conflicts with another form control");
+    }
+    form.valuesPath = "payload";
+    form.hiddenFields[0]!.name = "payload";
+    expect(validateDashboard(dashboard).join(" ")).toContain("conflicts with another form control");
 });

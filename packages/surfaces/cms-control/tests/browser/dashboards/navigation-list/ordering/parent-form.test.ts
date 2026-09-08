@@ -30,7 +30,10 @@ test("a list inside a detail submits its own form without validating or saving t
         await rows.first().locator("[data-handle]").dragTo(rows.last());
         await read;
         expect(fixture.writes).toEqual([
-            { endpoint: "reorder", body: { ids: ["question-2", "question-3", "question-1"] } },
+            {
+                endpoint: "reorder",
+                body: { context: "section / é? &test", ids: ["question-2", "question-3", "question-1"] },
+            },
         ]);
         expect(await input.inputValue()).toBe("");
         expect(await node!.evaluate((el) => el.isConnected)).toBe(true);

@@ -38285,6 +38285,10 @@ slot { display: contents; }
       if (this.busy || !this.form.isConnected) {
         return;
       }
+      if (hasMissingTechnicalFields(this.form)) {
+        Nh("The order cannot be saved because its parent identity is unavailable.", { type: "error" });
+        return;
+      }
       this.draft = order;
       this.busy = true;
       this.host.setAttribute("aria-busy", "true");
