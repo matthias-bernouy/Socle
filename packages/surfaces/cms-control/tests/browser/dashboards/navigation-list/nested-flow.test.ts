@@ -95,7 +95,7 @@ test("nested detail navigation saves, retries and handles child actions once wit
         await page.goForward();
         await child.locator('[data-field-control="name"] input').waitFor();
         expect(await child.locator('[data-field-control="name"] input').inputValue()).toBe("Edited question");
-        await child.locator("[data-back]").click();
+        await child.getByRole("button", { name: "Back to table", exact: true }).click();
         await rows.last().waitFor();
         expect(await rows.first().getAttribute("title")).toBe("Edited question");
         await page.goto("http://cms.test/admin/sources?source=forms&dashboard=forms&collection=parent&row=section-1");

@@ -1,7 +1,17 @@
 import type { Page } from "playwright";
 import { dashboard } from "./nested-definition";
 
-export async function installNestedRoutes(page: Page, bundle: string, styles: string) {
+export async function installNestedRoutes(page: Page, bundle: string, styles: string, sharedForm = false) {
+    const definition = structuredClone(dashboard);
+    if (sharedForm) {
+        const parent = (definition.views[0] as any).children[0].tabs[0].children[0];
+        parent.save = { endpoint: "saveParent", label: "Save section" };
+        parent.actions = [];
+        const list = parent.main.find((section: any) => section.widget === "w-navigation-list");
+        const reorder = list.actions.find((action: any) => action.id === "reorder");
+        delete reorder.endpoint;
+        reorder.form = { endpoint: "reorder" };
+    }
     let resource = { name: "Introduction", note: "A note" };
     let items = ["First", "Second", "Third"].map((name, index) => ({ id: `question-${index + 1}`, name }));
     const writes: { endpoint: string; body: unknown }[] = [];
@@ -15,7 +25,7 @@ export async function installNestedRoutes(page: Page, bundle: string, styles: st
                 params: [],
             }),
         ),
-        dashboards: [dashboard],
+        dashboards: [definition],
     };
     let pending: Promise<void> | undefined;
     let failChildren = false;

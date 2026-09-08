@@ -18,7 +18,6 @@ export type DetailBinding = {
 export class DetailFieldState {
     private scopeKey = "";
     private values: Record<string, unknown> = {};
-    private displayValues: Record<string, string> = {};
     private submittedTables: Record<string, unknown> = {};
     private acknowledged: { fields: Record<string, unknown>; resource: unknown } | null = null;
 
@@ -34,10 +33,6 @@ export class DetailFieldState {
 
     get draft(): Record<string, unknown> {
         return this.values;
-    }
-
-    get displayDraft(): Record<string, string> {
-        return this.displayValues;
     }
 
     acknowledgeSavedFields(fields: Record<string, unknown>): void {
@@ -57,9 +52,6 @@ export class DetailFieldState {
     draftForResource(resource: unknown): Record<string, unknown> {
         if (this.acknowledged && !Object.is(this.acknowledged.resource, resource)) {
             this.values = remainingDraft(this.values, this.acknowledged.fields);
-            this.displayValues = Object.fromEntries(
-                Object.entries(this.displayValues).filter(([id]) => Object.hasOwn(this.values, id)),
-            );
             this.acknowledged = null;
         }
         return this.values;
@@ -67,9 +59,6 @@ export class DetailFieldState {
 
     acknowledgeDraft(submitted: Record<string, unknown>): void {
         this.values = remainingDraft(this.values, submitted);
-        this.displayValues = Object.fromEntries(
-            Object.entries(this.displayValues).filter(([id]) => Object.hasOwn(this.values, id)),
-        );
     }
 
     syncScope(scopeKey: string): void {
@@ -78,7 +67,6 @@ export class DetailFieldState {
         }
         this.scopeKey = scopeKey;
         this.values = {};
-        this.displayValues = {};
         this.acknowledged = null;
         this.submittedTables = {};
     }
@@ -86,18 +74,12 @@ export class DetailFieldState {
     clear(): void {
         this.scopeKey = "";
         this.values = {};
-        this.displayValues = {};
         this.acknowledged = null;
         this.submittedTables = {};
     }
 
-    record(fieldId: string, value: unknown, displayValue?: string): void {
+    record(fieldId: string, value: unknown): void {
         this.values[fieldId] = value;
-        if (displayValue !== undefined) {
-            this.displayValues[fieldId] = displayValue;
-        } else {
-            delete this.displayValues[fieldId];
-        }
     }
 
     restoreField(fieldId: string, submitted: unknown, previous: unknown): void {

@@ -93,9 +93,10 @@ export function tableRowsTemplate(widget: Extract<DashboardWidget, { widget: "w-
 
 export function navigationItemsTemplate(
     widget: Extract<DashboardWidget, { widget: "w-navigation-list" }>,
+    items?: string,
 ): HTMLElement {
     const item = document.createElement("cms-dashboard-w-navigation-item");
-    item.setAttribute("cms-repeat", `${repeatPath("dashboardData", widget.source.itemsPath)} as row`);
+    item.setAttribute("cms-repeat", `${items ?? repeatPath("dashboardData", widget.source.itemsPath)} as row`);
     item.setAttribute("row-key", bindingPath("row", widget.rowKey));
     item.setAttribute("title", bindingPath("row", widget.item.title.path));
     if (widget.item.subtitle) {

@@ -13,6 +13,18 @@ export const dashboardDisplayFilters = {
         ),
     dashboardTokens: (value: unknown) => tokenValue(value).join(","),
     dashboardDefined: (value: unknown) => value !== null && value !== undefined,
+    dashboardHttpUrl: (value: unknown) => {
+        const text = textValue(value).trim();
+        if (!text) {
+            return "";
+        }
+        try {
+            const url = new URL(text, window.location.href);
+            return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+        } catch {
+            return "";
+        }
+    },
     dashboardTrimmedText: (value: unknown) => textValue(value).trim(),
     dashboardValueKind: (value: unknown) => {
         const display = readonlyValue(value);

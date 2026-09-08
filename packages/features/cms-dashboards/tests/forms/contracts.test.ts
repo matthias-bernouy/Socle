@@ -33,7 +33,18 @@ test("accepts independent forms, scalar technical fields, modal creation and dra
                 endpoint: "updateProduct",
                 refresh: "read",
                 hiddenFields: [{ name: "status", type: "string", value: "archived" }],
-                fields: [{ id: "reason", path: "reason", label: "Reason", type: "text" }],
+                fields: [
+                    { id: "reason", path: "reason", label: "Reason", type: "text" },
+                    {
+                        id: "minimum",
+                        path: "priceRule.minimumAmount",
+                        name: "minimumAmount",
+                        label: "Minimum",
+                        type: "money",
+                        currencyPath: "currency",
+                        allowDecimals: { value: "$resource.wholeUnitPrices", equals: false },
+                    },
+                ],
             },
         },
     ];

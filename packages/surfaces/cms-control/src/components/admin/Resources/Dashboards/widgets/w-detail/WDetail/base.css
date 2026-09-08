@@ -42,8 +42,10 @@ cms-shell-detail {
 
 .w-detail-actions {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 8px;
+    min-width: 0;
 }
 
 .w-detail-actions p9r-action-menu,

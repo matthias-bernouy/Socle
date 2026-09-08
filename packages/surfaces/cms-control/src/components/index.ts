@@ -22,6 +22,7 @@ import {
     Modal,
     OpenModal,
     P9rInput,
+    MoneyInput,
     P9rSelect,
     PhotoAlbum,
     SegmentedSwitch,
@@ -88,6 +89,7 @@ define("w13c-left-menu-layout", LeftMenuLayout);
 define("p9r-modal", Modal);
 define("p9r-open-modal", OpenModal);
 define("p9r-input", P9rInput);
+define("p9r-money-input", MoneyInput);
 define("p9r-select", P9rSelect);
 define("p9r-photo-album", PhotoAlbum);
 define("p9r-segmented-switch", SegmentedSwitch);

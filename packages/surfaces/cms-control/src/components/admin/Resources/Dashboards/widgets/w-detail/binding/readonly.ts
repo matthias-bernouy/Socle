@@ -5,7 +5,15 @@ type ReadonlyField = Extract<DashboardField, { type: "readonly" }>;
 /** Only field definitions enter composition; binding applies all resource values. */
 export function composeReadonly(control: HTMLElement, field: ReadonlyField, root: string): void {
     const path = field.path === "." ? root : `${root}.${field.path}`;
-    if (field.format === "image") {
+    if (field.format === "url") {
+        const anchor = control.querySelector("a")!;
+        anchor.setAttribute("href", fieldBinding(root, field.path, "dashboardHttpUrl"));
+        anchor.setAttribute("cms-condition", `${path} | dashboardHttpUrl`);
+        anchor.textContent = fieldBinding(root, field.path);
+        const fallback = control.querySelector("span")!;
+        fallback.setAttribute("cms-condition", `${path} | dashboardHttpUrl == ''`);
+        fallback.textContent = fieldBinding(root, field.path);
+    } else if (field.format === "image") {
         const image = control.querySelector("img")!;
         image.alt = field.label;
         image.setAttribute("cms-condition", `${path} | dashboardTrimmedText`);

@@ -107,7 +107,7 @@ test("refuses modal features without an isolated data context instead of silentl
     ).toThrow("reference a detail view");
     expect(() => parseWidget(detail({ save: { ...operation, refresh: "none" } }), "widget")).toThrow("saving reloads");
     for (const field of [
-        { id: "price", path: "price", label: "Price", type: "money" },
+        { id: "price", path: "price", label: "Price", type: "media", item: { urlPath: "url" } },
         { ...fields[0], visibleWhen: { value: "$field.title", equals: "yes" } },
         {
             id: "brand",
@@ -181,4 +181,21 @@ test("parses unified creation capability, optional identity and staged media ses
         ],
     };
     expect(parseWidget(input, "widget")).toEqual(input);
+});
+
+test("accepts monetary action fields with resource currency and decimal rules", () => {
+    const field = {
+        id: "minimum",
+        name: "minimumAmount",
+        path: "priceRule.minimumAmount",
+        label: "Minimum",
+        type: "money",
+        currencyPath: "currency",
+        allowDecimals: { value: "$resource.wholeUnitPrices", equals: false },
+    };
+    const parsed = parseWidget(
+        detail({ actions: [{ id: "price", label: "Request price", form: { ...operation, fields: [field] } }] }),
+        "widget",
+    );
+    expect(parsed).toMatchObject({ actions: [{ form: { fields: [field] } }] });
 });

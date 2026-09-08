@@ -41,6 +41,9 @@ export function composeDetail(
         }
         form = formPart<HTMLFormElement>("save");
         configureForm(form, widget.save, context);
+        if (widget.save.confirm) {
+            form.dataset.saveConfirm = widget.save.confirm;
+        }
         const button = formPart<HTMLElement>("submit");
         button.slot = "bound-actions";
         button.setAttribute("form", form.getAttribute("id")!);

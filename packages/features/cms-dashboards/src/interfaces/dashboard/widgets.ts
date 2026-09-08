@@ -56,7 +56,7 @@ export type DashboardNavigationListWidget = {
         badge?: DashboardBinding;
     };
     selection?: { opens?: string };
-    reorderable?: { action: string };
+    reorderable?: { action: string; name?: string };
     actions?: DashboardAction[];
     create?: DashboardCreateOperation;
 };

@@ -4,9 +4,11 @@ import { resolve } from "node:path";
 import { mkdir } from "node:fs/promises";
 import { installNavigationRoutes } from "./fixture";
 
-const bundle = await Bun.file(resolve(import.meta.dir, "../../../../src/static/assets/control-components.js")).text();
+const bundle = await Bun.file(
+    resolve(import.meta.dir, "../../../../../src/static/assets/control-components.js"),
+).text();
 const styles = await Bun.file(
-    resolve(import.meta.dir, "../../../../../../foundation/components/dist/style.css"),
+    resolve(import.meta.dir, "../../../../../../../foundation/components/dist/style.css"),
 ).text();
 
 test("navigation list binds its rows, preserves its layout and persists drag ordering through reloads", async () => {
@@ -94,7 +96,7 @@ test("navigation list binds its rows, preserves its layout and persists drag ord
                 expect(await rows.count()).toBe(3);
                 await rows.first().getByRole("button").click();
                 await page.locator('cms-dashboard-w-detail [data-field-control="label"] input').waitFor();
-                await page.locator("cms-dashboard-w-detail [data-back]").click();
+                await page.getByRole("button", { name: "Back to table", exact: true }).click();
                 await rows.last().waitFor();
                 page.once("dialog", (dialog) => dialog.dismiss());
                 await list.getByRole("button", { name: "Clear fields", exact: true }).click();

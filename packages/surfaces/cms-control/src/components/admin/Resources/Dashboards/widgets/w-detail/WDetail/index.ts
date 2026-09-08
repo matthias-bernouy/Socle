@@ -44,12 +44,7 @@ export class DashboardWDetail extends Component {
     configure(widget: DetailWidget): void {
         this.configuration = widget;
         this.setAttribute("data-declarative", "");
-        bindDetailContext(
-            this,
-            widget,
-            (resource) => this.fields.draftForResource(resource),
-            () => this.fields.displayDraft,
-        );
+        bindDetailContext(this, widget, (resource) => this.fields.draftForResource(resource));
     }
 
     private readBinding(): DetailBinding | null {

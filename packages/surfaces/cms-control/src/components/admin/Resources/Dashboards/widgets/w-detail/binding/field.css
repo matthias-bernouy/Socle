@@ -14,3 +14,5 @@ dd { margin: 0; min-width: 0; }
 ::slotted(.readonly-empty) { color: #8a9692; font-style: italic; }
 ::slotted(.badge) { display: inline-flex; align-items: center; width: fit-content; border-radius: 999px; background: #edf7f0; color: #105d3e; font-size: 12px; font-weight: 750; padding: 3px 8px; }
 ::slotted(.detail-image) { aspect-ratio: 1; background: #f4f1ec; border: 1px solid var(--border-default); border-radius: 10px; display: block; object-fit: cover; width: 100%; }
+
+::slotted(a) { color: var(--primary-base); overflow-wrap: anywhere; }

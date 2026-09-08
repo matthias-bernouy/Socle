@@ -5,6 +5,8 @@ import css from "./field.css" with { type: "text" };
 
 /** Visual shells contain slots; the document binding owns rows and field values. */
 export class ReorderableField extends Component {
+    static formAssociated = true;
+    private readonly internals: ElementInternals;
     private readonly interactions = new ReorderableInteractions(this);
     constructor() {
         super({
@@ -12,6 +14,13 @@ export class ReorderableField extends Component {
             template:
                 '<section class="reorderable-list"><div class="header"><slot name="heading"></slot></div><div class="rows"><slot name="row"></slot></div><slot name="add"></slot></section>',
         });
+        this.internals = this.attachInternals();
+    }
+    get form(): HTMLFormElement | null {
+        return this.internals.form;
+    }
+    get value(): Record<string, unknown>[] {
+        return this.items;
     }
     get items(): Record<string, unknown>[] {
         return this.interactions.pending ?? readReorderableItems(this);

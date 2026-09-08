@@ -28,7 +28,7 @@ export function composeDetailOperations(
             ...action.form,
             label: action.form.label ?? action.label,
         };
-        const { modal, form, opener } = operationModal(operation, context);
+        const { modal, form, opener } = operationModal(operation, context, `detailOperations.${action.id}.resource`);
         const confirmation = Boolean(operation.confirm || operation.fields?.length);
         const trigger = confirmation ? opener : form.querySelector<HTMLElement>('[type="submit"]')!;
         trigger.slot = "bound-actions";
@@ -44,6 +44,16 @@ export function composeDetailOperations(
         }
         const formId = form.getAttribute("id");
         const modalId = modal.id;
+        // The source may instantiate the modal from its template. Resolve the live form.
+        host.addEventListener("open", (event) => {
+            const target = event.target as HTMLElement;
+            if (target.id === modalId) {
+                const currentForm = target.querySelector<HTMLFormElement>("[data-operation-form]");
+                if (currentForm) {
+                    HTMLFormElement.prototype.reset.call(currentForm);
+                }
+            }
+        });
         const capture = trackOperationCompletion(host, formId!, (body, rowKey) => {
             host.querySelector(`[id="${modalId}"]`)?.removeAttribute("open");
             const currentForm = host.querySelector<HTMLFormElement>(`[id="${formId}"]`);

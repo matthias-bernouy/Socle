@@ -1,3 +1,4 @@
+import { validateNavigationOrder } from "./shared/forms/reorder";
 import { validateDetailForms } from "./shared/forms/detail";
 import { validateCreateOperation } from "./shared/forms/creation";
 import type { Source } from "@bernouy/cms-sources";
@@ -148,14 +149,7 @@ export function validateNavigationListWidget(
     widget.actions?.forEach((action, index) =>
         validateAction(action, `${path}.actions.${index}`, dashboard, source, errors),
     );
-    if (widget.reorderable) {
-        const action = widget.actions?.find((item) => item.id === widget.reorderable!.action);
-        if (!action) {
-            errors.push(`${path}.reorderable.action references unknown action "${widget.reorderable.action}"`);
-        } else if (!action.endpoint) {
-            errors.push(`${path}.reorderable.action must declare an endpoint`);
-        }
-    }
+    validateNavigationOrder(widget, path, errors);
 }
 
 function validateColumn(column: DashboardColumn, path: string, errors: string[]): void {

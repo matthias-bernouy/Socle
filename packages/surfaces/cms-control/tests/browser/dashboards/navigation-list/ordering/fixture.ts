@@ -32,7 +32,7 @@ const group = {
                             confirm: "Clear all test fields?",
                             endpoint: { endpoint: "clear" },
                         },
-                        { id: "reorder", label: "Reorder", endpoint: { endpoint: "reorder", body: { ids: "$value" } } },
+                        { id: "reorder", label: "Reorder", form: { endpoint: "reorder" } },
                     ],
                 },
                 {
@@ -58,6 +58,8 @@ export async function installNavigationRoutes(page: Page, bundle: string, styles
     const orders: string[][] = [];
     let clears = 0;
     let reads = 0;
+    let failWrite = false;
+    let failRead = false;
     let release = () => {};
     let pending: Promise<void> | undefined;
     await page.route("http://cms.test/**", async (route) => {
@@ -75,7 +77,12 @@ export async function installNavigationRoutes(page: Page, bundle: string, styles
             await route.fulfill({ json: [group] });
         } else if (url.pathname.endsWith("/list")) {
             reads += 1;
-            await route.fulfill({ json: { items } });
+            if (failRead) {
+                failRead = false;
+                await route.fulfill({ status: 503, json: { error: "Read failed" } });
+            } else {
+                await route.fulfill({ json: { items } });
+            }
         } else if (url.pathname.endsWith("/get")) {
             await route.fulfill({ json: items.find((item) => item.id === url.searchParams.get("id")) ?? {} });
         } else if (url.pathname.endsWith("/reorder")) {
@@ -83,6 +90,11 @@ export async function installNavigationRoutes(page: Page, bundle: string, styles
             orders.push(ids);
             if (pending) {
                 await pending;
+            }
+            if (failWrite) {
+                failWrite = false;
+                await route.fulfill({ status: 422, json: { error: "Order rejected" } });
+                return;
             }
             items = ids.map((id: string) => items.find((item) => item.id === id)!);
             await route.fulfill({ json: { ok: true } });
@@ -96,6 +108,12 @@ export async function installNavigationRoutes(page: Page, bundle: string, styles
     });
     return {
         orders,
+        failWrite: () => {
+            failWrite = true;
+        },
+        failRead: () => {
+            failRead = true;
+        },
         counts: () => ({ clears, reads }),
         hold: () => {
             pending = new Promise<void>((resolve) => {

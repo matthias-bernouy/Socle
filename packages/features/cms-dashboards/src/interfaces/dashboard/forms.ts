@@ -41,6 +41,7 @@ export const DASHBOARD_MODAL_FIELD_TYPES = [
     "text",
     "textarea",
     "number",
+    "money",
     "checkbox",
     "select",
     "combobox",

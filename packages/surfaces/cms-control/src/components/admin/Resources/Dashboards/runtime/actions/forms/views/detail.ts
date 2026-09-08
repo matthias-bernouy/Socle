@@ -90,6 +90,12 @@ export function connectDetailForm(
             }
             return;
         }
+        const confirmation = (event.target as HTMLFormElement).dataset.saveConfirm;
+        if (confirmation && !window.confirm(confirmation)) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return;
+        }
         submittedScope = scope();
         submitted = structuredClone(capture());
     };

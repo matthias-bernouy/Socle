@@ -80,10 +80,12 @@ describe("typed dashboard detail controls", () => {
 
         expect({
             input: decimalField.input,
-            value: (decimal as HTMLElement & { value: string }).value,
+            value: decimal.shadowRoot?.querySelector("input")?.value,
             inputMode: decimal.shadowRoot?.querySelector("input")?.inputMode,
         }).toEqual({ input: "money", value: "15,26", inputMode: "decimal" });
-        (decimal as HTMLElement & { value: string }).value = "18,75";
+        const decimalInput = decimal.shadowRoot!.querySelector("input")!;
+        decimalInput.value = "18,75";
+        decimalInput.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
         expect(readFieldControlValue(decimalField, decimal)).toBe(1875);
 
         const wholeField = moneyField(1500, false);
@@ -101,13 +103,16 @@ describe("typed dashboard detail controls", () => {
             { amount: 1500, currency: "EUR" },
         );
         const whole = wholeDetail.querySelector<HTMLElement>("[data-field-control=amount]")!;
-        expect((whole as HTMLElement & { value: string }).value).toBe("15");
-        (whole as HTMLElement & { value: string }).value = "15,26";
+        expect(whole.shadowRoot?.querySelector("input")?.value).toBe("15");
+        const wholeInput = whole.shadowRoot!.querySelector("input")!;
+        wholeInput.value = "15,26";
+        wholeInput.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
         expect(readFieldControlValue(wholeField, whole)).toBe("");
         expect(whole.hasAttribute("invalid")).toBe(true);
-        expect(whole.getAttribute("hint")).toContain("without decimals");
+        expect((whole as HTMLElement & { validationMessage: string }).validationMessage).toContain("without decimals");
 
-        (whole as HTMLElement & { value: string }).value = "16";
+        wholeInput.value = "16";
+        wholeInput.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
         expect(readFieldControlValue(wholeField, whole)).toBe(1600);
         expect(whole.hasAttribute("invalid")).toBe(false);
     });

@@ -7,6 +7,7 @@ import { configureForm, formId, formPart } from "./composition";
 export function operationModal(
     operation: DashboardFormOperation & { fields?: DashboardField[]; title?: string; submitLabel?: string },
     context: RenderContext,
+    root: string,
 ) {
     const modal = formPart<HTMLElement>("modal");
     modal.id = formId();
@@ -23,7 +24,7 @@ export function operationModal(
         stack.append(confirmation);
     }
     for (const field of operation.fields ?? []) {
-        stack.append(fieldElement(field, "operationDefaults", operation));
+        stack.append(fieldElement(field, root, operation));
     }
     const submit = formPart<HTMLElement>("submit");
     setP9rButtonTone(submit, operation.tone ?? "primary");

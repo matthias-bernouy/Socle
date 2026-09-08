@@ -17,8 +17,11 @@ export function applyDetailSourceOverlay(
     dashboardId: string,
 ): DetailWidget {
     const outputTargets = (overlay.output ?? []).filter((target) => target.endpointId === widget.source.endpoint);
-    const inputTargets = (overlay.input ?? []).filter((target) =>
-        (widget.actions ?? []).some((action) => action.endpoint?.endpoint === target.endpointId),
+    const inputTargets = (overlay.input ?? []).filter(
+        (target) =>
+            (widget.save?.endpoint === target.endpointId &&
+                (!widget.save.sourceId || widget.save.sourceId === overlay.sourceId)) ||
+            (widget.actions ?? []).some((action) => action.endpoint?.endpoint === target.endpointId),
     );
     let next: DetailWidget = {
         ...widget,

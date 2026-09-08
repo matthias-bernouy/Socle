@@ -85,7 +85,14 @@ export function parseWidget(value: unknown, name: string): DashboardWidget {
             item: parseNavigationItem(value.item, `${name}.item`),
             ...(isRecord(value.selection) ? { selection: parseSelection(value.selection) } : {}),
             ...(isRecord(value.reorderable)
-                ? { reorderable: { action: requiredText(value.reorderable.action, `${name}.reorderable.action`) } }
+                ? {
+                      reorderable: {
+                          action: requiredText(value.reorderable.action, `${name}.reorderable.action`),
+                          ...(value.reorderable.name !== undefined
+                              ? { name: requiredText(value.reorderable.name, `${name}.reorderable.name`) }
+                              : {}),
+                      },
+                  }
                 : {}),
             ...(value.actions !== undefined ? { actions: parseActions(value.actions, `${name}.actions`) } : {}),
         };

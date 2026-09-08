@@ -76,8 +76,9 @@ export function fieldElement(field: DashboardField, root: string, form?: { value
             }
         }
         if (field.type === "money") {
-            control.setAttribute("value", `{{ detailAmounts.${field.id}.value }}`);
-            control.setAttribute("inputmode", `{{ detailAmounts.${field.id}.inputmode }}`);
+            control.setAttribute("currency", `{{ ${root}Money.${field.id}.currency }}`);
+            control.setAttribute("allow-decimals", `{{ ${root}Money.${field.id}.allowDecimals }}`);
+            control.setAttribute("cms-form-value-type", "number");
         }
         if (field.type === "textarea") {
             control.setAttribute("rows", String(field.rows ?? 4));

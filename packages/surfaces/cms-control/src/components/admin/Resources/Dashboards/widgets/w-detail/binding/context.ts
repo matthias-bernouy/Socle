@@ -9,7 +9,7 @@ import { detailLookupUrls, tableLookupUrls, choiceLookupUrls } from "../lookups/
 import { readSourceData, setSourceContext } from "@bernouy/components";
 import { fieldValues } from "../../../runtime/mapping";
 import { matchesDashboardVisibility, setValueAt, valueAt } from "../../../runtime/expressions";
-import { currencyFractionDigits, formatMinorUnits } from "../../../runtime/mapping/money";
+import { moneyFieldContext } from "../../../runtime/mapping/money";
 import { actionLayout } from "./actions";
 import type { DetailWidget } from "../runtime/fieldState";
 
@@ -18,7 +18,6 @@ export function bindDetailContext(
     host: HTMLElement,
     widget: DetailWidget,
     draft: (resource: unknown) => Record<string, unknown>,
-    displayDraft: () => Record<string, string>,
 ): void {
     const fields = [...widget.main, ...(widget.aside ?? [])].flatMap((section) =>
         "widget" in section ? [] : section.fields,
@@ -46,32 +45,6 @@ export function bindDetailContext(
                 setValueAt(effective as Record<string, unknown>, field.path, edits[field.id]);
             }
         }
-        const amounts = Object.fromEntries(
-            fields
-                .filter((field) => field.type === "money")
-                .map((field) => {
-                    const currency = field.currencyPath
-                        ? (valueAt(values, field.currencyPath) ?? valueAt(resource, field.currencyPath))
-                        : undefined;
-                    const decimals =
-                        typeof field.allowDecimals === "object"
-                            ? matchesDashboardVisibility(field.allowDecimals, { fields: values, resource })
-                            : field.allowDecimals !== false;
-                    return [
-                        field.id,
-                        {
-                            value:
-                                displayDraft()[field.id] ??
-                                formatMinorUnits(
-                                    values[field.id],
-                                    currencyFractionDigits(typeof currency === "string" ? currency : undefined),
-                                    decimals,
-                                ),
-                            inputmode: decimals ? "decimal" : "numeric",
-                        },
-                    ];
-                }),
-        );
         const nested = choices(values, edits);
         const sessions = mediaUploadSessions(host);
         return {
@@ -102,9 +75,23 @@ export function bindDetailContext(
             detailResourcePath: widget.source.itemPath ?? "",
             detailLookupUrls: detailLookupUrls(fields, host.dataset.sourceId ?? "", values, resource),
             detailReady: resource !== null && resource !== undefined,
-            detailPersisted: !widget.create || valueAt(resource, widget.save?.idPath ?? "id") != null,
+            detailPersisted: !widget.create || host.dataset.rowKey !== "__new__",
             detailValues: effective,
             detailResource: resource,
+            detailOperations: Object.fromEntries(
+                (widget.actions ?? [])
+                    .filter((action) => action.form)
+                    .map((action) => {
+                        const operationFields = action.form!.fields ?? [];
+                        const operationValues = Object.fromEntries(
+                            operationFields.map((field) => [field.id, valueAt(resource, field.path)]),
+                        );
+                        return [
+                            action.id,
+                            { resource, resourceMoney: moneyFieldContext(operationFields, resource, operationValues) },
+                        ];
+                    }),
+            ),
             detailSelection: { id: host.dataset.rowKey ?? "" },
             detailRow: resource,
             detailOperationVisibility: Object.fromEntries(
@@ -114,7 +101,7 @@ export function bindDetailContext(
                 ]),
             ),
             detailActions: actions(values, resource),
-            detailAmounts: amounts,
+            detailValuesMoney: moneyFieldContext(fields, resource, values),
             detailVisibility: { fields: values, resource },
             detailRules: rules,
         };

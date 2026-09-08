@@ -1,3 +1,4 @@
+import { composeNavigationOrder } from "../../widgets/w-navigation-list/order/composition";
 import { composeCreation } from "../actions/forms/views/creation";
 import type { DashboardWidget } from "@bernouy/cms-dashboards";
 import type { DetailSelection, RenderContext } from "../../domain";
@@ -58,7 +59,8 @@ export function navigationListElement(
     if (slot) {
         element.setAttribute("slot", slot);
     }
-    wrapper.append(navigationItemsTemplate(widget));
+    const orderForm = composeNavigationOrder(element, wrapper, widget, context, formOwner);
+    wrapper.append(navigationItemsTemplate(widget, orderForm ? "navigationItems" : undefined));
     element.append(wrapper);
     composeCreation(element, widget, context, formOwner);
     return element;
