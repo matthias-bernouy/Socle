@@ -1,4 +1,0 @@
-<p slot="source-status" cms-condition="!detailReady &amp;&amp; !$source.loaded &amp;&amp; !$source.empty &amp;&amp; !$source.error">Loading…</p>
-<p slot="source-status" cms-condition="$source.error || $source.refreshError">{{ $source.message }} <button type="button" data-settings-retry>Retry</button></p>
-<button type="button" slot="footer" data-management-action="apply-settings" cms-condition="settings.savedRevision != settings.appliedRevision">Retry applying configuration</button>
-<p slot="source-status" cms-condition="!detailReady &amp;&amp; $source.loaded || !detailReady &amp;&amp; $source.empty">No connection settings are available. <button type="button" data-settings-retry>Retry</button></p>

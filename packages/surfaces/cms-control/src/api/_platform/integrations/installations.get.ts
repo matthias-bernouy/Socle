@@ -1,3 +1,4 @@
+import { parseUrn } from "@bernouy/cms-sources";
 import type { ControlCms } from "cms-control/ControlCms";
 import {
     buildIntegrationInstallationView,
@@ -12,7 +13,17 @@ export default async function getIntegrationInstallations(req: Request, cms: Con
             return new Response("Not found", { status: 404 });
         }
         const context = await loadIntegrationArtifactContext(cms);
-        return Response.json(buildIntegrationInstallationView(context, installation, true));
+        const parentId = installation.definitionSnapshot?.extensionOf?.kind;
+        const owner = installation.artifacts.some((artifact) => artifact.type === "source")
+            ? installation
+            : parentId
+              ? await cms.integrationInstallations.get(parentId)
+              : undefined;
+        const sourceArtifact = owner?.artifacts.find((artifact) => artifact.type === "source");
+        return Response.json({
+            ...buildIntegrationInstallationView(context, installation, true),
+            settingsSourceId: sourceArtifact ? (parseUrn(sourceArtifact.id)?.source ?? sourceArtifact.id) : undefined,
+        });
     }
 
     const context = await loadIntegrationArtifactContext(cms);

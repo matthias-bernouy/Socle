@@ -44,7 +44,13 @@ describe("GET /api/dashboards", () => {
             }),
         );
 
-        const body = await (await listDashboards(list(), { sources, dashboardViews } as any)).json();
+        const body = await (
+            await listDashboards(list(), {
+                integrationInstallations: { list: async () => [] },
+                sources,
+                dashboardViews,
+            } as any)
+        ).json();
         expect(body).toHaveLength(1);
         expect(body[0].source).toEqual({
             urn: "urn:commerce",
@@ -64,7 +70,13 @@ describe("GET /api/dashboards", () => {
         const sources = new CompositeSourceRepository(new InMemorySourceRepository(), SYSTEM_SOURCES);
         const dashboardViews = new InMemoryDashboardViewRepository();
 
-        const body = await (await listDashboards(list(), { sources, dashboardViews } as any)).json();
+        const body = await (
+            await listDashboards(list(), {
+                integrationInstallations: { list: async () => [] },
+                sources,
+                dashboardViews,
+            } as any)
+        ).json();
         expect(body[0].source).toEqual({
             urn: SYSTEM_AUTH_SOURCE_URN,
             id: "system-auth",
@@ -89,6 +101,7 @@ describe("GET /api/dashboards", () => {
 
         const body = await (
             await listDashboards(list(), {
+                integrationInstallations: { list: async () => [] },
                 sources: withFunctionsSource(baseSources, functions),
                 dashboardViews,
             } as any)

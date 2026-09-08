@@ -1,0 +1,16 @@
+{
+    "type": "dashboard-view",
+    "view": {
+        "id": "emailer-connection",
+        "source": "emailer",
+        "meta": {
+            "name": "Connection",
+            "icon": "settings"
+        },
+        "views": [
+            {
+                "$include": "detail.json"
+            }
+        ]
+    }
+}

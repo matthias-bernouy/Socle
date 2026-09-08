@@ -31,7 +31,8 @@
             "artifacts/functions/send-newsletter-broadcast/root.json",
             "artifacts/dashboards/broadcast-campaigns.json",
             "artifacts/dashboards/templates/root.json",
-            "artifacts/functions/source-management.json"
+            "artifacts/functions/source-management.json",
+            "artifacts/dashboards/connection/root.json"
         ]
     },
     "dependencies": {
@@ -103,7 +104,8 @@
                     "type": "text",
                     "path": "defaultReplyTo"
                 }
-            ]
+            ],
+            "dashboardId": "emailer-connection"
         },
         "runtimeSecrets": {
             "SMTP_PASSWORD": {

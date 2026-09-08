@@ -99,6 +99,7 @@ describe("GET /api/dashboards source overlays", () => {
 
         const body = await (
             await listDashboards(list(), {
+                integrationInstallations: { list: async () => [] },
                 sources: new SourceOverlaySourceRepository(sources, sourceOverlays),
                 dashboardViews,
                 sourceOverlays,

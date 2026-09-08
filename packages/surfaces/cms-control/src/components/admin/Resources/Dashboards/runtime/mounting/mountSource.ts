@@ -1,16 +1,12 @@
 import states from "cms-control/static/admin/_content/sources/_runtime/source-states.html" with { type: "text" };
-import type { DashboardWidget } from "@bernouy/cms-dashboards";
+import type { DashboardWidget, DashboardDataRef } from "@bernouy/cms-dashboards";
 import type { RenderContext } from "../../domain";
 import { sourceUrl } from "../source";
 import { resolveParams, type RuntimeVars } from "../expressions";
 
 let sourceSequence = 0;
 
-type SourceRef = {
-    sourceId?: string;
-    endpoint: string;
-    params?: Record<string, string>;
-};
+type SourceRef = DashboardDataRef;
 
 export function sourceWrapper(
     sourceId: string,
@@ -28,6 +24,9 @@ export function sourceWrapper(
 }
 
 export function requiredSourceParams(context: RenderContext, ref: SourceRef): string[] {
+    if (ref.management) {
+        return [];
+    }
     const sourceId = ref.sourceId ?? context.dashboard.source;
     const group = (context.groups ?? [context.group]).find((candidate) => candidate.source.id === sourceId);
     return (

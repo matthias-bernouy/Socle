@@ -1,8 +1,6 @@
-import "../management/IntegrationManagement";
+import "../../Dashboards/view/DashboardView";
 import { route, integrationRouteUrl } from "../api";
 import type { IntegrationBrowserHost, IntegrationDefinition } from "../model";
-import { definitionFor } from "./browser";
-import { cloneElement, fillIcon, text } from "./templates";
 
 export function renderDetail(host: IntegrationBrowserHost): void {
     const root = host.query<HTMLElement>("[data-detail-view]");
@@ -10,24 +8,18 @@ export function renderDetail(host: IntegrationBrowserHost): void {
     if (!installation) {
         return;
     }
-    const definition = definitionFor(host, installation);
-    const shell = cloneElement("detail-shell");
-    const content = shell.querySelector("template")!.content;
-    shell.setAttribute(
-        "cms-source",
-        `${route("/api/integrations/installations")}?id=${encodeURIComponent(installation.id)} as integration`,
-    );
-    text(content, "[data-title]", installation.label);
-    text(content, "[data-description]", definition?.description ?? "No description.");
-    content.querySelector<HTMLElement>("[data-run-sync]")!.dataset.integrationId = installation.id;
-    content.querySelector<HTMLElement>("[data-management]")!.setAttribute("installation-id", installation.id);
-    const upgrade = content.querySelector<HTMLElement>("[data-upgrade-panel]")!;
-    upgrade.dataset.integrationId = installation.id;
-    upgrade.dataset.currentVersion = installation.definitionVersion;
-    fillIcon(content, "[data-back-icon]", "table");
-    fillIcon(content, "[data-grid-icon]", "grid");
-    renderLinkedResources(content.querySelector<HTMLElement>("[data-linked]")!, host, definition);
-    root.replaceChildren(shell);
+    const settings = installation.management?.settings;
+    if (settings?.fields.length || settings?.dashboardId) {
+        const view = document.createElement("cms-dashboards-admin");
+        view.setAttribute("embedded", "");
+        view.setAttribute("dashboard-id", settings.dashboardId ?? `integration-${installation.id}-settings`);
+        root.replaceChildren(view);
+    } else {
+        const link = document.createElement("a");
+        link.href = route("/admin/health");
+        link.textContent = "View integration health";
+        root.replaceChildren(link);
+    }
 }
 
 export function renderLinkedResources(

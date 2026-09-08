@@ -1,0 +1,16 @@
+{
+    "type": "dashboard-view",
+    "view": {
+        "id": "stripe-connect-connection",
+        "source": "stripe-connect",
+        "meta": {
+            "name": "Connection",
+            "icon": "settings"
+        },
+        "views": [
+            {
+                "$include": "detail.json"
+            }
+        ]
+    }
+}

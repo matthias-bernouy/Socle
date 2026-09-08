@@ -27,7 +27,8 @@
         "$files": [
             "artifacts/sources/primary/definition.json",
             "artifacts/dashboards/delivery/definition.json",
-            "artifacts/functions/source-management.json"
+            "artifacts/functions/source-management.json",
+            "artifacts/dashboards/connection/root.json"
         ]
     },
     "type": "source",
@@ -106,7 +107,8 @@
                     "type": "secret-ref",
                     "required": true
                 }
-            ]
+            ],
+            "dashboardId": "delivery-connection"
         },
         "runtimeSecrets": {
             "MONDIAL_RELAY_CONNECT_ENDPOINT": {

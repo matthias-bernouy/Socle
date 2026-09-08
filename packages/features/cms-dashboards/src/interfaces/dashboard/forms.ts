@@ -1,3 +1,4 @@
+import type { DashboardRequestTarget } from "./refs";
 import type { DashboardField } from "./fields";
 
 export type DashboardFormHiddenField = {
@@ -8,8 +9,7 @@ export type DashboardFormHiddenField = {
 };
 
 /** A real form contributes editable controls and scalar technical fields. */
-export type DashboardFormOperation = {
-    endpoint: string;
+export type DashboardFormOperation = DashboardRequestTarget & {
     sourceId?: string;
     label?: string;
     icon?: string;

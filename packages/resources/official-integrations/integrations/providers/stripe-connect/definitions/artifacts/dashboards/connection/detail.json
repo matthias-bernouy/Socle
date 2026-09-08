@@ -1,0 +1,39 @@
+{
+    "widget": "w-detail",
+    "id": "connection",
+    "source": {
+        "management": {
+            "installationId": "stripe-connect",
+            "operation": "settings"
+        }
+    },
+    "title": {
+        "path": "label",
+        "fallback": "Settings"
+    },
+    "save": {
+        "management": {
+            "installationId": "stripe-connect",
+            "operation": "settings"
+        },
+        "label": "Save settings",
+        "valuesPath": "values",
+        "hiddenFields": [
+            {
+                "name": "expectedRevision",
+                "value": "$resource.savedRevision",
+                "type": "string",
+                "empty": "omit"
+            }
+        ]
+    },
+    "main": [
+        {
+            "id": "connection",
+            "title": "Connection",
+            "fields": {
+                "$include": "fields.json"
+            }
+        }
+    ]
+}

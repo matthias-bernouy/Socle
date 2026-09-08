@@ -18,13 +18,13 @@ export function validateFormOperation(
         return;
     }
     validateEndpointRef(dashboard, operation, path, source, errors);
-    for (const key of ["body", "params", "management"]) {
+    for (const key of ["body", "params"]) {
         if (Object.hasOwn(operation, key)) {
             errors.push(`${path}.${key} is not supported by form operations`);
         }
     }
     const endpoint =
-        source && (!operation.sourceId || operation.sourceId === dashboard.source)
+        source && operation.endpoint && (!operation.sourceId || operation.sourceId === dashboard.source)
             ? source.endpoints.find((entry) => entry.urn === makeEndpointUrn(dashboard.source, operation.endpoint))
             : undefined;
     if (endpoint && !["POST", "PUT", "PATCH", "DELETE"].includes(endpoint.method)) {

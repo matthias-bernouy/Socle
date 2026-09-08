@@ -1,6 +1,7 @@
+<p9r-stack gap="sm" trim>
 <span cms-condition="$source.loading &amp;&amp; !healthView.available">Loading…</span>
 <p cms-condition="$source.error || $source.refreshError" role="alert">Unable to load health. {{ $source.message }}</p>
-<button type="button" data-health-refresh aria-disabled="{{ healthBusy }}" cms-condition="healthView.available || $source.error || $source.empty">Refresh health</button>
+<p9r-button variant="outlined" type="button" data-health-refresh aria-disabled="{{ healthBusy }}" cms-condition="healthView.available || $source.error || $source.empty">Refresh health</p9r-button>
 <p cms-condition="healthView.available">{{ healthView.observation }}</p>
 <p cms-condition="healthView.issue">{{ healthView.issue }}</p>
 <p cms-condition="healthView.version">Observed version: {{ healthView.version }}</p>
@@ -10,7 +11,9 @@
 <p cms-condition="healthView.hasReport">{{ healthView.configuration }}</p>
 <cms-integration-health-check cms-repeat="healthView.checks as check" data-check-id="{{ check.id }}">
     <strong>{{ check.summary }}</strong>
-    <button type="button" cms-repeat="check.actions as action" data-health-action="{{ action.id }}" aria-disabled="{{ healthBusy }}">{{ action.label }}</button>
+    <p9r-button variant="outlined" type="button" cms-repeat="check.actions as action" data-health-action="{{ action.id }}" aria-disabled="{{ healthBusy }}">{{ action.label }}</p9r-button>
 </cms-integration-health-check>
 <h3 cms-condition="healthView.operation">{{ healthView.operation }}</h3>
 <p cms-repeat="healthView.steps as step">{{ step.id }}: {{ step.status }}</p>
+
+</p9r-stack>

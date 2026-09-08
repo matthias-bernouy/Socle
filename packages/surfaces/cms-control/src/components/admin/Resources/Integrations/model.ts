@@ -13,6 +13,7 @@ export type IntegrationInstallationRow = {
     status: IntegrationInstallationStatus;
     integrationType?: "source" | "collection";
     sourceIds?: string[];
+    management?: import("@bernouy/cms-integrations").IntegrationManagement;
     extensionOf?: { kind: string };
     runCount: number;
     artifactCount: number;
@@ -21,6 +22,7 @@ export type IntegrationInstallationRow = {
 };
 
 export type IntegrationInstallationDetail = IntegrationInstallationRow & {
+    settingsSourceId?: string;
     answers: Record<string, IntegrationAnswerValue>;
     definition?: IntegrationDefinition;
     secretInputs: string[];

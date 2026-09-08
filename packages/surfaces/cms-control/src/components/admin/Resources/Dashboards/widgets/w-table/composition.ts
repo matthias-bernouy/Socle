@@ -13,7 +13,7 @@ const filterStates = new WeakMap<HTMLElement, { values: Record<string, string> }
 export function tableShell(widget: TableWidget, filters: Record<string, string> = {}): DashboardWTable {
     const table = new DashboardWTable();
     table.dataset.widgetId = widget.id;
-    table.setAttribute("heading", widget.title ?? widget.source.endpoint);
+    table.setAttribute("heading", widget.title ?? widget.source.endpoint ?? widget.id);
     table.style.setProperty(
         "--dashboard-table-columns",
         ["46px", ...widget.columns.map((column) => column.width ?? "minmax(7rem, 1fr)")].join(" "),

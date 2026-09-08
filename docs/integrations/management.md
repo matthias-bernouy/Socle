@@ -12,7 +12,7 @@ verification and migration, not as a new authoring pattern.
 | --- | --- |
 | Integration | Settings validation, persistence, revision checks, provider reconciliation, truthful Health checks, and recovery actions |
 | `@bernouy/cms-integrations` | Manifest validation, function invocation, scoped secret delivery, published-page resolution, mutation leases, and Health observations |
-| `@bernouy/cms-control` | Administrator authentication, generic routes, Connection and Health UI, and existing dashboard rendering |
+| `@bernouy/cms-control` | Administrator authentication, generic routes, the global Health workspace, and native dashboard forms |
 | Runtime and connector adapter | Compose storage and provider adapters; synchronize declared runtime variables to the installed destination |
 
 Core contains no provider-specific provisioning policy. An extension declares
@@ -49,9 +49,61 @@ an owned `function` artifact with method `POST` and `access.mode: "system"`.
 ```
 
 Settings and action fields reuse `DashboardField` from `@bernouy/cms-dashboards`;
-there is no second settings-field language. Set `settings.dashboardId` to reuse
-an existing settings dashboard when a flat Connection form is insufficient.
+there is no second settings-field language. Set `settings.dashboardId` to the
+integration-owned dashboard view containing its settings. Emailer, Stripe Connect
+and Mondial Relay declare Connection views; Commerce and Consent retain their
+existing business settings views. Definitions without a settings dashboard can
+expose their declared fields through a generated native Connection view under
+their own Source (or their parent's Source for source-less extensions).
 Actions reference declared IDs, never arbitrary URLs or scripts.
+
+## Admin navigation and native forms
+
+`/admin/health` is the main-navigation entry between Settings and AI Assistant.
+It observes installations independently; an unavailable or stale report never
+means healthy. The single page contains a global ready/installed count and compact
+disclosures for checks, declared recovery actions, sync and explicit version
+upgrades. There is no separate detail page or activity log; audit history is
+reserved for a future Audit surface. Settings links lead back to Sources.
+Check upgrades and Upgrade all open a review of exact eligible versions before
+any mutation. Batch upgrades run sequentially and stop on failure; completed
+upgrades remain applied. Recheck releases before retrying. Health reads do not
+apply configuration. Site-wide checks beyond installed integrations are not
+implemented yet.
+
+Sources contains ordinary integration views, including Connection views with
+`secret-ref` and `page-link` controls. It no longer embeds the installation shell
+or its Settings/Health tabs. Technical operations live in Health.
+
+A detail can read and save through the management service using an explicit
+request target instead of a Source endpoint:
+
+```json
+{
+  "source": { "management": { "installationId": "emailer", "operation": "settings" } },
+  "save": {
+    "management": { "installationId": "emailer", "operation": "settings" },
+    "label": "Save settings",
+    "valuesPath": "values",
+    "hiddenFields": [
+      { "name": "expectedRevision", "value": "$resource.savedRevision", "type": "string", "empty": "omit" }
+    ]
+  },
+  "main": [{
+    "id": "connection", "title": "Connection",
+    "fields": [{ "id": "smtpHost", "label": "SMTP host", "type": "text", "path": "values.smtpHost", "name": "smtpHost" }]
+  }]
+}
+```
+
+The shared form submits editable values and the loaded revision, locks through
+the mutation and targeted GET, and retains mounted fields. A missing initial
+revision is normalized to `null` by the settings HTTP route. The integration
+owns patch semantics for undeclared properties; they are not copied into hidden
+JSON inputs. The settings target cannot mix `endpoint`, `sourceId`, `params` or
+`body`. It always uses the administrator-protected management service, preserving
+secret grants, actor identity, page resolution, leases and apply behavior.
+Management views cannot be delegated through published operator dashboards.
 
 ## Save, apply, and retry
 

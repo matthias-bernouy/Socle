@@ -18,6 +18,7 @@ import {
     type SourceOverlayRepository,
     type SourceOverlaySchemaCache,
 } from "@bernouy/cms-sources";
+import { appendIntegrationSettings } from "cms-control/core/admin/dashboards/presentation/integrationSettings";
 import type { ControlCms } from "cms-control/ControlCms";
 
 export type DashboardSourceSummary = {
@@ -102,6 +103,8 @@ export default async function listDashboards(_req: Request, cms: ControlCms): Pr
                     : {}),
             };
         });
+
+    appendIntegrationSettings(groups, await cms.integrationInstallations.list());
 
     return new Response(JSON.stringify(groups), {
         headers: { "Content-Type": "application/json" },

@@ -26,6 +26,22 @@ export function parseDataRef(value: Record<string, unknown>, name: string): Dash
 }
 
 export function parseEndpointRef(value: Record<string, unknown>, name: string): DashboardEndpointRef {
+    if (value.management !== undefined) {
+        if (!isRecord(value.management) || value.management.operation !== "settings") {
+            throw new IntegrationInputError(`${name}.management`, "must declare a settings operation");
+        }
+        for (const key of ["endpoint", "sourceId", "params", "body"]) {
+            if (Object.hasOwn(value, key)) {
+                throw new IntegrationInputError(`${name}.${key}`, "cannot be combined with management");
+            }
+        }
+        return {
+            management: {
+                installationId: requiredText(value.management.installationId, `${name}.management.installationId`),
+                operation: "settings",
+            },
+        };
+    }
     const endpoint = text(value.endpoint);
     if (!endpoint) {
         throw new MissingIntegrationParam(`${name}.endpoint`);

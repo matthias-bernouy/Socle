@@ -20,7 +20,7 @@ export function navigationContext() {
     let items: Item[] = [];
     return (
         groups: DashboardSourceGroup[],
-        installations: IntegrationInstallationRow[],
+        _installations: IntegrationInstallationRow[],
         source: string,
         dashboard: string,
         catalogue: boolean,
@@ -58,26 +58,6 @@ export function navigationContext() {
                     nested: true,
                     active: !selectedInstallation && entry.id === dashboard,
                     hidden: catalogue || id !== source || (!example && group.dashboards.length < 2),
-                });
-            }
-            const parent = installations.find((item) => item.sourceIds?.includes(id));
-            if (!parent) {
-                continue;
-            }
-            for (const entry of [parent, ...installations.filter((item) => item.extensionOf?.kind === parent.id)]) {
-                append({
-                    identity: `installation:${id}:${entry.id}`,
-                    label: entry === parent ? "Settings & health" : `${entry.label} settings`,
-                    source: "",
-                    dashboard: "",
-                    href: route(
-                        `/admin/sources?source=${encodeURIComponent(id)}&integration=${encodeURIComponent(entry.id)}`,
-                    ),
-                    icon: "",
-                    svg: "",
-                    nested: true,
-                    active: entry.id === selectedInstallation,
-                    hidden: id !== source,
                 });
             }
         }

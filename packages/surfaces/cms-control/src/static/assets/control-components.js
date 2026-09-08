@@ -18013,6 +18013,13 @@ slot[name="secondary-lateral-nav"]::slotted(*) {
             Settings
         </w13c-lateral-menu-item>
 
+        <w13c-lateral-menu-item data-route="health">
+            <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12h4l3-8 4 16 3-8h4" />
+            </svg>
+            Health
+        </w13c-lateral-menu-item>
+
         <w13c-lateral-menu-item disabled>
             <svg slot="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.95"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -27464,91 +27471,6 @@ ${ThemeNavActions_default}`;
 </template>
 `;
 
-  // src/components/admin/Resources/Integrations/ui/templates/detail.html
-  var detail_default = `<template data-template="detail-shell">
-    <div class="detail-source" cms-reload-on="integration:updated">
-        <template>
-            <p class="detail-loading" cms-condition="$source.loading">Loading integration...</p>
-            <p class="detail-loading" cms-condition="$source.error">Unable to load this integration.</p>
-            <cms-shell-detail cms-condition="$source.loaded">
-                <button type="button" slot="back" data-detail-back aria-label="Back to installed integrations" data-back-icon></button>
-                <span slot="title" data-title></span>
-                <div slot="actions" class="integration-detail-actions">
-                    <p9r-button type="button" color="primary" data-run-sync>Run sync</p9r-button>
-
-                    <span class="action-status" role="status" aria-live="polite" data-action-status></span>
-                </div>
-
-                <cms-shell-detail-body slot="body">
-                    <cms-integration-management slot="main" data-management></cms-integration-management>
-
-                    <cms-detail-section slot="main" heading="Created resources">
-                        <div class="resource-list">
-                            <article class="resource-row" cms-repeat="integration.artifacts as artifact">
-                                <span class="resource-icon" data-grid-icon aria-hidden="true"></span>
-                                <span>
-                                    <strong>{{ artifact.id }}</strong>
-                                    <small>{{ artifact.typeLabel }} - {{ artifact.actionLabel }}</small>
-                                </span>
-                                <span class="resource-state">{{ artifact.existsLabel }}</span>
-                            </article>
-                        </div>
-                    </cms-detail-section>
-
-                    <cms-detail-section slot="main" heading="Recent activity">
-                        <div class="activity-list">
-                            <article class="activity-row" cms-repeat="integration.runs as run">
-                                <span class="activity-dot"></span>
-                                <span>
-                                    <strong>Run #{{ run.runNumber }} - {{ run.statusLabel }}</strong>
-                                    <small>{{ run.startedAtLabel }}</small>
-                                </span>
-                            </article>
-                        </div>
-                    </cms-detail-section>
-
-                    <cms-detail-section slot="aside" heading="Installation">
-                        <dl class="summary-grid">
-                            <div><dt>Description</dt><dd data-description></dd></div>
-                            <div><dt>Identifier</dt><dd>{{ integration.id }}</dd></div>
-                            <div><dt>Status</dt><dd>{{ integration.statusLabel }}</dd></div>
-                            <div><dt>Version</dt><dd>{{ integration.definitionVersion }}</dd></div>
-                            <div><dt>Last sync</dt><dd>{{ integration.updatedAtLabel }}</dd></div>
-                        </dl>
-                    </cms-detail-section>
-
-                    <cms-detail-section slot="aside" heading="Version upgrade">
-                        <div class="upgrade-panel" data-upgrade-panel>
-                            <p>Upgrades are explicit. Syncing never changes the installed version.</p>
-                            <p9r-button type="button" data-upgrade-open>Check for upgrades</p9r-button>
-                            <div class="upgrade-form" data-upgrade-form hidden>
-                                <label>
-                                    Target version
-                                    <select data-upgrade-target aria-label="Target integration version"></select>
-                                </label>
-                                <label>
-                                    Type the exact target version to confirm
-                                    <input data-upgrade-confirmation type="text" autocomplete="off" spellcheck="false" />
-                                </label>
-                                <div class="upgrade-actions">
-                                    <p9r-button type="button" color="primary" data-upgrade-confirm>Upgrade</p9r-button>
-                                    <button type="button" class="secondary-action" data-upgrade-cancel>Cancel</button>
-                                </div>
-                            </div>
-                            <p class="upgrade-status" data-upgrade-status role="status" aria-live="polite"></p>
-                        </div>
-                    </cms-detail-section>
-
-                    <cms-detail-section slot="aside" heading="Linked integrations">
-                        <div data-linked></div>
-                    </cms-detail-section>
-                </cms-shell-detail-body>
-            </cms-shell-detail>
-        </template>
-    </div>
-</template>
-`;
-
   // src/components/admin/Resources/Integrations/ui/templates/icons.html
   var icons_default = `<template data-icon="chevron"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></template>
 <template data-icon="table"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"></rect><path d="M8 9h8"></path><path d="M8 13h5"></path></svg></template>
@@ -27661,7 +27583,7 @@ ${ThemeNavActions_default}`;
 
   // src/components/admin/Resources/Integrations/ui/templates/index.ts
   var registry = document.createElement("template");
-  registry.innerHTML = [browser_default, detail_default, icons_default, importing_default, items_default, setup_default].join("");
+  registry.innerHTML = [browser_default, icons_default, importing_default, items_default, setup_default].join("");
   function cloneElement(name) {
     const template3 = registry.content.querySelector(`template[data-template="${name}"]`);
     const container = document.createElement("div");
@@ -28522,7 +28444,7 @@ svg { width: 100%; height: 100%; stroke: currentColor; fill: none; }
   // src/components/admin/Resources/Dashboards/navigation/binding/context.ts
   function navigationContext() {
     let items = [];
-    return (groups, installations, source2, dashboard, catalogue, selectedInstallation, example) => {
+    return (groups, _installations, source2, dashboard, catalogue, selectedInstallation, example) => {
       const next = [];
       const append = (item) => {
         const previous = items[next.length];
@@ -28554,24 +28476,6 @@ svg { width: 100%; height: 100%; stroke: currentColor; fill: none; }
             nested: true,
             active: !selectedInstallation && entry.id === dashboard,
             hidden: catalogue || id2 !== source2 || !example && group.dashboards.length < 2
-          });
-        }
-        const parent = installations.find((item) => item.sourceIds?.includes(id2));
-        if (!parent) {
-          continue;
-        }
-        for (const entry of [parent, ...installations.filter((item) => item.extensionOf?.kind === parent.id)]) {
-          append({
-            identity: `installation:${id2}:${entry.id}`,
-            label: entry === parent ? "Settings & health" : `${entry.label} settings`,
-            source: "",
-            dashboard: "",
-            href: route2(`/admin/sources?source=${encodeURIComponent(id2)}&integration=${encodeURIComponent(entry.id)}`),
-            icon: "",
-            svg: "",
-            nested: true,
-            active: entry.id === selectedInstallation,
-            hidden: id2 !== source2
           });
         }
       }
@@ -31795,6 +31699,11 @@ w13c-lateral-menu {
     });
   }
   function sourceUrl(sourceId, ref, vars) {
+    if (ref.management) {
+      const url2 = new URL(route2("/api/integrations/management/settings"), window.location.origin);
+      url2.searchParams.set("id", ref.management.installationId);
+      return url2;
+    }
     const targetSourceId = ref.sourceId ?? sourceId;
     const dashboardId = document.documentElement.dataset.dashboardScope;
     const prefix = dashboardId ? `/.cms/dashboards/${encodeURIComponent(dashboardId)}/sources` : "/.cms/sources";
@@ -34310,12 +34219,12 @@ slot {
     const sourceId = operation.sourceId ?? context.dashboard.source;
     const group = (context.groups ?? [context.group]).find((candidate) => candidate.source.id === sourceId);
     const endpoint = group?.endpoints.find((candidate) => candidate.endpointId === operation.endpoint);
-    if (!endpoint || !["POST", "PUT", "PATCH", "DELETE"].includes(endpoint.method.toUpperCase())) {
+    if (!operation.management && (!endpoint || !["POST", "PUT", "PATCH", "DELETE"].includes(endpoint.method.toUpperCase()))) {
       throw new Error(`Form endpoint ${operation.endpoint} must declare a request-body method.`);
     }
     form.setAttribute("id", formId());
     form.setAttribute("cms-source", `${sourceUrl(sourceId, operation, {}).href} as operationResult`);
-    form.setAttribute("cms-source-method", endpoint.method);
+    form.setAttribute("cms-source-method", operation.management ? "POST" : endpoint.method);
     for (const field2 of operation.hiddenFields ?? []) {
       const input = document.createElement("input");
       input.type = "hidden";
@@ -37078,7 +36987,7 @@ slot { display: contents; }
   function tableShell(widget, filters = {}) {
     const table = new DashboardWTable;
     table.dataset.widgetId = widget.id;
-    table.setAttribute("heading", widget.title ?? widget.source.endpoint);
+    table.setAttribute("heading", widget.title ?? widget.source.endpoint ?? widget.id);
     table.style.setProperty("--dashboard-table-columns", ["46px", ...widget.columns.map((column) => column.width ?? "minmax(7rem, 1fr)")].join(" "));
     const state = { values: filters };
     filterStates.set(table, state);
@@ -37146,9 +37055,14 @@ slot { display: contents; }
   }
 
   // src/static/admin/_content/sources/_runtime/source-states.html
-  var source_states_default = `<p9r-alert type="info" role="status" cms-condition="!dashboardData &amp;&amp; !$source.error &amp;&amp; !$source.refreshError">Loading data…</p9r-alert>
+  var source_states_default = `<p9r-alert type="info" role="status" cms-condition="!dashboardData &amp;&amp; !$source.loaded &amp;&amp; !$source.empty &amp;&amp; !$source.error &amp;&amp; !$source.refreshError">Loading data…</p9r-alert>
 <p9r-alert type="error" cms-condition="$source.error || $source.refreshError" role="alert">
     <p>Unable to load this data. {{ $source.message }}</p>
+    <p9r-button type="button" variant="outlined" data-dashboard-source-retry>Retry</p9r-button>
+</p9r-alert>
+
+<p9r-alert type="info" cms-condition="!dashboardData &amp;&amp; $source.empty">
+    <p>No data is available.</p>
     <p9r-button type="button" variant="outlined" data-dashboard-source-retry>Retry</p9r-button>
 </p9r-alert>
 `;
@@ -37164,6 +37078,9 @@ slot { display: contents; }
     return urlSourceWrapper(`${url.pathname}${url.search}`, alias);
   }
   function requiredSourceParams(context, ref) {
+    if (ref.management) {
+      return [];
+    }
     const sourceId = ref.sourceId ?? context.dashboard.source;
     const group = (context.groups ?? [context.group]).find((candidate) => candidate.source.id === sourceId);
     return group?.endpoints.find((endpoint) => endpoint.endpointId === ref.endpoint)?.params.filter((param) => param.required).map((param) => param.name) ?? [];
@@ -37502,6 +37419,9 @@ slot { display: contents; }
     };
   }
   function endpointMethod(group, groups, ref) {
+    if (ref.management) {
+      return "POST";
+    }
     const sourceId = ref.sourceId ?? group.source.id;
     const sourceGroup = groups.find((candidate) => candidate.source.id === sourceId);
     const endpoint = sourceGroup?.endpoints.find((candidate) => candidate.endpointId === ref.endpoint);
@@ -44296,532 +44216,6 @@ details[open] > summary > .chevron {
     }
   }
 
-  // src/components/admin/Resources/Integrations/management/collections.ts
-  function renderCollectionSettings(root, installation, status) {
-    const definition = installation.definition;
-    if (definition?.schema !== "cms.integration.definition.v2" || definition.type !== "collection") {
-      return;
-    }
-    const selection = document.createElement("div");
-    selection.dataset.collectionSelection = "";
-    const hint = document.createElement("p");
-    hint.textContent = "Select the blocs available for new content in the editor. Existing pages keep rendering their blocs.";
-    renderCollectionSelection(selection, definition, installation.activeResources);
-    selection.addEventListener("click", (event) => {
-      if (event.target instanceof Element) {
-        handleCollectionSelection(event.target, definition);
-      }
-    });
-    const button2 = document.createElement("button");
-    button2.type = "button";
-    button2.textContent = "Save active blocs";
-    button2.addEventListener("click", async () => {
-      button2.disabled = true;
-      status("Saving active blocs…");
-      try {
-        await rerunIntegrationInstallation(installation.id, undefined, selectedCollectionResources(selection));
-        status("Active blocs saved.");
-      } catch (error) {
-        status(error instanceof Error ? error.message : "Unable to save active blocs.");
-      } finally {
-        button2.disabled = false;
-      }
-    });
-    root.replaceChildren(hint, selection, button2);
-  }
-
-  // src/components/admin/Resources/Integrations/management/presentation/healthContext.ts
-  function healthContext(management) {
-    const actions = new Map((management.actions ?? []).map((action) => [action.id, { id: action.id, label: action.label }]));
-    if (management.settings?.applyFunctionId && !actions.has("apply-settings")) {
-      actions.set("apply-settings", { id: "apply-settings", label: "Apply configuration" });
-    }
-    let checks = [];
-    let steps = [];
-    return (health) => {
-      const report = health?.report;
-      checks = (report?.checks ?? []).map((check, index) => {
-        const previous = checks[index];
-        const row = previous?.id === check.id ? previous : { id: check.id, summary: "", actions: [] };
-        row.summary = `${label3(check.status)} · ${check.message || check.code || check.id}`;
-        row.actions = (check.actionIds ?? []).flatMap((id2) => {
-          const action = actions.get(id2);
-          return action ? [action] : [];
-        });
-        return row;
-      });
-      steps = (report?.operation?.steps ?? []).map((step, index) => {
-        const previous = steps[index];
-        const row = previous?.id === step.id ? previous : { id: step.id, status: "" };
-        row.status = label3(step.status);
-        return row;
-      });
-      return {
-        healthView: {
-          available: Boolean(health),
-          hasReport: Boolean(report),
-          checks,
-          steps,
-          observation: health ? `Observation: ${label3(health.observation)} · ${label3(health.freshness)} · ${date(health.observedAt)}` : "",
-          issue: health?.reason ? `Observation issue: ${label3(health.reason)}${health.httpStatus ? ` (HTTP ${health.httpStatus})` : ""}` : "",
-          version: health?.reportDefinitionVersion ?? "",
-          service: report ? `${health.freshness === "fresh" ? "Service" : "Last observed service"}: ${label3(report.status)}` : "",
-          checked: report ? `Checked ${date(report.checkedAt)}` : "",
-          configuration: report ? configurationStatus(health) : "",
-          operation: report?.operation ? `Operation ${report.operation.id}: ${label3(report.operation.status)}` : ""
-        }
-      };
-    };
-  }
-  function date(value3) {
-    const parsed = new Date(value3);
-    return Number.isNaN(parsed.getTime()) ? value3 : parsed.toLocaleString();
-  }
-  function label3(value3) {
-    return value3.replaceAll("_", " ");
-  }
-  function configurationStatus(health) {
-    const { savedRevision, appliedRevision } = health.report.configuration;
-    if (savedRevision === null) {
-      return "No saved configuration revision was reported.";
-    }
-    if (savedRevision !== appliedRevision) {
-      return health.freshness === "fresh" ? "Saved changes are waiting to be applied." : "Saved changes were waiting to be applied at the last observation.";
-    }
-    return health.freshness === "fresh" ? "The saved configuration is applied." : "The saved configuration was applied at the last observation.";
-  }
-
-  // src/static/admin/_content/sources/_management/health.html
-  var health_default2 = `<span cms-condition="$source.loading &amp;&amp; !healthView.available">Loading…</span>
-<p cms-condition="$source.error || $source.refreshError" role="alert">Unable to load health. {{ $source.message }}</p>
-<button type="button" data-health-refresh aria-disabled="{{ healthBusy }}" cms-condition="healthView.available || $source.error || $source.empty">Refresh health</button>
-<p cms-condition="healthView.available">{{ healthView.observation }}</p>
-<p cms-condition="healthView.issue">{{ healthView.issue }}</p>
-<p cms-condition="healthView.version">Observed version: {{ healthView.version }}</p>
-<p cms-condition="healthView.available &amp;&amp; !healthView.hasReport || $source.empty">No valid service observation is available.</p>
-<h3 cms-condition="healthView.hasReport">{{ healthView.service }}</h3>
-<p cms-condition="healthView.hasReport">{{ healthView.checked }}</p>
-<p cms-condition="healthView.hasReport">{{ healthView.configuration }}</p>
-<cms-integration-health-check cms-repeat="healthView.checks as check" data-check-id="{{ check.id }}">
-    <strong>{{ check.summary }}</strong>
-    <button type="button" cms-repeat="check.actions as action" data-health-action="{{ action.id }}" aria-disabled="{{ healthBusy }}">{{ action.label }}</button>
-</cms-integration-health-check>
-<h3 cms-condition="healthView.operation">{{ healthView.operation }}</h3>
-<p cms-repeat="healthView.steps as step">{{ step.id }}: {{ step.status }}</p>
-`;
-
-  // src/components/admin/Resources/Integrations/management/presentation/healthCheck.css
-  var healthCheck_default = `:host {
-    display: flex;
-    gap: 1rem;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    padding: .75rem 0;
-    border-bottom: 1px solid var(--border-default);
-}
-`;
-
-  // src/components/admin/Resources/Integrations/management/presentation/HealthCheck.ts
-  class HealthCheck extends l {
-    constructor() {
-      super({ css: healthCheck_default, template: "<slot></slot>" });
-    }
-  }
-  customElements.define("cms-integration-health-check", HealthCheck);
-
-  // src/components/admin/Resources/Integrations/management/presentation/health.ts
-  function mountHealth(root, id2, management, run) {
-    const host = document.createElement("div");
-    host.dataset.integrationHealth = "";
-    const url = `${route("/api/integrations/management/health")}?id=${encodeURIComponent(id2)}`;
-    const reload = `integration:${encodeURIComponent(id2)}:health:reload`;
-    host.setAttribute("cms-source", `${url} as health`);
-    host.setAttribute("cms-reload-on", reload);
-    const template6 = document.createElement("template");
-    template6.innerHTML = health_default2;
-    host.append(template6.content.cloneNode(true));
-    let loading = true;
-    const project = healthContext(management);
-    jd(host, () => {
-      const value3 = et(host);
-      return { ...project(value3 ?? undefined), healthBusy: loading };
-    });
-    const stop = pb(host, (state2) => {
-      if (state2.disposed) {
-        stop();
-        return;
-      }
-      const pending = state2.loading || state2.refreshing === true;
-      if (loading !== pending) {
-        loading = pending;
-        Vi(host);
-      }
-    });
-    const refresh = () => {
-      if (!host.isConnected) {
-        return;
-      }
-      loading = true;
-      const next = `${url}&refresh=true as health`;
-      if (host.getAttribute("cms-source") !== next) {
-        host.setAttribute("cms-source", next);
-      } else {
-        host.ownerDocument.dispatchEvent(new Event(reload));
-      }
-    };
-    host.addEventListener("click", (event) => {
-      const target2 = event.target?.closest("[data-health-refresh], [data-health-action]");
-      if (!loading && target2?.hasAttribute("data-health-refresh")) {
-        refresh();
-      } else if (!loading && target2?.dataset.healthAction) {
-        run(target2.dataset.healthAction);
-      }
-    });
-    root.replaceChildren(host);
-    return { element: host, refresh };
-  }
-
-  // src/components/admin/Resources/Integrations/management/dashboard.ts
-  async function settingsDashboard(id2) {
-    const view = document.createElement("cms-dashboards-admin");
-    view.setAttribute("embedded", "");
-    view.setAttribute("dashboard-id", id2);
-    return view;
-  }
-
-  // src/static/admin/_content/sources/_management/settings.html
-  var settings_default = `<p slot="source-status" cms-condition="!detailReady &amp;&amp; !$source.loaded &amp;&amp; !$source.empty &amp;&amp; !$source.error">Loading…</p>
-<p slot="source-status" cms-condition="$source.error || $source.refreshError">{{ $source.message }} <button type="button" data-settings-retry>Retry</button></p>
-<button type="button" slot="footer" data-management-action="apply-settings" cms-condition="settings.savedRevision != settings.appliedRevision">Retry applying configuration</button>
-<p slot="source-status" cms-condition="!detailReady &amp;&amp; $source.loaded || !detailReady &amp;&amp; $source.empty">No connection settings are available. <button type="button" data-settings-retry>Retry</button></p>
-`;
-
-  // src/components/admin/Resources/Integrations/management/settings.ts
-  function mountSettings(root, fields, installationId, save, apply) {
-    const widget = {
-      widget: "w-detail",
-      id: "connection-settings",
-      source: { endpoint: "", itemPath: "values" },
-      title: { path: "", fallback: "Connection" },
-      actions: [{ label: "Save settings", id: "save-settings", tone: "primary" }],
-      main: [{ id: "configuration", title: "Configuration", fields }]
-    };
-    const editor = new DashboardWDetail;
-    editor.configure(widget);
-    editor.dataset.rowKey = "settings";
-    editor.setAttribute("cms-source", `${route("/api/integrations/management/settings")}?id=${encodeURIComponent(installationId)} as settings`);
-    const reload = `integration:${encodeURIComponent(installationId)}:settings:reload`;
-    editor.setAttribute("cms-reload-on", reload);
-    const template6 = document.createElement("template");
-    template6.innerHTML = settings_default;
-    if (!apply) {
-      template6.content.querySelector("[data-management-action]").remove();
-    }
-    editor.append(template6.content.cloneNode(true), composeDetail(widget));
-    editor.addEventListener("click", (event) => {
-      const target2 = event.target;
-      if (target2?.closest("[data-settings-retry]")) {
-        editor.ownerDocument.dispatchEvent(new Event(reload));
-      } else if (target2?.closest("[data-management-action]")) {
-        apply?.();
-      }
-    });
-    editor.addEventListener(WIDGET_ACTION_EVENT, (event) => {
-      event.stopPropagation();
-      const detail = event.detail;
-      const settings = et(editor);
-      if (detail.action !== "save-settings" || !settings?.values) {
-        return;
-      }
-      const submitted = structuredClone(detail.fields ?? {});
-      const values = structuredClone(settings.values);
-      for (const field3 of fields) {
-        if (Object.hasOwn(submitted, field3.id)) {
-          setValueAt(values, field3.path, submitted[field3.id]);
-        }
-      }
-      save(editor, values, submitted);
-    });
-    root.replaceChildren(editor);
-    return editor;
-  }
-
-  // src/components/admin/Resources/Integrations/management/presentation/style.css
-  var style_default15 = `cms-integration-management { display: block; border: 1px solid var(--border-default); border-radius: 8px; padding: 1rem; }
-.management-tabs { display: flex; flex-wrap: wrap; gap: .75rem; margin-bottom: 1rem; }
-.management-tabs button { padding: .5rem .8rem; border: 1px solid var(--border-default); border-radius: 6px; background: transparent; color: inherit; cursor: pointer; }
-.management-tabs button[aria-pressed="true"] { font-weight: 700; border-color: currentColor; }
-.management-status { margin: .75rem 0; min-block-size: 1lh; }
-`;
-
-  // src/components/admin/Resources/Integrations/management/presentation/shell.ts
-  function renderManagementShell(host, deploymentStatus, configurationLabel, panel, select2) {
-    const style = document.createElement("style");
-    style.textContent = style_default15;
-    const nav = document.createElement("nav");
-    nav.className = "management-tabs";
-    nav.setAttribute("aria-label", "Source settings");
-    for (const [id2, label4] of [
-      ["connection", configurationLabel],
-      ["health", "Health"]
-    ]) {
-      const button2 = document.createElement("button");
-      button2.type = "button";
-      button2.textContent = label4;
-      button2.dataset.panel = id2;
-      button2.setAttribute("aria-pressed", String(id2 === panel));
-      button2.addEventListener("click", () => select2(id2));
-      nav.append(button2);
-    }
-    const deployment = document.createElement("p");
-    deployment.textContent = `Deployment: ${deploymentStatus}`;
-    const status = document.createElement("p");
-    status.className = "management-status";
-    status.dataset.managementStatus = "";
-    status.setAttribute("role", "status");
-    const content = document.createElement("div");
-    content.dataset.managementContent = "";
-    host.replaceChildren(style, nav, deployment, status, content);
-  }
-
-  // src/components/admin/Resources/Integrations/management/feedback.ts
-  var changed = "cms-integration-management:feedback";
-  var latest = new WeakMap;
-  function managementFeedback(host, installationId, render) {
-    const workspace = host.closest("cms-integrations-admin") ?? host.parentElement ?? host;
-    const refresh = () => {
-      const state2 = latest.get(workspace);
-      render(state2?.installationId === installationId ? state2.message : "");
-    };
-    workspace.addEventListener(changed, refresh);
-    return {
-      refresh,
-      set(message) {
-        latest.set(workspace, { installationId, message });
-        workspace.dispatchEvent(new Event(changed));
-      },
-      disconnect() {
-        workspace.removeEventListener(changed, refresh);
-      }
-    };
-  }
-
-  // src/components/admin/Resources/Integrations/management/IntegrationManagement.ts
-  class IntegrationManagementView extends HTMLElement {
-    actionForms = new ActionForms(this);
-    installation;
-    management;
-    busy = false;
-    health;
-    revision = 0;
-    feedback;
-    panel = new URL(window.location.href).searchParams.get("panel") === "health" ? "health" : "connection";
-    connectedCallback() {
-      this.feedback = managementFeedback(this, this.getAttribute("installation-id") ?? "", (message) => {
-        const status = this.querySelector("[data-management-status]");
-        if (status) {
-          status.textContent = message;
-        }
-      });
-      this.load();
-    }
-    disconnectedCallback() {
-      this.actionForms.disconnect();
-      this.revision += 1;
-      this.feedback?.disconnect();
-    }
-    async load() {
-      const revision = ++this.revision;
-      const id2 = this.getAttribute("installation-id");
-      if (!id2) {
-        return;
-      }
-      this.textContent = "Loading settings…";
-      try {
-        const installation = await getIntegrationInstallation(id2);
-        if (!this.isConnected || revision !== this.revision) {
-          return;
-        }
-        this.installation = installation;
-        this.management = installation.definition?.management;
-        this.render();
-        await this.showPanel();
-      } catch (error) {
-        if (revision === this.revision) {
-          this.textContent = error instanceof Error ? error.message : "Unable to load settings.";
-        }
-      }
-    }
-    render() {
-      const configurationLabel = this.installation?.integrationType === "collection" ? "Availability" : this.management?.settings?.dashboardId ? "Settings" : "Connection";
-      renderManagementShell(this, this.installation?.status ?? "unknown", configurationLabel, this.panel, (panel) => {
-        if (!this.busy) {
-          this.panel = panel;
-          this.render();
-          this.showPanel();
-        }
-      });
-      this.feedback?.refresh();
-    }
-    async showPanel() {
-      this.health = undefined;
-      const revision = ++this.revision;
-      const root = this.querySelector("[data-management-content]");
-      const installation = this.installation;
-      root.textContent = "Loading…";
-      try {
-        if (this.panel === "health") {
-          this.health = mountHealth(root, installation.id, this.management ?? { schemaVersion: 1 }, (id2) => void this.runAction(id2));
-        } else if (installation.integrationType === "collection") {
-          renderCollectionSettings(root, installation, (message) => this.status(message));
-        } else if (this.management?.settings?.dashboardId) {
-          const dashboard = await settingsDashboard(this.management.settings.dashboardId);
-          if (revision !== this.revision || !this.isConnected) {
-            return;
-          }
-          root.replaceChildren(dashboard);
-        } else if (this.management?.settings) {
-          mountSettings(root, this.management.settings.fields, installation.id, (editor, values, submitted) => void this.save(editor, values, submitted), this.management.settings.applyFunctionId ? () => void this.runAction("apply-settings") : undefined);
-        } else {
-          root.textContent = "This source has no connection settings.";
-        }
-      } catch (error) {
-        if (revision === this.revision) {
-          root.textContent = error instanceof Error ? error.message : "Unable to load this panel.";
-        }
-      }
-    }
-    async save(editor, values, submitted) {
-      const settings = et(editor);
-      if (this.busy || !settings) {
-        return;
-      }
-      this.setBusy(true);
-      this.status("Saving settings…");
-      try {
-        const saved = await managementRequest(this.installation.id, "settings", {
-          values,
-          expectedRevision: settings.savedRevision
-        });
-        if (this.isConnected && editor.isConnected && this.contains(editor)) {
-          editor.acknowledgeSavedFields(submitted);
-          cd(editor, saved);
-          this.status("Settings saved.");
-        }
-      } catch (error) {
-        if (this.isConnected && this.contains(editor)) {
-          this.status(error instanceof Error ? error.message : "Unable to save settings.");
-        }
-      } finally {
-        this.setBusy(false);
-      }
-    }
-    async runAction(actionId) {
-      if (this.busy) {
-        return;
-      }
-      this.setBusy(true);
-      this.status("Applying configuration…");
-      try {
-        await this.actionForms.submit({
-          url: `${route("/api/integrations/management/action")}?id=${encodeURIComponent(this.installation.id)}`,
-          method: "POST",
-          fields: { actionId }
-        });
-        if (!this.isConnected) {
-          return;
-        }
-        this.status("Action completed.");
-        const reload = this.panel === "connection" ? this.querySelector("cms-dashboard-w-detail")?.getAttribute("cms-reload-on") : undefined;
-        if (reload) {
-          this.ownerDocument.dispatchEvent(new Event(reload));
-        } else if (this.health) {
-          this.health.refresh();
-        } else {
-          await this.showPanel();
-        }
-      } catch (error) {
-        if (this.isConnected) {
-          this.status(error instanceof Error ? error.message : "Action failed.");
-        }
-      } finally {
-        this.setBusy(false);
-      }
-    }
-    setBusy(busy) {
-      this.busy = busy;
-      for (const action of Array.from(this.querySelectorAll("[data-action], [data-management-action]"))) {
-        action.toggleAttribute("disabled", busy);
-      }
-      if (busy) {
-        this.setAttribute("aria-busy", "true");
-      } else {
-        this.removeAttribute("aria-busy");
-      }
-    }
-    status(message) {
-      this.feedback?.set(message);
-    }
-  }
-  if (!customElements.get("cms-integration-management")) {
-    customElements.define("cms-integration-management", IntegrationManagementView);
-  }
-
-  // src/components/admin/Resources/Integrations/domain.ts
-  function installedCounts(installations) {
-    const counts = new Map;
-    for (const installation of installations) {
-      counts.set(installation.id, (counts.get(installation.id) ?? 0) + 1);
-    }
-    return counts;
-  }
-
-  // src/components/admin/Resources/Integrations/ui/browser.ts
-  function renderBrowser(host) {
-    renderInstallations(host);
-    renderCounts(host);
-  }
-  function renderCounts(host) {
-    text3(host, "[data-installed-count]", host.installations.filter((row) => inScope(row.integrationType)).length);
-    text3(host, "[data-catalogue-count]", availableDefinitions(host).length);
-  }
-  function renderInstallations(host) {
-    const root = host.query("[data-installations]");
-    const rows = host.installations.filter((row) => inScope(row.integrationType)).sort((left, right) => left.label.localeCompare(right.label));
-    root.replaceChildren();
-    if (rows.length) {
-      root.append(cloneElement("installed-head"), ...rows.map((row) => installationRow(host, row)));
-    }
-    host.query("[data-installations-empty]").hidden = rows.length > 0;
-  }
-  function availableDefinitions(host) {
-    const counts = installedCounts(host.installations);
-    return host.definitions.filter((definition) => !counts.has(definition.kind) && inScope(definition.type) && (!definition.extensionOf || counts.has(definition.extensionOf.kind)));
-  }
-  function definitionFor(host, installation) {
-    return host.definitions.find((definition) => definition.kind === installation.id);
-  }
-  function installationRow(host, installation) {
-    const definition = definitionFor(host, installation);
-    const row = cloneElement("installed-row");
-    row.href = integrationRouteUrl({ view: "installation", id: installation.id });
-    row.dataset.integrationId = installation.id;
-    row.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
-    text3(row, "[data-label]", installation.label);
-    text3(row, "[data-kind]", installation.id);
-    const status = row.querySelector("[data-status]");
-    if (status) {
-      status.textContent = statusLabel(installation.status);
-      status.classList.add(`status-${installation.status}`);
-    }
-    appendBadges(row.querySelector("[data-badges]"), definition ? artifactLabels(definition) : ["Unknown"]);
-    text3(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
-    return row;
-  }
-  function inScope(type) {
-    return window.location.pathname.endsWith("/admin/blocs") ? type === "collection" : type !== "collection";
-  }
-
   // src/components/admin/Resources/Integrations/ui/detail.ts
   function renderDetail(host) {
     const root = host.query("[data-detail-view]");
@@ -44829,21 +44223,18 @@ details[open] > summary > .chevron {
     if (!installation) {
       return;
     }
-    const definition = definitionFor(host, installation);
-    const shell = cloneElement("detail-shell");
-    const content = shell.querySelector("template").content;
-    shell.setAttribute("cms-source", `${route("/api/integrations/installations")}?id=${encodeURIComponent(installation.id)} as integration`);
-    text3(content, "[data-title]", installation.label);
-    text3(content, "[data-description]", definition?.description ?? "No description.");
-    content.querySelector("[data-run-sync]").dataset.integrationId = installation.id;
-    content.querySelector("[data-management]").setAttribute("installation-id", installation.id);
-    const upgrade = content.querySelector("[data-upgrade-panel]");
-    upgrade.dataset.integrationId = installation.id;
-    upgrade.dataset.currentVersion = installation.definitionVersion;
-    fillIcon(content, "[data-back-icon]", "table");
-    fillIcon(content, "[data-grid-icon]", "grid");
-    renderLinkedResources(content.querySelector("[data-linked]"), host, definition);
-    root.replaceChildren(shell);
+    const settings = installation.management?.settings;
+    if (settings?.fields.length || settings?.dashboardId) {
+      const view = document.createElement("cms-dashboards-admin");
+      view.setAttribute("embedded", "");
+      view.setAttribute("dashboard-id", settings.dashboardId ?? `integration-${installation.id}-settings`);
+      root.replaceChildren(view);
+    } else {
+      const link = document.createElement("a");
+      link.href = route("/admin/health");
+      link.textContent = "View integration health";
+      root.replaceChildren(link);
+    }
   }
   function renderLinkedResources(root, host, definition) {
     const dependencies = definition?.dependencies ?? [];
@@ -45026,11 +44417,11 @@ details[open] > summary > .chevron {
     const activation = executionStatusSummary("activation", migration.activationOutcome);
     return `${version} / ${migration.connectorKey}: tested migration ${migration.supportedSourceRange}; ${cmsCutover}; ${providerCutover}; ${activation}; ${migration.rollback} rollback (${migration.rollbackVerified ? "verified" : "not verified"}); PONR ${migration.pointOfNoReturn} (${pointObservation})${drain}${downtime}`;
   }
-  function cutoverExecutionSummary(label4, strategy, outcome) {
-    return `${label4} ${strategy} (${executionStatus(outcome)})`;
+  function cutoverExecutionSummary(label3, strategy, outcome) {
+    return `${label3} ${strategy} (${executionStatus(outcome)})`;
   }
-  function executionStatusSummary(label4, outcome) {
-    return `${label4} ${executionStatus(outcome)}`;
+  function executionStatusSummary(label3, outcome) {
+    return `${label3} ${executionStatus(outcome)}`;
   }
   function executionStatus(outcome) {
     if (outcome === undefined) {
@@ -45054,9 +44445,9 @@ details[open] > summary > .chevron {
   function statusElement(panel) {
     return panel.querySelector("[data-upgrade-status]");
   }
-  function setBusy(element, busy, label4) {
+  function setBusy(element, busy, label3) {
     element.toggleAttribute("aria-busy", busy);
-    element.textContent = label4;
+    element.textContent = label3;
   }
   function setStatus(element, message, error = false) {
     if (!element) {
@@ -45168,6 +44559,61 @@ details[open] > summary > .chevron {
       return true;
     }
     return event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+  }
+
+  // src/components/admin/Resources/Integrations/domain.ts
+  function installedCounts(installations) {
+    const counts = new Map;
+    for (const installation of installations) {
+      counts.set(installation.id, (counts.get(installation.id) ?? 0) + 1);
+    }
+    return counts;
+  }
+
+  // src/components/admin/Resources/Integrations/ui/browser.ts
+  function renderBrowser(host) {
+    renderInstallations(host);
+    renderCounts(host);
+  }
+  function renderCounts(host) {
+    text3(host, "[data-installed-count]", host.installations.filter((row) => inScope(row.integrationType)).length);
+    text3(host, "[data-catalogue-count]", availableDefinitions(host).length);
+  }
+  function renderInstallations(host) {
+    const root = host.query("[data-installations]");
+    const rows = host.installations.filter((row) => inScope(row.integrationType)).sort((left, right) => left.label.localeCompare(right.label));
+    root.replaceChildren();
+    if (rows.length) {
+      root.append(cloneElement("installed-head"), ...rows.map((row) => installationRow(host, row)));
+    }
+    host.query("[data-installations-empty]").hidden = rows.length > 0;
+  }
+  function availableDefinitions(host) {
+    const counts = installedCounts(host.installations);
+    return host.definitions.filter((definition) => !counts.has(definition.kind) && inScope(definition.type) && (!definition.extensionOf || counts.has(definition.extensionOf.kind)));
+  }
+  function definitionFor(host, installation) {
+    return host.definitions.find((definition) => definition.kind === installation.id);
+  }
+  function installationRow(host, installation) {
+    const definition = definitionFor(host, installation);
+    const row = cloneElement("installed-row");
+    row.href = integrationRouteUrl({ view: "installation", id: installation.id });
+    row.dataset.integrationId = installation.id;
+    row.querySelector("[data-icon-host]")?.replaceWith(integrationIcon(definition));
+    text3(row, "[data-label]", installation.label);
+    text3(row, "[data-kind]", installation.id);
+    const status = row.querySelector("[data-status]");
+    if (status) {
+      status.textContent = statusLabel(installation.status);
+      status.classList.add(`status-${installation.status}`);
+    }
+    appendBadges(row.querySelector("[data-badges]"), definition ? artifactLabels(definition) : ["Unknown"]);
+    text3(row, "[data-updated]", formatRelativeDate(installation.updatedAt));
+    return row;
+  }
+  function inScope(type) {
+    return window.location.pathname.endsWith("/admin/blocs") ? type === "collection" : type !== "collection";
   }
 
   // src/components/admin/Resources/Integrations/ui/styles/base.css
@@ -45454,7 +44900,7 @@ button[slot="back"] svg {
 `;
 
   // src/components/admin/Resources/Integrations/ui/styles/detail.css
-  var detail_default2 = `.badge-row {
+  var detail_default = `.badge-row {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
@@ -45945,7 +45391,7 @@ button[slot="back"]:disabled {
 `;
 
   // src/components/admin/Resources/Integrations/ui/styles/index.ts
-  var styles_default7 = [base_default4, browser_default2, detail_default2, setup_default2, states_default2, responsive_default].join(`
+  var styles_default7 = [base_default4, browser_default2, detail_default, setup_default2, states_default2, responsive_default].join(`
 `);
 
   // src/components/admin/Resources/Integrations/IntegrationBrowser.ts
@@ -46073,6 +45519,661 @@ button[slot="back"]:disabled {
   if (!customElements.get("cms-integrations-admin")) {
     customElements.define("cms-integrations-admin", IntegrationBrowser);
   }
+
+  // src/static/admin/_operations/health/overview.html
+  var overview_default2 = `<p9r-stack gap="lg" trim>
+    <p9r-stack direction="row" wrap align-items="center" justify="between" gap="md">
+        <span>Monitor your integrations and keep them up to date.</span>
+        <p9r-stack direction="row" wrap align-items="center" gap="sm" trim>
+            <p9r-button type="button" variant="outlined" data-health-check-upgrades>Check upgrades</p9r-button>
+            <p9r-button type="button" variant="outlined" data-health-refresh-all>Reload health</p9r-button>
+            <p9r-button type="button" color="primary" data-health-upgrade-all>Upgrade all</p9r-button>
+        </p9r-stack>
+    </p9r-stack>
+    <cms-detail-section heading="Overall health">
+        <p9r-stack direction="row" wrap align-items="center" justify="between" gap="md" trim>
+            <strong role="status" data-health-total>{{ healthTotal }}</strong>
+            <span>{{ healthCoverage }}</span>
+        </p9r-stack>
+    </cms-detail-section>
+    <p cms-condition="$source.loading">Loading integrations…</p>
+    <p9r-alert cms-condition="$source.error || $source.refreshError" type="error" role="alert">{{ $source.message }}</p9r-alert>
+    <p cms-condition="$source.empty">No integrations are installed.</p>
+    <p9r-stack gap="sm" trim>
+        <cms-health-row cms-repeat="healthItems as item" installation-id="{{ item.id }}">
+            <p9r-stack slot="heading" gap="xs" trim><strong>{{ item.label }}</strong><small>v{{ item.version }} · Deployment: {{ item.deployment }}</small></p9r-stack>
+            <cms-health-summary slot="status" installation-id="{{ item.id }}"></cms-health-summary>
+        </cms-health-row>
+    </p9r-stack>
+    <cms-health-upgrades></cms-health-upgrades>
+</p9r-stack>
+`;
+
+  // src/components/admin/Resources/Integrations/health/presentation/summary.ts
+  function summarizeHealth(health, failed = false) {
+    const report = health?.report;
+    const fresh = !failed && health?.observation === "valid" && health.freshness === "fresh";
+    const ready = fresh && report?.status === "ready" && report.checks.every((check) => check.status === "ok");
+    const count = report ? `${report.checks.filter((check) => check.status === "ok").length}/${report.checks.length} checks passed${fresh ? "" : " · last observation"}` : "No check results";
+    const label3 = failed ? "Unavailable" : !health ? "Checking service…" : !fresh ? health.freshness === "stale" ? "Stale observation" : "Not observed" : report?.status.replaceAll("_", " ") ?? "Unknown";
+    return { ready, observed: Boolean(fresh && report), label: ready ? "✓ Ready" : label3, count };
+  }
+
+  // src/static/admin/_operations/health/summary.html
+  var summary_default = `<p9r-stack gap="xs" trim>
+    <strong>{{ healthStatus }}</strong>
+    <small>{{ healthCount }}</small>
+    <span cms-condition="$source.error || $source.refreshError" role="alert">Health unavailable. {{ $source.message }}</span>
+</p9r-stack>
+`;
+
+  // src/components/admin/Resources/Integrations/health/HealthSummary.ts
+  class HealthSummary extends HTMLElement {
+    static observedAttributes = ["installation-id"];
+    mounted = false;
+    stop;
+    connectedCallback() {
+      if (!this.mounted) {
+        const template6 = document.createElement("template");
+        template6.innerHTML = summary_default;
+        this.replaceChildren(template6.content.cloneNode(true));
+        jd(this, () => {
+          const summary2 = summarizeHealth(et(this));
+          return { healthStatus: summary2.label, healthCount: summary2.count };
+        });
+        this.mounted = true;
+      }
+      this.sync();
+      this.stop = pb(this, (state2) => {
+        const summary2 = summarizeHealth(state2.data, Boolean(state2.error || state2.refreshError));
+        this.closest("cms-health-row")?.setAttribute("health-state", summary2.ready ? "ready" : summary2.observed ? "attention" : "unknown");
+        this.dispatchEvent(new CustomEvent("health:observation", {
+          bubbles: true,
+          detail: { id: this.getAttribute("installation-id"), ...summary2 }
+        }));
+      });
+    }
+    disconnectedCallback() {
+      this.stop?.();
+    }
+    attributeChangedCallback() {
+      if (this.isConnected) {
+        this.sync();
+      }
+    }
+    refresh() {
+      this.sync(true);
+    }
+    sync(refresh = false) {
+      const id2 = this.getAttribute("installation-id");
+      if (!id2 || id2.includes("{{")) {
+        return;
+      }
+      const event = `health:summary:${encodeURIComponent(id2)}`;
+      const source2 = `${route("/api/integrations/management/health")}?id=${encodeURIComponent(id2)}${refresh ? "&refresh=true" : ""} as health`;
+      this.setAttribute("cms-reload-on", event);
+      if (this.getAttribute("cms-source") !== source2) {
+        this.setAttribute("cms-source", source2);
+      } else if (refresh) {
+        this.ownerDocument.dispatchEvent(new Event(event));
+      }
+    }
+  }
+  customElements.define("cms-health-summary", HealthSummary);
+
+  // src/components/admin/Resources/Integrations/health/presentation/healthRow.css
+  var healthRow_default = `:host { display: block; min-width: 0; border: 1px solid var(--border-default, #e0e5e4); border-radius: 12px; background: var(--bg-surface, #fff); overflow: clip; }
+summary { display: flex; align-items: center; gap: 24px; padding: 20px 24px; cursor: pointer; list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary:hover { background: var(--bg-base, #f6f8f7); }
+summary:focus-visible { outline: 2px solid var(--primary-base, #176451); outline-offset: -3px; }
+summary > slot { display: block; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+summary > slot[name="status"] { flex: 0 0 170px; }
+svg { width: 18px; height: 18px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.7; transition: transform 150ms; }
+details[open] svg { transform: rotate(180deg); }
+.content { padding: 24px; border-top: 1px solid var(--border-default, #e0e5e4); background: var(--bg-base, #f6f8f7); }
+@media (max-width: 600px) { summary, .content { padding: 16px; } summary { gap: 12px; } summary > slot[name="status"] { flex-basis: 96px; } }
+@media (prefers-reduced-motion: reduce) { svg { transition: none; } }
+
+.indicator { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; color: var(--text-muted); background: var(--secondary-muted); font-size: 18px; font-weight: 600; }
+.indicator::before { content: "–"; }
+:host([health-state="ready"]) .indicator { color: var(--success-base); background: var(--success-muted); }
+:host([health-state="ready"]) .indicator::before { content: "✓"; }
+:host([health-state="attention"]) .indicator { color: var(--warning-base); background: var(--warning-muted); }
+:host([health-state="attention"]) .indicator::before { content: "!"; }
+`;
+
+  // src/components/admin/Resources/Integrations/health/presentation/healthContext.ts
+  function healthContext(management) {
+    const actions = new Map((management.actions ?? []).map((action) => [action.id, { id: action.id, label: action.label }]));
+    if (management.settings?.applyFunctionId && !actions.has("apply-settings")) {
+      actions.set("apply-settings", { id: "apply-settings", label: "Apply configuration" });
+    }
+    let checks = [];
+    let steps = [];
+    return (health) => {
+      const report = health?.report;
+      checks = (report?.checks ?? []).map((check, index) => {
+        const previous = checks[index];
+        const row = previous?.id === check.id ? previous : { id: check.id, summary: "", actions: [] };
+        row.summary = `${label3(check.status)} · ${check.message || check.code || check.id}`;
+        row.actions = (check.actionIds ?? []).flatMap((id2) => {
+          const action = actions.get(id2);
+          return action ? [action] : [];
+        });
+        return row;
+      });
+      steps = (report?.operation?.steps ?? []).map((step, index) => {
+        const previous = steps[index];
+        const row = previous?.id === step.id ? previous : { id: step.id, status: "" };
+        row.status = label3(step.status);
+        return row;
+      });
+      return {
+        healthView: {
+          available: Boolean(health),
+          hasReport: Boolean(report),
+          checks,
+          steps,
+          observation: health ? `Observation: ${label3(health.observation)} · ${label3(health.freshness)} · ${date(health.observedAt)}` : "",
+          issue: health?.reason ? `Observation issue: ${label3(health.reason)}${health.httpStatus ? ` (HTTP ${health.httpStatus})` : ""}` : "",
+          version: health?.reportDefinitionVersion ?? "",
+          service: report ? `${health.freshness === "fresh" ? "Service" : "Last observed service"}: ${label3(report.status)}` : "",
+          checked: report ? `Checked ${date(report.checkedAt)}` : "",
+          configuration: report ? configurationStatus(health) : "",
+          operation: report?.operation ? `Operation ${report.operation.id}: ${label3(report.operation.status)}` : ""
+        }
+      };
+    };
+  }
+  function date(value3) {
+    const parsed = new Date(value3);
+    return Number.isNaN(parsed.getTime()) ? value3 : parsed.toLocaleString();
+  }
+  function label3(value3) {
+    return value3.replaceAll("_", " ");
+  }
+  function configurationStatus(health) {
+    const { savedRevision, appliedRevision } = health.report.configuration;
+    if (savedRevision === null) {
+      return "No saved configuration revision was reported.";
+    }
+    if (savedRevision !== appliedRevision) {
+      return health.freshness === "fresh" ? "Saved changes are waiting to be applied." : "Saved changes were waiting to be applied at the last observation.";
+    }
+    return health.freshness === "fresh" ? "The saved configuration is applied." : "The saved configuration was applied at the last observation.";
+  }
+
+  // src/static/admin/_operations/health/checks.html
+  var checks_default = `<p9r-stack gap="sm" trim>
+<span cms-condition="$source.loading &amp;&amp; !healthView.available">Loading…</span>
+<p cms-condition="$source.error || $source.refreshError" role="alert">Unable to load health. {{ $source.message }}</p>
+<p9r-button variant="outlined" type="button" data-health-refresh aria-disabled="{{ healthBusy }}" cms-condition="healthView.available || $source.error || $source.empty">Refresh health</p9r-button>
+<p cms-condition="healthView.available">{{ healthView.observation }}</p>
+<p cms-condition="healthView.issue">{{ healthView.issue }}</p>
+<p cms-condition="healthView.version">Observed version: {{ healthView.version }}</p>
+<p cms-condition="healthView.available &amp;&amp; !healthView.hasReport || $source.empty">No valid service observation is available.</p>
+<h3 cms-condition="healthView.hasReport">{{ healthView.service }}</h3>
+<p cms-condition="healthView.hasReport">{{ healthView.checked }}</p>
+<p cms-condition="healthView.hasReport">{{ healthView.configuration }}</p>
+<cms-integration-health-check cms-repeat="healthView.checks as check" data-check-id="{{ check.id }}">
+    <strong>{{ check.summary }}</strong>
+    <p9r-button variant="outlined" type="button" cms-repeat="check.actions as action" data-health-action="{{ action.id }}" aria-disabled="{{ healthBusy }}">{{ action.label }}</p9r-button>
+</cms-integration-health-check>
+<h3 cms-condition="healthView.operation">{{ healthView.operation }}</h3>
+<p cms-repeat="healthView.steps as step">{{ step.id }}: {{ step.status }}</p>
+
+</p9r-stack>
+`;
+
+  // src/components/admin/Resources/Integrations/health/presentation/healthCheck.css
+  var healthCheck_default = `:host {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding: .75rem 0;
+    border-bottom: 1px solid var(--border-default);
+}
+`;
+
+  // src/components/admin/Resources/Integrations/health/presentation/HealthCheck.ts
+  class HealthCheck extends l {
+    constructor() {
+      super({ css: healthCheck_default, template: "<slot></slot>" });
+    }
+  }
+  customElements.define("cms-integration-health-check", HealthCheck);
+
+  // src/components/admin/Resources/Integrations/health/presentation/health.ts
+  function mountHealth(root, id2, management, run) {
+    const host = document.createElement("div");
+    host.dataset.integrationHealth = "";
+    const url = `${route("/api/integrations/management/health")}?id=${encodeURIComponent(id2)}`;
+    const reload = `integration:${encodeURIComponent(id2)}:health:reload`;
+    host.setAttribute("cms-source", `${url} as health`);
+    host.setAttribute("cms-reload-on", reload);
+    const template6 = document.createElement("template");
+    template6.innerHTML = checks_default;
+    host.append(template6.content.cloneNode(true));
+    let loading = true;
+    const project = healthContext(management);
+    jd(host, () => {
+      const value3 = et(host);
+      return { ...project(value3 ?? undefined), healthBusy: loading };
+    });
+    const stop = pb(host, (state2) => {
+      if (state2.disposed) {
+        stop();
+        return;
+      }
+      const pending = state2.loading || state2.refreshing === true;
+      if (loading !== pending) {
+        loading = pending;
+        Vi(host);
+      }
+    });
+    const refresh = () => {
+      if (!host.isConnected) {
+        return;
+      }
+      loading = true;
+      const next = `${url}&refresh=true as health`;
+      if (host.getAttribute("cms-source") !== next) {
+        host.setAttribute("cms-source", next);
+      } else {
+        host.ownerDocument.dispatchEvent(new Event(reload));
+      }
+    };
+    host.addEventListener("click", (event) => {
+      const target2 = event.target?.closest("[data-health-refresh], [data-health-action]");
+      if (!loading && target2?.hasAttribute("data-health-refresh")) {
+        refresh();
+      } else if (!loading && target2?.dataset.healthAction) {
+        run(target2.dataset.healthAction);
+      }
+    });
+    root.replaceChildren(host);
+    return { element: host, refresh };
+  }
+
+  // src/components/admin/Resources/Integrations/health/actions.ts
+  function healthActions(root, id2, management) {
+    const forms = new Map;
+    const actions = [...management.actions ?? []];
+    if (management.settings?.applyFunctionId && !actions.some((action) => action.id === "apply-settings")) {
+      actions.push({
+        id: "apply-settings",
+        label: "Apply configuration",
+        functionId: management.settings.applyFunctionId
+      });
+    }
+    for (const action of actions) {
+      const modal = formPart("modal");
+      modal.id = formId();
+      modal.setAttribute("aria-label", action.label);
+      modal.querySelector('[slot="title"]').textContent = action.label;
+      const form = modal.querySelector("form");
+      form.setAttribute("cms-source", `${route("/api/integrations/management/action")}?id=${encodeURIComponent(id2)} as result`);
+      form.setAttribute("cms-source-method", "POST");
+      const input2 = document.createElement("input");
+      input2.type = "hidden";
+      input2.name = "actionId";
+      input2.value = action.id;
+      form.prepend(input2);
+      const stack = form.querySelector("[data-operation-fields]");
+      for (const field3 of action.fields ?? []) {
+        stack.append(fieldElement(field3, "actionValues", { valuesPath: "input" }));
+      }
+      jd(form, () => ({ actionValues: {} }));
+      const submit = formPart("submit");
+      submit.textContent = action.label;
+      stack.append(submit);
+      const opener = formPart("opener");
+      opener.setAttribute("modal-target", modal.id);
+      opener.querySelector("p9r-button").textContent = action.label;
+      root.append(opener, modal);
+      forms.set(action.id, { form, modal });
+    }
+    return (actionId) => {
+      const entry = forms.get(actionId);
+      if (!entry) {
+        return;
+      }
+      entry.modal.setAttribute("open", "");
+    };
+  }
+
+  // src/static/admin/_operations/health/operations.html
+  var operations_default = `<p9r-stack gap="md" trim>
+    <p cms-condition="$source.loading">Loading controls…</p>
+    <p9r-alert cms-condition="$source.error || $source.refreshError" type="error" role="alert">{{ $source.message }}<p9r-button variant="outlined" type="button" data-health-retry-installation>Retry</p9r-button></p9r-alert>
+    <div data-health-content></div>
+    <p9r-stack gap="md" trim>
+        <a data-settings-link cms-condition="healthSettingsHref" href="{{ healthSettingsHref }}">Open settings</a>
+        <p9r-stack direction="row" wrap align-items="center" gap="sm" trim data-health-actions></p9r-stack>
+        <form data-sync-form cms-source-trigger="submit" cms-source-method="POST" cms-source-serialization="typed-json" cms-source-inherit-query="false" cms-source-success-reset="false">
+            <p9r-button type="submit" variant="outlined">Run sync</p9r-button>
+            <p9r-alert cms-condition="$source.error" type="error" role="alert">{{ $source.message }}</p9r-alert>
+        </form>
+                    <p9r-stack gap="md" trim data-upgrade-panel>
+                        <span>Check available releases, then confirm an exact version to upgrade.</span>
+                        <p9r-button type="button" variant="outlined" data-upgrade-open>Check for upgrades</p9r-button>
+                        <div data-upgrade-form hidden>
+                            <p9r-stack gap="md">
+                                <p9r-select label="Target version" data-upgrade-target></p9r-select>
+                                <p9r-input label="Type the target version to confirm" data-upgrade-confirmation autocomplete="off"></p9r-input>
+                                <p9r-button type="button" color="primary" data-upgrade-confirm>Upgrade</p9r-button>
+                                <p9r-button type="button" variant="ghost" data-upgrade-cancel>Cancel</p9r-button>
+                            </p9r-stack>
+                        </div>
+                        <span data-upgrade-status role="status" aria-live="polite"></span>
+                    </p9r-stack>
+    </p9r-stack>
+</p9r-stack>
+`;
+
+  // src/components/admin/Resources/Integrations/health/HealthOperations.ts
+  class HealthOperations extends HTMLElement {
+    stop;
+    managementSignature = "";
+    health;
+    connectedCallback() {
+      const id2 = this.getAttribute("installation-id");
+      if (!id2) {
+        return;
+      }
+      const template6 = document.createElement("template");
+      template6.innerHTML = operations_default;
+      this.replaceChildren(template6.content.cloneNode(true));
+      this.id = `health-installation-${encodeURIComponent(id2)}`;
+      this.setAttribute("cms-source", `${route("/api/integrations/installations")}?id=${encodeURIComponent(id2)} as integration`);
+      this.setAttribute("cms-reload-on", `health:detail:${encodeURIComponent(this.getAttribute("installation-id"))}`);
+      const sync = this.querySelector("[data-sync-form]");
+      sync.setAttribute("cms-source", `${route("/api/integrations/installations/rerun")}?id=${encodeURIComponent(id2)} as result`);
+      sync.setAttribute("cms-source-success-reload", `#${this.id}`);
+      this.querySelector("[data-upgrade-panel]").dataset.integrationId = id2;
+      jd(this, () => {
+        const installation = et(this);
+        const settings = installation?.definition?.management?.settings;
+        const dashboard = settings?.dashboardId ?? (settings?.fields.length ? `integration-${id2}-settings` : undefined);
+        return {
+          healthHasActions: Boolean(installation?.definition?.management?.actions?.length || settings?.applyFunctionId),
+          healthSettingsHref: dashboard ? route(`/admin/sources?dashboard=${encodeURIComponent(dashboard)}&source=${encodeURIComponent(installation?.settingsSourceId ?? installation?.sourceIds?.[0] ?? "")}`) : ""
+        };
+      });
+      this.stop = pb(this, (state2) => {
+        const installation = state2.data;
+        if (installation?.id === id2 && !state2.loading && !state2.error) {
+          const management = installation.definition?.management ?? { schemaVersion: 1 };
+          const signature = JSON.stringify(management);
+          if (this.health && signature === this.managementSignature) {
+            return;
+          }
+          this.managementSignature = signature;
+          const actions = this.querySelector("[data-health-actions]");
+          actions?.replaceChildren();
+          const run = actions ? healthActions(actions, id2, management) : () => {};
+          this.health = mountHealth(this.querySelector("[data-health-content]"), id2, management, run);
+        }
+      });
+      this.addEventListener("click", this.onClick);
+      this.addEventListener(Yt2, this.success);
+      document.addEventListener("integration:updated", this.reload);
+    }
+    refresh() {
+      this.health?.refresh();
+    }
+    disconnectedCallback() {
+      this.stop?.();
+      this.health = undefined;
+      this.removeEventListener("click", this.onClick);
+      this.removeEventListener(Yt2, this.success);
+      document.removeEventListener("integration:updated", this.reload);
+    }
+    reload = () => {
+      this.ownerDocument.dispatchEvent(new Event(`health:detail:${encodeURIComponent(this.getAttribute("installation-id"))}`));
+      this.health?.refresh();
+      this.closest("cms-health-row")?.querySelector("cms-health-summary")?.refresh();
+    };
+    success = (event) => {
+      if (event.target.matches("[data-sync-form]")) {
+        this.health?.refresh();
+        this.closest("cms-health-row")?.querySelector("cms-health-summary")?.refresh();
+      } else if (event.target.closest("[data-health-actions]")) {
+        this.reload();
+      }
+    };
+    onClick = (event) => {
+      if (event.target.closest("[data-health-retry-installation]")) {
+        this.reload();
+        return;
+      }
+      const target2 = event.target.closest("[data-upgrade-open], [data-upgrade-cancel], [data-upgrade-confirm]");
+      if (target2?.hasAttribute("data-upgrade-open")) {
+        openIntegrationUpgrade(target2);
+      } else if (target2?.hasAttribute("data-upgrade-cancel")) {
+        cancelIntegrationUpgrade(target2);
+      } else if (target2?.hasAttribute("data-upgrade-confirm")) {
+        confirmIntegrationUpgrade(target2);
+      }
+    };
+  }
+  customElements.define("cms-health-operations", HealthOperations);
+
+  // src/components/admin/Resources/Integrations/health/HealthRow.ts
+  class HealthRow extends l {
+    constructor() {
+      super({
+        css: healthRow_default,
+        template: '<details><summary><span class="indicator" aria-hidden="true"></span><slot name="heading"></slot><slot name="status"></slot><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></summary><div class="content"><slot></slot></div></details>'
+      });
+    }
+    connectedCallback() {
+      super.connectedCallback();
+      this.shadowRoot.querySelector("details").addEventListener("toggle", this.expand);
+    }
+    disconnectedCallback() {
+      this.shadowRoot?.querySelector("details")?.removeEventListener("toggle", this.expand);
+    }
+    expand = () => {
+      if (!this.shadowRoot.querySelector("details").open || this.querySelector("cms-health-operations")) {
+        return;
+      }
+      const operations = document.createElement("cms-health-operations");
+      operations.setAttribute("installation-id", this.getAttribute("installation-id"));
+      this.append(operations);
+    };
+  }
+  customElements.define("cms-health-row", HealthRow);
+
+  // src/static/admin/_operations/health/upgrades.html
+  var upgrades_default = `<p9r-modal aria-label="Integration upgrades">
+    <span slot="title">Integration upgrades</span>
+    <p9r-stack gap="md" trim>
+        <p role="status">{{ upgradeMessage }}</p>
+        <cms-detail-section cms-repeat="upgradeItems as upgrade" heading="{{ upgrade.label }}">
+            <span>{{ upgrade.message }}</span>
+        </cms-detail-section>
+        <p9r-button type="button" color="primary" data-health-upgrade-confirm disabled>Confirm upgrades</p9r-button>
+    </p9r-stack>
+</p9r-modal>
+`;
+
+  // src/components/admin/Resources/Integrations/health/HealthUpgrades.ts
+  class HealthUpgrades extends HTMLElement {
+    candidates = [];
+    busy = false;
+    message = "";
+    page;
+    connectedCallback() {
+      const template6 = document.createElement("template");
+      template6.innerHTML = upgrades_default;
+      this.replaceChildren(template6.content.cloneNode(true));
+      jd(this, () => ({
+        upgradeItems: this.candidates,
+        upgradeMessage: this.message,
+        upgradeBusy: this.busy,
+        upgradeAvailable: this.candidates.some((item) => item.target && !item.done)
+      }));
+      this.setAttribute("cms-source", "");
+      cd(this, {});
+      this.page = this.closest("cms-health-page");
+      this.page.addEventListener("click", this.onClick);
+    }
+    disconnectedCallback() {
+      this.page?.removeEventListener("click", this.onClick);
+    }
+    update() {
+      Vi(this);
+      this.querySelector("[data-health-upgrade-confirm]")?.toggleAttribute("disabled", this.busy || !this.candidates.some((item) => item.target && !item.done));
+    }
+    onClick = (event) => {
+      const target2 = event.target.closest("[data-health-check-upgrades], [data-health-upgrade-all], [data-health-upgrade-confirm]");
+      if (!target2 || this.busy) {
+        return;
+      }
+      if (target2.hasAttribute("data-health-upgrade-confirm")) {
+        this.apply();
+      } else {
+        this.check();
+      }
+    };
+    async check() {
+      const rows = et(this.page);
+      this.candidates = (rows ?? []).map((row) => ({
+        id: row.id,
+        label: row.label,
+        current: row.definitionVersion,
+        target: "",
+        message: "Checking…",
+        done: false
+      }));
+      this.busy = true;
+      this.message = "Checking available releases…";
+      this.querySelector("p9r-modal").setAttribute("open", "");
+      this.update();
+      const pending = [...this.candidates];
+      await Promise.all(Array.from({ length: 3 }, async () => {
+        while (pending.length) {
+          const item = pending.shift();
+          try {
+            const choices = await integrationUpgradeVersions(item.id);
+            const preferred = choices.stable ?? choices.latest;
+            const target2 = preferred && choices.versions.includes(preferred) ? preferred : choices.versions[0];
+            const evidence = choices.targets?.find((entry) => entry.version === target2);
+            item.target = target2 && target2 !== choices.current && evidence?.eligible !== false ? target2 : "";
+            item.message = item.target ? `${choices.current} → ${item.target}` : "No eligible upgrade";
+            const reasons = choices.targets?.filter((entry) => !entry.eligible).flatMap((entry) => entry.reasons) ?? [];
+            const migrations = evidence?.migrations.map((entry) => `${entry.connectorKey}: rollback ${entry.rollback} (${entry.rollbackVerified ? "verified" : "not verified"}), point of no return ${entry.pointOfNoReturn}`) ?? [];
+            item.message += [...migrations, ...reasons].length ? ` · ${[...migrations, ...reasons].join("; ")}` : "";
+          } catch (error) {
+            item.message = integrationUpgradeErrorMessage(error);
+          }
+          this.update();
+        }
+      }));
+      this.busy = false;
+      const count = this.candidates.filter((item) => item.target).length;
+      this.message = count ? `${count} upgrades available. Review the exact versions below before confirming. Upgrades run one at a time and stop if one fails.` : "No eligible upgrades found. Review any unavailable repositories below.";
+      this.update();
+    }
+    async apply() {
+      if (!this.candidates.some((item) => item.target && !item.done)) {
+        return;
+      }
+      this.busy = true;
+      this.message = "Applying the reviewed upgrades…";
+      this.update();
+      for (const item of this.candidates.filter((entry) => entry.target && !entry.done)) {
+        try {
+          item.message = `Upgrading to ${item.target}…`;
+          this.update();
+          await upgradeIntegrationInstallation(item.id, item.target);
+          item.done = true;
+          item.message = `Upgraded to ${item.target}`;
+        } catch (error) {
+          item.message = integrationUpgradeErrorMessage(error);
+          this.message = "Stopped after an upgrade failed. Completed upgrades remain applied. Check releases again before retrying.";
+          item.target = "";
+          for (const remaining of this.candidates) {
+            if (!remaining.done) {
+              remaining.target = "";
+            }
+          }
+          this.busy = false;
+          this.update();
+          return;
+        }
+      }
+      this.busy = false;
+      this.message = "The reviewed upgrades are complete.";
+      this.ownerDocument.dispatchEvent(new Event("health:installations"));
+      this.update();
+    }
+  }
+  customElements.define("cms-health-upgrades", HealthUpgrades);
+
+  // src/components/admin/Resources/Integrations/health/HealthPage.ts
+  class HealthPage extends HTMLElement {
+    observations = new Map;
+    connectedCallback() {
+      const template6 = document.createElement("template");
+      template6.innerHTML = overview_default2;
+      this.replaceChildren(template6.content.cloneNode(true));
+      let items = [];
+      jd(this, () => {
+        const data = et(this);
+        const rows = Array.isArray(data) ? data : [];
+        items = rows.map((item, index) => {
+          const previous = items[index];
+          const values = {
+            id: item.id,
+            label: item.label,
+            version: item.definitionVersion,
+            deployment: item.status.replaceAll("_", " ")
+          };
+          return previous?.id === item.id ? Object.assign(previous, values) : values;
+        });
+        const statuses = items.map((item) => this.observations.get(item.id));
+        const ready = statuses.filter((state2, index) => state2?.ready && rows[index]?.status === "success").length;
+        const observed = statuses.filter((state2) => state2?.observed).length;
+        return {
+          healthItems: items,
+          healthTotal: `${ready}/${items.length} integrations ready`,
+          healthCoverage: `${observed} observed · ${items.length - observed} awaiting valid checks`
+        };
+      });
+      this.setAttribute("cms-source", `${route("/api/integrations/installations")} as installations`);
+      this.setAttribute("cms-reload-on", "health:installations");
+      this.addEventListener("click", this.refresh);
+      this.addEventListener("health:observation", this.observation);
+      document.addEventListener("integration:updated", this.reload);
+    }
+    disconnectedCallback() {
+      this.removeEventListener("click", this.refresh);
+      this.removeEventListener("health:observation", this.observation);
+      document.removeEventListener("integration:updated", this.reload);
+    }
+    observation = (event) => {
+      const detail = event.detail;
+      this.observations.set(detail.id, detail);
+      Vi(this);
+    };
+    refresh = (event) => {
+      if (!event.target.closest("[data-health-refresh-all]")) {
+        return;
+      }
+      this.reload();
+    };
+    reload = () => {
+      this.ownerDocument.dispatchEvent(new Event("health:installations"));
+      for (const summary2 of Array.from(this.querySelectorAll("cms-health-summary, cms-health-operations"))) {
+        summary2.refresh();
+      }
+    };
+  }
+  customElements.define("cms-health-page", HealthPage);
 
   // src/components/admin/Resources/Sources/ResourceWorkspace.ts
   class ResourceWorkspace extends HTMLElement {
@@ -46230,7 +46331,7 @@ button[slot="back"]:disabled {
   customElements.define("cms-bloc-choice", BlocChoice);
 
   // src/components/admin/Resources/Blocs/artwork/style.css
-  var style_default16 = `:host { display: block; width: 100%; }
+  var style_default15 = `:host { display: block; width: 100%; }
 .artwork {
     position: relative;
     aspect-ratio: 16 / 9;
@@ -46276,7 +46377,7 @@ button[slot="back"]:disabled {
   // src/components/admin/Resources/Blocs/artwork/LibraryArtwork.ts
   class LibraryArtwork extends l {
     constructor() {
-      super({ css: style_default16, template: template_default20 });
+      super({ css: style_default15, template: template_default20 });
     }
     static get observedAttributes() {
       return ["label"];
@@ -46309,7 +46410,7 @@ button[slot="back"]:disabled {
   customElements.define("cms-library-artwork", LibraryArtwork);
 
   // src/components/admin/Resources/Blocs/icons/style.css
-  var style_default17 = `:host { display: inline-flex; width: 16px; height: 16px; flex: none; }
+  var style_default16 = `:host { display: inline-flex; width: 16px; height: 16px; flex: none; }
 svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 `;
 
@@ -46326,7 +46427,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
 
   class LibraryIcon extends l {
     constructor() {
-      super({ css: style_default17, template: '<svg viewBox="0 0 24 24" aria-hidden="true"><path/></svg>' });
+      super({ css: style_default16, template: '<svg viewBox="0 0 24 24" aria-hidden="true"><path/></svg>' });
     }
     static get observedAttributes() {
       return ["name"];
@@ -46341,7 +46442,7 @@ svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width:
   customElements.define("cms-library-icon", LibraryIcon);
 
   // src/components/admin/Resources/Blocs/preview/style.css
-  var style_default18 = `:host {
+  var style_default17 = `:host {
     display: block;
     min-width: 0;
 }
@@ -46363,7 +46464,7 @@ iframe {
   // src/components/admin/Resources/Blocs/preview/BlocPreview.ts
   class BlocPreview extends l {
     constructor() {
-      super({ css: style_default18, template: template_default21 });
+      super({ css: style_default17, template: template_default21 });
     }
     static get observedAttributes() {
       return ["src"];
@@ -46470,7 +46571,7 @@ iframe {
 `;
 
   // src/components/admin/Resources/Triggers/style.css
-  var style_default19 = `.triggers-surface {
+  var style_default18 = `.triggers-surface {
     max-width: 1120px;
 }
 
@@ -46703,7 +46804,7 @@ button.run:disabled {
     }
     mount() {
       const style = document.createElement("style");
-      style.textContent = style_default19;
+      style.textContent = style_default18;
       const body = document.createElement("template");
       body.innerHTML = template_default22;
       this.replaceChildren(style, body.content.cloneNode(true));
@@ -48234,7 +48335,7 @@ button:hover {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/style.css
-  var style_default20 = `:host {
+  var style_default19 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -48334,7 +48435,7 @@ button:hover {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Panel/Panel.ts
   var template7 = document.createElement("template");
-  template7.innerHTML = `<style>${String(style_default20)}</style>${String(template_default24)}`;
+  template7.innerHTML = `<style>${String(style_default19)}</style>${String(template_default24)}`;
 
   class Panel extends HTMLElement {
     constructor() {
@@ -49646,7 +49747,7 @@ h2 {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/style.css
-  var style_default21 = `:host { display: contents; }
+  var style_default20 = `:host { display: contents; }
 * { box-sizing: border-box; }
 
 .backdrop {
@@ -50050,7 +50151,7 @@ textarea { min-height: 92px; resize: vertical; }
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Pickers/ConditionPicker/ConditionPicker.ts
   var template9 = document.createElement("template");
-  template9.innerHTML = `<style>${String(style_default21)}</style>${String(template_default26)}`;
+  template9.innerHTML = `<style>${String(style_default20)}</style>${String(template_default26)}`;
 
   class ConditionPicker extends HTMLElement {
     _mode = "source";
@@ -52803,7 +52904,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/style.css
-  var style_default22 = `:host {
+  var style_default21 = `:host {
     display: block;
     position: relative;
     min-height: 100%;
@@ -52974,7 +53075,7 @@ dd {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/StructureTree/StructureTree.ts
   var template11 = document.createElement("template");
-  template11.innerHTML = `<style>${[style_default22, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
+  template11.innerHTML = `<style>${[style_default21, sourceStates_default, badges_default, context_default].map((css) => String(css)).join(`
 `)}</style>${String(template_default28)}`;
 
   class StructureTree extends HTMLElement {
@@ -53025,7 +53126,7 @@ dd {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/style.css
-  var style_default23 = `:host {
+  var style_default22 = `:host {
     display: block;
     min-width: 0;
     min-height: 0;
@@ -53134,7 +53235,7 @@ iframe {
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Canvas/Canvas.ts
   var template12 = document.createElement("template");
-  template12.innerHTML = `<style>${String(style_default23)}</style>${String(template_default29)}`;
+  template12.innerHTML = `<style>${String(style_default22)}</style>${String(template_default29)}`;
   var CANVAS_FRAME_READY_EVENT = "editor-v2:frame-ready";
   var CANVAS_BACKGROUND_CLICK_EVENT = "editor-v2:canvas-background-click";
 
@@ -53287,7 +53388,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/style.css
-  var style_default24 = `:host {
+  var style_default23 = `:host {
     display: block;
 }
 
@@ -53376,7 +53477,7 @@ iframe {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Section/Section.ts
-  var template13 = createFieldTemplate(template_default30, style_default24);
+  var template13 = createFieldTemplate(template_default30, style_default23);
 
   class Section extends HTMLElement {
     toggle = () => {
@@ -53421,7 +53522,7 @@ iframe {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/style.css
-  var style_default25 = `:host {
+  var style_default24 = `:host {
     display: block;
 }
 
@@ -53858,7 +53959,7 @@ input:disabled {
   }
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/TextInput/TextInput.ts
-  var template14 = createFieldTemplate(template_default31, `${String(style_default25)}${String(dynamicDataPicker_default)}`);
+  var template14 = createFieldTemplate(template_default31, `${String(style_default24)}${String(dynamicDataPicker_default)}`);
 
   class TextInput extends HTMLElement {
     _connected = false;
@@ -53939,7 +54040,7 @@ input:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/style.css
-  var style_default26 = `:host {
+  var style_default25 = `:host {
     display: block;
 }
 
@@ -54011,7 +54112,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Textarea/Textarea.ts
-  var template15 = createFieldTemplate(template_default32, `${String(style_default26)}${String(dynamicDataPicker_default)}`);
+  var template15 = createFieldTemplate(template_default32, `${String(style_default25)}${String(dynamicDataPicker_default)}`);
 
   class Textarea extends HTMLElement {
     _connected = false;
@@ -54843,7 +54944,7 @@ textarea:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/style.css
-  var style_default27 = `:host {
+  var style_default26 = `:host {
     display: block;
 }
 
@@ -54947,7 +55048,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Select/Select.ts
-  var template17 = createFieldTemplate(template_default34, style_default27);
+  var template17 = createFieldTemplate(template_default34, style_default26);
 
   class Select extends HTMLElement {
     constructor() {
@@ -54994,7 +55095,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/style.css
-  var style_default28 = `:host {
+  var style_default27 = `:host {
     display: block;
 }
 
@@ -55107,7 +55208,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/Toggle/Toggle.ts
-  var template18 = createFieldTemplate(template_default35, style_default28);
+  var template18 = createFieldTemplate(template_default35, style_default27);
 
   class Toggle extends HTMLElement {
     constructor() {
@@ -55130,7 +55231,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/style.css
-  var style_default29 = `:host {
+  var style_default28 = `:host {
     display: block;
 }
 
@@ -55176,7 +55277,7 @@ select:disabled {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Controls/Fields/SegmentedControl/SegmentedControl.ts
-  var template19 = createFieldTemplate(template_default36, style_default29);
+  var template19 = createFieldTemplate(template_default36, style_default28);
 
   class SegmentedControl extends HTMLElement {
     constructor() {
@@ -61893,7 +61994,7 @@ label {
 `;
 
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/style.css
-  var style_default30 = `:host {
+  var style_default29 = `:host {
     --editor-v2-bg: #f6f7f7;
     --editor-v2-surface: #ffffff;
     --editor-v2-surface-muted: #f9faf9;
@@ -62021,7 +62122,7 @@ label {
   // ../../features/cms-editor-system-v2/src/components/Layout/Shell/Controller/shellTemplate.ts
   function createShellTemplate() {
     const template22 = document.createElement("template");
-    template22.innerHTML = `<style>${[style_default30, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
+    template22.innerHTML = `<style>${[style_default29, inlineRichText_default, pageSettings_default, pageSettingsTags_default].map((css) => String(css)).join(`
 `)}</style>${String(template_default39)}`;
     return template22;
   }
@@ -63411,7 +63512,7 @@ label {
 `;
 
   // src/components/editorSystemV2/siteBloc/style.css
-  var style_default31 = `:host {
+  var style_default30 = `:host {
     --builder-accent: #165f4b;
     --builder-border: #dfe5e2;
     --builder-muted: #697873;
@@ -63459,7 +63560,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 
   // src/components/editorSystemV2/siteBloc/SiteBlocBuilder.ts
   var template22 = document.createElement("template");
-  template22.innerHTML = `<style>${String(style_default31)}</style>${String(template_default40)}`;
+  template22.innerHTML = `<style>${String(style_default30)}</style>${String(template_default40)}`;
 
   class SiteBlocBuilder extends HTMLElement {
     controller;
@@ -63620,7 +63721,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/CardMedia/style.css
-  var style_default32 = `:host {
+  var style_default31 = `:host {
     --card-bg: var(--bg-surface, #fff);
     --card-border: var(--border-default, #e2e8f0);
     --card-radius: 12px;
@@ -63745,7 +63846,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
   class CardMedia extends l {
     constructor() {
       super({
-        css: style_default32,
+        css: style_default31,
         template: template_default41
       });
     }
@@ -64393,7 +64494,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
 `;
 
   // src/components/media/GridMedia/view/styles/detail.css
-  var detail_default3 = `/* ── Detail fields (injected into detail-media slot) ── */
+  var detail_default2 = `/* ── Detail fields (injected into detail-media slot) ── */
 .detail-field {
     display: flex;
     flex-direction: column;
@@ -65445,7 +65546,7 @@ cms-editor-shell { display: block; min-height: 0; height: 100%; }
     _items = [];
     constructor() {
       super({
-        css: [navigation_default3, interactions_default, detail_default3].join(`
+        css: [navigation_default3, interactions_default, detail_default2].join(`
 `),
         template: template_default44
       });

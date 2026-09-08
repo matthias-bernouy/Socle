@@ -53,6 +53,7 @@ describe("GET /api/dashboards dynamic overlay schema contract", () => {
         });
 
         const response = await listDashboards(new Request("http://localhost/cms/api/dashboards"), {
+            integrationInstallations: { list: async () => [] },
             sources: overlaySources,
             dashboards,
             dashboardViews,

@@ -160,6 +160,7 @@ define("cms-dashboard-navigation-editor", CmsDashboardNavigationEditor);
 import "./admin/Resources/Functions/detail/FunctionDetail";
 import "./admin/Resources/Functions/create/FunctionCreate";
 import "./admin/Resources/Integrations/IntegrationBrowser";
+import "./admin/Resources/Integrations/health/HealthPage";
 import "./admin/Resources/Sources/ResourceWorkspace";
 import "./admin/Resources/Blocs/BlocLibrary";
 import "./admin/Resources/Triggers/TriggersAdmin";

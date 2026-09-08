@@ -18,12 +18,15 @@ export function configureForm(form: HTMLFormElement, operation: DashboardFormOpe
     const sourceId = operation.sourceId ?? context.dashboard.source;
     const group = (context.groups ?? [context.group]).find((candidate) => candidate.source.id === sourceId);
     const endpoint = group?.endpoints.find((candidate) => candidate.endpointId === operation.endpoint);
-    if (!endpoint || !["POST", "PUT", "PATCH", "DELETE"].includes(endpoint.method.toUpperCase())) {
+    if (
+        !operation.management &&
+        (!endpoint || !["POST", "PUT", "PATCH", "DELETE"].includes(endpoint.method.toUpperCase()))
+    ) {
         throw new Error(`Form endpoint ${operation.endpoint} must declare a request-body method.`);
     }
     form.setAttribute("id", formId());
     form.setAttribute("cms-source", `${sourceUrl(sourceId, operation, {}).href} as operationResult`);
-    form.setAttribute("cms-source-method", endpoint.method);
+    form.setAttribute("cms-source-method", operation.management ? "POST" : endpoint!.method);
     for (const field of operation.hiddenFields ?? []) {
         const input = document.createElement("input");
         input.type = "hidden";

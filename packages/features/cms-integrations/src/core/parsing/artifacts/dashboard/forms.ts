@@ -10,18 +10,19 @@ import type {
 import { IntegrationInputError } from "../../../errors";
 import { isRecord } from "../../definition/values";
 import { optionalText, requiredText } from "../common";
+import { parseEndpointRef } from "./refs";
 import { parseModalFields } from "./fields/modalFields";
 
 export function parseFormOperation(value: unknown, name: string): DashboardFormOperation {
     if (!isRecord(value)) {
         throw new IntegrationInputError(name, "must be an object");
     }
-    for (const key of ["body", "params", "management"]) {
+    for (const key of ["body", "params"]) {
         if (Object.hasOwn(value, key)) {
             throw new IntegrationInputError(`${name}.${key}`, "is not supported by form operations");
         }
     }
-    const result: DashboardFormOperation = { endpoint: requiredText(value.endpoint, `${name}.endpoint`) };
+    const result: DashboardFormOperation = parseEndpointRef(value, name);
     for (const key of ["sourceId", "label", "icon", "confirm", "valuesPath"] as const) {
         const parsed = optionalText(value[key], `${name}.${key}`);
         if (parsed !== undefined) {

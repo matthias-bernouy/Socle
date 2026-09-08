@@ -3,11 +3,9 @@ import { waitForDetail } from "../../dashboards/detail/detailTestHelpers";
 import { setSourceData } from "@bernouy/components";
 import { afterEach, expect, test } from "bun:test";
 import type { IntegrationHealthEnvelope } from "@bernouy/cms-integrations";
-import { mountHealth } from "cms-control/components/admin/Resources/Integrations/management/presentation/health";
-import { mountSettings } from "cms-control/components/admin/Resources/Integrations/management/settings";
+import { mountHealth } from "cms-control/components/admin/Resources/Integrations/health/presentation/health";
 import { managementRequest } from "cms-control/components/admin/Resources/Integrations/management/api";
 import { executeEndpointAction } from "cms-control/components/admin/Resources/Dashboards/runtime/actions/endpoint";
-import { WIDGET_ACTION_EVENT } from "cms-control/components/admin/Resources/Dashboards/widgets/shared";
 import { navigationContext } from "cms-control/components/admin/Resources/Dashboards/navigation/binding/context";
 import { detail } from "./support";
 
@@ -65,32 +63,6 @@ test("health distinguishes stale ready observations and exposes registered recov
     expect(root.textContent).toContain("No valid service observation");
 });
 
-test("settings use DashboardField paths and preserve untouched nested values", () => {
-    const root = document.createElement("div");
-    document.body.append(root);
-    let saved: unknown;
-    const editor = mountSettings(
-        root,
-        [{ id: "currency", label: "Currency", path: "market.currency", type: "text" }],
-        "service",
-        (_editor, values) => {
-            saved = values;
-        },
-    );
-    setSourceData(editor, {
-        values: { market: { currency: "EUR", country: "FR" }, hidden: 42 },
-        savedRevision: "2",
-        appliedRevision: "1",
-    });
-    editor.dispatchEvent(
-        new CustomEvent(WIDGET_ACTION_EVENT, {
-            detail: { action: "save-settings", fields: { currency: "USD" } },
-            bubbles: true,
-        }),
-    );
-    expect(saved).toEqual({ market: { currency: "USD", country: "FR" }, hidden: 42 });
-});
-
 test("settings save sends expected revision and management dashboard actions unwrap the canonical resource", async () => {
     const requests: Array<{ url: string; body: unknown }> = [];
     globalThis.fetch = (async (input, init) => {
@@ -133,7 +105,7 @@ test("settings save sends expected revision and management dashboard actions unw
     expect(result).toMatchObject({ kind: "value", value: { contextKey: "signup", revision: "3" } });
 });
 
-test("source-less extension settings are listed under the real parent source", () => {
+test("source navigation no longer appends installation management panels", () => {
     const context = navigationContext()(
         [
             {
@@ -172,9 +144,8 @@ test("source-less extension settings are listed under the real parent source", (
         false,
     );
     const visible = context.navItems.filter((item) => !item.hidden);
-    expect(visible.map((item) => item.label)).toEqual(["Shop", "Settings & health", "Stripe settings", "Newsletter"]);
-    expect(visible[2]!.href).toBe("/admin/sources?source=shop-source&integration=stripe");
-    expect(visible[2]!.active).toBe(true);
+    expect(visible.map((item) => item.label)).toEqual(["Shop", "Newsletter"]);
+    expect(visible.every((item) => !item.href.includes("integration="))).toBe(true);
 });
 
 test("health does not equate absent revisions with applied configuration and explains observation failures", async () => {

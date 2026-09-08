@@ -19,7 +19,7 @@ export async function mountShell(
         if (route.request().resourceType() === "document") {
             await route.fulfill({
                 contentType: "text/html",
-                body: `<!doctype html><meta name="basePath" content=""><style>${styles}</style>
+                body: `<!doctype html><meta charset="utf-8"><meta name="basePath" content=""><style>${styles}</style>
                     <cms-binding-core>${content}</cms-binding-core><script src="/assets/control-components.js"></script>`,
             });
         } else if (url.pathname === "/assets/control-components.js") {

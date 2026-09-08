@@ -30,7 +30,8 @@
         "$files": [
             "artifacts/sources/primary/definition.json",
             "artifacts/dashboards/marketplace-terms/root.json",
-            "artifacts/functions/source-management.json"
+            "artifacts/functions/source-management.json",
+            "artifacts/dashboards/connection/root.json"
         ]
     },
     "type": "source",
@@ -96,7 +97,8 @@
                         }
                     ]
                 }
-            ]
+            ],
+            "dashboardId": "stripe-connect-connection"
         },
         "generatedSecrets": [
             "stripeWebhookSecret",

@@ -23,6 +23,7 @@ export type {
     DashboardExecutionPlan,
     DashboardEmbeddedLookupRef,
     DashboardEndpointRef,
+    DashboardRequestTarget,
     DashboardExpr,
     DashboardField,
     DashboardFieldBase,

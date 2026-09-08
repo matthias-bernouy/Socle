@@ -10,7 +10,7 @@ const styles = await Bun.file(
     resolve(import.meta.dir, "../../../../../../../../foundation/components/dist/style.css"),
 ).text();
 
-test("connection saves retain a newer draft, selection and bottom scroll without rereading settings", async () => {
+test("connection saves lock the form through rereading and retain selection and bottom scroll", async () => {
     const browser = await chromium.launch();
     const captures = process.env.CMS_CONNECTION_STABILITY_CAPTURES;
     if (captures) {
@@ -28,13 +28,7 @@ test("connection saves retain a newer draft, selection and bottom scroll without
             const notes = page.locator('[data-field-control="notes"] textarea');
             const save = page.getByRole("button", { name: "Save settings", exact: true });
             await country.fill("be");
-            const release = fixture.holdSave();
-            await save.dblclick();
-            await page.waitForFunction(() =>
-                document.querySelector("cms-integration-management")?.hasAttribute("aria-busy"),
-            );
-            await country.fill("de");
-            await notes.fill("Newer notes typed during the save");
+            await notes.fill("Notes before saving");
             await notes.evaluate((node: HTMLTextAreaElement) => {
                 node.focus();
                 node.setSelectionRange(6, 15);
@@ -59,13 +53,22 @@ test("connection saves retain a newer draft, selection and bottom scroll without
                 };
             });
             expect(before.focused).toBe(true);
+            const release = fixture.holdSave();
+            await page.locator("[data-detail-save]").evaluate((form: HTMLFormElement) => form.requestSubmit());
+            await page.waitForFunction(() =>
+                document.querySelector("cms-dashboard-w-detail")?.hasAttribute("aria-busy"),
+            );
+            await page.keyboard.type("blocked");
+            expect(await notes.inputValue()).toBe(before.value);
             expect(fixture.writes).toHaveLength(1);
             if (captures) {
                 await page.screenshot({ path: `${captures}/${width}-pending.png` });
             }
             release();
-            await page.getByRole("status").filter({ hasText: "Settings saved." }).waitFor();
-            expect(await country.inputValue()).toBe("de");
+            await page.waitForFunction(
+                () => !document.querySelector("cms-dashboard-w-detail")?.hasAttribute("aria-busy"),
+            );
+            expect(await country.inputValue()).toBe("BE");
             for (let frame = 0; frame < 5; frame += 1) {
                 await page.evaluate(() => new Promise<void>((resolve) => requestAnimationFrame(() => resolve())));
                 const after = await notes.evaluate((node: HTMLTextAreaElement) => {
@@ -94,16 +97,19 @@ test("connection saves retain a newer draft, selection and bottom scroll without
                 await page.screenshot({ path: `${captures}/${width}-saved.png` });
             }
             expect(fixture.settings().values.country).toBe("BE");
-            expect(fixture.settings().values.notes).toBe("Existing notes");
+            expect(fixture.settings().values.notes).toBe("Notes before saving");
             expect(
                 fixture.requests.filter((request) => request === "GET /api/integrations/management/settings"),
-            ).toHaveLength(1);
+            ).toHaveLength(2);
+            await country.fill("de");
             const saved = page.waitForResponse(
                 (response) => response.request().method() === "POST" && response.url().includes("/management/settings"),
             );
             await save.click();
             await saved;
-            await page.getByRole("status").filter({ hasText: "Settings saved." }).waitFor();
+            await page.waitForFunction(
+                () => !document.querySelector("cms-dashboard-w-detail")?.hasAttribute("aria-busy"),
+            );
             expect(fixture.writes[1]?.expectedRevision).toBe("v2");
             await page.reload();
             await country.waitFor();

@@ -2,7 +2,7 @@ import type { IntegrationHealthEnvelope, IntegrationManagement } from "@bernouy/
 import { observeSource, readSourceData, refreshSourceContext, setSourceContext } from "@bernouy/components";
 import { route } from "../../api";
 import { healthContext } from "./healthContext";
-import markup from "cms-control/static/admin/_content/sources/_management/health.html" with { type: "text" };
+import markup from "cms-control/static/admin/_operations/health/checks.html" with { type: "text" };
 import "./HealthCheck";
 
 /** Compose once from an integration contract; no response data enters this function. */

@@ -16,9 +16,9 @@ export async function compileDashboardExecutionPlan(
         return { errors: ["only a published dashboard can produce an execution plan"] };
     }
     const references: EndpointReference[] = [];
-    dashboard.views.forEach((view) => collectViewReferences(view, references));
-    const calls: DashboardAllowedCall[] = [];
     const errors: string[] = [];
+    dashboard.views.forEach((view) => collectViewReferences(view, references, errors));
+    const calls: DashboardAllowedCall[] = [];
     const seen = new Set<string>();
     for (const reference of references) {
         const source = await sources.getSource(makeSourceUrn(reference.sourceId));
@@ -53,25 +53,33 @@ export async function compileDashboardExecutionPlan(
     };
 }
 
-function collectViewReferences(view: ResolvedDashboardView, output: EndpointReference[]): void {
-    collectReferences(view.widgets, view.source, output);
-    view.children.forEach((child) => collectViewReferences(child, output));
+function collectViewReferences(view: ResolvedDashboardView, output: EndpointReference[], errors: string[]): void {
+    collectReferences(view.widgets, view.source, output, errors);
+    view.children.forEach((child) => collectViewReferences(child, output, errors));
 }
 
-function collectReferences(value: unknown, defaultSource: string | undefined, output: EndpointReference[]): void {
+function collectReferences(
+    value: unknown,
+    defaultSource: string | undefined,
+    output: EndpointReference[],
+    errors: string[],
+): void {
     if (Array.isArray(value)) {
-        value.forEach((item) => collectReferences(item, defaultSource, output));
+        value.forEach((item) => collectReferences(item, defaultSource, output, errors));
         return;
     }
     if (!value || typeof value !== "object") {
         return;
     }
     const record = value as Record<string, unknown>;
+    if (record.management && typeof record.management === "object") {
+        errors.push("Integration management is administrator-only and cannot be delegated");
+    }
     if (typeof record.endpoint === "string") {
         const sourceId = typeof record.sourceId === "string" ? record.sourceId : defaultSource;
         if (sourceId) {
             output.push({ sourceId, endpointId: record.endpoint });
         }
     }
-    Object.values(record).forEach((child) => collectReferences(child, defaultSource, output));
+    Object.values(record).forEach((child) => collectReferences(child, defaultSource, output, errors));
 }

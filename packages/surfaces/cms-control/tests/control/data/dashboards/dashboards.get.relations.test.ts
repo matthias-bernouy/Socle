@@ -40,7 +40,14 @@ describe("GET /api/dashboards relation projections", () => {
             columns: [{ id: "title", label: "Offer", path: "title", primary: true }],
         });
 
-        const body = await (await listDashboards(list(), { sources, dashboardViews, relations } as any)).json();
+        const body = await (
+            await listDashboards(list(), {
+                integrationInstallations: { list: async () => [] },
+                sources,
+                dashboardViews,
+                relations,
+            } as any)
+        ).json();
 
         expect(body[0].dashboardRelationProjections).toEqual([
             {

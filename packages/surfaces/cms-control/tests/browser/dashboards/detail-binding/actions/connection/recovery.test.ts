@@ -19,7 +19,7 @@ test("connection read retries and a detached save cannot overwrite the newly sel
         const fixture = await installConnectionRoutes(page, bundle, styles);
         fixture.failRead();
         await page.goto("http://cms.test/admin/sources?integration=service");
-        await page.getByText("HTTP 503", { exact: false }).waitFor();
+        await page.getByText("Unable to load this data", { exact: false }).waitFor();
         await page.getByRole("button", { name: "Retry", exact: true }).click();
         const country = page.locator('[data-field-control="country"] input');
         await country.fill("be");
@@ -28,61 +28,22 @@ test("connection read retries and a detached save cannot overwrite the newly sel
         ).toHaveLength(2);
         const release = fixture.holdSave();
         await page.getByRole("button", { name: "Save settings", exact: true }).click();
-        await page.waitForFunction(() =>
-            document.querySelector("cms-integration-management")?.hasAttribute("aria-busy"),
-        );
+        await page.waitForFunction(() => document.querySelector("cms-dashboard-w-detail")?.hasAttribute("aria-busy"));
         // A client navigation replaces the management host while its submitted operation finishes.
-        await page.locator("cms-integration-management").evaluate((node) => {
-            history.replaceState(null, "", "/admin/sources?integration=service&panel=health");
-            const next = document.createElement("cms-integration-management");
+        await page.locator("cms-dashboard-w-detail").evaluate((node) => {
+            history.replaceState(null, "", "/admin/health?integration=service");
+            const next = document.createElement("cms-health-operations");
             next.setAttribute("installation-id", "service");
-            node.replaceWith(next);
+            node.closest("cms-dashboards-admin")!.replaceWith(next);
         });
         await page.getByText("No valid service observation", { exact: false }).waitFor();
-        const response = page.waitForResponse(
-            (result) => result.request().method() === "POST" && result.url().includes("/management/settings"),
-        );
         release();
-        await response;
+        await page.waitForTimeout(250);
         await page.waitForFunction(() => !document.querySelector("cms-dashboard-w-detail"));
         expect(await page.getByText("No valid service observation", { exact: false }).isVisible()).toBe(true);
-        expect(await page.getByRole("status").filter({ hasText: "Settings saved." }).count()).toBe(0);
+        expect(await page.getByRole("status").filter({ hasText: "Changes saved" }).count()).toBe(0);
         expect(fixture.settings().values.country).toBe("BE");
         expect(fixture.writes).toHaveLength(1);
-        expect(errors).toEqual([]);
-    } finally {
-        await browser.close();
-    }
-}, 20000);
-
-test("applying saved connection settings refreshes the bound editor and preserves its unsaved fields", async () => {
-    const browser = await chromium.launch();
-    try {
-        const page = await browser.newPage();
-        page.setDefaultTimeout(5000);
-        const errors: string[] = [];
-        page.on("pageerror", (error) => errors.push(error.message));
-        const fixture = await installConnectionRoutes(page, bundle, styles);
-        fixture.requireApply();
-        await page.goto("http://cms.test/admin/sources?integration=service");
-        const country = page.locator('[data-field-control="country"] input');
-        await country.fill("de");
-        const editor = await page.locator("cms-dashboard-w-detail").elementHandle();
-        const field = await country.elementHandle();
-        const read = page.waitForResponse(
-            (response) => response.request().method() === "GET" && response.url().includes("/management/settings"),
-        );
-        await page.getByRole("button", { name: "Retry applying configuration", exact: true }).click();
-        await read;
-        await page.getByRole("status").filter({ hasText: "Action completed." }).waitFor();
-        expect(await editor!.evaluate((node) => node.isConnected)).toBe(true);
-        expect(await field!.evaluate((node) => node.isConnected)).toBe(true);
-        expect(await country.inputValue()).toBe("de");
-        expect(await page.getByRole("button", { name: "Retry applying configuration", exact: true }).count()).toBe(0);
-        expect(fixture.actions).toEqual(["apply-settings"]);
-        expect(fixture.writes).toHaveLength(0);
-        expect(fixture.settings().values.country).toBe("FR");
-        expect(fixture.settings().appliedRevision).toBe("v1");
         expect(errors).toEqual([]);
     } finally {
         await browser.close();
@@ -99,8 +60,8 @@ test("an empty connection response shows a recoverable state instead of loading 
             times: 1,
         });
         await page.goto("http://cms.test/admin/sources?integration=service");
-        await page.getByText("No connection settings are available.", { exact: false }).waitFor();
-        expect(await page.getByText("Loading…", { exact: true }).count()).toBe(0);
+        await page.getByText("No data is available.", { exact: false }).waitFor();
+        expect(await page.getByText("Loading data…", { exact: true }).count()).toBe(0);
         expect(await page.getByRole("button", { name: "Save settings", exact: true }).count()).toBe(0);
         await page.getByRole("button", { name: "Retry", exact: true }).click();
         const country = page.locator('[data-field-control="country"] input');

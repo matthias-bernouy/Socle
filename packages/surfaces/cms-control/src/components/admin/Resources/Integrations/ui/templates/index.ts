@@ -1,12 +1,11 @@
 import browserHtml from "./browser.html" with { type: "text" };
-import detailHtml from "./detail.html" with { type: "text" };
 import iconsHtml from "./icons.html" with { type: "text" };
 import importingHtml from "./importing.html" with { type: "text" };
 import itemsHtml from "./items.html" with { type: "text" };
 import setupHtml from "./setup.html" with { type: "text" };
 
 const registry = document.createElement("template");
-registry.innerHTML = [browserHtml, detailHtml, iconsHtml, importingHtml, itemsHtml, setupHtml].join("");
+registry.innerHTML = [browserHtml, iconsHtml, importingHtml, itemsHtml, setupHtml].join("");
 
 export function cloneElement<T extends HTMLElement = HTMLElement>(name: string): T {
     const template = registry.content.querySelector<HTMLTemplateElement>(`template[data-template="${name}"]`);

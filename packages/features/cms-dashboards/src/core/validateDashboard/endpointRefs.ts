@@ -63,6 +63,22 @@ export function validateEndpointRef(
         errors.push(`${path} must be an object`);
         return;
     }
+    if (ref.management !== undefined) {
+        if (!isRecord(ref.management)) {
+            errors.push(`${path}.management must be an object`);
+            return;
+        }
+        validateRequiredId(`${path}.management.installationId`, ref.management.installationId, errors);
+        if (ref.management.operation !== "settings") {
+            errors.push(`${path}.management.operation must be settings`);
+        }
+        for (const key of ["endpoint", "sourceId", "params", "body"]) {
+            if (Object.hasOwn(ref, key)) {
+                errors.push(`${path}.${key} cannot be combined with management`);
+            }
+        }
+        return;
+    }
     validateRequiredId(`${path}.endpoint`, ref.endpoint, errors);
     validateId(`${path}.sourceId`, ref.sourceId, errors);
     const endpoint =

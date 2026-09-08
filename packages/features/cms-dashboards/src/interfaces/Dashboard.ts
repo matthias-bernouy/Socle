@@ -4,6 +4,7 @@ export type {
     DashboardDataRef,
     DashboardEmbeddedLookupRef,
     DashboardEndpointRef,
+    DashboardRequestTarget,
     DashboardExpr,
     DashboardFieldExpression,
     DashboardFilter,
