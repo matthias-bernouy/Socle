@@ -1,32 +1,5 @@
 [
     {
-        "id": "saveQuestion",
-        "label": "Save question",
-        "tone": "primary",
-        "placement": "primary",
-        "endpoint": {
-            "endpoint": "saveQuestion",
-            "body": {
-                "ref": "$resource.ref",
-                "key": "$field.key",
-                "label": "$field.label",
-                "type": "$field.type",
-                "required": "$field.required",
-                "hint": "$field.hint",
-                "placeholder": "$field.placeholder",
-                "presentation": "$field.presentation",
-                "multiple": "$field.multiple",
-                "options": "$field.options",
-                "imageOptions": "$field.imageOptions"
-            }
-        },
-        "after": {
-            "opens": "questionDetail",
-            "row": "$result.ref",
-            "resource": "$result"
-        }
-    },
-    {
         "id": "backToSection",
         "label": "Section",
         "placement": "secondary",

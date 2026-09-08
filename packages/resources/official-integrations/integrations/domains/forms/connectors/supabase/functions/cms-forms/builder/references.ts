@@ -51,3 +51,8 @@ function fromBase64Url(value: string): string {
 function text(value: unknown): boolean {
     return typeof value === "string" && value.trim().length > 0 && value.length <= 80;
 }
+
+/** Existing questions keep their original reference when their answer key is renamed. */
+export function questionIdentity(question: { key: string; id?: unknown }): string {
+    return typeof question.id === "string" && question.id ? question.id : question.key;
+}

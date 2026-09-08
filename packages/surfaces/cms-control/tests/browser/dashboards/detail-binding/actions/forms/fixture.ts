@@ -110,8 +110,18 @@ export async function mountEditor(page: Page, collection = "formsTable", row?: s
                     state.question = {
                         ...state.question,
                         ...body,
-                        ref: `question-${body.key}`,
-                        options: body.imageOptions ?? body.options ?? [],
+                        ref: state.question.ref,
+                        options: (body.imageOptions ?? body.options ?? []).map((option: any) => ({
+                            ...option,
+                            ...(option.image
+                                ? {
+                                      image: {
+                                          mediaId: String(option.image.mediaId ?? option.image.id),
+                                          alt: option.image.alt ?? "",
+                                      },
+                                  }
+                                : {}),
+                        })),
                     };
                 }
                 await route.fulfill({ json: endpoint === "saveFormDraft" ? state.form : state.question });

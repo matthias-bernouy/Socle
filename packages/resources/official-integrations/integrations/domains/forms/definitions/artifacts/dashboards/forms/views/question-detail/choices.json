@@ -14,18 +14,37 @@
             "maxItems": 50,
             "visibleWhen": {
                 "any": [
-                    { "value": "$field.type", "equals": "select" },
+                    {
+                        "value": "$field.type",
+                        "equals": "select"
+                    },
                     {
                         "all": [
-                            { "value": "$field.type", "equals": "choice" },
-                            { "value": "$field.presentation", "notEquals": "image-grid" }
+                            {
+                                "value": "$field.type",
+                                "equals": "choice"
+                            },
+                            {
+                                "value": "$field.presentation",
+                                "notEquals": "image-grid"
+                            }
                         ]
                     }
                 ]
             },
             "fields": [
-                { "id": "key", "label": "Stable key", "path": "key", "required": true },
-                { "id": "label", "label": "Label", "path": "label", "required": true }
+                {
+                    "id": "key",
+                    "label": "Stable key",
+                    "path": "key",
+                    "required": true
+                },
+                {
+                    "id": "label",
+                    "label": "Label",
+                    "path": "label",
+                    "required": true
+                }
             ]
         },
         {
@@ -40,8 +59,14 @@
             "maxItems": 50,
             "visibleWhen": {
                 "all": [
-                    { "value": "$field.type", "equals": "choice" },
-                    { "value": "$field.presentation", "equals": "image-grid" }
+                    {
+                        "value": "$field.type",
+                        "equals": "choice"
+                    },
+                    {
+                        "value": "$field.presentation",
+                        "equals": "image-grid"
+                    }
                 ]
             },
             "fields": [
@@ -51,23 +76,57 @@
                     "path": "image",
                     "type": "media",
                     "required": true,
-                    "item": { "idPath": "mediaId", "urlPath": "url", "altPath": "alt" },
+                    "item": {
+                        "idPath": "mediaId",
+                        "urlPath": "url",
+                        "altPath": "alt"
+                    },
                     "actions": {
-                        "upload": { "endpoint": "uploadChoiceImage", "params": { "ref": "$resource.ref" } },
-                        "replace": { "endpoint": "uploadChoiceImage", "params": { "ref": "$resource.ref" } }
+                        "upload": {
+                            "endpoint": "uploadChoiceImage",
+                            "params": {
+                                "ref": "$resource.ref"
+                            }
+                        },
+                        "replace": {
+                            "endpoint": "uploadChoiceImage",
+                            "params": {
+                                "ref": "$resource.ref"
+                            }
+                        }
                     }
                 },
-                { "id": "label", "label": "Label", "path": "label", "required": true },
-                { "id": "key", "label": "Stable key", "path": "key", "required": true, "secondary": true },
-                { "id": "imageAlt", "label": "Image alt text", "path": "image.alt", "secondary": true }
-            ]
+                {
+                    "id": "label",
+                    "label": "Label",
+                    "path": "label",
+                    "required": true
+                },
+                {
+                    "id": "key",
+                    "label": "Stable key",
+                    "path": "key",
+                    "required": true,
+                    "secondary": true
+                },
+                {
+                    "id": "imageAlt",
+                    "label": "Image alt text",
+                    "path": "image.alt",
+                    "secondary": true
+                }
+            ],
+            "name": "imageOptions"
         },
         {
             "id": "multiple",
             "label": "Allow multiple choices",
             "path": "multiple",
             "type": "checkbox",
-            "visibleWhen": { "value": "$field.type", "equals": "choice" }
+            "visibleWhen": {
+                "value": "$field.type",
+                "equals": "choice"
+            }
         }
     ]
 }

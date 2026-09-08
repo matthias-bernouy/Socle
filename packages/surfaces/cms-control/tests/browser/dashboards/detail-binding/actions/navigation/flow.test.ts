@@ -1,16 +1,10 @@
-import { afterAll, beforeAll, expect, test } from "bun:test";
-import { chromium, type Browser } from "playwright";
+import { expect, test } from "bun:test";
+import { chromium } from "playwright";
 import { formKey, mountForms, questionRef, sectionRef } from "./fixture";
-let browser: Browser;
-beforeAll(async () => {
-    browser = await chromium.launch();
-});
-afterAll(async () => {
-    await browser.close();
-});
-
 test("official Forms returns read each parent once, preserve identities and protect unsaved section input", async () => {
+    const browser = await chromium.launch();
     const page = await browser.newPage({ viewport: { width: 1440, height: 950 } });
+    page.setDefaultTimeout(5000);
     try {
         const { requests, errors } = await mountForms(page);
         await page.locator('[data-action="backToSection"]').click();
@@ -45,12 +39,14 @@ test("official Forms returns read each parent once, preserve identities and prot
         await page.screenshot({ path: "/tmp/cmscore-forms-navigation-mobile.png", fullPage: true });
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     } finally {
-        await page.close();
+        await browser.close();
     }
 }, 30000);
 
 test("missing parent identity cannot navigate or make another source request", async () => {
+    const browser = await chromium.launch();
     const page = await browser.newPage();
+    page.setDefaultTimeout(5000);
     try {
         const { requests, errors } = await mountForms(page, true);
         const before = requests.length;
@@ -60,12 +56,14 @@ test("missing parent identity cannot navigate or make another source request", a
         expect(requests).toHaveLength(before);
         expect(errors).toEqual([]);
     } finally {
-        await page.close();
+        await browser.close();
     }
 }, 15000);
 
 test("a failed parent read retries only the destination GET", async () => {
+    const browser = await chromium.launch();
     const page = await browser.newPage();
+    page.setDefaultTimeout(5000);
     try {
         const { requests, errors, failNextSection } = await mountForms(page);
         failNextSection();
@@ -79,6 +77,6 @@ test("a failed parent read retries only the destination GET", async () => {
         expect(requests.every((request) => request.method === "GET")).toBe(true);
         expect(errors).toEqual([]);
     } finally {
-        await page.close();
+        await browser.close();
     }
 }, 15000);

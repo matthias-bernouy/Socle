@@ -1,7 +1,7 @@
 import { HttpError, isRecord } from "../http.ts";
 import { rpcRecord } from "../rest.ts";
 import { formDefinition } from "../validation.ts";
-import { builderReference, type BuilderReference } from "./references.ts";
+import { builderReference, questionIdentity, type BuilderReference } from "./references.ts";
 
 export type FormQuestion = Record<string, unknown> & {
     key: string;
@@ -79,7 +79,7 @@ export function sectionIn(form: EditableForm): FormSection {
 
 export function questionIn(form: EditableForm): { section: FormSection; question: FormQuestion } {
     const section = sectionIn(form);
-    const question = section.fields.find((candidate) => candidate.key === form.reference.questionKey);
+    const question = section.fields.find((candidate) => questionIdentity(candidate) === form.reference.questionKey);
     if (!question) {
         throw new HttpError(404, "question does not exist");
     }

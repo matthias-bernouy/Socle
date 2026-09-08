@@ -12,7 +12,7 @@ Beyond those earlier views, 22 detail views were fully or partially migrated:
 | Integration | Views | Result |
 | --- | --- | --- |
 | Commerce | General settings, notifications, protected C2C policy, offer condition, custom metadata, workflow state and transition | Native Save; metadata deletion; creation through the detail where supported |
-| Forms | Form, section, submission | Common form creation/Save with atomic metadata updates; publish/archive independent forms; section Save/Delete; submission review/archive |
+| Forms | Form, section, question, submission | Common form creation/Save with atomic metadata updates; publish/archive independent forms; section Save/Delete; question Save with stable references and structured image choices; submission review/archive |
 | User Account | Account and extra field | Native Save/Delete; extra-field creation and native list reordering |
 | Emailer | Template | Native Save/Create; independent test-email and archive forms |
 | Mondial Relay | Shipment and settings | Independent shipment recovery; native settings Save |
@@ -28,15 +28,33 @@ to migrate. Newsletter's subscription export remains a GET download.
 | Case | Why a direct migration is unsafe | Required follow-up |
 | --- | --- | --- |
 | Consent details and Stripe Connect seller terms | These call integration management actions, rather than source form endpoints. Publishing also owns immutable legal snapshots | Migrate legal actions to independent native forms while preserving publication semantics; the settings target is now standardized separately |
-| Forms question editor | Nested options and image choices still use immediate media writes | Migrate the complex field/media lifecycle before changing its Save/Delete wiring |
-| Forms nested section/question navigation | Creation depends on ancestor selection; controls are nested inside the parent detail | Reordering now uses independent native forms with explicit ancestor identity; migrate the remaining creation actions |
+| Forms child creation and question deletion | These still use scalar compatibility actions and navigate to another detail after success | Migrate `createSection`, `createQuestion` and `deleteQuestion` with their destination semantics. Reordering already uses independent native forms |
 | Mondial Relay projection-exception table action | Native independent forms are currently composed for details, not table-row operations | Provide a reusable table operation form host |
+
+No official dashboard action still submits a structured body through `sendSourceJson`.
+The remaining source mutations use scalar compatibility forms: the three Forms
+actions above and Mondial Relay projection recovery. Consent and Stripe Connect
+legal actions use the separate management transport; binary downloads are also
+independent. Generic legacy definitions and examples still accept endpoint bodies.
 
 The old action runtime cannot yet be deleted. An empty legacy-source-action list
 alone does not prove a migration is complete: integration management actions
 must also be inventoried.
 
 ## Validation baseline
+
+The Forms follow-up passed 98 dashboard/parsing/provider tests, PostgreSQL
+transaction assertions for settings preservation, and the real local
+create/save/rename/reorder/delete flow. Owned local test records were removed.
+Browser coverage includes typed choices, false booleans, image upload and
+replacement, rejected replacement, choice removal, delayed Save, rejected Save,
+failed reread/retry, desktop/mobile screenshots and stable control geometry.
+The combined browser run passed 34 of 35 tests; a navigation test timed out.
+All three navigation tests passed in isolation afterward. Keep this grouped-run
+instability visible rather than reporting a fully green browser batch.
+`check:all` remains 8/8 with 63 existing UI-contract warnings. The Forms endpoint
+JSON stays grouped as one cohesive declaration despite the file-size advisory.
+
 
 The migration was checked with 38 new browser tests using resolved official
 definitions and the real admin bundle: all 22 views, six creations, four

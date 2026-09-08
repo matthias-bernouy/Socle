@@ -12,7 +12,7 @@ import {
     type FormSection,
 } from "./model.ts";
 import { normalizedOptions, normalizedQuestionKey, optionItems } from "./options.ts";
-import { builderReference, questionReference, sectionReference } from "./references.ts";
+import { builderReference, questionIdentity, questionReference, sectionReference } from "./references.ts";
 
 const choiceTypes = new Set(["select", "choice"]);
 const questionTypes = new Set(["text", "email", "tel", "number", "date", "textarea", "select", "choice", "checkbox"]);
@@ -37,6 +37,7 @@ export async function createQuestion(context: unknown, actor: string): Promise<R
         throw new HttpError(422, "a form cannot contain more than 100 questions");
     }
     const question: FormQuestion = {
+        id: crypto.randomUUID(),
         key: uniqueQuestionKey(form),
         label: "Untitled question",
         type: "text",
@@ -61,6 +62,7 @@ export async function saveQuestion(input: Record<string, unknown>, actor: string
     ) {
         throw new HttpError(422, `question key "${key}" is already used`);
     }
+    question.id = questionIdentity(question);
     question.key = key;
     question.label = requiredText(input.label, "question label", 240);
     question.type = type;
@@ -107,11 +109,11 @@ export async function reorderQuestions(
     const section = sectionIn(form);
     const references = stringArray(value, "question order");
     const keys = references.map((reference) => builderReference(reference).questionKey);
-    const expected = new Set(section.fields.map((question) => question.key));
+    const expected = new Set(section.fields.map(questionIdentity));
     if (keys.length !== expected.size || keys.some((key) => !key || !expected.delete(key))) {
         throw new HttpError(422, "question order must contain every question exactly once");
     }
-    const byKey = new Map(section.fields.map((question) => [question.key, question]));
+    const byKey = new Map(section.fields.map((question) => [questionIdentity(question), question]));
     section.fields = keys.map((key) => byKey.get(key!)!);
     await saveEditableForm(form, form.definition, actor);
     return await listQuestions(sectionReference(form.reference.formKey, section.id));
@@ -124,7 +126,7 @@ function questionItem(
     position: number,
 ): Record<string, unknown> {
     return {
-        id: questionReference(form.reference.formKey, section.id, question.key),
+        id: questionReference(form.reference.formKey, section.id, questionIdentity(question)),
         key: question.key,
         title: question.label,
         subtitle: question.required === true ? "Required" : "Optional",
@@ -137,7 +139,7 @@ function questionDetail(form: EditableForm, section: FormSection, question: Form
     const options = optionItems(question.options);
     return {
         ...questionItem(form, section, question, section.fields.indexOf(question)),
-        ref: questionReference(form.reference.formKey, section.id, question.key),
+        ref: questionReference(form.reference.formKey, section.id, questionIdentity(question)),
         sectionRef: sectionReference(form.reference.formKey, section.id),
         formKey: form.reference.formKey,
         sectionTitle: section.title,

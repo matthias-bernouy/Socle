@@ -14,6 +14,7 @@ export function formDefinition(value: unknown): Record<string, unknown> {
         throw new HttpError(422, "definition must contain between 1 and 20 steps");
     }
     const keys = new Set<string>();
+    const identities = new Set<string>();
     const stepIds = new Set<string>();
     let fieldCount = 0;
     for (const step of steps) {
@@ -26,6 +27,12 @@ export function formDefinition(value: unknown): Record<string, unknown> {
         stepIds.add(step.id as string);
         for (const field of step.fields) {
             validateField(field, keys);
+            const question = field as Record<string, unknown>;
+            const identity = question.id ?? question.key;
+            if (!shortText(identity, 80) || identities.has(String(identity))) {
+                throw new HttpError(422, "question identities must be unique nonempty strings");
+            }
+            identities.add(String(identity));
             fieldCount += 1;
         }
     }

@@ -63,9 +63,12 @@ test("Forms creates through its detail then saves metadata without replacing con
         expect(await node!.evaluate((e) => e.isConnected)).toBe(true);
         expect(await title.boundingBox()).toEqual(before);
         expect(await page.locator("form form").count()).toBe(0);
-        await page.screenshot({ path: "/tmp/cmscore-forms-native-save-desktop.png" });
+        await page.screenshot({ animations: "disabled", path: "/tmp/cmscore-forms-native-save-desktop.png" });
         await page.setViewportSize({ width: 390, height: 844 });
-        await page.screenshot({ path: "/tmp/cmscore-forms-native-save-mobile.png" });
+        await page.locator("w13c-left-menu-layout .app-sidebar").waitFor({ state: "hidden" });
+        const bounds = await title.boundingBox();
+        expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390);
+        await page.screenshot({ animations: "disabled", path: "/tmp/cmscore-forms-native-save-mobile.png" });
         expect(state.errors).toEqual([]);
     } finally {
         await browser.close();

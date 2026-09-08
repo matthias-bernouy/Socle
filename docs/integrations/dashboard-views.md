@@ -194,3 +194,11 @@ media reachability and published snapshots. `forms.save_form_draft` remains
 internal to builder operations. The SQL regression in the Forms integration
 under `tests/verification/settings-save.sql` runs inside a caller-owned local
 transaction that must be rolled back.
+
+Question Save uses explicit `imageOptions` as the image editor control name,
+while both choice editors read `options` from the shared response. Only the
+visible editor submits. Uploads create immutable Forms assets; their association
+with the draft changes on Save. Published versions retain their own associations.
+Questions have an internal stable identity separate from the editable answer
+key. Existing questions retain their original reference on first save; newly
+created questions use a UUID. Renaming does not invalidate a subsequent GET.
