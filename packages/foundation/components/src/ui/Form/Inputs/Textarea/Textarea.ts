@@ -41,8 +41,6 @@ export class Textarea extends Component {
     private _counter: HTMLElement | null;
     private _count: HTMLElement | null;
     private _max: HTMLElement | null;
-    private _defaultValue = "";
-    private _defaultsCaptured = false;
     private _showValidationMessage = false;
 
     constructor() {
@@ -59,10 +57,6 @@ export class Textarea extends Component {
     }
 
     override connectedCallback() {
-        if (!this._defaultsCaptured) {
-            this._defaultValue = this.getAttribute("value") ?? "";
-            this._defaultsCaptured = true;
-        }
         ["value", "disabled", "required"].forEach((p) => upgradeProperty(this, p));
         this._textarea?.addEventListener("input", this._onInput);
         this._textarea?.addEventListener("change", this._onChange);
@@ -85,7 +79,7 @@ export class Textarea extends Component {
 
     formResetCallback() {
         this._showValidationMessage = false;
-        this.value = this._defaultValue;
+        this.value = this.getAttribute("value") ?? "";
     }
 
     attributeChangedCallback(name: string, _oldVal: string | null, newVal: string | null) {

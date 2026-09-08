@@ -37,6 +37,11 @@ runtime uses a `cms-` activation tag.
 
 ## Forms
 
+`p9r-money-input` exposes integer minor units through `value` and native form
+submission while displaying localized major units. `currency` and
+`allow-decimals` control formatting and validation. Consumers must not parse its
+display text again; typed JSON forms declare `cms-form-value-type="number"`.
+
 `p9r-modal[placement="end"]` presents a full-height side panel on desktop and a
 full-screen panel on mobile, using the same native dialog lifecycle as a centered
 modal. `content-layout="contained"` lets

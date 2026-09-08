@@ -132,6 +132,9 @@ function withCustomError(validity: ValidityState): ValidityState {
 
 function standardValidationMessage(input: HTMLInputElement): string {
     const validity = input.validity;
+    if (validity.customError) {
+        return input.validationMessage;
+    }
     if (validity.valueMissing) {
         return "This field is required.";
     }

@@ -145,3 +145,6 @@ export {
 } from "./binding/source/presentation/sourceContext";
 
 export { observeSource, type SourceObservation } from "./binding/source/runtime/observation";
+
+export { MoneyInput } from "./ui/Form/Inputs/MoneyInput/MoneyInput";
+export { currencyFractionDigits, formatMinorUnits, parseMajorUnits } from "./ui/Form/Inputs/MoneyInput/amount";

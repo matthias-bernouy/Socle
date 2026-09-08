@@ -22,8 +22,6 @@ export class P9rInput extends ValidatableFormControlElement {
     private readonly max: HTMLElement | null;
     private readonly helpController: InputHelpController;
     private readonly validityController: InputValidityController;
-    private defaultValue = "";
-    private defaultsCaptured = false;
 
     constructor() {
         super({ css, template: template as unknown as string });
@@ -50,10 +48,6 @@ export class P9rInput extends ValidatableFormControlElement {
     }
 
     override connectedCallback(): void {
-        if (!this.defaultsCaptured) {
-            this.defaultValue = this.getAttribute("value") ?? "";
-            this.defaultsCaptured = true;
-        }
         ["value", "disabled", "required"].forEach((property) => upgradeProperty(this, property));
         this.input?.addEventListener("input", this.onInput);
         this.input?.addEventListener("change", this.onChange);
@@ -78,7 +72,7 @@ export class P9rInput extends ValidatableFormControlElement {
     }
 
     formResetCallback(): void {
-        this.value = this.defaultValue;
+        this.value = this.getAttribute("value") ?? "";
         this.validityController.reset();
     }
 

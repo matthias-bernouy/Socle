@@ -27,6 +27,7 @@ export const blocEntries: ReadonlyArray<readonly [string, string]> = [
     ["form-section", "./src/ui/Form/Structure/FormSection/FormSection.ts"],
     ["icon-button", "./src/ui/Form/Actions/IconButton/IconButton.ts"],
     ["input-file", "./src/ui/Form/Inputs/InputFile/InputFile.ts"],
+    ["money-input", "./src/ui/Form/Inputs/MoneyInput/MoneyInput.ts"],
     ["p9r-input", "./src/ui/Form/Inputs/P9rInput/P9rInput.ts"],
     ["p9r-range", "./src/ui/Form/Inputs/P9rRange/P9rRange.ts"],
     ["p9r-select", "./src/ui/Form/Selection/P9rSelect/P9rSelect.ts"],
