@@ -8,6 +8,9 @@ This section documents the supported workflow:
 
 - [Source and collection model](./model.md) defines ownership, resource
   selection, endpoint bindings, contracts, themes, and dependency closure.
+- [Dashboard detail forms](./dashboard-views.md) defines shared saves, independent
+  operations and related-resource panels; [Commerce media](./commerce-media.md)
+  documents staging and attachment at Save.
 - [Settings and Health](./management.md) defines zero-input installation,
   integration-owned configuration, scoped references, declared actions, and
   the versioned Health report and observation contracts.

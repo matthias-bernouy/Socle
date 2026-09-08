@@ -48,7 +48,7 @@ The ownership rule is a **CMS application policy**, not a restriction of the
 foundation engine. The engine supports isolated nested cores; that capability and
 its tests remain valid. Dashboard navigation and widget sources now remain in
 light DOM under the document core. Dynamic widget mounting does not justify a
-private core. See the [Dashboard follow-up](./ui-contracts-dashboards.md).
+private core. See the [Dashboard binding architecture](./dashboard-widget-binding.md).
 
 ## Component composition and styles
 

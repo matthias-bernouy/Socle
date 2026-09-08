@@ -41,21 +41,11 @@ implementation notes live in each package's `AGENTS.md`.
   Delivery optimization, browser selection, caching, and rollout for responsive
   images.
 
-## Design Plans
+## Dashboard Implementation
 
-- [Integration view refactor](../REFACTOR_INTEGRATIONS_VIEW.md) records the staged
-  detail-shell and form refactor, with its [baseline and target contracts](./quality/integration-views/step-1.md)
-  and [generic forms/binding validation](./quality/integration-views/step-3.md).
-  [Remaining integration migrations](./quality/integration-views/all-integrations.md)
-  records the migrated views, validation and deferred contracts.
-- [Commerce Notifications](../NOTIFICATIONS.md) documents the native,
-  replaceable buyer notification queue, template contract, and delivery modes.
-- [Scheduled Triggers](../SCHEDULED_TRIGGERS_PLAN.md) documents declarative
-  recurring integration work, distributed claims, runtime defaults, and
-  operational controls.
-- [Newsletter Broadcast Plan](../BROADCAST_PLAN.md) describes the durable
-  campaign architecture that should replace the smoke-test newsletter emailer
-  function for large sends.
-- [Stripe Connect C2C Protected Buyer Plan](../STRIPE_CONNECT_C2C_PROCTED_BUYER.md)
-  defines mandatory protected C2C settlement, Commerce-owned fee policy,
-  marketplace claims, refunds, and Stripe reconciliation.
+- [Dashboard detail forms](./integrations/dashboard-views.md) documents current
+  authoring contracts, creation, operations and related-resource panels.
+- [Dashboard binding verification](./quality/dashboard-widget-binding.md) explains
+  rendering ownership and the browser validation checklist.
+- [Integration migration status](./quality/integration-views/all-integrations.md)
+  records migrated views, remaining legacy consumers and validation limits.
