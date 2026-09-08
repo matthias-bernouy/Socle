@@ -28,6 +28,12 @@ Official integrations install without a questionnaire. Their versioned
 actions. Save applies configuration through those functions; install and update
 preserve existing settings. See [Settings and Health](./management.md).
 
+Omit empty `inputs` and `ui` declarations from authored packages. The definition
+parser supplies an empty input list. `ui` only declares optional catalogue
+`instructions` as title/copy pairs; installation-screen marks, checklists and
+sync descriptions are no longer part of that contract. Runtime Health checks
+remain defined by `management`.
+
 The CMS owns the dashboard shell. A source may publish `dashboard-view`
 artifacts that operate its own data, endpoints, and overlays. This bounded
 operator declaration is not public-site rendering: the Source cannot publish a

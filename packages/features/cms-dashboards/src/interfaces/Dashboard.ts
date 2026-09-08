@@ -65,6 +65,7 @@ export type {
     DashboardFormOperation,
     DashboardSaveOperation,
     DashboardActionForm,
+    DashboardActionField,
     DashboardDeleteOperation,
     DashboardCreateOperation,
     DashboardDetailOpenRef,

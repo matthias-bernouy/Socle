@@ -1,8 +1,8 @@
-import { DASHBOARD_MODAL_FIELD_TYPES, type DashboardField } from "@bernouy/cms-dashboards";
+import { DASHBOARD_MODAL_FIELD_TYPES, type DashboardActionField } from "@bernouy/cms-dashboards";
 import { IntegrationInputError } from "../../../../errors";
 import { parseFields } from ".";
 
-export function parseModalFields(value: unknown, path: string): DashboardField[] {
+export function parseModalFields(value: unknown, path: string): DashboardActionField[] {
     const fields = parseFields(value, path);
     fields.forEach((field, index) => {
         const name = `${path}.${index}`;
@@ -19,5 +19,5 @@ export function parseModalFields(value: unknown, path: string): DashboardField[]
             );
         }
     });
-    return fields;
+    return fields as DashboardActionField[];
 }

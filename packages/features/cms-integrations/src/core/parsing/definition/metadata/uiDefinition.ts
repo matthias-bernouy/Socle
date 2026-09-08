@@ -19,59 +19,11 @@ function readUiDefinition(value: unknown, name: string, mode: UiReadMode): Integ
         return invalid(mode, name, "must be an object");
     }
 
-    return {
-        ...(text(value.mark) ? { mark: text(value.mark)! } : {}),
-        ...(text(value.markClass) ? { markClass: text(value.markClass)! } : {}),
-        ...(text(value.emit) ? { emit: text(value.emit)! } : {}),
-        ...readPairField(value.instructions, `${name}.instructions`, "instructions", mode),
-        ...readStringField(value.scopes, `${name}.scopes`, "scopes", mode),
-        ...readStringField(value.checks, `${name}.checks`, "checks", mode),
-        ...readPairField(value.resources, `${name}.resources`, "resources", mode),
-        ...readStringField(value.review, `${name}.review`, "review", mode),
-        ...readStringField(value.sync, `${name}.sync`, "sync", mode),
-        ...(text(value.syncNote) ? { syncNote: text(value.syncNote)! } : {}),
-    };
-}
-
-function readStringField<K extends keyof IntegrationUiDefinition>(
-    value: unknown,
-    name: string,
-    key: K,
-    mode: UiReadMode,
-): Pick<IntegrationUiDefinition, K> | {} {
-    if (value === undefined) {
+    if (value.instructions === undefined) {
         return {};
     }
-    const list = stringList(value, name, mode);
-    return list ? ({ [key]: list } as Pick<IntegrationUiDefinition, K>) : {};
-}
-
-function readPairField<K extends keyof IntegrationUiDefinition>(
-    value: unknown,
-    name: string,
-    key: K,
-    mode: UiReadMode,
-): Pick<IntegrationUiDefinition, K> | {} {
-    if (value === undefined) {
-        return {};
-    }
-    const list = pairList(value, name, mode);
-    return list ? ({ [key]: list } as Pick<IntegrationUiDefinition, K>) : {};
-}
-
-function stringList(value: unknown, name: string, mode: UiReadMode): string[] | undefined {
-    if (!Array.isArray(value)) {
-        return invalid(mode, name, "must be an array");
-    }
-    const out: string[] = [];
-    for (const [index, entry] of value.entries()) {
-        const item = text(entry);
-        if (!item) {
-            return invalid(mode, `${name}.${index}`, "must be a non-empty string");
-        }
-        out.push(item);
-    }
-    return out;
+    const instructions = pairList(value.instructions, `${name}.instructions`, mode);
+    return instructions ? { instructions } : {};
 }
 
 function pairList(value: unknown, name: string, mode: UiReadMode): Array<[string, string]> | undefined {

@@ -8,12 +8,6 @@
     "icon": {
         "path": "assets/icon.svg"
     },
-    "inputs": {
-        "$include": "configuration/inputs.json"
-    },
-    "ui": {
-        "$include": "configuration/ui.json"
-    },
     "security": {
         "$include": "configuration/security.json"
     },

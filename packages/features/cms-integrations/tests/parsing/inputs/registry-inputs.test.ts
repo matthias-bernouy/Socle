@@ -130,6 +130,19 @@ describe("@bernouy/cms-integrations registry and scalar input DTO parsing", () =
         } as unknown as IntegrationDefinition;
 
         const entry = integrationRegistry([definition]).find((item) => item.kind === "site-ui");
-        expect(entry?.ui).toEqual({ mark: "S", checks: ["safe"] });
+        expect(entry?.ui).toEqual({});
+    });
+
+    test("preserves catalogue instructions while discarding retired installation UI metadata", () => {
+        const definition = {
+            kind: "catalogue-help",
+            label: "Catalogue help",
+            inputs: [],
+            ui: { instructions: [["Connect", "Select a secret in Settings."]], mark: "C", sync: ["Install"] },
+        };
+        const request = parseIntegrationImportRequest({ definition, answers: {} });
+        const expected = { instructions: [["Connect", "Select a secret in Settings."]] };
+        expect(request.siteIntegrations[0]?.ui).toEqual(expected);
+        expect(integrationRegistry([definition as IntegrationDefinition])[0]?.ui).toEqual(expected);
     });
 });

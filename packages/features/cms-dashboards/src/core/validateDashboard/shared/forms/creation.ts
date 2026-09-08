@@ -32,8 +32,6 @@ export function validateCreateOperation(
     create: DashboardCreateOperation,
     path: string,
     dashboard: DashboardDto,
-    source: Source | null,
-    widgetIds: Set<string>,
     errors: string[],
 ): void {
     if (!isRecord(create)) {

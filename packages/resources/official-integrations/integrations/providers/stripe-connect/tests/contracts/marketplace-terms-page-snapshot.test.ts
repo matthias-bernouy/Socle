@@ -128,7 +128,7 @@ describe("Stripe Connect marketplace terms published-page evidence", () => {
     });
 
     test("keeps immutable seller evidence while moving publication out of installation answers", async () => {
-        const inputs = await artifact("extensions/commerce-stripe-payments/definitions/configuration/inputs.json");
+        const definition = await artifact("extensions/commerce-stripe-payments/definitions/root.json");
         const afterInstallation = await artifact(
             "extensions/commerce-stripe-payments/definitions/configuration/after-installation.json",
         );
@@ -152,9 +152,7 @@ describe("Stripe Connect marketplace terms published-page evidence", () => {
             "providers/stripe-connect/definitions/artifacts/sources/primary/endpoints.json",
         );
 
-        expect(inputs).not.toContain("sellerTermsVersion");
-        expect(inputs).not.toContain("sellerTermsHash");
-        expect(inputs).not.toContain("sellerTermsDocuments");
+        expect(JSON.parse(definition).inputs ?? []).toEqual([]);
         expect(afterInstallation).not.toContain("termsConfiguration");
         expect(afterInstallation).not.toContain("syncMarketplaceTermsConfiguration");
         expect(afterInstallation).toContain('"id": "providerSnapshot"');

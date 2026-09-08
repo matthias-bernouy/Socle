@@ -80,17 +80,11 @@ export function validateAction(
         if (!action.form) {
             errors.push(`${path}.after requires a native form`);
         }
-        validateActionAfter(action, `${path}.after`, dashboard, errors, visibilityFieldIds !== undefined);
+        validateActionAfter(action, `${path}.after`, dashboard, errors);
     }
 }
 
-function validateActionAfter(
-    action: DashboardAction,
-    path: string,
-    dashboard: DashboardDto,
-    errors: string[],
-    detailAction: boolean,
-): void {
+function validateActionAfter(action: DashboardAction, path: string, dashboard: DashboardDto, errors: string[]): void {
     const after = action.after!;
     const hasOpens = after.opens !== undefined;
     const hasResource = Object.hasOwn(after, "resource");

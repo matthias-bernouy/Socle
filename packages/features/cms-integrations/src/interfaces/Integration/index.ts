@@ -124,16 +124,7 @@ export type IntegrationObjectListInput = IntegrationInputBase & {
 export type IntegrationInput = IntegrationValueInput | IntegrationObjectListInput;
 
 export type IntegrationUiDefinition = {
-    mark?: string;
-    markClass?: string;
-    emit?: string;
     instructions?: Array<[title: string, copy: string]>;
-    scopes?: string[];
-    checks?: string[];
-    resources?: Array<[kind: string, label: string]>;
-    review?: string[];
-    sync?: string[];
-    syncNote?: string;
 };
 
 export type IntegrationCspPolicy = {

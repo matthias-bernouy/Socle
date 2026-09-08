@@ -117,6 +117,9 @@ Operation-dialog fields currently support text, textarea, number, money,
 checkbox, select, combobox, tokens, secret references and page links. Complex
 controls or dependent reads require a full detail view rather than extending a
 short operation dialog implicitly. Use `$resource` for persisted eligibility.
+The exported `DashboardActionField` type reflects these limits: action fields
+cannot declare `visibleWhen` or remote `lookup` options. Full detail fields retain
+those capabilities.
 
 Optional `delete` requires confirmation and is hidden before creation. Success
 returns to the owning collection; its response is not a replacement resource.

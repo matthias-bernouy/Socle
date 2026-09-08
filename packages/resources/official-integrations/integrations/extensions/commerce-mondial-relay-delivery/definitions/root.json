@@ -9,9 +9,6 @@
     "dependencies": {
         "$include": "configuration/dependencies.json"
     },
-    "ui": {
-        "$include": "configuration/ui.json"
-    },
     "artifacts": {
         "$files": [
             "artifacts/functions/set-relay-point-for-order/root.json",

@@ -20,32 +20,25 @@ export const EXPECTED_MANUAL_DASHBOARD_ARTIFACT = {
                 id: "itemDetail",
                 source: { endpoint: "get", params: { id: "$selection.id" }, itemPath: "item" },
                 title: { path: "name", fallback: "Item" },
+                save: {
+                    endpoint: "update",
+                    label: "Save item",
+                    hiddenFields: [{ name: "id", value: "$resource.id", type: "string" }],
+                },
+                delete: {
+                    endpoint: "delete",
+                    label: "Delete item",
+                    confirm: "Delete this item?",
+                    hiddenFields: [{ name: "id", value: "$resource.id", type: "string" }],
+                },
                 actions: [
-                    {
-                        id: "save",
-                        label: "Save item",
-                        placement: "primary",
-                        endpoint: {
-                            endpoint: "update",
-                            params: { id: "$resource.id" },
-                            body: { owner: "$field.owner" },
-                        },
-                    },
-                    {
-                        id: "delete",
-                        label: "Delete item",
-                        placement: "more",
-                        section: "Other actions",
-                        tone: "danger",
-                        endpoint: { endpoint: "delete", params: { id: "$resource.id" } },
-                        confirm: "Delete this item?",
-                    },
                     {
                         id: "export",
                         label: "Export CSV",
                         placement: "more",
                         section: "Share",
                         endpoint: { endpoint: "exportItems", params: { q: "$param.q" } },
+                        download: {},
                     },
                 ],
                 main: [

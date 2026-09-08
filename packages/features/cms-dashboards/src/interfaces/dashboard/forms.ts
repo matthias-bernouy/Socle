@@ -22,7 +22,7 @@ export type DashboardFormOperation = DashboardRequestTarget & {
 
 export type DashboardSaveOperation = DashboardFormOperation & { refresh?: "read"; idPath?: string };
 
-export type DashboardActionForm = DashboardFormOperation & { fields?: DashboardField[] };
+export type DashboardActionForm = DashboardFormOperation & { fields?: DashboardActionField[] };
 export type DashboardDeleteOperation = DashboardFormOperation & { confirm: string };
 
 /** Open the same detail definition for creation, editing, or selection. */
@@ -49,3 +49,11 @@ export const DASHBOARD_MODAL_FIELD_TYPES = [
     "secret-ref",
     "page-link",
 ] as const;
+
+type ModalField = Extract<DashboardField, { type: (typeof DASHBOARD_MODAL_FIELD_TYPES)[number] }>;
+type StaticModalField<T> = T extends ModalField
+    ? Omit<T, "visibleWhen" | "lookup"> & { visibleWhen?: never; lookup?: never }
+    : never;
+
+/** Action forms support scalar controls and static choices, not full detail sections. */
+export type DashboardActionField = StaticModalField<ModalField>;

@@ -33,7 +33,7 @@ export function validateTableWidget(
     validateDataRef(dashboard, widget.source, `${path}.source`, source, errors);
     validateRequiredPath("rowKey", widget.rowKey, path, errors);
     if (widget.create !== undefined) {
-        validateCreateOperation(widget.create, `${path}.create`, dashboard, source, widgetIds, errors);
+        validateCreateOperation(widget.create, `${path}.create`, dashboard, errors);
     }
     if (!Array.isArray(widget.columns) || widget.columns.length === 0) {
         errors.push(`${path}.columns must contain at least one column`);
@@ -138,7 +138,7 @@ export function validateNavigationListWidget(
     validateDataRef(dashboard, widget.source, `${path}.source`, source, errors);
     validateRequiredPath("rowKey", widget.rowKey, path, errors);
     if (widget.create !== undefined) {
-        validateCreateOperation(widget.create, `${path}.create`, dashboard, source, widgetIds, errors);
+        validateCreateOperation(widget.create, `${path}.create`, dashboard, errors);
     }
     validateBinding(widget.item.title, `${path}.item.title`, errors);
     validateBinding(widget.item.subtitle, `${path}.item.subtitle`, errors);
