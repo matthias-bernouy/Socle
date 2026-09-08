@@ -20,14 +20,20 @@
                 "imageOptions": "$field.imageOptions"
             }
         },
-        "after": { "opens": "questionDetail", "row": "$result.ref", "resource": "$result" }
+        "after": {
+            "opens": "questionDetail",
+            "row": "$result.ref",
+            "resource": "$result"
+        }
     },
     {
         "id": "backToSection",
         "label": "Section",
         "placement": "secondary",
-        "endpoint": { "endpoint": "manageSection", "params": { "ref": "$resource.sectionRef" } },
-        "after": { "opens": "sectionDetail", "row": "$result.ref" }
+        "selection": {
+            "opens": "sectionDetail",
+            "row": "$resource.sectionRef"
+        }
     },
     {
         "id": "deleteQuestion",
@@ -35,7 +41,15 @@
         "tone": "danger",
         "placement": "more",
         "confirm": "Delete this question? Existing published versions and responses remain unchanged.",
-        "endpoint": { "endpoint": "deleteQuestion", "body": { "ref": "$resource.ref" } },
-        "after": { "opens": "sectionDetail", "row": "$result.sectionRef" }
+        "endpoint": {
+            "endpoint": "deleteQuestion",
+            "body": {
+                "ref": "$resource.ref"
+            }
+        },
+        "after": {
+            "opens": "sectionDetail",
+            "row": "$result.sectionRef"
+        }
     }
 ]

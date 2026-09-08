@@ -20,15 +20,9 @@
                 "id": "backToForm",
                 "label": "Form settings",
                 "placement": "secondary",
-                "endpoint": {
-                    "endpoint": "manageForm",
-                    "params": {
-                        "key": "$resource.formKey"
-                    }
-                },
-                "after": {
+                "selection": {
                     "opens": "formDetail",
-                    "row": "$result.key"
+                    "row": "$resource.formKey"
                 }
             }
         ],

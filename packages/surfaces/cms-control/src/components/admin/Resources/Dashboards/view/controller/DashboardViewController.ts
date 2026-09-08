@@ -119,6 +119,18 @@ export class DashboardViewController extends DashboardStateController {
             },
             clearDetail: () => this.clearDetail(),
             openDetail: (collection, row) => this.openDetail(collection, row),
+            navigateDetail: (collection, row) => {
+                const detail = this.querySelector<DashboardWDetail>("cms-dashboard-w-detail");
+                if (detail?.hasUnsavedChanges()) {
+                    if (!window.confirm("Discard the unsaved changes?")) {
+                        return;
+                    }
+                    if (this.detailSelection) {
+                        this.drafts.delete(`${this.detailSelection.collection}:${this.detailSelection.row}`);
+                    }
+                }
+                this.openDetail(collection, row);
+            },
             setDetailResource: (collection, row, resource) => this.setDetailResource(collection, row, resource),
             actionCoordinator: this.detailResource,
         };

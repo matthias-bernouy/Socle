@@ -1,3 +1,4 @@
+import { validateActionSelection } from "./shared/selection";
 import { validateFormOperation } from "./shared/forms/operation";
 import { validateOperationFields } from "./shared/forms/creation";
 import type { Source } from "@bernouy/cms-sources";
@@ -76,9 +77,13 @@ export function validateAction(
             errors.push(`${path}.download.filename must be a safe file name`);
         }
     }
-    if (action.selection?.opens && !findWidget(dashboard.views, action.selection.opens)) {
-        errors.push(`${path}.selection.opens references unknown widget "${action.selection.opens}"`);
-    }
+    validateActionSelection(
+        action,
+        path,
+        findWidget(dashboard.views, action.selection?.opens ?? ""),
+        errors,
+        visibilityFieldIds !== undefined,
+    );
     if (action.after) {
         if (!action.endpoint && !action.management && !action.form) {
             errors.push(`${path}.after requires endpoint or management`);

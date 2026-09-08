@@ -31366,6 +31366,11 @@ w13c-lateral-menu {
   }
   function collectDetailTargets(widget, targets) {
     if (widget.widget === "w-detail") {
+      for (const action of widget.actions ?? []) {
+        if (action.selection?.opens) {
+          targets.add(action.selection.opens);
+        }
+      }
       for (const mainItem of widget.main) {
         if ("widget" in mainItem) {
           collectDetailTargets(mainItem, targets);
@@ -37389,6 +37394,13 @@ slot { display: contents; }
 
   // src/components/admin/Resources/Dashboards/runtime/actions/endpoint.ts
   async function executeEndpointAction(group, groups, action, vars, submit) {
+    if (action.selection?.row !== undefined) {
+      const row = resolveExpression(action.selection.row, vars);
+      if (!action.selection.opens || typeof row !== "string" && typeof row !== "number" || !String(row).trim() || typeof row === "number" && !Number.isFinite(row)) {
+        throw new Error("The navigation target is unavailable. Reload the detail before trying again.");
+      }
+      return { kind: "navigation", collection: action.selection.opens, row: String(row) };
+    }
     if (action.management) {
       const management = action.management;
       const input = resolveBody(management.body, vars) ?? vars.fields ?? {};
@@ -37519,7 +37531,7 @@ slot { display: contents; }
     if (!action) {
       throw new Error(`Dashboard action "${actionId}" was not found`);
     }
-    if (!action.endpoint && !action.management) {
+    if (!action.endpoint && !action.management && !action.selection) {
       throw new Error(`Dashboard action "${actionId}" does not declare an endpoint`);
     }
     const resource = requireDetailResource(currentResource);
@@ -37538,7 +37550,7 @@ slot { display: contents; }
     if (!action) {
       throw new Error(`Dashboard table action "${actionId}" was not found`);
     }
-    if (!action.endpoint && !action.management) {
+    if (!action.endpoint && !action.management && !action.selection) {
       throw new Error(`Dashboard table action "${actionId}" does not declare an endpoint`);
     }
     return executeEndpointAction(group, groups, action, {
@@ -37811,6 +37823,12 @@ slot { display: contents; }
     try {
       const submittedFields = structuredClone({ ...context.drafts.get(key) ?? {}, ...action.fields ?? {} });
       const result = actionDetail ? await executeDashboardAction(group, dashboard, actionDetail, action.action, submittedFields, action.resource, context.groups ?? [group], context.submit) : await executeDashboardTableAction(group, dashboard, action.action, action.widget, action.value, context.groups ?? [group], context.filters?.get(action.widget ?? "") ?? {}, detail ?? undefined, context.submit);
+      if (result.kind === "navigation") {
+        if (finishAction() !== "stale") {
+          (context.navigateDetail ?? context.openDetail)(result.collection, result.row);
+        }
+        return;
+      }
       let definitionsReloaded = false;
       if (result.invalidatesSchema && context.reloadDefinitions) {
         try {
@@ -39362,6 +39380,18 @@ slot { display: contents; }
         },
         clearDetail: () => this.clearDetail(),
         openDetail: (collection, row) => this.openDetail(collection, row),
+        navigateDetail: (collection, row) => {
+          const detail = this.querySelector("cms-dashboard-w-detail");
+          if (detail?.hasUnsavedChanges()) {
+            if (!window.confirm("Discard the unsaved changes?")) {
+              return;
+            }
+            if (this.detailSelection) {
+              this.drafts.delete(`${this.detailSelection.collection}:${this.detailSelection.row}`);
+            }
+          }
+          this.openDetail(collection, row);
+        },
         setDetailResource: (collection, row, resource) => this.setDetailResource(collection, row, resource),
         actionCoordinator: this.detailResource
       };

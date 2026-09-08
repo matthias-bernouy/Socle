@@ -38,7 +38,9 @@ function parseAction(value: unknown, name: string): DashboardAction {
         ...(value.form !== undefined ? { form: parseActionForm(value.form, `${name}.form`) } : {}),
         ...(value.endpoint !== undefined ? { endpoint: parseEndpointRef(value.endpoint, `${name}.endpoint`) } : {}),
         ...(value.download !== undefined ? { download: parseActionDownload(value.download, `${name}.download`) } : {}),
-        ...(isRecord(value.selection) ? { selection: parseSelection(value.selection) } : {}),
+        ...(value.selection !== undefined
+            ? { selection: parseActionSelection(value.selection, `${name}.selection`) }
+            : {}),
         ...(isRecord(value.after) ? { after: parseActionAfter(value.after, `${name}.after`) } : {}),
         ...(text(value.confirm) ? { confirm: text(value.confirm)! } : {}),
         ...(value.visibleWhen !== undefined
@@ -121,4 +123,19 @@ function parseManagementAction(value: unknown, name: string): NonNullable<Dashbo
             : ({ action: "save-settings" } as const)),
         ...(value.body !== undefined ? { body: parseStringMap(value.body, `${name}.body`) } : {}),
     };
+}
+
+function parseActionSelection(value: unknown, name: string): NonNullable<DashboardAction["selection"]> {
+    if (!isRecord(value)) {
+        throw new IntegrationInputError(name, "must be an object");
+    }
+    const selection: NonNullable<DashboardAction["selection"]> = { opens: requiredText(value.opens, `${name}.opens`) };
+    if (value.row !== undefined) {
+        const row = requiredText(value.row, `${name}.row`);
+        if (row.startsWith("$") && !isSafeDashboardExpression(row, ["resource", "selection"], true)) {
+            throw new IntegrationInputError(`${name}.row`, "must be an identity or a safe resource or selection path");
+        }
+        selection.row = row;
+    }
+    return selection;
 }

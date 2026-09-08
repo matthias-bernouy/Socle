@@ -25,6 +25,7 @@ export type DashboardViewActionContext = {
     ) => void;
     clearDetail: () => void;
     openDetail: (collection: string, row: string) => void;
+    navigateDetail?: (collection: string, row: string) => void;
     setDetailResource?: (collection: string, row: string, resource: unknown) => void;
     actionCoordinator?: { beginAction: () => () => DashboardActionCompletion };
 };

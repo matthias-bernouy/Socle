@@ -58,6 +58,12 @@ export async function runDashboardWidgetAction(
                   detail ?? undefined,
                   context.submit,
               );
+        if (result.kind === "navigation") {
+            if (finishAction() !== "stale") {
+                (context.navigateDetail ?? context.openDetail)(result.collection, result.row);
+            }
+            return;
+        }
         let definitionsReloaded = false;
         if (result.invalidatesSchema && context.reloadDefinitions) {
             try {

@@ -82,6 +82,11 @@ function detailTargetsFor(widgets: DashboardWidget[]): Set<string> {
 
 function collectDetailTargets(widget: DashboardWidget, targets: Set<string>): void {
     if (widget.widget === "w-detail") {
+        for (const action of widget.actions ?? []) {
+            if (action.selection?.opens) {
+                targets.add(action.selection.opens);
+            }
+        }
         for (const mainItem of widget.main) {
             if ("widget" in mainItem) {
                 collectDetailTargets(mainItem, targets);

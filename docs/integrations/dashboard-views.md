@@ -130,6 +130,27 @@ If that GET fails, Retry reads the created resource. A successful creation with
 no identity blocks an automatic second creation. Endpoints must supply their
 own idempotency guarantees for ambiguous network failures.
 
+## Direct detail navigation
+
+A detail action can select another detail in the same dashboard without calling
+an endpoint first:
+
+```json
+{
+  "id": "parent",
+  "label": "Parent",
+  "selection": { "opens": "parentDetail", "row": "$resource.parentId" }
+}
+```
+
+`selection.row` accepts a literal identity or a safe `$resource`/`$selection`
+path. It is supported on detail actions and cannot combine with `endpoint`,
+`management`, `form`, `download` or `after`. Existing list selection stays unchanged.
+The destination source performs its normal GET. Missing or non-scalar identities
+fail without navigation. Unsaved changes require explicit discard confirmation;
+cancelling keeps the current controls and sends no request. Navigation never
+acknowledges a Save or shows a mutation-success notification.
+
 ## Page and panel layout
 
 `cms-shell-detail` owns header actions and the body slot. A shared form occupies

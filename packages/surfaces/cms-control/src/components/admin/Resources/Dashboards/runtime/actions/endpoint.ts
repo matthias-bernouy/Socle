@@ -4,7 +4,7 @@ import { route } from "../../api";
 import type { DashboardAction } from "@bernouy/cms-dashboards";
 import type { DashboardSourceGroup } from "../../types";
 import { managementRequest } from "../../../Integrations/management/api";
-import { resolveBody } from "../expressions";
+import { resolveBody, resolveExpression } from "../expressions";
 import { sendSourceDownload } from "../source";
 
 type ActionResultMeta = {
@@ -13,6 +13,7 @@ type ActionResultMeta = {
 };
 
 export type DashboardActionResult =
+    | { kind: "navigation"; collection: string; row: string }
     | ({ kind: "value"; value: unknown } & ActionResultMeta)
     | ({ kind: "download"; blob: Blob; filename: string } & ActionResultMeta);
 
@@ -29,6 +30,18 @@ export async function executeEndpointAction(
     },
     submit?: SubmitAction,
 ): Promise<DashboardActionResult> {
+    if (action.selection?.row !== undefined) {
+        const row = resolveExpression(action.selection.row, vars);
+        if (
+            !action.selection.opens ||
+            (typeof row !== "string" && typeof row !== "number") ||
+            !String(row).trim() ||
+            (typeof row === "number" && !Number.isFinite(row))
+        ) {
+            throw new Error("The navigation target is unavailable. Reload the detail before trying again.");
+        }
+        return { kind: "navigation", collection: action.selection.opens, row: String(row) };
+    }
     if (action.management) {
         const management = action.management;
         const input = resolveBody(management.body, vars) ?? vars.fields ?? {};

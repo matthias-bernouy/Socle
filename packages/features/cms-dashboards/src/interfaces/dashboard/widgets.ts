@@ -33,7 +33,7 @@ export type DashboardAction = {
     download?: {
         filename?: string;
     };
-    selection?: { opens?: string };
+    selection?: { opens?: string; row?: DashboardExpr };
     after?: {
         opens?: string;
         row?: DashboardExpr;

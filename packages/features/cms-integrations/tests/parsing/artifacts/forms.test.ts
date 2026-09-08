@@ -209,3 +209,14 @@ test("integration view parsing retains native management targets and rejects mix
     );
     expect(() => parseWidget(detail({ save: { ...target, params: {} } }), "detail")).toThrow("not supported");
 });
+
+test("preserves explicit navigation identities and rejects invalid paths", () => {
+    const action = { id: "parent", label: "Parent", selection: { opens: "parentDetail", row: "$resource.parentId" } };
+    const raw = detail({ actions: [action] });
+    expect(parseWidget(raw, "widget")).toEqual(raw);
+    for (const row of ["", "$result.id", "$resource.constructor.id", 42]) {
+        expect(() =>
+            parseWidget(detail({ actions: [{ ...action, selection: { ...action.selection, row } }] }), "widget"),
+        ).toThrow();
+    }
+});
